@@ -1,0 +1,14 @@
+
+project clucene
+    : requirements <include>$(BOOST_ROOT)
+    : requirements <include>src/
+    : usage-requirements <include>$(BOOST_ROOT)
+    : usage-requirements <include>src/
+    : build-dir build
+    ;
+#todo: fix this
+build-project build/boost ;
+build-project test ;
+build-project contributions/demo ;
+build-project contributions/logreader ;
+

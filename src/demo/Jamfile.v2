@@ -1,0 +1,13 @@
+project demo ;
+
+DEMO_SOURCES =
+  Main.cpp 
+  DeleteFiles.cpp 
+  IndexFiles.cpp 
+  SearchFiles.cpp 
+  Statistics.cpp 
+  stdafx.cpp
+  ;
+
+exe cl_demo : $(DEMO_SOURCES) ../../build/boost//libclucene
+    	       : <define>_UCS2 ;

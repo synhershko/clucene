@@ -1,0 +1,53 @@
+PROJECT (clucene)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2 FATAL_ERROR)
+
+# include specific modules
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# compile in debug mode
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ELSE(NOT CMAKE_BUILD_TYPE)
+  MESSAGE( "Compiling as ${CMAKE_BUILD_TYPE}" )
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src )
+INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src )
+
+SUBDIRS (src/CLucene test src/demo)
+
+OPTION(ENABLE_DEBUG
+  "enable debug support"
+  OFF)
+IF(ENABLE_DEBUG)
+	ADD_DEFINITIONS(-D_DEBUG)
+ENDIF(ENABLE_DEBUG)
+
+
+OPTION(ENABLE_MMAP
+  "enable mmap support (experimental)"
+  OFF)
+IF(ENABLE_MMAP)
+	ADD_DEFINITIONS(-DLUCENE_FS_MMAP)
+ENDIF(ENABLE_MMAP)
+
+
+OPTION(DISABLE_MULTITHREADING
+  "disable multithreading - remove all locking code"
+  OFF)
+IF(ENABLE_MMAP)
+	ADD_DEFINITIONS(-D_CL_DISABLE_MULTITHREADING)
+ENDIF(ENABLE_MMAP)
+
+OPTION(ENABLE_ASCII_MODE
+  "enable ascii support"
+  OFF)
+IF(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_ASCII)
+ELSEIF(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_UCS2)
+ENDIF(ENABLE_ASCII_MODE)
+

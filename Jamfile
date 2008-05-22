@@ -1,0 +1,9 @@
+			     
+project clucene
+	: source-location src/ ;
+
+
+lib libclucene : CLucene/CLMonolithic.cpp
+					     : <include>src/ ;
+
+    

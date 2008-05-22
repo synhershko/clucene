@@ -1,0 +1,69 @@
+Linux Build instructions
+=======================================
+
+If you downloaded CLucene as a tar ball you should be able to skip straight
+to the section titled 'building', otherwise read the next section
+
+
+Rebuilding the autobuild scripts
+--------------------------------
+If you made changes to the configure.ac or any of the Makefile.am 
+files you will also need to run through this process.
+
+Requirements:
+GNU autotools is required. I have the following versions installed:
+Autoconf 2.57
+Automake 1.72
+Libtool 1.5a
+
+If you use significantly older versions, I can almost guarantee
+issues.  This is because each of the autotools is constantly changing
+with little regard to backward compatability or even compatiability
+with the other autotools.
+
+Run the autogen.sh file in the root directory of clucene to run the necessary commands.
+
+
+Building
+--------
+The following will get you building assuming that you have suffciently
+recent buld tools installed.  
+1.) unpack tarball 
+2.) cd into clucene
+3.) if you downloaded a tar version skip to 5
+4.) run ./autogen.sh
+5.) run ./configure
+6.) run make
+7.) things will churn for a very long time, the clucene library will
+be built as well as the examples.
+8.) check the src/demo, test and src directory
+
+In src/demo you should see:
+cl_demo
+
+In test you should see
+cl_test
+
+In src you should see:
+libclucene.so.0.0.0 libclucene.la libclucene.a 
+and symbolic links to these files.
+
+9.) If you want to run make install to copy the clucene files into the system 
+    include and lib directories
+10.) You may have to run
+export LD_LIBRARY_PATH=/path/to/clucene/lib 
+
+11.) run ./cl_test in the test directory and check that the tests all run
+
+Alternative (faster) way of building:
+-------------------------------------
+This method does not create library files, so depending on your needs you may not
+find this method useful.
+
+* Do steps 1-5 of the previous build process.
+* Change directory into src/
+* run make monolithic
+* Change directory into test/ (cd ../test/)
+* run make monolithic
+* You should see cl_test_monolithic in this directory
+* run ./cl_test_monolithic and check that the tests all run
