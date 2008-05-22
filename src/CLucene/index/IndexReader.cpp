@@ -195,6 +195,7 @@ CL_NS_DEF(index)
 		if (locked) {
 			commitLock->release();
 		}
+		_CLDELETE(commitLock);
 	)
 	return ret;
   }
