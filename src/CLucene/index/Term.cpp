@@ -192,6 +192,9 @@ void Term::set(const TCHAR* fld, const TCHAR* txt,const bool internField){
 /** Compares two terms, returning true iff they have the same
   field and text. */
 bool Term::equals(const Term* other) const{
+	if (other == this)
+		return true;
+
    if ( cachedHashCode != 0 && other->cachedHashCode != 0 &&
 		other->cachedHashCode != cachedHashCode )
 		return false;

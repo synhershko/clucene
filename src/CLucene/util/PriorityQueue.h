@@ -12,16 +12,18 @@
 #endif
 CL_NS_DEF(util)
 
-// A PriorityQueue maintains a partial ordering of its elements such that the
-// least element can always be found in constant time.  Put()'s and pop()'s
-//  require log(size) time. 
+/** A PriorityQueue maintains a partial ordering of its elements such that the
+  least element can always be found in constant time.  Put()'s and pop()'s
+  require log(size) time. */
 template <class _type,typename _valueDeletor> class PriorityQueue:LUCENE_BASE {
 	private:
-		_type* heap; //(was object[])
 		size_t _size;
 		bool dk;
 		size_t maxSize;
+	protected:
+		_type* heap; //(was object[])
 
+	private:
 		void upHeap(){
 			size_t i = _size;
 			_type node = heap[i];			  // save bottom node (WAS object)
@@ -69,7 +71,12 @@ template <class _type,typename _valueDeletor> class PriorityQueue:LUCENE_BASE {
 		void initialize(const int32_t maxSize, bool deleteOnClear){
 			_size = 0;
 			dk = deleteOnClear;
-			int32_t heapSize = maxSize + 1;
+			int32_t heapSize;
+			if (0 == maxSize)
+				// We allocate 1 extra to avoid if statement in top()
+				heapSize = 2;
+			else
+				heapSize = maxSize + 1;
 			heap = _CL_NEWARRAY(_type,heapSize);
             this->maxSize = maxSize;
 		}
@@ -94,36 +101,55 @@ template <class _type,typename _valueDeletor> class PriorityQueue:LUCENE_BASE {
 			upHeap();
 		}
 
-      /**
-      * Adds element to the PriorityQueue in log(size) time if either
-      * the PriorityQueue is not full, or not lessThan(element, top()).
-      * @param element
-      * @return true if element is added, false otherwise.
-      */
-      bool insert(_type element){
-         if(_size < maxSize){
-            put(element);
-            return true;
-        }else if(_size > 0 && !lessThan(element, top())){
-			if ( dk ){
-				_valueDeletor::doDelete(heap[1]);
-			}
-            heap[1] = element;
-            adjustTop();
-            return true;
-         }else
-            return false;
-      }
+	  /**
+	  * Adds element to the PriorityQueue in log(size) time if either
+	  * the PriorityQueue is not full, or not lessThan(element, top()).
+	  * @param element
+	  * @return true if element is added, false otherwise.
+	  */
+	  bool insert(_type element){
+		  _type t = insertWithOverflow(element);
+		  if (t != element) {
+			  if (t) _valueDeletor::doDelete(t);
+			  return true;
+		  }
+		  return false;
+	  }
 
-		/**
-		* Returns the least element of the PriorityQueue in constant time. 
-		*/
-		_type top(){
-			if (_size > 0)
-				return heap[1];
-			else
-				return NULL;
-		}
+	  /**
+	  * insertWithOverflow() is the same as insert() except its
+	  * return value: it returns the object (if any) that was
+	  * dropped off the heap because it was full. This can be
+	  * the given parameter (in case it is smaller than the
+	  * full heap's minimum, and couldn't be added), or another
+	  * object that was previously the smallest value in the
+	  * heap and now has been replaced by a larger one, or null
+	  * if the queue wasn't yet full with maxSize elements.
+	  * NOTE: value is not being deleted - its the user responsibilty
+	  * to dispose the returned _type (only if != NULL && != element).
+	  */
+	  _type insertWithOverflow(_type element) {
+		  if(_size < maxSize){
+			  put(element);
+			  return NULL;
+		  }else if(_size > 0 && !lessThan(element, heap[1])){
+			  _type ret = heap[1];
+			  heap[1] = element;
+			  adjustTop();
+			  return ret;
+		  }else
+			  return element;
+	  }
+
+	  /**
+	  * Returns the least element of the PriorityQueue in constant time. 
+	  */
+	  _type top(){
+		  // We don't need to check size here: if maxSize is 0,
+		  // then heap is length 2 array with both entries null.
+		  // If size is 0 then heap[1] is already null.
+		  return heap[1];
+	  }
 
 		/** Removes and returns the least element of the PriorityQueue in log(size)
 		*	time.  

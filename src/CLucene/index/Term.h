@@ -64,6 +64,8 @@ class Term:LUCENE_REFBASE {
 	/**
 	* Constructor. Constructs a Term with the given field and text. Field and text are not copied
 	* Field and text are deleted in destructor only if intern is false. 
+	* <p>Note that a null field or null text value results in undefined
+	* behavior for most Lucene APIs that accept a Term parameter.
 	*/
 	Term(const TCHAR* fld, const TCHAR* txt);
 	

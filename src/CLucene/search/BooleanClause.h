@@ -12,9 +12,10 @@
 #endif
 #include "SearchHeader.h"
 
-//#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 
 CL_NS_DEF(search)
+
 // A clause in a BooleanQuery. 
 class BooleanClause:LUCENE_BASE {
 public:
@@ -150,16 +151,27 @@ public:
 		query = q;
 	}
 
-	bool isProhibited() const { return prohibited; /* return (occur == MUST_NOT); */ }
-	bool isRequired() const { return required; /* return (occur == MUST); */ }
+	bool isProhibited() const { return prohibited; /* TODO: return (occur == MUST_NOT); */ }
+	bool isRequired() const { return required; /* TODO: return (occur == MUST); */ }
 
-protected:
+	TCHAR* toString() const {
+		CL_NS(util)::StringBuffer buffer;
+		if (occur == MUST)
+			buffer.append(_T("+"));
+		else if (occur == MUST_NOT)
+			buffer.append(_T("-"));
+		buffer.append( query->toString() );
+		return buffer.toString();
+	}
+
+private:
 	/** The query whose matching documents are combined by the boolean query.
 	*     @deprecated use {@link #setQuery(Query)} instead */
 	Query* query;
 
 	Occur occur;
 
+	/* Middle layer for the Occur enum; will be removed soon enough. */
 	void setFields(Occur occur) {
 		if (occur == MUST) {
 			required = true;
