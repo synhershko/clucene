@@ -61,7 +61,7 @@ TermInfo::TermInfo(const TermInfo* ti) {
   skipOffset  = ti->skipOffset;
 }
 
-void TermInfo::set(const int32_t df, const int64_t fp, const int64_t pp, const int32_t so) {
+void TermInfo::set(const int32_t df, const int64_t fp, const int64_t pp, int32_t so) {
 //Func - Sets a new document frequency, a new freqPointer and a new proxPointer
 //Pre  - df >= 0, fp >= 0 pp >= 0
 //Post - The new document frequency, a new freqPointer and a new proxPointer

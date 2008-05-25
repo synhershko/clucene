@@ -28,7 +28,7 @@ Term::Term(){
 	textLen = 0;
 }
 
-Term::Term(const TCHAR* fld, const TCHAR* txt,const bool internField){
+Term::Term(const TCHAR* fld, const TCHAR* txt, bool internField){
 //Func - Constructor.
 //       Constructs a Term with the given field and text. Field and text are not copied
 //       Field and text are deleted in destructor only if intern is false. 

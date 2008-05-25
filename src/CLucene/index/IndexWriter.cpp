@@ -549,15 +549,19 @@ CL_NS_DEF(index)
 		  }
         i++;
 	}
+
+// commented out by tbusch to solve a bug and to be conform with 
+// java lucene
 	
 	// merge newly added segments in log(n) passes
-    while (segmentInfos->size() > start+mergeFactor) {
-      for (int32_t base = start; base < segmentInfos->size(); base++) {
-        int32_t end = min(segmentInfos->size(), base+mergeFactor);
-        if (end-base > 1)
-          mergeSegments(base, end);
-      }
-    }
+//    while (segmentInfos->size() > start+mergeFactor) {
+//      for (int32_t base = start; base < segmentInfos->size(); base++) {
+//        int32_t end = min(segmentInfos->size(), base+mergeFactor);
+//        if (end-base > 1) {
+//          mergeSegments(base, end);
+//        }
+//      }
+//    }
 
 	optimize();					  // cleanup
   }

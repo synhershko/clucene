@@ -392,11 +392,11 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		}else if ( _create ){
 	    	dir->create();
 		}
-	}
 
-	{
-		SCOPED_LOCK_MUTEX(dir->THIS_LOCK)
-		dir->refCount++;
+		{
+			SCOPED_LOCK_MUTEX(dir->THIS_LOCK)
+				dir->refCount++;
+		}
 	}
 
     return _CL_POINTER(dir);
@@ -552,8 +552,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
           //we can wait until the dir_Exists() returns false
           //after the success run of unlink()
           int i=0;
-          while ( Misc::dir_Exists(nu) && i < 100 )
-            i++;
+		  while ( Misc::dir_Exists(nu) && i < 100 ){
+			  if ( ++i > 50 ) //if it still doesn't show up, then we do some sleeping for the last 50ms
+				  _LUCENE_SLEEP(1);
+		  }
           if ( !Misc::dir_Exists(nu) )
             break; //keep trying to unlink until the file is gone, or the unlink fails.
       }

@@ -12,7 +12,6 @@
 
 #if defined(_CL_DISABLE_MULTITHREADING)
 	#define SCOPED_LOCK_MUTEX(theMutex)
-	#define SCOPED_LOCK_MUTEX_EX(theMutex,mutexname,dummy)
 	#define DEFINE_MUTEX(x)
 	#define STATIC_DEFINE_MUTEX(x)
 	#define _LUCENE_SLEEP(x)

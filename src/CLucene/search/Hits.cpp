@@ -80,7 +80,7 @@ CL_NS_DEF(search)
 		return _length;
 	}
 
-	Document& Hits::doc(int32_t n){
+	Document& Hits::doc(const int32_t n){
 		HitDoc* hitDoc = getHitDoc(n);
 
 		// Update LRU cache of documents

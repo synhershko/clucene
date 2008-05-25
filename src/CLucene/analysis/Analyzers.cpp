@@ -169,7 +169,7 @@ bool ISOLatin1AccentFilter::next(Token* token){
 		int32_t l = token->termTextLength();
 		const TCHAR* chars = token->termText();
 		bool doProcess = false;
-		for (int i = 0; i < l; ++i) {
+		for (int32_t i = 0; i < l; ++i) {
 			#ifdef _UCS2
 			if ( chars[i] >= 0xC0 && chars[i] <= 0x178 ) {
 			#else

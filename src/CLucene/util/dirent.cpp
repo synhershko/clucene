@@ -111,6 +111,8 @@ struct dirent * readdir (DIR * dirp)
 		return NULL;
 	}
 
+	bool bCallFindNext = true;
+
 	if (dirp->dd_stat < 0)
 	{
 		/* We have already returned all files in the directory
@@ -133,51 +135,62 @@ struct dirent * readdir (DIR * dirp)
 		{
 			dirp->dd_stat = 1;
 		}
-	}
-	else
-	{
-		/* Get the next search entry. */
-		if (_findnext (dirp->dd_handle, &(dirp->dd_dta)))
-		{
-			/* We are off the end or otherwise error. */
-			_findclose (dirp->dd_handle);
-			dirp->dd_handle = -1;
-			dirp->dd_stat = -1;
-		}
-		else
-		{
-			/* Update the status to indicate the correct
-			* number. */
-			dirp->dd_stat++;
-		}
+
+		/* Dont call _findnext first time. */
+		bCallFindNext = false;
 	}
 
-	if (dirp->dd_stat > 0)
+	while (dirp->dd_stat > 0)
 	{
+		if (bCallFindNext)
+		{
+			/* Get the next search entry. */
+			if (_findnext (dirp->dd_handle, &(dirp->dd_dta)))
+			{
+				/* We are off the end or otherwise error. */
+				_findclose (dirp->dd_handle);
+				dirp->dd_handle = -1;
+				dirp->dd_stat = -1;                      
+				return NULL;
+			}
+			else
+			{
+				/* Update the status to indicate the correct
+				* number. */
+				dirp->dd_stat++;
+			}
+		}
+
 		/* Successfully got an entry. Everything about the file is
 		* already appropriately filled in except the length of the
 		* file name. */
 		dirp->dd_dir.d_namlen = strlen (dirp->dd_dir.d_name);
 
-		if ( dirp->dd_dir.d_name[0] == '.' &&
-			(dirp->dd_dir.d_name[1] == 0 || 
-				(dirp->dd_dir.d_name[1] == '.' && dirp->dd_dir.d_name[2] == 0)))
-				return readdir(dirp);
+		bool bThisFolderOrUpFolder = dirp->dd_dir.d_name[0] == '.' &&
+			(dirp->dd_dir.d_name[1] == 0 || (dirp->dd_dir.d_name[1] == '.' && dirp->dd_dir.d_name[2] == 0));
 
-		struct _stat buf;
-		char buffer[CL_MAX_DIR];
-		size_t bl = strlen(dirp->dd_name)-strlen(DIRENT_SEARCH_SUFFIX);
-		strncpy(buffer,dirp->dd_name,bl);
-		buffer[bl]=0;
-		strcat(buffer, dirp->dd_dir.d_name);
-		if ( _stat(buffer,&buf) == -1 )
-			return readdir(dirp);
+		if (!bThisFolderOrUpFolder)
+		{
+			struct _stat buf;
+			char buffer[CL_MAX_DIR];
+			size_t bl = strlen(dirp->dd_name)-strlen(DIRENT_SEARCH_SUFFIX);
+			strncpy(buffer,dirp->dd_name,bl);
+			buffer[bl]=0;
+			strcat(buffer, dirp->dd_dir.d_name);     
+			if ( _stat(buffer,&buf) == 0 )
+			{
+				/* Finally we have a valid entry. */
+				return &dirp->dd_dir;
+			}
+		}
 
-		return &dirp->dd_dir;
+		/* Allow to find next file. */
+		bCallFindNext = true;
 	}
 
 	return NULL;
 }
+
 
 
 int32_t
