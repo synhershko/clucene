@@ -58,6 +58,10 @@ CL_NS_DEF(search)
 		/** Expert: Constructs a TopDocs. TopDocs takes ownership of the ScoreDoc array*/
 		TopDocs(const int32_t th, ScoreDoc* sds, int32_t scoreDocsLength);
 		~TopDocs();
+
+	private:
+		/** Expert: Stores the maximum score value encountered, needed for normalizing. */
+		//float_t maxScore;
 	};
 
     // Lower-level search API.
@@ -144,7 +148,20 @@ CL_NS_DEF(search)
 
 
 
-    // A ranked list of documents, used to hold search results. 
+   /** A ranked list of documents, used to hold search results.
+   * <p>
+   * <b>Caution:</b> Iterate only over the hits needed.  Iterating over all
+   * hits is generally not desirable and may be the source of
+   * performance issues. If you need to iterate over many or all hits, consider
+   * using the search method that takes a {@link HitCollector}.
+   * </p>
+   * <p><b>Note:</b> Deleting matching documents concurrently with traversing 
+   * the hits, might, when deleting hits that were not yet retrieved, decrease
+   * {@link #length()}. In such case, 
+   * {@link java.util.ConcurrentModificationException ConcurrentModificationException}
+   * is thrown when accessing hit <code>n</code> &ge; current_{@link #length()} 
+   * (but <code>n</code> &lt; {@link #length()}_at_start). 
+   */
    class Hits:LUCENE_BASE {
     private:
 		Query* query;
@@ -159,6 +176,12 @@ CL_NS_DEF(search)
 		HitDoc* last;				  // tail of LRU cache
 		int32_t numDocs;			  // number cached
 		int32_t maxDocs;			  // max to cache
+
+		int32_t nDeletions;       // # deleted docs in the index.    
+		size_t _lengthAtStart;    // this is the number apps usually count on (although deletions can bring it down). 
+		int32_t nDeletedHits;    // # of already collected hits that were meanwhile deleted.
+
+		bool debugCheckedForDeletions; // for test purposes.
 
     public:
 		Hits(Searcher* s, Query* q, Filter* f, const Sort* sort=NULL);
@@ -175,17 +198,26 @@ CL_NS_DEF(search)
 		*/
 		CL_NS(document)::Document& doc(const int32_t n);
 	      
-		/** Returns the id for the nth document in this set. */
+		/** Returns the id for the n<sup>th</sup> document in this set.
+		* Note that ids may change when the index changes, so you cannot
+		* rely on the id to be stable.
+		*/
 		int32_t id (const int32_t n);
 	    
 		/** Returns the score for the nth document in this set. */
 		float_t score(const int32_t n);
+
+		/** count # deletions, return -1 if unknown. */
+		int32_t countDeletions(CL_NS(search)::Searcher* s);
 	      
 	private:
-		// Tries to add new documents to hitDocs.
-		// Ensures that the hit numbered <code>_min</code> has been retrieved.
+		/**
+		* Tries to add new documents to hitDocs.
+		* Ensures that the hit numbered <code>_min</code> has been retrieved.
+		*/
 		void getMoreDocs(const size_t _min);
 	    
+		/** Returns the score for the n<sup>th</sup> document in this set. */
 		HitDoc* getHitDoc(const size_t n);
 	    
 		void addToFront(HitDoc* hitDoc);
@@ -294,7 +326,9 @@ CL_NS_DEF(search)
 			similarity = Similarity::getDefault();
 		}
 		virtual ~Searcher(){
+
 		}
+
 
 		// Returns the documents matching <code>query</code>.
 		Hits* search(Query* query) {
@@ -353,6 +387,10 @@ CL_NS_DEF(search)
 		Similarity* getSimilarity(){
 			return this->similarity;
 		}
+
+		virtual const TCHAR* getClassName(){
+			return _T("Searcher");
+		}
 	};
 
 	/** The abstract base class for queries.
@@ -374,7 +412,7 @@ CL_NS_DEF(search)
     <li>{@link queryParser.QueryParser QueryParser}
     </ul>
 	*/
-	class Query :LUCENE_BASE {
+	class Query :LUCENE_BASE { 
 	private:
 		// query boost factor
 		float_t boost;

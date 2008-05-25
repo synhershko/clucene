@@ -1,3 +1,10 @@
+/*------------------------------------------------------------------------------
+* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+* 
+* Distributable under the terms of either the Apache License (Version 2.0) or 
+* the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
+
 #ifndef _lucene_search_BooleanScorer2_
 #define _lucene_search_BooleanScorer2_
 
@@ -29,14 +36,14 @@ CL_NS_DEF(search)
 			void init();
 			
 			void initDoc() {
-				nrMatchers = 0;
+			nrMatchers = 0;
 			}
 			
 			float_t coordFactor() {
 				return coordFactors[nrMatchers];
 			}			
-		};
-		
+	};
+
 		class SingleMatchScorer: public Scorer {
 		public:
 			Scorer* scorer;
@@ -85,6 +92,7 @@ CL_NS_DEF(search)
 			}
 			bool skipTo( int32_t target ) { return false; }
 			TCHAR* toString() { return NULL; }
+
 			void explain( int32_t doc, Explanation* ret ) {
 				_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::explain");								
 			}
@@ -103,7 +111,7 @@ CL_NS_DEF(search)
 			
 			int32_t doc() const {
 				return reqScorer->doc();
-			}
+		}
 			
 			bool next() {
 				return reqScorer->next();
@@ -185,7 +193,7 @@ CL_NS_DEF(search)
 		Coordinator *coordinator;
 		Scorer *countingSumScorer;
 		
-		int32_t minNrShouldMatch;
+		size_t minNrShouldMatch;
 		bool allowDocsOutOfOrder;
 		
 	public:

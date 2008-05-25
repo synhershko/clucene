@@ -131,7 +131,7 @@ CL_NS_DEF(search)
 
 		if (!c->prohibited) {			  // just return clause
 			c->deleteQuery=false;
-			Query* ret = c->query;
+			Query* ret = c->getQuery();
 
 			_CLDELETE(query);
 			return ret;

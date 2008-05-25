@@ -17,11 +17,20 @@
 #include "Similarity.h"
 
 CL_NS_DEF(search)
-
+/** Expert: Scoring functionality for phrase queries.
+* <br>A document is considered matching if it contains the phrase-query terms  
+* at "valid" positons. What "valid positions" are
+* depends on the type of the phrase query: for an exact phrase query terms are required 
+* to appear in adjacent locations, while for a sloppy phrase query some distance between 
+* the terms is allowed. The abstract method {@link #phraseFreq()} of extending classes
+* is invoked for each document containing all the phrase query terms, in order to 
+* compute the frequency of the phrase query in that document. A non zero frequency
+* means a match. 
+*/
 	class PhraseScorer: public Scorer {
 	private:
 		Weight* weight;
-		float_t freq;
+		float_t freq; //phrase frequency in current doc as computed by phraseFreq().
 		bool firstTime;
 		bool more;
 
@@ -36,7 +45,7 @@ CL_NS_DEF(search)
 	public:
 		//Constructor
 		PhraseScorer(Weight* weight, CL_NS(index)::TermPositions** tps, 
-		int32_t* positions, Similarity* similarity, uint8_t* norms);
+		int32_t* offsets, Similarity* similarity, uint8_t* norms);
 		virtual ~PhraseScorer();
 
 		int32_t doc() const { return first->doc; }
@@ -48,6 +57,13 @@ CL_NS_DEF(search)
 		void explain(int32_t doc, Explanation* ret);
 		TCHAR* toString();
 	protected:
+		/**
+		* For a document containing all the phrase query terms, compute the
+		* frequency of the phrase in that document. 
+		* A non zero frequency means a match.
+		* <br>Note, that containing all phrase terms does not guarantee a match - they have to be found in matching locations.  
+		* @return frequency of the phrase in current doc, 0 if not found. 
+		*/
 		virtual float_t phraseFreq() =0;
 
         //Transfers the PhrasePositions from the PhraseQueue pq to

@@ -28,15 +28,17 @@ CL_NS_DEF(search)
 	class BooleanQuery:public Query {
 	public:
 		typedef CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> > ClausesType;
+
 	private:
 		BooleanQuery::ClausesType clauses;
 		static size_t maxClauseCount;
+
 		static bool useScorer14;
-		
+	
 		LUCENE_STATIC_CONSTANT(bool, allowDocsOutOfOrder=false);
 		
 		bool disableCoord;
-		
+
 		class BooleanWeight: public Weight {
 		protected:
 			Searcher* searcher;
@@ -46,8 +48,8 @@ CL_NS_DEF(search)
 			BooleanQuery* parentQuery;
 		public:
 			BooleanWeight(Searcher* searcher,
-				CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses, 
-				BooleanQuery* parentQuery);
+ 				CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses, 
+ 				BooleanQuery* parentQuery);
 			~BooleanWeight();
 			Query* getQuery();
 			float_t getValue();
@@ -55,39 +57,36 @@ CL_NS_DEF(search)
 			void normalize(float_t norm);
 			Scorer* scorer(CL_NS(index)::IndexReader* reader);
 			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
-		};//booleanweight
+		};// BooleanWeight
 		friend class BooleanQuery::BooleanWeight;
-		
+
 		class BooleanWeight2: public BooleanWeight {
 		public:
 			BooleanWeight2( Searcher* searcher, CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses, BooleanQuery* parentQuery );
 			Scorer* scorer( CL_NS(index)::IndexReader* reader );
-		};
+		};// BooleanWeight2
 		friend class BooleanQuery::BooleanWeight2;
-		
+
     protected:
-      int32_t minNrShouldMatch;
-      
-      Weight* _createWeight(Searcher* searcher) {
-    	 if ( 0 < minNrShouldMatch ) {
-    		 return _CLNEW BooleanWeight2( searcher, &clauses, this );
-    	 }
-    	 
-    	 return getUseScorer14() ? (Weight*) _CLNEW BooleanWeight( searcher, &clauses, this )
-    	                         : (Weight*) _CLNEW BooleanWeight2( searcher, &clauses, this );
-    	 
-      }
-      
-      BooleanQuery(const BooleanQuery& clone);
+		int32_t minNrShouldMatch;
+		Weight* _createWeight(Searcher* searcher) {
+			//return _CLNEW BooleanWeight(searcher,&clauses,this);
+			if ( 0 < minNrShouldMatch ) {
+				return _CLNEW BooleanWeight2( searcher, &clauses, this );
+			}
+
+			return getUseScorer14() ? (Weight*) _CLNEW BooleanWeight( searcher, &clauses, this )
+				: (Weight*) _CLNEW BooleanWeight2( searcher, &clauses, this );
+		}
+		BooleanQuery(const BooleanQuery& clone);
 	public:
     /** Constructs an empty boolean query. */
 		BooleanQuery();
-		
-        BooleanQuery( bool disableCoord );
-        
-        ~BooleanQuery();
-        
-        const TCHAR* getQueryName() const;
+
+		BooleanQuery( bool disableCoord );
+
+		~BooleanQuery();
+		const TCHAR* getQueryName() const;
 		static const TCHAR* getClassName();
         
          /** Return the maximum number of clauses permitted, 1024 by default.
@@ -98,25 +97,33 @@ CL_NS_DEF(search)
          /** Set the maximum number of clauses permitted. */
          static void setMaxClauseCount(size_t maxClauseCount);
 
-       /** Adds a clause to a boolean query.  Clauses may be:
-		* <ul>
-		* <li><code>required</code> which means that documents which <i>do not</i>
-		* match this sub-query will <i>not</i> match the boolean query;
-		* <li><code>prohibited</code> which means that documents which <i>do</i>
-		* match this sub-query will <i>not</i> match the boolean query; or
-		* <li>neither, in which case matched documents are neither prohibited from
-		* nor required to match the sub-query. However, a document must match at
-		* least 1 sub-query to match the boolean query.
-		* </ul>
-		* It is an error to specify a clause as both <code>required</code> and
-		* <code>prohibited</code>.
-		*
-		* @see #getMaxClauseCount()
-		*/
+		 /** Adds a clause to a boolean query.  Clauses may be:
+		 * <ul>
+		 * <li><code>required</code> which means that documents which <i>do not</i>
+		 * match this sub-query will <i>not</i> match the boolean query;
+		 * <li><code>prohibited</code> which means that documents which <i>do</i>
+		 * match this sub-query will <i>not</i> match the boolean query; or
+		 * <li>neither, in which case matched documents are neither prohibited from
+		 * nor required to match the sub-query. However, a document must match at
+		 * least 1 sub-query to match the boolean query.
+		 * </ul>
+		 * It is an error to specify a clause as both <code>required</code> and
+		 * <code>prohibited</code>.
+		 *
+		 * @deprecated use {@link #add(Query, BooleanClause.Occur)} instead:
+		 * <ul>
+		 *  <li>For add(query, true, false) use add(query, BooleanClause.Occur.MUST)
+		 *  <li>For add(query, false, false) use add(query, BooleanClause.Occur.SHOULD)
+		 *  <li>For add(query, false, true) use add(query, BooleanClause.Occur.MUST_NOT)
+		 * </ul>
+		 */
 		void add(Query* query, const bool required, const bool prohibited){
 			add(query,false,required,prohibited);
 		}
 		void add(Query* query, const bool deleteQuery, const bool required, const bool prohibited);
+
+		void add(Query* query, const bool deleteQuery, BooleanClause::Occur occur);
+		void add(Query* query, BooleanClause::Occur occur) { add(query,false,occur); };
 		
 		/** Copies the clauses of this query into the array.
 		* The array must be at least as long as getClauseCount()
@@ -140,8 +147,8 @@ CL_NS_DEF(search)
 
 		Query* rewrite(CL_NS(index)::IndexReader* reader);
 		Query* clone() const;
+
 		bool equals(Query* o) const;
-			
 		Similarity* getSimilarity( Searcher* searcher );
 		
 		bool isCoordDisabled() { return disableCoord; }
@@ -149,7 +156,7 @@ CL_NS_DEF(search)
 		
 		static bool getUseScorer14();
 		static void setUseScorer14( bool use14 );
-		
+		 
 	  	/** Prints a user-readable version of this query. */
 		TCHAR* toString(const TCHAR* field) const;
 		/** Returns a hash code value for this object.*/

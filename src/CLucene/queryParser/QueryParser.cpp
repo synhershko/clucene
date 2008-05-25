@@ -218,7 +218,7 @@ CL_NS_DEF(queryParser)
 		// finalize query
 		if(clauses.size() == 1){ //bvk: removed this && firstQuery != NULL
 			BooleanClause* c = clauses[0];
-			Query* q = c->query;
+			Query* q = c->getQuery();
 
 			//Condition check to be sure clauses[0] is valid
 			CND_CONDITION(c != NULL, "c is NULL");

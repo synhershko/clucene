@@ -13,69 +13,67 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-  WildcardQuery::WildcardQuery(Term* term): 
-	MultiTermQuery( term ){
-  //Func - Constructor
-  //Pre  - term != NULL
-  //Post - Instance has been created
+WildcardQuery::WildcardQuery(Term* term): 
+MultiTermQuery( term ){
+	//Func - Constructor
+	//Pre  - term != NULL
+	//Post - Instance has been created
+	termContainsWildcard = (_tcschr(term->text(), _T('*')) == NULL || _tcschr(term->text(), _T('?')) == NULL);
+}
 
-  }
+WildcardQuery::~WildcardQuery(){
+	//Func - Destructor
+	//Pre  - true
+	//Post - true
 
-  WildcardQuery::~WildcardQuery(){
-  //Func - Destructor
-  //Pre  - true
-  //Post - true
+}
 
-  }
-
-  const TCHAR* WildcardQuery::getQueryName() const{
-  //Func - Returns the string "WildcardQuery"
-  //Pre  - true
-  //Post - The string "WildcardQuery" has been returned
+const TCHAR* WildcardQuery::getQueryName() const{
+	//Func - Returns the string "WildcardQuery"
+	//Pre  - true
+	//Post - The string "WildcardQuery" has been returned
 	return getClassName();
-  }
+}
 
-  const TCHAR* WildcardQuery::getClassName(){
-      return _T("WildcardQuery");
-  }
-
-
-  FilteredTermEnum* WildcardQuery::getEnum(IndexReader* reader) {
-    return _CLNEW WildcardTermEnum(reader, getTerm(false));
-  }
-
-	WildcardQuery::WildcardQuery(const WildcardQuery& clone):
-		MultiTermQuery(clone)
-	{
-	}
-
-	Query* WildcardQuery::clone() const{
-		return _CLNEW WildcardQuery(*this);
-	}
-	size_t WildcardQuery::hashCode() const{
-		//todo: we should give the query a seeding value... but
-		//need to do it for all hascode functions
-		return Similarity::floatToByte(getBoost()) ^ getTerm()->hashCode();
-	}
-	bool WildcardQuery::equals(Query* other) const{
-		if (!(other->instanceOf(WildcardQuery::getClassName())))
-			return false;
-
-		WildcardQuery* tq = (WildcardQuery*)other;
-		return (this->getBoost() == tq->getBoost())
-			&& getTerm()->equals(tq->getTerm());
-	}
+const TCHAR* WildcardQuery::getClassName(){
+	return _T("WildcardQuery");
+}
 
 
+FilteredTermEnum* WildcardQuery::getEnum(IndexReader* reader) {
+	return _CLNEW WildcardTermEnum(reader, getTerm(false));
+}
+
+WildcardQuery::WildcardQuery(const WildcardQuery& clone):
+MultiTermQuery(clone)
+{
+}
+
+Query* WildcardQuery::clone() const{
+	return _CLNEW WildcardQuery(*this);
+}
+size_t WildcardQuery::hashCode() const{
+	//todo: we should give the query a seeding value... but
+	//need to do it for all hascode functions
+	return Similarity::floatToByte(getBoost()) ^ getTerm()->hashCode();
+}
+bool WildcardQuery::equals(Query* other) const{
+	if (!(other->instanceOf(WildcardQuery::getClassName())))
+		return false;
+
+	WildcardQuery* tq = (WildcardQuery*)other;
+	return (this->getBoost() == tq->getBoost())
+		&& getTerm()->equals(tq->getTerm());
+}
 
 
+Query* WildcardQuery::rewrite(CL_NS(index)::IndexReader* reader) {
+	if (termContainsWildcard)
+		return MultiTermQuery::rewrite(reader);
 
+	return _CLNEW TermQuery( getTerm(false) );
+}
 
-
-
-
-
-	
 
 WildcardFilter::WildcardFilter( Term* term )
 {
@@ -88,7 +86,7 @@ WildcardFilter::~WildcardFilter()
 }
 
 WildcardFilter::WildcardFilter( const WildcardFilter& copy ) : 
-	term( _CL_POINTER(copy.term) )
+term( _CL_POINTER(copy.term) )
 {
 }
 
@@ -100,19 +98,19 @@ Filter* WildcardFilter::clone() const {
 TCHAR* WildcardFilter::toString()
 {
 	//Instantiate a stringbuffer buffer to store the readable version temporarily
-    CL_NS(util)::StringBuffer buffer;
-    //check if field equal to the field of prefix
-    if( term->field() != NULL ) {
-	  //Append the field of prefix to the buffer
-      buffer.append(term->field());
-	  //Append a colon
-      buffer.append(_T(":") );
-    }
-    //Append the text of the prefix
-    buffer.append(term->text());
+	CL_NS(util)::StringBuffer buffer;
+	//check if field equal to the field of prefix
+	if( term->field() != NULL ) {
+		//Append the field of prefix to the buffer
+		buffer.append(term->field());
+		//Append a colon
+		buffer.append(_T(":") );
+	}
+	//Append the text of the prefix
+	buffer.append(term->text());
 
 	//Convert StringBuffer buffer to TCHAR block and return it
-    return buffer.toString();
+	return buffer.toString();
 }
 
 
@@ -121,10 +119,10 @@ search results, and false for those that should not. */
 BitSet* WildcardFilter::bits( IndexReader* reader )
 {
 	BitSet* bts = _CLNEW BitSet( reader->maxDoc() );
-	
+
 	WildcardTermEnum termEnum (reader, term);
-    if (termEnum.term(false) == NULL)
-      return bts;
+	if (termEnum.term(false) == NULL)
+		return bts;
 
 	TermDocs* termDocs = reader->termDocs();
 	try{
@@ -132,16 +130,16 @@ BitSet* WildcardFilter::bits( IndexReader* reader )
 			termDocs->seek(&termEnum);
 
 			while (termDocs->next()) {
-			  bts->set(termDocs->doc());
+				bts->set(termDocs->doc());
 			}
 		}while(termEnum.next());
 	} _CLFINALLY(
-      termDocs->close();
-      _CLDELETE(termDocs);
-      termEnum.close();
-    )
+		termDocs->close();
+	_CLDELETE(termDocs);
+	termEnum.close();
+	)
 
-	return bts;
+		return bts;
 }
 
 CL_NS_END

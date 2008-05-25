@@ -41,6 +41,10 @@ CL_NS_DEF(search)
 		size_t hashCode() const;
 		bool equals(Query* other) const;
 		Query* clone() const;
+
+		Query* rewrite(CL_NS(index)::IndexReader* reader);
+	private:
+		  bool termContainsWildcard;
     };
     
     

@@ -132,7 +132,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
   void TermVectorsWriter::addAllDocVectors(Array<TermFreqVector*>& vectors){
 	openDocument();
 
-	for (int32_t i = 0; i < vectors.length; ++i) {
+	for (size_t i = 0; i < vectors.length; ++i) {
 		bool storePositionWithTermVector = false;
 		bool storeOffsetWithTermVector = false;
 

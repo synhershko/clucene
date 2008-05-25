@@ -253,6 +253,7 @@ CL_NS_DEF(search)
   
   
     float_t FuzzyQuery::defaultMinSimilarity = 0.5f;
+	int32_t FuzzyQuery::defaultPrefixLength = 0;
 
     FuzzyQuery::~FuzzyQuery(){
     //Func - Destructor

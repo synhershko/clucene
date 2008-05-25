@@ -14,8 +14,8 @@ CL_NS_USE(index)
 CL_NS_DEF(search)
 
 	ExactPhraseScorer::ExactPhraseScorer(Weight* weight, TermPositions** tps, 
-		int32_t* positions, Similarity* similarity, uint8_t* norms):
-		PhraseScorer(weight, tps, positions, similarity, norms){
+		int32_t* offsets, Similarity* similarity, uint8_t* norms):
+		PhraseScorer(weight, tps, offsets, similarity, norms){
 	//Func - Constructor
 	//Pre  - tps != NULL
 	//       tpsLength >= 0
@@ -42,6 +42,8 @@ CL_NS_DEF(search)
 		CND_PRECONDITION(pq->size()==0,"pq is not empty");
 
 		//build pq from list
+		pq->clear();
+
 
 		//Add the nodes of the list of PhrasePositions and store them
 		//into the PhraseQueue pq so it can used to build
@@ -64,10 +66,10 @@ CL_NS_DEF(search)
 		//Initialize freq at 0
 		int32_t freq = 0;
 
-		//find position with all terms
-		do {
-			//scan forward in first
-			while (first->position < last->position){
+		// for counting how many times the exact phrase is found in current document,
+		// just count how many times all PhrasePosition's have exactly the same position.   
+		do {		//find position with all terms
+			while (first->position < last->position){	//scan forward in first
 				do{
 					if (!first->nextPosition()){
 						return (float_t)freq;

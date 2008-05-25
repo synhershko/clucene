@@ -27,6 +27,7 @@ CL_NS_DEF(search)
 	  FuzzyQuery(const FuzzyQuery& clone);
    public:
 	  static float_t defaultMinSimilarity;
+	  static int32_t defaultPrefixLength;
 
      /**
 	* Create a new FuzzyQuery that will match terms with a similarity 

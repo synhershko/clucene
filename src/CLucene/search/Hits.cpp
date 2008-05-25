@@ -11,6 +11,7 @@
 #include "CLucene/index/IndexReader.h"
 #include "Filter.h"
 #include "CLucene/search/SearchHeader.h"
+#include "CLucene/search/IndexSearcher.h"
 
 CL_NS_USE(document)
 CL_NS_USE(util)
@@ -54,14 +55,27 @@ CL_NS_DEF(search)
 		last    = NULL;
 		numDocs = 0;
 		maxDocs = 200;
+		nDeletedHits = 0;
+		debugCheckedForDeletions = false; // for test purposes.
+		nDeletions = countDeletions(s);
 
 		//retrieve 100 initially
 		getMoreDocs(50);
+
+		_lengthAtStart = _length;
 	}
 
-	Hits::~Hits(){
+	Hits::~Hits(){ }
 
+	// count # deletions, return -1 if unknown.
+	int32_t Hits::countDeletions(CL_NS(search)::Searcher* s) {
+		int32_t cnt = -1;
+		if ( s->getClassName() == _T("IndexSearcher") ) {
+			cnt = s->maxDoc() - dynamic_cast<IndexSearcher*>(s)->getReader()->numDocs(); 
+		} 
+		return cnt;
 	}
+
 	int32_t Hits::length() const {
 		return _length;
 	}
@@ -113,31 +127,63 @@ CL_NS_DEF(search)
 		_length = topDocs->totalHits;
 		ScoreDoc* scoreDocs = topDocs->scoreDocs;
 		int32_t scoreDocsLength = topDocs->scoreDocsLength;
-
 		float_t scoreNorm = 1.0f;
+
 		//Check that scoreDocs is a valid pointer before using it
 		if (scoreDocs != NULL){
 			if (_length > 0 && scoreDocs[0].score > 1.0f){
 				scoreNorm = 1.0f / scoreDocs[0].score;
 			}
 
-			int32_t end = scoreDocsLength < _length ? scoreDocsLength : _length;
-			for (int32_t i = hitDocs.size(); i < end; i++) {
-				hitDocs.push_back(_CLNEW HitDoc(scoreDocs[i].score*scoreNorm, scoreDocs[i].doc));
+			int32_t start = hitDocs.size() - nDeletedHits;
+
+			// any new deletions?
+			int32_t nDels2 = countDeletions(searcher);
+			debugCheckedForDeletions = false;
+			if (nDeletions < 0 || nDels2 > nDeletions) { 
+				// either we cannot count deletions, or some "previously valid hits" might have been deleted, so find exact start point
+				nDeletedHits = 0;
+				debugCheckedForDeletions = true;
+				int32_t i2 = 0;
+				for (size_t i1=0; i1<hitDocs.size() && i2 < scoreDocsLength; i1++) {
+					int32_t id1 = static_cast<HitDoc*>(hitDocs[i1])->id;
+					int32_t id2 = scoreDocs[i2].doc;
+					if (id1 == id2) {
+						i2++;
+					} else {
+						nDeletedHits++;
+					}
+				}
+				start = i2;
 			}
+
+			int32_t end = scoreDocsLength < _length ? scoreDocsLength : _length;
+			_length += nDeletedHits;
+			//for (size_t i = hitDocs.size(); i < end; i++) {
+			for (int32_t i = start; i < end; i++) {
+				hitDocs.push_back(_CLNEW HitDoc(scoreDocs[i].score * scoreNorm, scoreDocs[i].doc));
+			}
+
+			nDeletions = nDels2;
 		}
 
 		_CLDELETE(topDocs);
 	}
 
 	HitDoc* Hits::getHitDoc(const size_t n){
-		if (n >= _length){
+		if (n >= _lengthAtStart){
 		    TCHAR buf[100];
             _sntprintf(buf, 100,_T("Not a valid hit number: %d"),n);
 			_CLTHROWT(CL_ERR_IndexOutOfBounds, buf );
 		}
 		if (n >= hitDocs.size())
 			getMoreDocs(n);
+
+		if (n >= _length) {
+		    TCHAR buf[100];
+            _sntprintf(buf, 100,_T("Not a valid hit number: %d"),n);
+			_CLTHROWT(CL_ERR_ConcurrentModification, buf );
+		}
 
 		return hitDocs[n];
 	}

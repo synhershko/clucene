@@ -166,7 +166,7 @@ CL_NS_DEF(search)
 	void PhraseQuery::getPositions(Array<int32_t>& result) const{
 		result.length = positions.size();
 		result.values = _CL_NEWARRAY(int32_t,result.length);
-		for(int32_t i = 0; i < result.length; i++){
+		for(size_t i = 0; i < result.length; i++){
 			result.values[i] = positions[i];
 		}
 	}
@@ -430,7 +430,7 @@ CL_NS_DEF(search)
    Explanation* tfExpl = _CLNEW Explanation;
    scorer(reader)->explain(doc, tfExpl);
    fieldExpl->addDetail(tfExpl);
-   fieldExpl->addDetail(idfExpl);
+   fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
 
    Explanation* fieldNormExpl = _CLNEW Explanation();
    uint8_t* fieldNorms = reader->norms(_this->field);
@@ -448,14 +448,14 @@ CL_NS_DEF(search)
                       idfExpl->getValue() *
                       fieldNormExpl->getValue());
    
-   result->addDetail(fieldExpl);
-
-   // combine them
-   result->setValue(queryExpl->getValue() * fieldExpl->getValue());
-
    if (queryExpl->getValue() == 1.0f){
      result->set(*fieldExpl);
      _CLDELETE(fieldExpl);
+   } else {
+	   result->addDetail(fieldExpl);
+
+	   // combine them
+	   result->setValue(queryExpl->getValue() * fieldExpl->getValue());
    }
  }
 

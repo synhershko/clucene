@@ -25,6 +25,8 @@
 #define CL_ERR_RAMTransaction 11
 #define CL_ERR_InvalidCast 12
 #define CL_ERR_IllegalState 13
+#define CL_ERR_UnknownOperator 14
+#define CL_ERR_ConcurrentModification 15
 
 
 

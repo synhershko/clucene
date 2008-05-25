@@ -18,7 +18,7 @@ CL_NS_DEF(search)
 
 
 	PhraseScorer::PhraseScorer(Weight* weight, TermPositions** tps, 
-		int32_t* positions, Similarity* similarity, uint8_t* norms):
+		int32_t* offsets, Similarity* similarity, uint8_t* norms):
 		Scorer(similarity)
 	{
 	//Func - Constructor
@@ -43,10 +43,14 @@ CL_NS_DEF(search)
 		first   = NULL;
 		last    = NULL;
 
-		//use pq to build a sorted list of PhrasePositions
+		// use pq to build a sorted list of PhrasePositions
+		// note: phrase-position differs from term-position in that its position
+		// reflects the phrase offset: pp.pos = tp.pos - offset.
+		// this allows to easily identify a matching (exact) phrase 
+		// when all PhrasePositions have exactly the same position.
 		int32_t i = 0;
 		while(tps[i] != NULL){
-			PhrasePositions *pp = _CLNEW PhrasePositions(tps[i], positions[i]);
+			PhrasePositions *pp = _CLNEW PhrasePositions(tps[i], offsets[i]);
 			CND_CONDITION(pp != NULL,"Could not allocate memory for pp");
 
 			//Store PhrasePos into the PhrasePos pq
@@ -113,6 +117,7 @@ CL_NS_DEF(search)
 	}
 
 	bool PhraseScorer::skipTo(int32_t target) {
+		firstTime = false;
 		for (PhrasePositions* pp = first; more && pp != NULL; pp = pp->_next) {
 			more = pp->skipTo(target);
 		}

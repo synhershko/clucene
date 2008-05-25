@@ -27,13 +27,13 @@ CL_NS_DEF(search)
 	{
     }
 
-	BooleanQuery::BooleanQuery( bool disableCoord )
-	{
-		BooleanQuery();
-		this->minNrShouldMatch = 0;
-		this->disableCoord = disableCoord;
-	}
-	
+		BooleanQuery::BooleanQuery( bool disableCoord )
+		{
+			BooleanQuery();
+			this->minNrShouldMatch = 0;
+			this->disableCoord = disableCoord;
+		}
+
 	BooleanQuery::BooleanQuery(const BooleanQuery& clone):
 		Query(clone)
 	{
@@ -48,7 +48,7 @@ CL_NS_DEF(search)
     BooleanQuery::~BooleanQuery(){
 		clauses.clear();
     }
-    
+
 	size_t BooleanQuery::hashCode() const {
 		//todo: do cachedHashCode, and invalidate on add/remove clause
 		size_t ret = 0;
@@ -80,15 +80,25 @@ CL_NS_DEF(search)
 	   BooleanQuery::maxClauseCount = maxClauseCount;
    }
 
-  Similarity* BooleanQuery::getSimilarity( Searcher* searcher ) {
-	  
-	Similarity* result = Query::getSimilarity( searcher );
-	return result;
-	
-  }
-  
+   Similarity* BooleanQuery::getSimilarity( Searcher* searcher ) {
+
+	   Similarity* result = Query::getSimilarity( searcher );
+	   return result;
+
+   }
+
   void BooleanQuery::add(Query* query, const bool deleteQuery, const bool required, const bool prohibited) {
 		BooleanClause* bc = _CLNEW BooleanClause(query,deleteQuery,required, prohibited);
+		try{
+			add(bc);
+		}catch(...){
+			_CLDELETE(bc);
+			throw;
+		}
+  }
+
+  void BooleanQuery::add(Query* query, const bool deleteQuery, BooleanClause::Occur occur) {
+		BooleanClause* bc = _CLNEW BooleanClause(query,deleteQuery,occur);
 		try{
 			add(bc);
 		}catch(...){
@@ -104,12 +114,13 @@ CL_NS_DEF(search)
     clauses.push_back(clause);
   }
 
+ 
   bool BooleanQuery::useScorer14 = false;
-  
+
   bool BooleanQuery::getUseScorer14() {
 	  return useScorer14;
   }
-  
+
   void BooleanQuery::setUseScorer14( bool use14 ) {
 	  useScorer14 = use14;
   }
@@ -131,16 +142,16 @@ CL_NS_DEF(search)
       else if (c->required)
         buffer.append(_T("+"));
 
-      if ( c->query->instanceOf(BooleanQuery::getClassName()) ) {	  // wrap sub-bools in parens
+      if ( c->getQuery()->instanceOf(BooleanQuery::getClassName()) ) {	  // wrap sub-bools in parens
         buffer.append(_T("("));
 
-        TCHAR* buf = c->query->toString(field);
+        TCHAR* buf = c->getQuery()->toString(field);
         buffer.append(buf);
         _CLDELETE_CARRAY( buf );
 
         buffer.append(_T(")"));
       } else {
-        TCHAR* buf = c->query->toString(field);
+        TCHAR* buf = c->getQuery()->toString(field);
         buffer.append(buf);
         _CLDELETE_CARRAY( buf );
       }
@@ -176,12 +187,12 @@ CL_NS_DEF(search)
          if (clauses.size() == 1) {                    // optimize 1-clause queries
             BooleanClause* c = clauses[0];
             if (!c->prohibited) {			  // just return clause
-				Query* query = c->query->rewrite(reader);    // rewrite first
+				Query* query = c->getQuery()->rewrite(reader);    // rewrite first
 
 				//if the query doesn't actually get re-written,
 				//then return a clone (because the BooleanQuery
 				//will register different to the returned query.
-				if ( query == c->query )
+				if ( query == c->getQuery() )
 					query = query->clone();
 
 				if (getBoost() != 1.0f) {                 // incorporate boost
@@ -195,8 +206,8 @@ CL_NS_DEF(search)
          BooleanQuery* clone = NULL;                    // recursively rewrite
 		 for (uint32_t i = 0 ; i < clauses.size(); i++) {
             BooleanClause* c = clauses[i];
-            Query* query = c->query->rewrite(reader);
-            if (query != c->query) {                     // clause rewrote: must clone
+            Query* query = c->getQuery()->rewrite(reader);
+            if (query != c->getQuery()) {                     // clause rewrote: must clone
                if (clone == NULL)
                   clone = (BooleanQuery*)this->clone();
 			   //todo: check if delete query should be on...
@@ -238,15 +249,15 @@ CL_NS_DEF(search)
 
 
 
-	BooleanQuery::BooleanWeight::BooleanWeight(Searcher* searcher,
-		CLVector<BooleanClause*,Deletor::Object<BooleanClause> >* clauses, BooleanQuery* parentQuery)
+	BooleanQuery::BooleanWeight::BooleanWeight(Searcher* searcher, 
+		CLVector<BooleanClause*,Deletor::Object<BooleanClause> >* clauses, BooleanQuery* parentQuery) 
 	{
 		this->searcher = searcher;
 		this->similarity = parentQuery->getSimilarity( searcher );
 		this->parentQuery = parentQuery;
 		this->clauses = clauses;
 		for (uint32_t i = 0 ; i < clauses->size(); i++) {
-			weights.push_back((*clauses)[i]->query->_createWeight(searcher));
+			weights.push_back((*clauses)[i]->getQuery()->_createWeight(searcher));
 		}
 	}
 	BooleanQuery::BooleanWeight::~BooleanWeight(){
@@ -289,7 +300,7 @@ CL_NS_DEF(search)
 			BooleanClause* c = (*clauses)[i];
 			if (!c->required)
 			  allRequired = false;
-			if (c->query->instanceOf(BooleanQuery::getClassName()))
+			if (c->getQuery()->instanceOf(BooleanQuery::getClassName()))
 			  noneBoolean = false;
 		  }
 	  }
@@ -391,15 +402,15 @@ CL_NS_DEF(search)
 		Searcher* searcher,
 		CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses,
 		BooleanQuery* parentQuery 
-	): BooleanQuery::BooleanWeight( searcher, clauses, parentQuery )
+		): BooleanQuery::BooleanWeight( searcher, clauses, parentQuery )
 	{		
 	}
-	
+
 	Scorer* BooleanQuery::BooleanWeight2::scorer( CL_NS(index)::IndexReader* reader )
 	{
 		BooleanScorer2* result = _CLNEW BooleanScorer2( similarity, parentQuery->minNrShouldMatch, false );
-		
-		for ( int32_t i = 0; i < weights.size(); i++ ) {
+
+		for ( size_t i = 0; i < weights.size(); i++ ) {
 			BooleanClause* c = (*clauses)[i];
 			Weight* w = (Weight*)weights[i];
 			Scorer* subScorer = w->scorer( reader );
@@ -409,9 +420,9 @@ CL_NS_DEF(search)
 				return NULL;
 			}
 		}
-		
+
 		return result;
-		
+
 	}
 
 CL_NS_END

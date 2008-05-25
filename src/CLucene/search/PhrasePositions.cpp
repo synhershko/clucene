@@ -12,7 +12,7 @@
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-  PhrasePositions::PhrasePositions(TermPositions* Tp, const int32_t OffSet){
+PhrasePositions::PhrasePositions(TermPositions* Tp, const int32_t OffSet) {
   //Func - Constructor
   //Pre  - t != NULL
   //       OffSet != NULL
@@ -93,6 +93,12 @@ CL_NS_DEF(search)
 	  nextPosition();
   }
 
+  /**
+  * Go to next location of this term current document, and set 
+  * <code>position</code> as <code>location - offset</code>, so that a 
+  * matching exact phrase is easily identified when all PhrasePositions 
+  * have exactly the same <code>position</code>.
+  */
   bool PhrasePositions::nextPosition(){
   //Func - Move to the next position
   //Pre  - tp != NULL

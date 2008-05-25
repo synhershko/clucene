@@ -63,6 +63,10 @@ public:
 
 	Query* rewrite(Query* original);
 	void explain(Query* query, int32_t doc, Explanation* ret);
+
+	virtual const TCHAR* getClassName(){
+		return _T("IndexSearcher");
+	}
 };
 CL_NS_END
 #endif
