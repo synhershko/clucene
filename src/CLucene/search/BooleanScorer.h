@@ -75,6 +75,9 @@ CL_NS_DEF(search)
 
       	int32_t end;
 		Bucket* current;
+		
+		int32_t minNrShouldMatch;
+		
 	public:
 		LUCENE_STATIC_CONSTANT(int32_t,BucketTable_SIZE=1024);
 		int32_t requiredMask;
@@ -82,15 +85,21 @@ CL_NS_DEF(search)
 		float_t* coordFactors;
 
     	BooleanScorer(Similarity* similarity);
+    	BooleanScorer( Similarity* similarity, int32_t minNrShouldMatch );
 		~BooleanScorer();
 		void add(Scorer* scorer, const bool required, const bool prohibited);
 		int32_t doc() const { return current->doc; }
 		bool next();
 		float_t score();
+		void score( HitCollector* hc );
 		bool skipTo(int32_t target);
 		void explain(int32_t doc, Explanation* ret);
 		TCHAR* toString();
 		void computeCoordFactors();
+		
+	protected:
+		bool score( HitCollector* hc, const int32_t max );
+		
 	};
 
 

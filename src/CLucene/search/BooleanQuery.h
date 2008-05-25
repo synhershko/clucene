@@ -18,6 +18,7 @@
 #include "BooleanClause.h"
 #include "BooleanScorer.h"
 #include "Scorer.h"
+#include "Similarity.h"
 
 CL_NS_DEF(search)
 
@@ -30,15 +31,21 @@ CL_NS_DEF(search)
 	private:
 		BooleanQuery::ClausesType clauses;
 		static size_t maxClauseCount;
-
+		static bool useScorer14;
+		
+		LUCENE_STATIC_CONSTANT(bool, allowDocsOutOfOrder=false);
+		
+		bool disableCoord;
+		
 		class BooleanWeight: public Weight {
-		private:
+		protected:
 			Searcher* searcher;
+			Similarity* similarity;
 			CL_NS(util)::CLVector<Weight*,CL_NS(util)::Deletor::Object<Weight> > weights;
 			ClausesType* clauses;
 			BooleanQuery* parentQuery;
 		public:
-			BooleanWeight(Searcher* searcher, 
+			BooleanWeight(Searcher* searcher,
 				CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses, 
 				BooleanQuery* parentQuery);
 			~BooleanWeight();
@@ -49,15 +56,34 @@ CL_NS_DEF(search)
 			Scorer* scorer(CL_NS(index)::IndexReader* reader);
 			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
 		};//booleanweight
-
+		friend class BooleanQuery::BooleanWeight;
+		
+		class BooleanWeight2: public BooleanWeight {
+		public:
+			BooleanWeight2( Searcher* searcher, CL_NS(util)::CLVector<BooleanClause*,CL_NS(util)::Deletor::Object<BooleanClause> >* clauses, BooleanQuery* parentQuery );
+			Scorer* scorer( CL_NS(index)::IndexReader* reader );
+		};
+		friend class BooleanQuery::BooleanWeight2;
+		
     protected:
+      int32_t minNrShouldMatch;
+      
       Weight* _createWeight(Searcher* searcher) {
-         return _CLNEW BooleanWeight(searcher,&clauses,this);
+    	 if ( 0 < minNrShouldMatch ) {
+    		 return _CLNEW BooleanWeight2( searcher, &clauses, this );
+    	 }
+    	 
+    	 return getUseScorer14() ? (Weight*) _CLNEW BooleanWeight( searcher, &clauses, this )
+    	                         : (Weight*) _CLNEW BooleanWeight2( searcher, &clauses, this );
+    	 
       }
+      
       BooleanQuery(const BooleanQuery& clone);
 	public:
     /** Constructs an empty boolean query. */
-        BooleanQuery();
+		BooleanQuery();
+		
+        BooleanQuery( bool disableCoord );
         
         ~BooleanQuery();
         
@@ -116,6 +142,14 @@ CL_NS_DEF(search)
 		Query* clone() const;
 		bool equals(Query* o) const;
 			
+		Similarity* getSimilarity( Searcher* searcher );
+		
+		bool isCoordDisabled() { return disableCoord; }
+		void setCoordDisabled( bool disableCoord ) { this->disableCoord = disableCoord; }
+		
+		static bool getUseScorer14();
+		static void setUseScorer14( bool use14 );
+		
 	  	/** Prints a user-readable version of this query. */
 		TCHAR* toString(const TCHAR* field) const;
 		/** Returns a hash code value for this object.*/

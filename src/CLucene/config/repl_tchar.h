@@ -33,6 +33,7 @@
     #define _tcscpy wcscpy //copy a string to another string
     #define _tcsncpy wcsncpy //copy a specified amount of one string to another string.
     #define _tcscat wcscat //copy a string onto the end of the other string
+	#define _tcsncat wcsncat
     #define _tcschr wcschr //find location of one character
     #define _tcsstr wcsstr //find location of a string
     #define _tcslen wcslen //get length of a string
@@ -74,6 +75,7 @@
     #define _tcscpy strcpy
     #define _tcsncpy strncpy
     #define _tcscat strcat
+	#define _tcsncat strncat
     #define _tcschr strchr
     #define _tcsstr strstr
     #define _tcslen strlen

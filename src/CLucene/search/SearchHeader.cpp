@@ -23,6 +23,8 @@ CL_NS(document)::Document* Searchable::doc(const int32_t i){
 Query* Query::mergeBooleanQueries(Query** queries) {
     CL_NS(util)::CLVector<BooleanClause*> allClauses;
     int32_t i = 0;
+    int32_t queriesLength = 0;
+    
     while ( queries[i] != NULL ){
 		BooleanQuery* bq = (BooleanQuery*)queries[i];
 		
@@ -36,9 +38,12 @@ Query* Query::mergeBooleanQueries(Query** queries) {
 		}
 		_CLDELETE_ARRAY(clauses);
 		i++;
+		queriesLength++;
     }
 
-    BooleanQuery* result = _CLNEW BooleanQuery();
+    bool coordDisabled = ( queriesLength == 0 ) ? false : ((BooleanQuery*)queries[0])->isCoordDisabled();
+    BooleanQuery* result = _CLNEW BooleanQuery(coordDisabled);
+    
     CL_NS(util)::CLVector<BooleanClause*>::iterator itr = allClauses.begin();
     while (itr != allClauses.end() ) {
 		result->add(*itr);

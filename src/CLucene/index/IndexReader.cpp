@@ -87,20 +87,23 @@ CL_NS_DEF(index)
   //Post - An IndexReader has been returned that reads the index located at directory
 
 	  // in- & inter-process sync
-      SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+      //SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
       
      IndexReader* ret = NULL;     
 
-	  LuceneLock* lock = directory->makeLock("commit.lock");
-
+	 //LuceneLock* lock = directory->makeLock("commit.lock");
+     
 	  //Instantiate an IndexReader::LockWith which can produce an IndexReader
-      IndexReader::LockWith with(lock,directory);
+      //IndexReader::LockWith with(lock,directory);
 
+     SegmentInfos::FindSegmentsReader find(directory);
+     
 	  try{
 	  //Create an IndexReader reading the index
-		ret = with.runAndReturn();
+		//ret = with.runAndReturn();
+        ret = (IndexReader*)find.run();
 	  }_CLFINALLY(
-        _CLDELETE( lock );
+        //_CLDELETE( lock );
 	  );
 
 	  ret->closeDirectory = closeDirectory;
@@ -184,19 +187,18 @@ CL_NS_DEF(index)
   }
 
   int64_t IndexReader::getCurrentVersion(Directory* directory) {
-	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)                 // in- & inter-process sync
-	LuceneLock* commitLock=directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-	bool locked=false;
+//	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)                 // in- & inter-process sync
+//	LuceneLock* commitLock=directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
+//	bool locked=false;
 	int64_t ret = 0;
-	try {
-		locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
+//	try {
+//		locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
 		ret = SegmentInfos::readCurrentVersion(directory);
-	}_CLFINALLY(
-		if (locked) {
-			commitLock->release();
-		}
-		_CLDELETE(commitLock);
-	)
+//	}_CLFINALLY(
+//		if (locked) {
+//			commitLock->release();
+//		}
+//	)
 	return ret;
   }
 
@@ -213,18 +215,18 @@ CL_NS_DEF(index)
 	}
 	
 	bool IndexReader::isCurrent() {
-		SCOPED_LOCK_MUTEX(directory->THIS_LOCK)                 // in- & inter-process sync
-		LuceneLock* commitLock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-		bool locked=false;
+//		SCOPED_LOCK_MUTEX(directory->THIS_LOCK)                 // in- & inter-process sync
+//		LuceneLock* commitLock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
+//		bool locked=false;
 		bool ret = false;
-		try {
-			locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
+//		try {
+//			locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
 			ret = SegmentInfos::readCurrentVersion(directory) == segmentInfos->getVersion();
-		} _CLFINALLY(
-			if (locked) {
-				commitLock->release();
-			}
-		)
+//		} _CLFINALLY(
+//			if (locked) {
+//				commitLock->release();
+//			}
+//		)
 		return ret;
 	}
 

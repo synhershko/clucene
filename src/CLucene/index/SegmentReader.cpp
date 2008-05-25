@@ -22,6 +22,23 @@ CL_NS_DEF(index)
 
  SegmentReader::Norm::Norm(IndexInput* instrm, int32_t n, SegmentReader* r, const char* seg): 
 	number(n), 
+	normSeek(0),
+	reader(r), 
+	segment(seg), 
+	in(instrm),
+	bytes(NULL), 
+	dirty(false){
+  //Func - Constructor
+  //Pre  - instrm is a valid reference to an IndexInput
+  //Post - A Norm instance has been created with an empty bytes array
+
+	 bytes = NULL;
+     dirty = false;
+  }
+
+ SegmentReader::Norm::Norm(IndexInput* instrm, int32_t n, int64_t ns, SegmentReader* r, const char* seg): 
+	number(n), 
+	normSeek(ns),
 	reader(r), 
 	segment(seg), 
 	in(instrm),
@@ -43,7 +60,8 @@ CL_NS_DEF(index)
 
       //Close and destroy the inputstream in-> The inputstream will be closed
       // by its destructor. Note that the IndexInput 'in' actually is a pointer!!!!!  
-      _CLDELETE(in);
+      if ( in != reader->singleNormStream )
+    	  _CLDELETE(in);
 
 	  //Delete the bytes array
       _CLDELETE_ARRAY(bytes);
@@ -100,6 +118,7 @@ CL_NS_DEF(index)
 
 	  //Duplicate the name of the segment from SegmentInfo to segment
       segment          = STRDUP_AtoA(si->name);
+      
 	  // make sure that all index files have been read or are kept open
       // so that if an index update removes them we'll still have them
       freqStream       = NULL;
@@ -114,8 +133,9 @@ CL_NS_DEF(index)
       if (cfsDir->fileExists(buf)) {
          cfsReader = _CLNEW CompoundFileReader(cfsDir, buf);
          cfsDir = cfsReader;
-	  }else
+	  }else {
 		 cfsReader = NULL;
+	  }
 
 	  //Create the name of the field info file with suffix .fnm in buf
       SegmentName(buf, CL_MAX_PATH, ".fnm");
@@ -184,12 +204,15 @@ CL_NS_DEF(index)
 	  //Open the norm file. There's a norm file for each indexed field with a byte for each document. 
 	  //The .f[0-9]* file contains, for each document, a byte that encodes a value 
 	  //that is multiplied into the score for hits on that field
+      hasSingleNorm = si->hasSingleNorm;
+      singleNormStream = NULL;
       openNorms(cfsDir);
 
       if (fieldInfos->hasVectors()) { // open term vector files only as needed
          termVectorsReaderOrig = _CLNEW TermVectorsReader(cfsDir, segment, fieldInfos);
       }else
 		 termVectorsReaderOrig = NULL;
+            
   }
 
   SegmentReader::~SegmentReader(){
@@ -697,6 +720,9 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
   //Post - For each field a norm instance has been created with an open inputstream to
   //       a corresponding norm file ready to be read
 
+	  int64_t nextNormSeek = 0;
+	  int32_t max = maxDoc();
+	  
       //Iterate through all the fields
       for (int32_t i = 0; i < fieldInfos->size(); i++) {
 		  //Get the FieldInfo for the i-th field
@@ -714,7 +740,28 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 				d = cfsDir;
 			  }
              
-			  _norms.put(fi->name, _CLNEW Norm( d->openInput( fileName ),fi->number, this, segment ));
+			  IndexInput* normInput = NULL;
+			  int64_t normSeek;
+			  
+			  if ( hasSingleNorm == 1 ) {
+				  
+				  normSeek = nextNormSeek;
+				  SegmentName( fileName, CL_MAX_PATH, ".nrm" );
+				  if ( singleNormStream == NULL ) {
+					  singleNormStream = d->openInput( fileName );
+				  }
+				  normInput = singleNormStream;
+				  
+			  } else {
+				  
+				  normSeek = 0;
+				  normInput = d->openInput( fileName );
+				  
+			  }
+			  
+			  _norms.put(fi->name, _CLNEW Norm( normInput, fi->number, normSeek, this, segment ));
+			  normSeek += max;
+			  
           }
       }
   }
@@ -738,6 +785,10 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
         ++itr;
      }
     _norms.clear(); //bvk: they're deleted, so clear them so that they are not re-used
+    if ( singleNormStream != NULL ) {
+    	singleNormStream->close();
+    	_CLDELETE(singleNormStream);
+    }
   }
 
 

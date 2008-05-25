@@ -11,25 +11,47 @@
 # pragma once
 #endif
 
+#include "IndexReader.h"
+
 #include "CLucene/util/VoidList.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
 
 CL_NS_DEF(index)
 
 	class SegmentInfo :LUCENE_BASE{
 	private:
 		//Directory where the segment resides
-		CL_NS(store)::Directory* dir;		
+		CL_NS(store)::Directory* dir;
+		
 	public:
+		
+		static const int32_t NO = -1;
+		static const int32_t YES = 1;
+		static const int32_t CHECK_DIR = 0;
+		static const int32_t WITHOUT_GEN = 0;
+		
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } 
 
     	//Unique name in directory dir
 		char name[CL_MAX_NAME];	
 		//Number of docs in the segment
-		const int32_t docCount;						  
+		const int32_t docCount;						  					
 
+		// before lock-less commits
+		const bool preLockless;
+		// generation of each field's norm file
+		const int64_t *normGen;
+		// generation count of the deletes file
+		const int64_t delGen;
+		// single norm file flag
+		const bool hasSingleNorm;
+		// compound file flag
+		const uint8_t isCompoundFile;
+		
 		SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir);
+		SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen, const int64_t* NormGen, const uint8_t IsCompoundFile, const bool HasSingleNorm, const bool PreLockless );
 
 		~SegmentInfo();
 	};
@@ -65,11 +87,22 @@ CL_NS_DEF(index)
   //Format, SegCount, SegSize --> UInt32        
   //      
   //Format and Version have not been implemented yet
+	
+	class IndexReader;
+	
 	class SegmentInfos: LUCENE_BASE {
 		/** The file format version, a negative number. */
 		/* Works since counter, the old 1st entry, is always >= 0 */
 		LUCENE_STATIC_CONSTANT(int32_t,FORMAT=-1);
-
+		LUCENE_STATIC_CONSTANT(int32_t,FORMAT_LOCKLESS=-2);
+		LUCENE_STATIC_CONSTANT(int32_t,FORMAT_SINGLE_NORM_FILE=-3);
+		
+		LUCENE_STATIC_CONSTANT(int32_t,CURRENT_FORMAT=FORMAT_SINGLE_NORM_FILE);
+		
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryCount=10);
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryPauseMsec=50);
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenLookaheadCount=10);
+		
 		/**
 		* counts how often the index has been changed by adding or deleting docs.
 		* starting with the current time in milliseconds forces to create unique version numbers.
@@ -80,6 +113,10 @@ CL_NS_DEF(index)
 		
         int32_t counter;  // used to name new segments
 		friend class IndexWriter; //allow IndexWriter to use counter
+		
+		int64_t generation;
+		int64_t lastGeneration;
+		
     public:
         SegmentInfos(bool deleteMembers=true);
         ~SegmentInfos();
@@ -102,11 +139,53 @@ CL_NS_DEF(index)
 		
 		static int64_t readCurrentVersion(CL_NS(store)::Directory* directory);
 
-		  //Reads segments file that resides in directory
-		  void read(CL_NS(store)::Directory* directory);
+		//Reads segments file that resides in directory
+		void read(CL_NS(store)::Directory* directory);
+		void read(CL_NS(store)::Directory* directory, const char* segmentFileName);
 
-	  //Writes a new segments file based upon the SegmentInfo instances it manages
-      void write(CL_NS(store)::Directory* directory);
+	    //Writes a new segments file based upon the SegmentInfo instances it manages
+        void write(CL_NS(store)::Directory* directory);
+        
+        static int64_t getCurrentSegmentGeneration( char** files );        
+        static int64_t getCurrentSegmentGeneration( CL_NS(store)::Directory* directory );
+        
+        static const char* getCurrentSegmentFileName( char** files );        
+        static const char* getCurrentSegmentFileName( CL_NS(store)::Directory* directory );
+        
+        const char* getCurrentSegmentFileName();
+        
+        static int64_t generationFromSegmentsFileName( const char* fileName );
+        
+        const char* getNextSegmentFileName();
+        
+    	class FindSegmentsFile: LUCENE_BASE {
+    	protected:
+    		CL_NS(store)::Directory* directory;    		    	
+    		
+    	public:
+    		FindSegmentsFile( CL_NS(store)::Directory* dir );    		
+    		~FindSegmentsFile();    			
+    		
+    		void* run();    		
+    		virtual void* doBody( const char* segmentFileName ) = 0;
+    		
+    	};
+    	friend class SegmentInfos::FindSegmentsFile;
+    	
+    	class FindSegmentsReader: public FindSegmentsFile {
+    	public:
+    		FindSegmentsReader( CL_NS(store)::Directory* dir );
+    		void* doBody( const char* segmentFileName );
+    	};
+    	friend class SegmentInfos::FindSegmentsReader;
+    	
+    	class FindSegmentsVersion: public FindSegmentsFile {
+    	public:
+    		FindSegmentsVersion( CL_NS(store)::Directory* dir );
+    		void* doBody( const char* segmentFileName );
+    	};
+    	friend class SegmentInfos::FindSegmentsVersion;
+    	
   };
 CL_NS_END
 #endif

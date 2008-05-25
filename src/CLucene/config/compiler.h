@@ -133,6 +133,9 @@
 #define LUCENE_INT32_MAX_SHOULDBE 0x7FFFFFFFL
 #define LUCENE_UINT8_MAX_SHOULDBE 0xff
 
+// max float
+#define LUCENE_FLOAT_MAX_SHOULDBE 0x7F7FFFFFL
+
 //maximum path length. only used for buffers that use fullpath.
 //anything else should use a dynamic length.
 #if defined(CL_MAX_PATH)
@@ -150,9 +153,9 @@
 //this is the max filename... for now its just the same,
 //but this could change, so we use a different name
 #define CL_MAX_NAME CL_MAX_PATH
-//todo: this is a temporary fix for a potential buffer overflow...
-//should never use this
-#define CL_MAX_DIR CL_MAX_PATH*32
+//this used to be CL_MAX_NAME * 32, but as Alex Hudson points out, this could come to be 128kb.
+//the above logic for CL_MAX_NAME should be correct enough to handle all file names
+#define CL_MAX_DIR CL_MAX_PATH
 
 #ifdef _LARGE_FILES
     #define LUCENE_MAX_FILELENGTH LUCENE_INT64_MAX_SHOULDBE

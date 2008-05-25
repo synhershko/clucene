@@ -26,6 +26,12 @@ CL_NS_DEF(util)
 		   virtual ~_Arrays(){
 		   }
 
+		   	static void fill( _type* a, int32_t alen, _type value ) {
+		   		for ( int32_t i = 0; i < alen; i++ ) {
+		   			a[i] = value;
+		   		}
+		   	}
+		   	
 			void sort(_type* a, int32_t alen, int32_t fromIndex, int32_t toIndex) const{
 				CND_PRECONDITION(fromIndex < toIndex,"fromIndex >= toIndex");
 				CND_PRECONDITION(fromIndex >= 0,"fromIndex < 0");

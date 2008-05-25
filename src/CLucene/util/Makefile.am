@@ -10,6 +10,7 @@ libclucene_la_SOURCES        += $(utildir)/fileinputstream.cpp
 libclucene_la_SOURCES        += $(utildir)/MD5Digester.cpp
 libclucene_la_SOURCES        += $(utildir)/Misc.cpp
 libclucene_la_SOURCES        += $(utildir)/Reader.cpp
+libclucene_la_SOURCES        += $(utildir)/ScorerDocQueue.cpp
 libclucene_la_SOURCES        += $(utildir)/StringBuffer.cpp
 libclucene_la_SOURCES        += $(utildir)/StringIntern.cpp
 libclucene_la_SOURCES        += $(utildir)/ThreadLocal.cpp

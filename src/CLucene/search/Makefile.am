@@ -4,10 +4,12 @@ searchhdir = $(includedir)/CLucene/search
  
 libclucene_la_SOURCES  += $(searchdir)/BooleanQuery.cpp
 libclucene_la_SOURCES  += $(searchdir)/BooleanScorer.cpp
+libclucene_la_SOURCES  += $(searchdir)/BooleanScorer2.cpp
 libclucene_la_SOURCES  += $(searchdir)/DateFilter.cpp
 libclucene_la_SOURCES  += $(searchdir)/CachingWrapperFilter.cpp
 libclucene_la_SOURCES  += $(searchdir)/ChainedFilter.cpp
 libclucene_la_SOURCES  += $(searchdir)/ConjunctionScorer.cpp
+libclucene_la_SOURCES  += $(searchdir)/DisjunctionSumScorer.cpp
 libclucene_la_SOURCES  += $(searchdir)/ExactPhraseScorer.cpp
 libclucene_la_SOURCES  += $(searchdir)/Explanation.cpp
 libclucene_la_SOURCES  += $(searchdir)/FieldCache.cpp

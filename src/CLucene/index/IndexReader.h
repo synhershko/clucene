@@ -22,6 +22,8 @@
 
 CL_NS_DEF(index)
 
+// Need this forward declaration as IndexReader and SegmentInfos depend on each other
+class SegmentInfos;
 
 /** IndexReader is an abstract class, providing an interface for accessing an
  index.  Search of an index is done entirely through this abstract interface,

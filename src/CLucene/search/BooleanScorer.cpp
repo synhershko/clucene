@@ -14,15 +14,22 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
   BooleanScorer::BooleanScorer(Similarity* similarity):
+	  Scorer(similarity)
+  {
+	BooleanScorer( similarity, 1 );	
+  }
+
+   BooleanScorer::BooleanScorer(Similarity* similarity, int32_t minNrShouldMatch ):
     Scorer(similarity),
     scorers(NULL),
-    maxCoord (1),
-    nextMask (1),
+    maxCoord(1),
+    nextMask(1),
 	end(0),
 	current(NULL),
-    requiredMask (0),
-    prohibitedMask (0),
-	coordFactors (NULL)
+    requiredMask(0),
+    prohibitedMask(0),
+	coordFactors(NULL),
+	minNrShouldMatch(minNrShouldMatch)
   {
     bucketTable = _CLNEW BucketTable(this);
   }
@@ -77,6 +84,11 @@ CL_NS_DEF(search)
 		return current->score * coordFactors[current->coord];
 	}
 
+	void BooleanScorer::score( HitCollector* results ) {
+		next();
+		score( results, LUCENE_INT32_MAX_SHOULDBE );
+	}
+	
 	bool BooleanScorer::skipTo(int32_t target) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::skipTo");
 	}
@@ -125,18 +137,59 @@ CL_NS_DEF(search)
       coordFactors[i] = getSimilarity()->coord(i, maxCoord-1);
   }
 
-  /*void BooleanScorer::score(HitCollector* results, const int32_t maxDoc) {
-    if (coordFactors == NULL)
-    computeCoordFactors();
-
-    while (currentDoc < maxDoc) {
-      currentDoc = (currentDoc+BucketTable_SIZE<maxDoc?currentDoc+BucketTable_SIZE:maxDoc);
-      for (SubScorer* t = scorers; t != NULL; t = t->next)
-        t->scorer->score((t->collector), currentDoc);
-      bucketTable->collectHits(results);
+  bool BooleanScorer::score( HitCollector* results, const int32_t maxDoc ) {
+    if ( coordFactors == NULL ) {
+    	computeCoordFactors();
     }
-  }*/
 
+    bool more;
+    Bucket* tmp;
+    
+    do {
+    	bucketTable->first = NULL;
+    	while ( current != NULL ) {
+    		
+    		if (( current->bits & prohibitedMask ) == 0 &&
+    		    ( current->bits & requiredMask ) == requiredMask ) {
+    			
+    			if ( current->doc >= maxDoc ) {
+    				tmp = current;
+    				current = current->next;
+    				tmp->next = bucketTable->first;
+    				bucketTable->first = tmp;
+    				continue;
+    			}
+    			
+    			if ( current->coord >= minNrShouldMatch ) {
+    				results->collect( current->doc, current->score * coordFactors[current->coord] );
+    			}
+    		}
+    		
+    		current = current->next;
+    	}
+    	
+    	if ( bucketTable->first != NULL ) {
+    		current = bucketTable->first;
+    		bucketTable->first = current->next;
+    		return true;
+    	}
+    	
+    	more = false;
+    	end += BucketTable_SIZE;
+    	
+    	for ( SubScorer* sub = scorers; sub != NULL; sub = sub->next ) {
+    		if ( !sub->done ) {
+    			sub->done = !sub->scorer->score( sub->collector, end );
+    			if ( !sub->done )
+    				more = true;
+    		}
+    	}
+    	current = bucketTable->first;
+    	
+    } while ( current != NULL || more );
+    
+    return false;
+  }
 
 
 

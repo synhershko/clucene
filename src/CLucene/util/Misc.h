@@ -46,6 +46,9 @@ CL_NS_DEF(util)
    * @return The first position where the two strings differ.
    */
 	static int32_t stringDifference(const TCHAR* s1, const int32_t s1Len, const TCHAR* s2, const int32_t s2Len);
+	
+	static char* longToBase( int64_t value, int32_t base );
+	static int64_t base36ToLong( const char* value );	
 
 #ifdef _UCS2
     static size_t whashCode(const wchar_t* str);

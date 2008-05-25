@@ -22,6 +22,8 @@ CL_NS_DEF(store)
    * @see IndexOutput
    */
 	class IndexInput: LUCENE_BASE {
+	private:
+		void skipChars( const int32_t count);
 	protected:
 		IndexInput();
 		IndexInput(const IndexInput& clone);
@@ -107,6 +109,8 @@ CL_NS_DEF(store)
 		virtual int64_t length() = 0;
 		
 		virtual const char* getDirectoryType() const = 0;
+		
+		virtual const char* getObjectName() = 0;
 	};
 	
    /** Abstract base class for input from a file in a {@link Directory}.  A
@@ -149,6 +153,11 @@ CL_NS_DEF(store)
 		void readBytes(uint8_t* b, const int32_t len);
 		int64_t getFilePointer() const;
 		void seek(const int64_t pos);
+
+		void setBufferSize( int32_t newSize );
+		
+		const char* getObjectName(){ return BufferedIndexInput::getClassName(); }
+		static const char* getClassName(){ return "BufferedIndexInput"; }
 
 	protected:
       /** Expert: implements buffer refill.  Reads bytes from the current position

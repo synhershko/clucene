@@ -63,10 +63,8 @@ CL_NS_DEF(index)
     TermInfo* ti=NULL;
     
     // use comparison of fieldinfos to verify that termEnum belongs to the same segment as this SegmentTermDocs
-	if ( termEnum->getObjectName() == SegmentTermEnum::getClassName() ){
-      SegmentTermEnum* te = (SegmentTermEnum*)termEnum;
-      te->fieldInfos = parent->fieldInfos;
-      ti = te->getTermInfo();
+	if ( termEnum->getObjectName() == SegmentTermEnum::getClassName() && ((SegmentTermEnum*)termEnum)->fieldInfos == parent->fieldInfos ){
+      ti = ((SegmentTermEnum*)termEnum)->getTermInfo();
     }else{
       ti = parent->tis->get(termEnum->term(false));
     }

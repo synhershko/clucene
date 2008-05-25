@@ -46,7 +46,7 @@ CL_NS_DEF(search)
 
 	Query* MultiTermQuery::rewrite(IndexReader* reader) {
 		FilteredTermEnum* enumerator = getEnum(reader);
-		BooleanQuery* query = _CLNEW BooleanQuery();
+		BooleanQuery* query = _CLNEW BooleanQuery( true );
 		try {
             do {
                 Term* t = enumerator->term(false);

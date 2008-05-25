@@ -42,6 +42,9 @@ CL_NS_DEF(search)
 		int32_t* getStarts() {
   			return starts;
 		}
+		int32_t getLength() {
+			return searchablesLen;
+		}
 
   public:
       /** Creates a searcher which searches <i>Searchables</i>. */

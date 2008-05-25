@@ -25,6 +25,7 @@ class Scorer: LUCENE_BASE {
       Scorer(Similarity* similarity) {
          this->similarity = similarity;
       }
+
 	public:
 		virtual ~Scorer(){
 		}
@@ -35,10 +36,19 @@ class Scorer: LUCENE_BASE {
       }
 
       /** Scores all documents and passes them to a collector. */
-      void score(HitCollector* hc) {
+      virtual void score(HitCollector* hc) {
          while (next()) {
             hc->collect(doc(), score());
          }
+      }
+
+      virtual bool score( HitCollector* results, int32_t maxDoc ) {
+    	  while( doc() < maxDoc ) {
+    		  results->collect( doc(), score() );
+    		  if ( !next() )
+    			  return false;
+    	  }
+    	  return true;
       }
 
       /** Advance to the next document matching the query.  Returns true iff there

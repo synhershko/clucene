@@ -377,14 +377,17 @@ void MultiTermDocs::seek( Term* tterm) {
 }
 
 bool MultiTermDocs::next() {
-	if (current != NULL && current->next()) {
-	  return true;
-	} else if (pointer < subReadersLength) {
-	  base = starts[pointer];
-	  current = termDocs(pointer++);
-	  return next();
-	} else
-	  return false;
+	for(;;) {
+		if (current != NULL && current->next()) {
+		  return true;
+		} else if (pointer < subReadersLength) {
+		  base = starts[pointer];
+		  current = termDocs(pointer++);
+//		  return next();
+		} else {
+		  return false;
+		}
+	}
 }
 
 int32_t MultiTermDocs::read(int32_t* docs, int32_t* freqs, int32_t length) {
@@ -410,11 +413,21 @@ int32_t MultiTermDocs::read(int32_t* docs, int32_t* freqs, int32_t length) {
 }
 
 bool MultiTermDocs::skipTo(const int32_t target) {
-	do {
-	  if (!next())
-	    return false;
-	} while (target > doc());
-	return true;
+//	do {
+//	  if (!next())
+//	    return false;
+//	} while (target > doc());
+//	return true;
+	for(;;) {
+		if ( current != NULL && current->skipTo(target - base)) {
+			return true;
+		} else if ( pointer < subReadersLength ) {
+			base = starts[pointer];
+			current = termDocs(pointer++);
+		} else {
+			return false;
+		}		
+	}
 }
 
 void MultiTermDocs::close() {
@@ -717,6 +730,5 @@ int32_t MultiTermPositions::nextPosition() {
 	)
 	return curAsTP->nextPosition();
 }
-
 
 CL_NS_END

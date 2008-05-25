@@ -171,7 +171,7 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 			if (severalTokensAtSamePosition) {
 				if (positionCount == 1) {
 					// no phrase query:
-					BooleanQuery* q = _CLNEW BooleanQuery; //todo: disableCoord=true here, but not implemented in BooleanQuery
+					BooleanQuery* q = _CLNEW BooleanQuery( true ); //todo: disableCoord=true here, but not implemented in BooleanQuery
 					StringArrayConst::iterator itr = v.begin();
 					while ( itr != v.end() ){
 						Term* t = _CLNEW Term(field, *itr);
@@ -325,11 +325,15 @@ Query* QueryParserBase::GetWildcardQuery(const TCHAR* field, TCHAR* termStr){
 	return q;
 }
 
-Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses){
+Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses ) {
+	return GetBooleanQuery( clauses, false );
+}
+
+Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord){
 	if ( clauses.size() == 0 )
 		return NULL;
 
-	BooleanQuery* query = _CLNEW BooleanQuery();
+	BooleanQuery* query = _CLNEW BooleanQuery( disableCoord );
 	//Condition check to see if query has been allocated properly
 	CND_CONDITION(query != NULL, "No memory could be allocated for query");
 

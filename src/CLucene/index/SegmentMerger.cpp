@@ -7,17 +7,12 @@
 #include "CLucene/StdHeader.h"
 #include "SegmentMerger.h"
 
+#include "CLucene/index/IndexFileNames.h"
+
 CL_NS_USE(util)
 CL_NS_USE(document)
 CL_NS_USE(store)
 CL_NS_DEF(index)
-
-// File extensions of old-style index files
-const char* COMPOUND_EXTENSIONS="fnm\0" "frq\0" "prx\0" "fdx\0" "fdt\0" "tii\0" "tis\0";
-int COMPOUND_EXTENSIONS_LENGTH=7;
-
-const char* VECTOR_EXTENSIONS="tvx\0" "tvd\0" "tvf\0";
-int VECTOR_EXTENSIONS_LENGTH=3;
 
 SegmentMerger::SegmentMerger(IndexWriter* writer, const char* name){
 //Func - Constructor
@@ -130,8 +125,8 @@ void SegmentMerger::createCompoundFile(const char* filename, CL_NS(util)::AStrin
 
 	{ //msvc6 scope fix
 		// Basic files
-		for (int32_t i = 0; i < COMPOUND_EXTENSIONS_LENGTH; i++) {
-			files.push_back (Misc::ajoin(segment,".",COMPOUND_EXTENSIONS+(i*4)) );
+		for (int32_t i = 0; i < IndexFileNames::COMPOUND_EXTENSIONS_LENGTH; i++) {
+			files.push_back (Misc::ajoin(segment,".",IndexFileNames::COMPOUND_EXTENSIONS[i]) );
 		}
 	}
 
@@ -152,8 +147,8 @@ void SegmentMerger::createCompoundFile(const char* filename, CL_NS(util)::AStrin
 
     // Vector files
     if (fieldInfos->hasVectors()) {
-        for (int32_t i = 0; i < VECTOR_EXTENSIONS_LENGTH; i++) {
-			files.push_back ( Misc::ajoin(segment, ".", VECTOR_EXTENSIONS+(i*4)) );
+        for (int32_t i = 0; i < IndexFileNames::VECTOR_EXTENSIONS_LENGTH; i++) {
+			files.push_back ( Misc::ajoin(segment, ".", IndexFileNames::VECTOR_EXTENSIONS[i]) );
         }
     }
 

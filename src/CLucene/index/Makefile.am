@@ -7,6 +7,7 @@ libclucene_la_SOURCES     += $(indexdir)/DocumentWriter.cpp
 libclucene_la_SOURCES     += $(indexdir)/FieldInfos.cpp
 libclucene_la_SOURCES     += $(indexdir)/FieldsReader.cpp
 libclucene_la_SOURCES     += $(indexdir)/FieldsWriter.cpp
+libclucene_la_SOURCES     += $(indexdir)/IndexFileNames.cpp
 libclucene_la_SOURCES     += $(indexdir)/IndexModifier.cpp
 libclucene_la_SOURCES     += $(indexdir)/IndexReader.cpp
 libclucene_la_SOURCES     += $(indexdir)/IndexWriter.cpp

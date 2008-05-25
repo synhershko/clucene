@@ -32,7 +32,7 @@ MultiFieldQueryParser::~MultiFieldQueryParser(){
 //static 
 Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, Analyzer* analyzer)
 {
-    BooleanQuery* bQuery = _CLNEW BooleanQuery();
+    BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
     int32_t i = 0;
     while ( fields[i] != NULL ){
 		   Query* q = QueryParser::parse(query, fields[i], analyzer);
@@ -46,7 +46,7 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, An
 //static 
 Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, const uint8_t* flags, Analyzer* analyzer)
 {
-    BooleanQuery* bQuery = _CLNEW BooleanQuery();
+    BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
     int32_t i = 0;
     while ( fields[i] != NULL )
     {

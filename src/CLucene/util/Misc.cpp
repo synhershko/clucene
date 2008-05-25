@@ -257,4 +257,37 @@ int32_t Misc::stringDifference(const TCHAR* s1, const int32_t len1, const TCHAR*
 	return len;
 }
 
+char* Misc::longToBase( int64_t value, int32_t base ) {
+
+    static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    char buf[(sizeof(unsigned long) << 3) + 1];
+    char *ptr, *end, *retval;
+
+    ptr = end = buf + sizeof(buf) - 1;
+
+    *ptr = '\0';
+    do {
+            *--ptr = digits[ value % base ];
+            value /= base;
+    } while ( ptr > buf && value );
+
+    retval = (char*)malloc( end - ptr + 1 );
+    memcpy( retval, ptr, end - ptr );
+    retval[end-ptr] = 0;
+    
+    return retval;
+}
+
+int64_t Misc::base36ToLong( const char* value ) {
+	char* ptr = (char*)value;
+	int64_t lval = 0;
+	
+	while ( *ptr != '\0' ) {
+		lval = isdigit(*ptr) ? ( 36 * lval ) + ( *ptr - '0' ) : ( 36 * lval ) + ( *ptr - 'a' + 10 );
+		ptr++;
+	}
+	
+	return lval;
+}
+
 CL_NS_END

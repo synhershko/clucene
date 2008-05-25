@@ -34,7 +34,8 @@ CL_NS_DEF(index)
 		bufferLength = 0;
 		prev         = NULL;
 		formatM1SkipInterval = 0;
-
+		maxSkipLevels = 1;
+		
 		//Set isClone to false as the instance is not clone of another instance
 		isClone      = false;
 
@@ -106,6 +107,8 @@ CL_NS_DEF(index)
       indexInterval= clone.indexInterval;
       skipInterval = clone.skipInterval;
       formatM1SkipInterval = clone.formatM1SkipInterval;
+      maxSkipLevels = clone.maxSkipLevels;
+      
 		//Set isClone to true as this instance is a clone of another instance
 		isClone      = true;
 

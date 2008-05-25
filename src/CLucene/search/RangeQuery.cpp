@@ -108,7 +108,7 @@ CL_NS_DEF(search)
      */
     Query* RangeQuery::rewrite(IndexReader* reader){
 
-        BooleanQuery* query = _CLNEW BooleanQuery;
+        BooleanQuery* query = _CLNEW BooleanQuery( true );
         TermEnum* enumerator = reader->terms(lowerTerm);
 		Term* lastTerm = NULL;
         try {

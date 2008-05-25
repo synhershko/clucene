@@ -34,7 +34,7 @@ private:
 
 	int32_t format;
 	int32_t formatM1SkipInterval;
-
+	
 	CL_NS(store)::IndexInput* input;    ///The IndexInput that reads from the Term Infos File
 	FieldInfos* fieldInfos;	///contains the Field Infos for the segment
 	int64_t size;			///The size of the enumeration
@@ -43,6 +43,7 @@ private:
 	Term* prev;				///The previous current 
 	int32_t indexInterval;
 	int32_t skipInterval;
+	int32_t maxSkipLevels;
 	
 	friend class TermInfosReader;
 	friend class SegmentTermDocs;

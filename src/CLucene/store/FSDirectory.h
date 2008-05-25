@@ -70,7 +70,11 @@
 			
 			static const char* DirectoryType(){ return "MMAP"; }
 			const char* getDirectoryType() const{ return DirectoryType(); }
+			
+			const char* getObjectName(){ return MMapIndexInput::getClassName(); }
+			static const char* getClassName(){ return "MMapIndexInput"; }			
 		};
+		friend class FSDirectory::MMapIndexInput;
 #endif
 
     	class FSIndexInput:public BufferedIndexInput {

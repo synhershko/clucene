@@ -26,8 +26,14 @@ CL_NS_DEF(index)
 class SegmentReader;
 
 class SegmentTermDocs:public virtual TermDocs {
+	
 	int32_t _doc;
+	
 	int32_t skipInterval;
+	
+	int64_t freqBasePointer;
+	int64_t proxBasePointer;
+	
 	int32_t numSkips;
 	int32_t skipCount;
 	CL_NS(store)::IndexInput* skipStream;
@@ -36,6 +42,7 @@ class SegmentTermDocs:public virtual TermDocs {
 	int64_t proxPointer;
 	int64_t skipPointer;
 	bool haveSkipped;
+	
 protected:
 	// SegmentReader parent
 	const SegmentReader* parent;
@@ -62,7 +69,7 @@ public:
 
 	/** Optimized implementation. */
 	virtual bool skipTo(const int32_t target);
-
+	
 	virtual TermPositions* __asTermPositions();
 	
 	///\param Parent must be a segment reader
@@ -78,7 +85,13 @@ private:
 	CL_NS(store)::IndexInput* proxStream;
 	int32_t proxCount;
 	int32_t position;
+	
+	int64_t lazySkipPointer;
+	int64_t lazySkipDocCount;
 
+	void skipPositions( int32_t n );
+	void lazySkip();
+	
 public:
 	///\param Parent must be a segment reader
 	SegmentTermPositions(const SegmentReader* Parent);
@@ -102,7 +115,7 @@ public:
 protected:
 	void skippingDoc();
 	/** Called by super.skipTo(). */
-    void skipProx(int64_t proxPointer);
+	void skipProx(int64_t proxPointer);
 };
 
 
@@ -118,6 +131,7 @@ class SegmentReader: public IndexReader{
 	*/
 	class Norm :LUCENE_BASE{
 		int32_t number;
+		int64_t normSeek;
 		SegmentReader* reader;
 		const char* segment; ///< pointer to segment name
 	public:
@@ -126,6 +140,7 @@ class SegmentReader: public IndexReader{
 		bool dirty;
 		//Constructor
 		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, SegmentReader* reader, const char* segment);
+		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
 		//Destructor
 		~Norm();
 
@@ -135,7 +150,7 @@ class SegmentReader: public IndexReader{
 
 	//Holds the name of the segment that is being read
 	const char* segment;
-
+	
 	//Indicates if there are documents marked as deleted
 	bool deletedDocsDirty;
 	bool normsDirty;
@@ -148,6 +163,9 @@ class SegmentReader: public IndexReader{
 	uint8_t* ones;
 	uint8_t* fakeNorms();
 
+	uint8_t hasSingleNorm;
+	CL_NS(store)::IndexInput* singleNormStream;
+	
 	// Compound File Reader when based on a compound file segment
 	CompoundFileReader* cfsReader;
 	///Reads the Field Info file

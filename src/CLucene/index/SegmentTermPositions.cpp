@@ -45,7 +45,10 @@ TermPositions* SegmentTermPositions::__asTermPositions(){
 void SegmentTermPositions::seek(const TermInfo* ti) {
     SegmentTermDocs::seek(ti);
     if (ti != NULL)
+    	//lazySkipPointer = ti->proxPointer;
         proxStream->seek(ti->proxPointer);
+    
+    //lazySkipDocCount = 0;
     proxCount = 0;
 }
 
@@ -68,6 +71,7 @@ int32_t SegmentTermPositions::nextPosition() {
     **   if (--proxCount == 0) throw ...;
     ** The JavaDocs for TermPositions.nextPosition declare this constraint,
     ** but CLucene doesn't enforce it. */
+	//lazySkip();
     proxCount--;
     return position += proxStream->readVInt();
 }
@@ -91,11 +95,29 @@ int32_t SegmentTermPositions::read(int32_t* docs, int32_t* freqs, int32_t length
 void SegmentTermPositions::skippingDoc() {
     for (int32_t f = _freq; f > 0; f--)		  // skip all positions
         proxStream->readVInt();
+//	lazySkipDocCount += _freq;
 }
 
 void SegmentTermPositions::skipProx(int64_t proxPointer){
     proxStream->seek(proxPointer);
+//	lazySkipPointer = proxPointer;
+//	lazySkipDocCount = 0;
     proxCount = 0;
 }
 
+void SegmentTermPositions::skipPositions(int32_t n) {
+	for ( int32_t f = n; f > 0; f-- )
+		proxStream->readVInt();
+}
+
+void SegmentTermPositions::lazySkip() {
+	if ( lazySkipPointer != 0 ) {
+		proxStream->seek( lazySkipPointer );
+		lazySkipPointer = 0;
+	}
+	if ( lazySkipDocCount != 0 ) {
+		skipPositions( lazySkipDocCount );
+		lazySkipDocCount = 0;
+	}
+}
 CL_NS_END

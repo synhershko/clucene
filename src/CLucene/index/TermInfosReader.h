@@ -61,6 +61,8 @@ CL_NS_DEF(index)
 
 		int32_t getSkipInterval() { return origEnum->skipInterval; }
 		
+		int32_t getMaxSkipLevels() { return origEnum->maxSkipLevels; }
+		
 		// Returns an enumeration of terms starting at or after the named term. 
 		// If no term is specified, an enumeration of all the Terms 
 		// and TermInfos in the set is returned.

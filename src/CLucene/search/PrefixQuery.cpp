@@ -78,7 +78,7 @@ CL_NS_DEF(search)
   }
 
    Query* PrefixQuery::rewrite(IndexReader* reader){
-    BooleanQuery* query = _CLNEW BooleanQuery();
+    BooleanQuery* query = _CLNEW BooleanQuery( true );
     TermEnum* enumerator = reader->terms(prefix);
 	Term* lastTerm = NULL;
     try {

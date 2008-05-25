@@ -18,7 +18,10 @@ CL_NS_DEF(store)
 	}
 
   int32_t IndexInput::readInt() {
-    return (readByte() << 24) | (readByte() << 16) | (readByte() <<  8) | readByte();
+    int32_t b = (readByte() << 24);
+    b |= (readByte() << 16);
+    b |= (readByte() <<  8);
+    return (b | readByte());
   }
 
   int32_t IndexInput::readVInt() {
@@ -32,7 +35,8 @@ CL_NS_DEF(store)
   }
 
   int64_t IndexInput::readLong() {
-    return ((int64_t)readInt() << 32) | ((int64_t)readInt() & 0xFFFFFFFFL);
+    int64_t i = ((int64_t)readInt() << 32);
+    return (i | ((int64_t)readInt() & 0xFFFFFFFFL));
   }
 
   int64_t IndexInput::readVLong() {
@@ -40,10 +44,24 @@ CL_NS_DEF(store)
     int64_t i = b & 0x7F;
     for (int32_t shift = 7; (b & 0x80) != 0; shift += 7) {
       b = readByte();
-      i |= (b & 0x7FL) << shift;
+      i |= (((int64_t)b) & 0x7FL) << shift;
     }
     return i;
   }
+  
+  void IndexInput::skipChars( const int32_t count) {
+	for (int32_t i = 0; i < count; i++) {
+		TCHAR b = readByte();
+		if ((b & 0x80) == 0) {
+			// Do Nothing.
+		} else if ((b & 0xE0) != 0xE0) {
+			readByte();
+		} else {
+			readByte();
+			readByte();
+		}
+	}
+}
 
   int32_t IndexInput::readString(TCHAR* buffer, const int32_t maxLength){
     int32_t len = readVInt();
@@ -52,8 +70,10 @@ CL_NS_DEF(store)
       readChars(buffer, 0, ml);
       buffer[ml] = 0;
       //we have to finish reading all the data for this string!
-      if ( len-ml > 0 )
-         seek(getFilePointer()+(len-ml));
+      if ( len-ml > 0 ){
+		//seek(getFilePointer()+(len-ml)); <- that was the wrong way to "finish reading"
+		skipChars(len-ml);
+	  }
       return ml;
     }else{
       readChars(buffer, 0, len);
@@ -90,9 +110,8 @@ CL_NS_DEF(store)
         b = (((b & 0x1F) << 6)
           | (readByte() & 0x3F));
       } else {
-		  b = (((b & 0x0F) << 12)
-              | ((readByte() & 0x3F) << 6)
-              | (readByte() & 0x3F));
+		  b = ((b & 0x0F) << 12) | ((readByte() & 0x3F) << 6);
+		  b |= (readByte() & 0x3F);
       }
       buffer[i] = b;
 	}
@@ -191,6 +210,35 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     bufferPosition = 0;
   }
 
+  void BufferedIndexInput::setBufferSize( int32_t newSize ) {
+	  
+	  if ( newSize != bufferSize ) {
+		  bufferSize = newSize;
+		  if ( buffer != NULL ) {
+			  
+			  uint8_t* newBuffer = _CL_NEWARRAY( uint8_t, newSize );
+			  int32_t leftInBuffer = bufferLength - bufferPosition;
+			  int32_t numToCopy;
+			  
+			  if ( leftInBuffer > newSize ) {
+				  numToCopy = newSize;
+			  } else {
+				  numToCopy = leftInBuffer;
+			  }
+			  
+			  memcpy( (void*)newBuffer, (void*)(buffer + bufferPosition), numToCopy );
+			  
+			  bufferStart += bufferPosition;
+			  bufferPosition = 0;
+			  bufferLength = numToCopy;
+			  
+			  _CLDELETE_ARRAY( buffer );
+			  buffer = newBuffer;
+			  
+		  }
+	  }
+	  
+  }
 
 IndexInputStream::IndexInputStream(IndexInput* input){
 	this->input = input;
