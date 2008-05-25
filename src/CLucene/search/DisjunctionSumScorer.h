@@ -51,7 +51,7 @@ public:
 	
 protected:
 	
-	bool score( HitCollector* hc, int32_t max );
+	bool score( HitCollector* hc, const int32_t max );
 	bool advanceAfterCurrent();
 	
 private:

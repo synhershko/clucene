@@ -42,7 +42,7 @@ class Scorer: LUCENE_BASE {
          }
       }
 
-      virtual bool score( HitCollector* results, int32_t maxDoc ) {
+      virtual bool score( HitCollector* results, const int32_t maxDoc ) {
     	  while( doc() < maxDoc ) {
     		  results->collect( doc(), score() );
     		  if ( !next() )
