@@ -104,6 +104,30 @@ public:
 	~MultiTermPositions() {};
 	int32_t nextPosition();
 
+	/**
+	* Not implemented.
+	* @throws UnsupportedOperationException
+	*/
+	int32_t getPayloadLength() const {
+		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: MultiTermPositions::getPayloadLength");
+	}
+
+	/**
+	* Not implemented.
+	* @throws UnsupportedOperationException
+	*/
+	uint8_t* getPayload(uint8_t* data, int offset) {
+		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: MultiTermPositions::getPayload");
+	}
+
+	/**
+	*
+	* @return false
+	*/
+	// TODO: Remove warning after API has been finalized
+	bool isPayloadAvailable() const {
+		return false;
+	}
 
 	virtual TermDocs* __asTermDocs();
 	virtual TermPositions* __asTermPositions();

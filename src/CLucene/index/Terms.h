@@ -154,15 +154,52 @@ public:
  */
 class TermPositions: public virtual TermDocs {
 public:
-	// Returns next position in the current document.  It is an error to call
-	//	this more than {@link #freq()} times
-	//	without calling {@link #next()}<p> This is
-	//	invalid until {@link #next()} is called for
-	//	the first time.
+    /** Returns next position in the current document.  It is an error to call
+    this more than {@link #freq()} times
+    without calling {@link #next()}<p> This is
+    invalid until {@link #next()} is called for
+    the first time.
+    */
 	virtual int32_t nextPosition() = 0;
 
 	virtual ~TermPositions(){
 	}
+
+    /** 
+     * Returns the length of the payload at the current term position.
+     * This is invalid until {@link #nextPosition()} is called for
+     * the first time.<br>
+     * @return length of the current payload in number of bytes
+     */
+    virtual int32_t getPayloadLength() const = 0;
+    
+    /** 
+     * Returns the payload data at the current term position.
+     * This is invalid until {@link #nextPosition()} is called for
+     * the first time.
+     * This method must not be called more than once after each call
+     * of {@link #nextPosition()}. However, payloads are loaded lazily,
+     * so if the payload data for the current position is not needed,
+     * this method may not be called at all for performance reasons.<br>
+     * 
+     * @param data the array into which the data of this payload is to be
+     *             stored, if it is big enough; otherwise, a new byte[] array
+     *             is allocated for this purpose. 
+     * @param offset the offset in the array into which the data of this payload
+     *               is to be stored.
+     * @return a byte[] array containing the data of this payload
+     */
+    virtual uint8_t* getPayload(uint8_t* data, int32_t offset) = 0;
+
+	/**
+	* Checks if a payload can be loaded at this position.
+	* <p>
+	* Payloads can only be loaded once per call to 
+	* {@link #nextPosition()}.
+	* 
+	* @return true if there is a payload available at this position that can be loaded
+	*/
+	virtual bool isPayloadAvailable() const = 0;
 
 	/** Solve the diamond inheritence problem by providing a reinterpret function.
 	  *	No dynamic casting is required and no RTTI data is needed to do this

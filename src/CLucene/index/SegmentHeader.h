@@ -85,9 +85,16 @@ private:
 	CL_NS(store)::IndexInput* proxStream;
 	int32_t proxCount;
 	int32_t position;
+
+	// the current payload length
+	int32_t payloadLength;
+	// indicates whether the payload of the currend position has
+	// been read from the proxStream yet
+	bool needToLoadPayload;
 	
 	int64_t lazySkipPointer;
 	int64_t lazySkipDocCount;
+	//int32_t lazySkipProxCount;
 
 	void skipPositions( int32_t n );
 	void lazySkip();
@@ -111,6 +118,38 @@ public:
     int32_t doc() const{ return SegmentTermDocs::doc(); }
 	int32_t freq() const{ return SegmentTermDocs::freq(); }
 	bool skipTo(const int32_t target){ return SegmentTermDocs::skipTo(target); }
+
+	int32_t getPayloadLength() const {
+		return payloadLength;
+	}
+
+	// INITIAL DESIGN
+	uint8_t* getPayload(uint8_t* data, int32_t offset) {
+		if (!needToLoadPayload) {
+			//throw new IOException("Payload cannot be loaded more than once for the same term position.");
+		}
+
+		// read payloads lazily
+		uint8_t* retArray;
+		int32_t retOffset;
+		if (data == NULL /*|| data.length - offset < payloadLength*/) {
+			// the array is too small to store the payload data,
+			// so we allocate a new one
+			if (data) _CLDELETE_ARRAY(data);
+			retArray = _CL_NEWARRAY(uint8_t, payloadLength);
+			retOffset = 0;
+		} else {
+			retArray = data;
+			retOffset = offset;
+		}
+		proxStream->readBytes(retArray, retOffset/*, payloadLength*/);
+		needToLoadPayload = false;
+		return retArray;
+	}
+
+	bool isPayloadAvailable() const {
+		return needToLoadPayload && (payloadLength > 0);
+	}
 
 protected:
 	void skippingDoc();
