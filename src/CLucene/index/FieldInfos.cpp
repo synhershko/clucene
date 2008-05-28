@@ -26,14 +26,15 @@ FieldInfo::FieldInfo(	const TCHAR* _fieldName,
 						const bool _storeTermVector,
 						const bool _storeOffsetWithTermVector,
 						const bool _storePositionWithTermVector,
-						const bool _omitNorms):
+						const bool _omitNorms,
+						const bool _storePayloads):
 	name(CLStringIntern::intern(_fieldName CL_FILELINE)),
 	isIndexed(_isIndexed),
 	number(_fieldNumber),
 	storeTermVector(_storeTermVector),
 	storeOffsetWithTermVector(_storeOffsetWithTermVector),
 	storePositionWithTermVector(_storeTermVector),
-	omitNorms(_omitNorms)
+	omitNorms(_omitNorms), storePayloads(_storePayloads)
 {
 }
 
@@ -72,13 +73,13 @@ void FieldInfos::add(const Document* doc) {
 	_CLDELETE(fields);
 }
 
-void FieldInfos::add( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
-		bool storePositionWithTermVector, bool storeOffsetWithTermVector, bool omitNorms) {
+FieldInfo* FieldInfos::add( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
+		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads) {
 	FieldInfo* fi = fieldInfo(name);
 	if (fi == NULL) {
-		addInternal(name, isIndexed, storeTermVector, 
+		return addInternal(name, isIndexed, storeTermVector, 
 			storePositionWithTermVector, 
-			storeOffsetWithTermVector, omitNorms);
+			storeOffsetWithTermVector, omitNorms, storePayloads);
 	} else {
 		if (fi->isIndexed != isIndexed) {
 			fi->isIndexed = true;                      // once indexed, always index
@@ -95,17 +96,22 @@ void FieldInfos::add( const TCHAR* name, const bool isIndexed, const bool storeT
 	    if (fi->omitNorms != omitNorms) {
 	        fi->omitNorms = false;                // once norms are stored, always store
 	    }
+		if (fi->storePayloads != storePayloads) {
+			fi->storePayloads = true;
+		}
 	}
+	return fi;
 }
 
 void FieldInfos::add(const TCHAR** names,const bool isIndexed, const bool storeTermVectors,
-              bool storePositionWithTermVector, bool storeOffsetWithTermVector, bool omitNorms) {
-  int32_t i=0;      
-  while ( names[i] != NULL ){
-     add(names[i], isIndexed, storeTermVectors, storePositionWithTermVector, 
-		 storeOffsetWithTermVector, omitNorms);
-	 ++i;
-  }
+					 const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads)
+{
+	int32_t i=0;      
+	while ( names[i] != NULL ){
+		add(names[i], isIndexed, storeTermVectors, storePositionWithTermVector, 
+			storeOffsetWithTermVector, omitNorms, storePayloads);
+		++i;
+	}
 }
 
 int32_t FieldInfos::fieldNumber(const TCHAR* fieldName)const {
@@ -155,6 +161,7 @@ void FieldInfos::write(IndexOutput* output) const{
  		if (fi->storePositionWithTermVector) bits |= STORE_POSITIONS_WITH_TERMVECTOR;
  		if (fi->storeOffsetWithTermVector) bits |= STORE_OFFSET_WITH_TERMVECTOR;
  		if (fi->omitNorms) bits |= OMIT_NORMS;
+		if (fi->storePayloads) bits |= STORE_PAYLOADS;
 
 	    output->writeString(fi->name,_tcslen(fi->name));
 	    output->writeByte(bits);
@@ -164,7 +171,7 @@ void FieldInfos::write(IndexOutput* output) const{
 void FieldInfos::read(IndexInput* input) {
 	int32_t size = input->readVInt();
     uint8_t bits;
-	bool isIndexed,storeTermVector,storePositionsWithTermVector,storeOffsetWithTermVector,omitNorms;
+	bool isIndexed,storeTermVector,storePositionsWithTermVector,storeOffsetWithTermVector,omitNorms,storePayloads;
 	for (int32_t i = 0; i < size; ++i){
 	    TCHAR* name = input->readString(); //we could read name into a string buffer, but we can't be sure what the maximum field length will be.
 		bits = input->readByte();
@@ -173,17 +180,19 @@ void FieldInfos::read(IndexInput* input) {
    		storePositionsWithTermVector = (bits & STORE_POSITIONS_WITH_TERMVECTOR) != 0;
    		storeOffsetWithTermVector = (bits & STORE_OFFSET_WITH_TERMVECTOR) != 0;
    		omitNorms = (bits & OMIT_NORMS) != 0;
+		storePayloads = (bits & STORE_PAYLOADS) != 0;
    
-   		addInternal(name, isIndexed, storeTermVector, storePositionsWithTermVector, storeOffsetWithTermVector, omitNorms);
+   		addInternal(name, isIndexed, storeTermVector, storePositionsWithTermVector, storeOffsetWithTermVector, omitNorms, storePayloads);
    		_CLDELETE_CARRAY(name);
 	}
 }
-void FieldInfos::addInternal( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
-		bool storePositionWithTermVector, bool storeOffsetWithTermVector, bool omitNorms) {
+FieldInfo* FieldInfos::addInternal( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
+		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads) {
 	FieldInfo* fi = _CLNEW FieldInfo(name, isIndexed, byNumber.size(), storeTermVector, 
-		storePositionWithTermVector, storeOffsetWithTermVector, omitNorms);
+		storePositionWithTermVector, storeOffsetWithTermVector, omitNorms, storePayloads);
 	byNumber.push_back(fi);
 	byName.put( fi->name, fi);
+	return fi;
 }
 
 bool FieldInfos::hasVectors() const{
@@ -193,4 +202,17 @@ bool FieldInfos::hasVectors() const{
 	}
 	return false;
 }
+
+FieldInfos* FieldInfos::clone()
+{
+	FieldInfos* fis = _CLNEW FieldInfos();
+	const size_t numField = byNumber.size();
+	for(size_t i=0;i<numField;i++) {
+		FieldInfo* fi = byNumber[i]->clone();
+		fis->byNumber.push_back(fi);
+		fis->byName.put( fi->name, fi);
+	}
+	return fis;
+}
+
 CL_NS_END
