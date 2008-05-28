@@ -16,6 +16,7 @@
 
 CL_NS_DEF(index)
 class SegmentMergeInfo:LUCENE_BASE {
+private:
 	int32_t* docMap;				  // maps around deleted docs
 	TermPositions* postings;
 public:

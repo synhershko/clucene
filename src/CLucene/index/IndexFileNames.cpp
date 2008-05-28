@@ -48,7 +48,7 @@ CL_NS_DEF(index)
 			free( genStr );
 		}
 
-		return strdup( fileName );
+		return STRDUP_AtoA( fileName );
 	}
 	
 CL_NS_END
