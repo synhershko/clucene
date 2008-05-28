@@ -10,12 +10,12 @@
 
 CL_NS_DEF(search)
 
-DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers ) : Scorer(  NULL ), subScorers(false)
+DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers ) : Scorer(  NULL )
 {
 	init( subScorers, 1 );
 }
 
-DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers, int32_t minimumNrMatchers ) : Scorer( NULL ), subScorers(false)
+DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers, int32_t minimumNrMatchers ) : Scorer( NULL )
 {	
 	init( subScorers, minimumNrMatchers );
 }
@@ -31,12 +31,14 @@ void DisjunctionSumScorer::init( DisjunctionSumScorer::ScorersType* SubScorers, 
 		// throw exception
 	}
 
-	//this->subScorers = subScorers;
 	minimumNrMatchers = MinimumNrMatchers;
 	nrScorers = SubScorers->size();
 	scorerDocQueue = NULL;
 	
-	subScorers = *SubScorers;
+	for ( DisjunctionSumScorer::ScorersType::iterator itr = SubScorers->begin(); itr != SubScorers->end(); itr++ ) {
+		subScorers.push_back( *itr );
+	}
+	
 	SubScorers->setDoDelete(false);
 	SubScorers->clear();	
 }

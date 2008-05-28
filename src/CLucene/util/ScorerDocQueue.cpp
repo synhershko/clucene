@@ -11,6 +11,10 @@ ScorerDocQueue::HeapedScorerDoc::HeapedScorerDoc( Scorer* scorer, int32_t doc ) 
 {		
 }
 
+ScorerDocQueue::HeapedScorerDoc::~HeapedScorerDoc()
+{	
+}
+
 void ScorerDocQueue::HeapedScorerDoc::adjust()
 {
 	this->_doc = _scorer->doc();

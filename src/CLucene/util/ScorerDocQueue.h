@@ -19,6 +19,7 @@ private:
 		
 		HeapedScorerDoc( Scorer* s );
 		HeapedScorerDoc( Scorer* s, int32_t doc );
+		~HeapedScorerDoc();
 		
 		void adjust();
 	};
