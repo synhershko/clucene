@@ -42,6 +42,11 @@ BooleanScorer2::SingleMatchScorer::SingleMatchScorer( Scorer* scorer, Coordinato
 {
 }
 
+BooleanScorer2::SingleMatchScorer::~SingleMatchScorer()
+{
+	_CLDELETE( scorer );
+}
+
 float_t BooleanScorer2::SingleMatchScorer::score()
 {
 	if ( doc() >= lastScoredDoc ) {
@@ -205,9 +210,6 @@ BooleanScorer2::BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch
 Scorer( similarity ),
 minNrShouldMatch(minNrShouldMatch),
 allowDocsOutOfOrder(allowDocsOutOfOrder),
-requiredScorers(false),
-optionalScorers(false), 
-prohibitedScorers(false),
 countingSumScorer(NULL)
 {
 	if ( minNrShouldMatch < 0 ) {
@@ -333,11 +335,11 @@ Scorer* BooleanScorer2::countingDisjunctionSumScorer( BooleanScorer2::ScorersTyp
 Scorer* BooleanScorer2::countingConjunctionSumScorer( BooleanScorer2::ScorersType* requiredScorers )
 {
 	ConjunctionScorer *cs = _CLNEW ConjunctionScorer( coordinator, requiredScorers->size() );
-	ScorersType::iterator rsi = requiredScorers->begin();
-	while ( rsi != requiredScorers->end() ) {
+	for ( ScorersType::iterator rsi = requiredScorers->begin(); rsi != requiredScorers->end(); rsi++ ) {
 		cs->add( *rsi );
-		rsi++;
 	}
+	requiredScorers->setDoDelete(false);
+	requiredScorers->clear();
 	return cs;
 }
 
@@ -363,13 +365,15 @@ Scorer* BooleanScorer2::makeCountingSumScorerNoReq()
 		if ( optionalScorers.size() < nrOptRequired ) {
 			return _CLNEW NonMatchingScorer();
 		} else {
-			Scorer* requiredCountingSumScorer = 
-				( optionalScorers.size() > nrOptRequired )
-				? countingDisjunctionSumScorer( &optionalScorers, nrOptRequired )
-				:
-			( optionalScorers.size() == 1 )
-				? _CLNEW SingleMatchScorer((Scorer*) optionalScorers[0], coordinator)
-				: countingConjunctionSumScorer( &optionalScorers );
+			Scorer* requiredCountingSumScorer = NULL;
+			if ( optionalScorers.size() == 1 ) {
+				requiredCountingSumScorer = _CLNEW SingleMatchScorer( optionalScorers.back(), coordinator );
+				optionalScorers.pop_back();
+			} else if ( optionalScorers.size() > nrOptRequired ) {
+				requiredCountingSumScorer = countingDisjunctionSumScorer( &optionalScorers, nrOptRequired );
+			} else {
+				requiredCountingSumScorer = countingConjunctionSumScorer( &optionalScorers );
+			}
 			return addProhibitedScorers( requiredCountingSumScorer );
 		}
 	}
@@ -386,13 +390,18 @@ Scorer* BooleanScorer2::makeCountingSumScorerSomeReq()
 		}
 		for ( ScorersType::iterator it = optionalScorers.begin(); it != optionalScorers.end(); it++ ) {
 			allReq.push_back( *it );
-		}
+		}		
+		requiredScorers.setDoDelete(false);
+		optionalScorers.setDoDelete(false);
 		return addProhibitedScorers( countingConjunctionSumScorer( &allReq ));
 	} else {
-		Scorer* requiredCountingSumScorer =
-			( requiredScorers.size() == 1 )
-			? _CLNEW SingleMatchScorer( (Scorer*)requiredScorers[0], coordinator )
-			: countingConjunctionSumScorer( &requiredScorers );
+		Scorer* requiredCountingSumScorer = NULL;
+		if ( requiredScorers.size() == 1 ) {
+			requiredCountingSumScorer = _CLNEW SingleMatchScorer( requiredScorers.back(), coordinator );
+			requiredScorers.pop_back();
+		} else {
+			requiredCountingSumScorer = countingConjunctionSumScorer( &requiredScorers );
+		}
 		if ( minNrShouldMatch > 0 ) {
 			return addProhibitedScorers(
 				dualConjunctionSumScorer(
@@ -401,24 +410,33 @@ Scorer* BooleanScorer2::makeCountingSumScorerSomeReq()
 				&optionalScorers,
 				minNrShouldMatch )));
 		} else {
-			return _CLNEW ReqOptSumScorer(
-				addProhibitedScorers( requiredCountingSumScorer ),
-				(( optionalScorers.size() == 1 )
-				? _CLNEW SingleMatchScorer( (Scorer*)optionalScorers[0], coordinator )
-				: countingDisjunctionSumScorer( &optionalScorers, 1 )));
-
+			Scorer* scorer = NULL;
+			if ( optionalScorers.size() == 1 ) {
+				scorer = _CLNEW SingleMatchScorer( optionalScorers.back(), coordinator );
+				optionalScorers.pop_back();
+			} else {
+				scorer = countingDisjunctionSumScorer( &optionalScorers, 1 );
+			}
+			return _CLNEW ReqOptSumScorer( addProhibitedScorers( requiredCountingSumScorer ), scorer );
 		}
 	}
 }
 
 Scorer* BooleanScorer2::addProhibitedScorers( Scorer* requiredCountingSumScorer )
 {
-	return ( prohibitedScorers.size() == 0 )
-		? requiredCountingSumScorer
-		: _CLNEW ReqExclScorer( requiredCountingSumScorer,
-		(( prohibitedScorers.size() == 1 )
-		? (Scorer*)prohibitedScorers[0]
-	: _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers )));
+	if ( prohibitedScorers.size() == 0 ) {
+		return requiredCountingSumScorer;
+	}
+	
+	Scorer* scorer = NULL;
+	if ( prohibitedScorers.size() == 1 ) {
+		scorer = _CLNEW ReqExclScorer( requiredCountingSumScorer, prohibitedScorers.back() );
+		prohibitedScorers.pop_back();
+	} else {
+		scorer = _CLNEW ReqExclScorer( requiredCountingSumScorer, _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers ));
+	}
+	
+	return scorer;
 }
 
 CL_NS_END

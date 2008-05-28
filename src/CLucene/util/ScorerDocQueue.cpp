@@ -47,6 +47,7 @@ bool ScorerDocQueue::insert( Scorer* scorer )
 	} else {
 		int32_t docNr = scorer->doc();
 		if (( _size > 0 ) && ( !( docNr < topHsd->_doc ))) {
+			_CLDELETE( heap[1] );
 			heap[1] = _CLNEW HeapedScorerDoc( scorer, docNr );
 			downHeap();
 			return true;
@@ -112,6 +113,7 @@ bool ScorerDocQueue::checkAdjustElsePop( bool cond )
 	if ( cond ) {
 		topHsd->_doc = topHsd->_scorer->doc();
 	} else {
+		_CLDELETE( heap[1] );
 		heap[1] = heap[_size];
 		heap[_size] = NULL;
 		_size--;
@@ -122,6 +124,7 @@ bool ScorerDocQueue::checkAdjustElsePop( bool cond )
 
 void ScorerDocQueue::popNoResult()
 {
+	_CLDELETE( heap[1] );
 	heap[1] = heap[_size];
 	heap[_size] = NULL;
 	_size--;

@@ -51,6 +51,7 @@ CL_NS_DEF(search)
 			int32_t lastScoredDoc;
 			
 			SingleMatchScorer( Scorer* scorer, Coordinator* coordinator );
+			~SingleMatchScorer();
 			
 			float_t score();
 			

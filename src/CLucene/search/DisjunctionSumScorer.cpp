@@ -4,6 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
+
 #include "CLucene/StdHeader.h"
 #include "DisjunctionSumScorer.h"
 
@@ -19,22 +20,25 @@ DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* s
 	init( subScorers, minimumNrMatchers );
 }
 
-void DisjunctionSumScorer::init( DisjunctionSumScorer::ScorersType* subScorers, int32_t minimumNrMatchers )
+void DisjunctionSumScorer::init( DisjunctionSumScorer::ScorersType* SubScorers, int32_t MinimumNrMatchers )
 {
 	
-	if ( minimumNrMatchers <= 0 ) {
+	if ( MinimumNrMatchers <= 0 ) {
 		// throw exception
 	}
 	
-	if ( subScorers->size() <= 1 ) {
+	if ( SubScorers->size() <= 1 ) {
 		// throw exception
 	}
 
-	this->subScorers = subScorers;
-	this->minimumNrMatchers = minimumNrMatchers;
-	this->nrScorers = subScorers->size();
-	this->scorerDocQueue = NULL;
+	//this->subScorers = subScorers;
+	minimumNrMatchers = MinimumNrMatchers;
+	nrScorers = SubScorers->size();
+	scorerDocQueue = NULL;
 	
+	subScorers = *SubScorers;
+	SubScorers->setDoDelete(false);
+	SubScorers->clear();	
 }
 
 DisjunctionSumScorer::~DisjunctionSumScorer()
@@ -151,7 +155,7 @@ void DisjunctionSumScorer::initScorerDocQueue()
 	scorerDocQueue = _CLNEW ScorerDocQueue( nrScorers );
 	queueSize = 0;
 	
-	for ( ScorersType::iterator it = subScorers->begin(); it != subScorers->end(); ++it ) {
+	for ( ScorersType::iterator it = subScorers.begin(); it != subScorers.end(); ++it ) {
 		Scorer* scorer = (Scorer*)(*it);
 		if ( scorer->next() ) {
 			if ( scorerDocQueue->insert( scorer )) {

@@ -24,7 +24,7 @@ private:
 	int32_t nrScorers;
 	int32_t minimumNrMatchers;
 	
-	DisjunctionSumScorer::ScorersType* subScorers;
+	DisjunctionSumScorer::ScorersType subScorers;
 	ScorerDocQueue* scorerDocQueue;
 	
 	int32_t queueSize;
