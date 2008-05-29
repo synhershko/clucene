@@ -107,7 +107,7 @@ public:
 	*/
 	uint8_t* toByteArray(int32_t &_dataLen) {
 		uint8_t* retArray = _CL_NEWARRAY(uint8_t,this->length);
-		memcpy(retArray, &(this->data[this->offset]), this->length);
+		memcpy((void*)retArray, (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
 		_dataLen = this->length;
 
 		return retArray;
@@ -123,7 +123,7 @@ public:
 		if (this->length > targetLen + targetOffset) {
 			_CLTHROWA(CL_ERR_IndexOutOfBounds,"Array index out of bounds at Payload::byteAt");
 		}
-		memcpy(&(target[targetOffset]), &(this->data[this->offset]), this->length);
+		memcpy((void*)(target + targetOffset), (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
 	}
 
 	/**
