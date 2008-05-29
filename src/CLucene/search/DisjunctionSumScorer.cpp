@@ -39,8 +39,6 @@ void DisjunctionSumScorer::init( DisjunctionSumScorer::ScorersType* SubScorers, 
 		subScorers.push_back( *itr );
 	}
 	
-	SubScorers->setDoDelete(false);
-	SubScorers->clear();	
 }
 
 DisjunctionSumScorer::~DisjunctionSumScorer()

@@ -210,7 +210,10 @@ BooleanScorer2::BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch
 Scorer( similarity ),
 minNrShouldMatch(minNrShouldMatch),
 allowDocsOutOfOrder(allowDocsOutOfOrder),
-countingSumScorer(NULL)
+countingSumScorer(NULL),
+requiredScorers(false),
+optionalScorers(false),
+prohibitedScorers(false)
 {
 	if ( minNrShouldMatch < 0 ) {
 		// throw some sort of exception
@@ -338,8 +341,6 @@ Scorer* BooleanScorer2::countingConjunctionSumScorer( BooleanScorer2::ScorersTyp
 	for ( ScorersType::iterator rsi = requiredScorers->begin(); rsi != requiredScorers->end(); rsi++ ) {
 		cs->add( *rsi );
 	}
-	requiredScorers->setDoDelete(false);
-	requiredScorers->clear();
 	return cs;
 }
 
@@ -359,21 +360,21 @@ Scorer* BooleanScorer2::makeCountingSumScorer()
 Scorer* BooleanScorer2::makeCountingSumScorerNoReq()
 {
 	if ( optionalScorers.size() == 0 ) {
+		optionalScorers.setDoDelete(true);
 		return _CLNEW NonMatchingScorer();
 	} else {
 		size_t nrOptRequired = ( minNrShouldMatch < 1 ) ? 1 : minNrShouldMatch;
 		if ( optionalScorers.size() < nrOptRequired ) {
+			optionalScorers.setDoDelete(true);
 			return _CLNEW NonMatchingScorer();
 		} else {
-			Scorer* requiredCountingSumScorer = NULL;
-			if ( optionalScorers.size() == 1 ) {
-				requiredCountingSumScorer = _CLNEW SingleMatchScorer( optionalScorers.back(), coordinator );
-				optionalScorers.pop_back();
-			} else if ( optionalScorers.size() > nrOptRequired ) {
-				requiredCountingSumScorer = countingDisjunctionSumScorer( &optionalScorers, nrOptRequired );
-			} else {
-				requiredCountingSumScorer = countingConjunctionSumScorer( &optionalScorers );
-			}
+			Scorer* requiredCountingSumScorer = 
+				( optionalScorers.size() > nrOptRequired )
+				? countingDisjunctionSumScorer( &optionalScorers, nrOptRequired )
+				:
+				( optionalScorers.size() == 1 )
+				? _CLNEW SingleMatchScorer((Scorer*) optionalScorers[0], coordinator)
+				: countingConjunctionSumScorer( &optionalScorers );
 			return addProhibitedScorers( requiredCountingSumScorer );
 		}
 	}
@@ -382,6 +383,8 @@ Scorer* BooleanScorer2::makeCountingSumScorerNoReq()
 Scorer* BooleanScorer2::makeCountingSumScorerSomeReq()
 {
 	if ( optionalScorers.size() < minNrShouldMatch ) {
+		requiredScorers.setDoDelete(true);
+		optionalScorers.setDoDelete(true);
 		return _CLNEW NonMatchingScorer();
 	} else if ( optionalScorers.size() == minNrShouldMatch ) {
 		ScorersType allReq( false );
@@ -391,52 +394,37 @@ Scorer* BooleanScorer2::makeCountingSumScorerSomeReq()
 		for ( ScorersType::iterator it = optionalScorers.begin(); it != optionalScorers.end(); it++ ) {
 			allReq.push_back( *it );
 		}		
-		requiredScorers.setDoDelete(false);
-		optionalScorers.setDoDelete(false);
 		return addProhibitedScorers( countingConjunctionSumScorer( &allReq ));
 	} else {
-		Scorer* requiredCountingSumScorer = NULL;
-		if ( requiredScorers.size() == 1 ) {
-			requiredCountingSumScorer = _CLNEW SingleMatchScorer( requiredScorers.back(), coordinator );
-			requiredScorers.pop_back();
-		} else {
-			requiredCountingSumScorer = countingConjunctionSumScorer( &requiredScorers );
-		}
+		Scorer* requiredCountingSumScorer =
+			( requiredScorers.size() == 1 )
+			? _CLNEW SingleMatchScorer( (Scorer*)requiredScorers[0], coordinator )
+			: countingConjunctionSumScorer( &requiredScorers );
 		if ( minNrShouldMatch > 0 ) {
 			return addProhibitedScorers(
 				dualConjunctionSumScorer(
-				requiredCountingSumScorer,
-				countingDisjunctionSumScorer(
-				&optionalScorers,
-				minNrShouldMatch )));
+						requiredCountingSumScorer,
+						countingDisjunctionSumScorer(
+							&optionalScorers,
+							minNrShouldMatch )));
 		} else {
-			Scorer* scorer = NULL;
-			if ( optionalScorers.size() == 1 ) {
-				scorer = _CLNEW SingleMatchScorer( optionalScorers.back(), coordinator );
-				optionalScorers.pop_back();
-			} else {
-				scorer = countingDisjunctionSumScorer( &optionalScorers, 1 );
-			}
-			return _CLNEW ReqOptSumScorer( addProhibitedScorers( requiredCountingSumScorer ), scorer );
+			return _CLNEW ReqOptSumScorer(
+					addProhibitedScorers( requiredCountingSumScorer ),
+					(( optionalScorers.size() == 1 )
+							? _CLNEW SingleMatchScorer( (Scorer*)optionalScorers[0], coordinator )
+							: countingDisjunctionSumScorer( &optionalScorers, 1 )));
 		}
 	}
 }
 
 Scorer* BooleanScorer2::addProhibitedScorers( Scorer* requiredCountingSumScorer )
 {
-	if ( prohibitedScorers.size() == 0 ) {
-		return requiredCountingSumScorer;
-	}
-	
-	Scorer* scorer = NULL;
-	if ( prohibitedScorers.size() == 1 ) {
-		scorer = _CLNEW ReqExclScorer( requiredCountingSumScorer, prohibitedScorers.back() );
-		prohibitedScorers.pop_back();
-	} else {
-		scorer = _CLNEW ReqExclScorer( requiredCountingSumScorer, _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers ));
-	}
-	
-	return scorer;
+	return ( prohibitedScorers.size() == 0 )
+		? requiredCountingSumScorer
+		: _CLNEW ReqExclScorer( requiredCountingSumScorer,
+								(( prohibitedScorers.size() == 1 )
+										? (Scorer*)prohibitedScorers[0]
+										: _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers )));
 }
 
 CL_NS_END
