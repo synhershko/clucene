@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="CLucene"
 	ProjectGUID="{0A6A6ABD-B67D-41D6-916B-718B477E9D4F}"
+	RootNamespace="CLucene"
 	>
 	<Platforms>
 		<Platform
@@ -227,6 +228,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\CLucene\util\ScorerDocQueue.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CLucene\util\streambase.h"
 					>
 				</File>
@@ -332,6 +337,10 @@
 				</File>
 				<File
 					RelativePath="..\src\CLucene\index\MultiReader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\CLucene\index\Payload.h"
 					>
 				</File>
 				<File
@@ -463,6 +472,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\CLucene\search\BooleanScorer2.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CLucene\search\CachingWrapperFilter.h"
 					>
 				</File>
@@ -480,6 +493,10 @@
 				</File>
 				<File
 					RelativePath="..\src\CLucene\search\DateFilter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\CLucene\search\DisjunctionSumScorer.h"
 					>
 				</File>
 				<File
@@ -723,6 +740,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\CLucene\search\BooleanScorer2.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CLucene\search\CachingWrapperFilter.cpp"
 					>
 				</File>
@@ -736,6 +757,10 @@
 				</File>
 				<File
 					RelativePath="..\src\CLucene\search\DateFilter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\CLucene\search\DisjunctionSumScorer.cpp"
 					>
 				</File>
 				<File
@@ -919,6 +944,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\CLucene\index\Payload.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CLucene\index\SegmentInfos.cpp"
 					>
 				</File>
@@ -1043,6 +1072,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\CLucene\util\ScorerDocQueue.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CLucene\util\StringBuffer.cpp"
 					>
 				</File>
@@ -1114,6 +1147,14 @@
 		</Filter>
 		<File
 			RelativePath="..\src\CLucene\CLConfig.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\CLucene\index\IndexFileNames.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\CLucene\index\IndexFileNames.h"
 			>
 		</File>
 		<File

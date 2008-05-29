@@ -12,6 +12,7 @@ libclucene_la_SOURCES     += $(indexdir)/IndexModifier.cpp
 libclucene_la_SOURCES     += $(indexdir)/IndexReader.cpp
 libclucene_la_SOURCES     += $(indexdir)/IndexWriter.cpp
 libclucene_la_SOURCES     += $(indexdir)/MultiReader.cpp
+libclucene_la_SOURCES     += $(indexdir)/Payload.cpp
 libclucene_la_SOURCES     += $(indexdir)/SegmentInfos.cpp
 libclucene_la_SOURCES     += $(indexdir)/SegmentMergeInfo.cpp
 libclucene_la_SOURCES     += $(indexdir)/SegmentMerger.cpp
