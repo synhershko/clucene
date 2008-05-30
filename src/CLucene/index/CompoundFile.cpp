@@ -18,7 +18,7 @@ CompoundFileReader::CSIndexInput::CSIndexInput(CL_NS(store)::IndexInput* base, c
    this->_length = length;
 }
 	
-void CompoundFileReader::CSIndexInput::readInternal(uint8_t* b, const int32_t len)
+void CompoundFileReader::CSIndexInput::readInternal(uint8_t* b, const int32_t offset, const int32_t len)
 {
    SCOPED_LOCK_MUTEX(base->THIS_LOCK)
 
@@ -26,7 +26,7 @@ void CompoundFileReader::CSIndexInput::readInternal(uint8_t* b, const int32_t le
    if(start + len > _length)
       _CLTHROWA(CL_ERR_IO,"read past EOF");
    base->seek(fileOffset + start);
-   base->readBytes(b, len);
+   base->readBytes(b, offset, len, false);
 }
 CompoundFileReader::CSIndexInput::~CSIndexInput(){
 }
@@ -301,7 +301,7 @@ void CompoundFileWriter::copyFile(WriterFileEntry* source, IndexOutput* os, uint
 
       while(remainder > 0) {
           int32_t len = (int32_t)min((int64_t)chunk, remainder);
-          is->readBytes(buffer, len);
+          is->readBytes(buffer, 0, len);
           os->writeBytes(buffer, len);
           remainder -= len;
       }

@@ -204,7 +204,7 @@ public:
 
 	// synchronized
 	uint8_t* norms(const TCHAR* field);
-	void norms(const TCHAR* field, uint8_t* result);
+	void norms(const TCHAR* field, uint8_t* result, int32_t offset);
 
 	TermEnum* terms() const;
 	TermEnum* terms(const Term* term) const;

@@ -18,28 +18,106 @@
 
 CL_NS_DEF(store)
 
+	// forward declaration
+	class RAMDirectory;
+
 	class RAMFile:LUCENE_BASE {
-	public:
-		CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
+	public: // TODO: privatize all below
+		LUCENE_STATIC_CONSTANT(int64_t, serialVersionUID=11);
+
+		struct RAMFileBuffer:LUCENE_BASE {
+			uint8_t* _buffer; size_t _len;
+			RAMFileBuffer(uint8_t* buf = NULL, size_t len=0) : _buffer(buf), _len(len) {};
+			~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
+		};
+	
+		// TODO: Should move to ArrayList ?
+		//CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
+		CL_NS(util)::CLVector<RAMFileBuffer*,CL_NS(util)::Deletor::Object<RAMFileBuffer> > buffers;
 		int64_t length;
+		RAMDirectory* directory;
+		uint64_t sizeInBytes;                  // Only maintained if in a directory; updates synchronized on directory
+
+		// This is publicly modifiable via Directory::touchFile(), so direct access not supported
 		uint64_t lastModified;
 
         #ifdef _DEBUG
 		const char* filename;
         #endif
-
-		RAMFile();
+	
+	public:
+		// File used as buffer, in no RAMDirectory
+		RAMFile(RAMDirectory* _directory=NULL);
 		~RAMFile();
+
+		// For non-stream access from thread that might be concurrent with writing
+		int64_t getLength() const { return length; }
+		void setLength(const int64_t _length) { this->length = _length; }
+
+		// For non-stream access from thread that might be concurrent with writing
+		uint64_t getLastModified() const { return lastModified;}
+		void setLastModified(const uint64_t lastModified) { this->lastModified = lastModified; }
+
+		uint8_t* addBuffer(const int32_t size) {
+			uint8_t* buffer = newBuffer(size);
+			if (directory!=NULL) {
+				// TODO: implement below
+				/*
+				synchronized (directory) {             // Ensure addition of buffer and adjustment to directory size are atomic wrt directory
+					buffers.add(buffer);
+					directory.sizeInBytes += size;
+					*/
+			}
+			else {
+				RAMFileBuffer* rfb = _CLNEW RAMFileBuffer(buffer, size);
+				buffers.push_back(rfb);
+			}
+			return buffer;
+		}
+
+		uint8_t* getBuffer(const int32_t index) const { return buffers[index]->_buffer; }
+		size_t getBufferLen(const int32_t index) const { return buffers[index]->_len; }
+
+		size_t numBuffers() const { return buffers.size(); }
+
+		/**
+		* Expert: allocate a new buffer. 
+		* Subclasses can allocate differently. 
+		* @param size size of allocated buffer.
+		* @return allocated buffer.
+		*/
+		uint8_t* newBuffer(const int32_t size) {
+			return _CL_NEWARRAY(uint8_t, size);
+		}
+
+		// Only valid if in a directory
+		uint64_t getSizeInBytes() {
+			/*
+			synchronized (directory) {
+				return sizeInBytes;
+			}*/
+			return sizeInBytes;
+		}
+
 	};
 
-	class RAMIndexOutput: public BufferedIndexOutput {
-	protected:
+	class RAMIndexOutput: public /*Buffered*/IndexOutput {
+	public:
+		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
+	private:
 		RAMFile* file;
-		int32_t pointer;
+
+		uint8_t* currentBuffer;
+		int32_t currentBufferIndex;
+
+		int32_t bufferPosition;
+		int64_t bufferStart;
+		int32_t bufferLength;
+
 		bool deleteFile;
 		
 		// output methods: 
-		void flushBuffer(const uint8_t* src, const int32_t len);
+		//void flushBuffer(const uint8_t* src, const int32_t len);
 	public:
 		RAMIndexOutput(RAMFile* f);
 		RAMIndexOutput();
@@ -55,35 +133,162 @@ CL_NS_DEF(store)
         void reset();
   	    /** Copy the current contents of this buffer to the named output. */
         void writeTo(IndexOutput* output);
+
+		void writeByte(const uint8_t b)
+		{
+			if (bufferPosition == bufferLength) {
+				currentBufferIndex++;
+				switchCurrentBuffer();
+			}
+			currentBuffer[bufferPosition++] = b;
+		}
+
+		void writeBytes(const uint8_t* b, int32_t offset, int32_t len)
+		{
+			while (len > 0) {
+				if (bufferPosition == bufferLength) {
+					currentBufferIndex++;
+					switchCurrentBuffer();
+				}
+
+				const int32_t remainInBuffer = bufferLength - bufferPosition;
+				const int32_t bytesToCopy = len < remainInBuffer ? len : remainInBuffer;
+				memcpy((void*)(currentBuffer + bufferPosition), (void*)(b + offset), bytesToCopy * sizeof(uint8_t)); // sizeof wasn't here
+				offset += bytesToCopy;
+				len -= bytesToCopy;
+				bufferPosition += bytesToCopy;
+			}
+		}
+
+	private:
+		void switchCurrentBuffer()
+		{
+			if (currentBufferIndex == file->numBuffers()) {
+				currentBuffer = file->addBuffer(BUFFER_SIZE);
+				bufferLength = BUFFER_SIZE;
+			} else {
+				currentBuffer = file->getBuffer(currentBufferIndex);
+				bufferLength = file->getBufferLen(currentBufferIndex);
+			}
+			bufferPosition = 0;
+			bufferStart = (int64_t) BUFFER_SIZE * (int64_t) currentBufferIndex;
+		}
+
+		void setFileLength() {
+			int64_t pointer = bufferStart + bufferPosition;
+			if (pointer > file->length) {
+				file->setLength(pointer);
+			}
+		}
+
+	public:
+		void flush()
+		{
+			file->setLastModified(CL_NS(util)::Misc::currentTimeMillis());
+			setFileLength();
+		}
+
+		int64_t getFilePointer() const {
+			return (currentBufferIndex < 0) ? 0 : bufferStart + bufferPosition;
+		}
+
+		virtual const char* getObjectName() { return "RAMIndexOutput"; };
 	};
 
-	class RAMIndexInput:public BufferedIndexInput {
+	class RAMIndexInput:public IndexInput/*BufferedIndexInput*/ {
+		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=RAMIndexOutput::BUFFER_SIZE);
 	private:
 		RAMFile* file;
-		int32_t pointer;
 		int64_t _length;
+
+		uint8_t* currentBuffer;
+		int32_t currentBufferIndex;
+  
+		int32_t bufferPosition;
+		int64_t bufferStart;
+		int32_t bufferLength;
+
 	protected:
 		/** IndexInput methods */
 		RAMIndexInput(const RAMIndexInput& clone);
-		void readInternal(uint8_t *dest, const int32_t len);
+		//void readInternal(uint8_t *dest, const int32_t offset, const int32_t len);
 		
         /** Random-at methods */
-		void seekInternal(const int64_t pos);
+		//void seekInternal(const int64_t pos);
 	public:
 		RAMIndexInput(RAMFile* f);
 		~RAMIndexInput();
 		IndexInput* clone() const;
 
+		inline uint8_t readByte(){
+			if (bufferPosition >= bufferLength) {
+				currentBufferIndex++;
+				switchCurrentBuffer();
+			}
+			return currentBuffer[bufferPosition++];
+		}
+
+		void readBytes(uint8_t* b, int32_t offset, int32_t len) {
+			while (len > 0) {
+				if (bufferPosition >= bufferLength) {
+					currentBufferIndex++;
+					switchCurrentBuffer();
+				}
+
+				const int32_t remainInBuffer = bufferLength - bufferPosition;
+				const int32_t bytesToCopy = (len < remainInBuffer) ? len : remainInBuffer;
+				memcpy((void*)(b + offset), (void*)(currentBuffer + bufferPosition), bytesToCopy * sizeof(uint8_t)); // sizeof wasn't here
+				offset += bytesToCopy;
+				len -= bytesToCopy;
+				bufferPosition += bytesToCopy;
+			}
+		}
+
 		void close();
-		int64_t length();
+		int64_t length() const;
 		const char* getDirectoryType() const;
+
+		int64_t getFilePointer() const {
+			return (currentBufferIndex < 0) ? 0 : (bufferStart + bufferPosition);
+		}
+
+		void seek(const int64_t pos) {
+			if (currentBuffer==NULL || pos < bufferStart || pos >= bufferStart + BUFFER_SIZE) {
+				currentBufferIndex = (int32_t) (pos / BUFFER_SIZE);
+				switchCurrentBuffer();
+			}
+			bufferPosition = (int32_t) (pos % BUFFER_SIZE);
+		}
+
+		virtual const char* getObjectName() { return "RAMIndexInput"; };
+	private:
+		void switchCurrentBuffer() {
+			if (currentBufferIndex >= file->numBuffers()) {
+				// end of file reached, no more buffers left
+				_CLTHROWA(CL_ERR_IO, "Read past EOF");
+			} else {
+				currentBuffer = file->getBuffer(currentBufferIndex);
+				bufferPosition = 0;
+				bufferStart = (int64_t) BUFFER_SIZE * (int64_t) currentBufferIndex;
+				int64_t buflen = _length - bufferStart;
+				bufferLength = (buflen > BUFFER_SIZE) ? BUFFER_SIZE : static_cast<int32_t>(buflen);
+			}
+		}
 	};
 
 
-   /**
-   * A memory-resident {@link Directory} implementation.
-   */
+	/**
+	* A memory-resident {@link Directory} implementation.  Locking
+	* implementation is by default the {@link SingleInstanceLockFactory}
+	* but can be changed with {@link #setLockFactory}.
+	*
+	*/
 	class RAMDirectory:public Directory{
+		//private static final long serialVersionUID = 1l;
+
+		// *****
+		// Lock acquisition sequence:  RAMDirectory, then RAMFile
+		// *****
 
 		class RAMLock: public LuceneLock{
 		private:

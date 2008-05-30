@@ -37,7 +37,7 @@ BitSet::BitSet(CL_NS(store)::Directory* d, const char* name) {
 	  	_count = input->readInt();			  // read count
 
 		bits = _CL_NEWARRAY(uint8_t,(_size >> 3) + 1);		  // allocate bits
-		input->readBytes(bits, (_size >> 3) + 1);	  // read bits
+		input->readBytes(bits, 0, (_size >> 3) + 1);	  // read bits - TODO: offset is 0 by default?
 	} _CLFINALLY (
 	    input->close();
 	    _CLDELETE(input );
@@ -49,7 +49,8 @@ void BitSet::write(CL_NS(store)::Directory* d, const char* name) {
 	try {
 	  output->writeInt(size());			  // write size
 	  output->writeInt(count());			  // write count
-	  output->writeBytes(bits, (_size >> 3) + 1);	  // write bits
+	  // TODO: make sure default offset = 0 is fine
+	  output->writeBytes(bits, 0, (_size >> 3) + 1);	  // write bits
 	} _CLFINALLY (
 	    output->close();
 	    _CLDELETE(output);

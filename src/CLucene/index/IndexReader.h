@@ -177,7 +177,7 @@ public:
 	*
 	* @see Field#setBoost(float_t)
 	*/
-	virtual void norms(const TCHAR* field, uint8_t* bytes) = 0;
+	virtual void norms(const TCHAR* field, uint8_t* bytes, int32_t offset) = 0;
 
     /** Expert: Resets the normalization factor for the named field of the named
     * document.

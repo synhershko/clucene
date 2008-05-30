@@ -45,17 +45,17 @@ CL_NS_DEF(store)
     buffer[bufferPosition++] = b;
   }
 
-  void BufferedIndexOutput::writeBytes(const uint8_t* b, const int32_t length) {
+  void BufferedIndexOutput::writeBytes(const uint8_t* b, int32_t offset, int32_t length) {
 	  if ( length < 0 )
 		  _CLTHROWA(CL_ERR_IllegalArgument, "IO Argument Error. Value must be a positive value.");
 	  int32_t bytesLeft = BUFFER_SIZE - bufferPosition;
 	  // is there enough space in the buffer?
 	  if (bytesLeft >= length) {
 		  // we add the data to the end of the buffer
-		  memcpy(buffer + bufferPosition, b, length);
+		  memcpy((void*)(buffer + bufferPosition), (void*)(b + offset), length  * sizeof(uint8_t)); // sizeof wasn't here
 		  bufferPosition += length;
 		  // if the buffer is full, flush it
-		  if (BUFFER_SIZE - bufferPosition == 0)
+		  if ((BUFFER_SIZE - bufferPosition) == 0)
 			  flush();
 	  } else {
 		  // is data larger then buffer?
@@ -64,7 +64,7 @@ CL_NS_DEF(store)
 			  if (bufferPosition > 0)
 				  flush();
 			  // and write data at once
-			  flushBuffer(b, length);
+			  flushBuffer(b, offset, length);
 			  bufferStart += length;
 		  } else {
 			  // we fill/flush the buffer (until the input is written)
@@ -75,7 +75,7 @@ CL_NS_DEF(store)
 					pieceLength =  length - pos;
 				  else
 					pieceLength = bytesLeft;
-				  memcpy(buffer + bufferPosition, b + pos, pieceLength);
+				  memcpy((void*)(buffer + bufferPosition), (void*)(b + (pos + offset)), pieceLength * sizeof(uint8_t)); // sizeof wasn't here
 				  pos += pieceLength;
 				  bufferPosition += pieceLength;
 				  // if the buffer is full, flush it
@@ -144,10 +144,7 @@ CL_NS_DEF(store)
     }
   }
 
-
-  int64_t BufferedIndexOutput::getFilePointer() const{
-    return bufferStart + bufferPosition;
-  }
+  int64_t BufferedIndexOutput::getFilePointer() const { return bufferStart + bufferPosition; }
 
   void BufferedIndexOutput::seek(const int64_t pos) {
     flush();

@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "IndexInput.h"
+//#include "IndexOutput.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -48,8 +49,26 @@ CL_NS_DEF(store)
     }
     return i;
   }
+
+  void IndexInput::skipChars(int32_t length)
+  {
+	  for (int32_t i = 0; i < length; i++) {
+		  uint8_t b = readByte();
+		  if ((b & 0x80) == 0){
+			  //do nothing, we only need one byte
+		  }
+		  else if ((b & 0xE0) != 0xE0) {
+			  readByte();//read an additional byte
+		  } else{      
+			  //read two additional bytes.
+			  readByte();
+			  readByte();
+		  }
+	  }
+  }
+
   
-  void IndexInput::skipChars( const int32_t count) {
+/*  void IndexInput::skipChars( const int32_t count) {
 	for (int32_t i = 0; i < count; i++) {
 		TCHAR b = readByte();
 		if ((b & 0x80) == 0) {
@@ -61,7 +80,7 @@ CL_NS_DEF(store)
 			readByte();
 		}
 	}
-}
+}*/
 
   int32_t IndexInput::readString(TCHAR* buffer, const int32_t maxLength){
     int32_t len = readVInt();
@@ -118,127 +137,157 @@ CL_NS_DEF(store)
   }
 
 
-
-
-
-
 BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
 		buffer(NULL),
-		bufferSize(_bufferSize),
 		bufferStart(0),
 		bufferLength(0),
-		bufferPosition(0)
+		bufferPosition(0),
+		bufferSize(_bufferSize)
   {
+	      checkBufferSize(_bufferSize);
   }
 
   BufferedIndexInput::BufferedIndexInput(const BufferedIndexInput& other):
   	IndexInput(other),
     buffer(NULL),
-	bufferSize(other.bufferSize),
-    bufferStart(other.bufferStart),
-    bufferLength(other.bufferLength),
-    bufferPosition(other.bufferPosition)
+	bufferSize(BUFFER_SIZE),
+    bufferStart(other.getFilePointer()),
+    bufferLength(0),
+    bufferPosition(0)
   {
     /* DSR: Does the fact that sometime clone.buffer is not NULL even when
     ** clone.bufferLength is zero indicate memory corruption/leakage?
     **   if ( clone.buffer != NULL) { */
     if (other.bufferLength != 0 && other.buffer != NULL) {
-      buffer = _CL_NEWARRAY(uint8_t,bufferLength);
-	  memcpy(buffer,other.buffer,bufferLength * sizeof(uint8_t));
+      buffer = _CL_NEWARRAY(uint8_t,bufferSize); // was bufferLength
+	  memcpy(buffer,other.buffer,bufferSize * sizeof(uint8_t));
     }
   }
 
-  void BufferedIndexInput::readBytes(uint8_t* b, const int32_t len){
-    if (len < bufferSize) {
-      for (int32_t i = 0; i < len; ++i)		  // read byte-by-byte
-        b[i] = readByte();
-    } else {					  // read all-at-once
-      int64_t start = getFilePointer();
-      seekInternal(start);
-      readInternal(b, len);
+	void BufferedIndexInput::readBytes(uint8_t* b, int32_t offset, int32_t len, const bool useBuffer) {
+		if (len <= (bufferLength-bufferPosition)) {
+			// the buffer contains enough data to satisfy this request
+			if(len>0) // to allow b to be null if len is 0...
+				memcpy((void*)(b + offset), (void*)(buffer + bufferPosition), len * sizeof(uint8_t));
+			bufferPosition+=len;
+		} else {
+			// the buffer does not have enough data. First serve all we've got.
+			int32_t available = bufferLength - bufferPosition;
+			if(available > 0){
+				memcpy((void*)(b + offset), (void*)(buffer + bufferPosition), available * sizeof(uint8_t));
+				offset += available;
+				len -= available;
+				bufferPosition += available;
+			}
+			// and now, read the remaining 'len' bytes:
+			if (useBuffer && len<bufferSize){
+				// If the amount left to read is small enough, and
+				// we are allowed to use our buffer, do it in the usual
+				// buffered way: fill the buffer and copy from it:
+				refill();
+				if(bufferLength<len){
+					// Throw an exception when refill() could not read len bytes:
+					memcpy((void*)(b + offset), buffer, bufferLength * sizeof(uint8_t));
+					_CLTHROWA(CL_ERR_IO, "BufferedIndexInput::readBytes read past EOF");
+				} else {
+					memcpy((void*)(b + offset), buffer, len * sizeof(uint8_t));
+					bufferPosition=len;
+				}
+			} else {
+				// The amount left to read is larger than the buffer
+				// or we've been asked to not use our buffer -
+				// there's no performance reason not to read it all
+				// at once. Note that unlike the previous code of
+				// this function, there is no need to do a seek
+				// here, because there's no need to reread what we
+				// had in the buffer.
+				int64_t after = bufferStart+bufferPosition+len;
+				if(after > length())
+					_CLTHROWA(CL_ERR_IO, "BufferedIndexInput::readBytes read past EOF");
+				readInternal(b, offset, len);
+				bufferStart = after;
+				bufferPosition = 0;
+				bufferLength = 0;                    // trigger refill() on read
+			}
+		}
+	}
 
-      bufferStart = start + len;		  // adjust stream variables
-      bufferPosition = 0;
-      bufferLength = 0;				  // trigger refill() on read
-    }
-  }
+	int64_t BufferedIndexInput::getFilePointer() const { return bufferStart + bufferPosition; }
 
-  int64_t BufferedIndexInput::getFilePointer() const{
-    return bufferStart + bufferPosition;
-  }
+	void BufferedIndexInput::seek(const int64_t pos) {
+		if ( pos < 0 )
+			_CLTHROWA(CL_ERR_IO, "IO Argument Error. Value must be a positive value.");
+		if (pos >= bufferStart && pos < (bufferStart + bufferLength))
+			bufferPosition = (int32_t)(pos - bufferStart);  // seek within buffer
+		else {
+			bufferStart = pos;
+			bufferPosition = 0;
+			bufferLength = 0;				  // trigger refill() on read()
+			seekInternal(pos);
+		}
+	}
 
-  void BufferedIndexInput::seek(const int64_t pos) {
-    if ( pos < 0 )
-      _CLTHROWA(CL_ERR_IO, "IO Argument Error. Value must be a positive value.");
-    if (pos >= bufferStart && pos < (bufferStart + bufferLength))
-      bufferPosition = (int32_t)(pos - bufferStart);  // seek within buffer
-    else {
-      bufferStart = pos;
-      bufferPosition = 0;
-      bufferLength = 0;				  // trigger refill() on read()
-      seekInternal(pos);
-    }
-  }
-  void BufferedIndexInput::close(){
-	_CLDELETE_ARRAY(buffer);
-    bufferLength = 0;
-    bufferPosition = 0;
-    bufferStart = 0;
-  }
+	void BufferedIndexInput::close(){
+		_CLDELETE_ARRAY(buffer);
+		bufferLength = 0;
+		bufferPosition = 0;
+		bufferStart = 0;
+	}
 
 
-  BufferedIndexInput::~BufferedIndexInput(){
-    BufferedIndexInput::close();
-  }
+	BufferedIndexInput::~BufferedIndexInput(){
+		BufferedIndexInput::close();
+	}
 
-  void BufferedIndexInput::refill() {
-    int64_t start = bufferStart + bufferPosition;
-    int64_t end = start + bufferSize;
-    if (end > length())				  // don't read past EOF
-      end = length();
-    bufferLength = (int32_t)(end - start);
-    if (bufferLength == 0)
-      _CLTHROWA(CL_ERR_IO, "IndexInput read past EOF");
+	void BufferedIndexInput::refill() {
+		int64_t start = bufferStart + bufferPosition;
+		int64_t end = start + bufferSize;
+		if (end > length())				  // don't read past EOF
+			end = length();
+		int32_t newLength = (int32_t)(end - start);
+		if (newLength <= 0)
+			_CLTHROWA(CL_ERR_IO, "BufferedIndexInput::refill tried to read past EOF");
 
-    if (buffer == NULL){
-      buffer = _CL_NEWARRAY(uint8_t,bufferSize);		  // allocate buffer lazily
-    }
-    readInternal(buffer, bufferLength);
+		if (buffer == NULL){
+			buffer = _CL_NEWARRAY(uint8_t,bufferSize);		  // allocate buffer lazily
+			seekInternal(bufferStart);
+		}
+		readInternal(buffer, 0, newLength);
 
+		bufferLength = newLength;
+		bufferStart = start;
+		bufferPosition = 0;
+	}
 
-    bufferStart = start;
-    bufferPosition = 0;
-  }
+	void BufferedIndexInput::setBufferSize( const int32_t newSize )
+	{
+		CND_PRECONDITION (buffer == NULL /*|| bufferSize == buffer.length*/, "Buffer was not initialized properly");
+		if (newSize != bufferSize) {
+			checkBufferSize(newSize);
+			bufferSize = newSize;
+			if (buffer != NULL) {
+				// Resize the existing buffer and carefully save as
+				// many bytes as possible starting from the current
+				// bufferPosition
+				uint8_t* newBuffer = _CL_NEWARRAY(uint8_t, newSize);
+				const int32_t leftInBuffer = bufferLength-bufferPosition;
+				int32_t numToCopy;
+				if (leftInBuffer > newSize)
+					numToCopy = newSize;
+				else
+					numToCopy = leftInBuffer;
 
-  void BufferedIndexInput::setBufferSize( int32_t newSize ) {
-	  
-	  if ( newSize != bufferSize ) {
-		  bufferSize = newSize;
-		  if ( buffer != NULL ) {
-			  
-			  uint8_t* newBuffer = _CL_NEWARRAY( uint8_t, newSize );
-			  int32_t leftInBuffer = bufferLength - bufferPosition;
-			  int32_t numToCopy;
-			  
-			  if ( leftInBuffer > newSize ) {
-				  numToCopy = newSize;
-			  } else {
-				  numToCopy = leftInBuffer;
-			  }
-			  
-			  memcpy( (void*)newBuffer, (void*)(buffer + bufferPosition), numToCopy );
-			  
-			  bufferStart += bufferPosition;
-			  bufferPosition = 0;
-			  bufferLength = numToCopy;
-			  
-			  _CLDELETE_ARRAY( buffer );
-			  buffer = newBuffer;
-			  
-		  }
-	  }
-	  
-  }
+				memcpy((void*)newBuffer, (void*)(buffer + bufferPosition), numToCopy *  sizeof(uint8_t));
+
+				bufferStart += bufferPosition;
+				bufferPosition = 0;
+				bufferLength = numToCopy;
+
+				_CLDELETE_LARRAY(buffer);
+				buffer = newBuffer;
+			}
+		}
+	}
 
 IndexInputStream::IndexInputStream(IndexInput* input){
 	this->input = input;
@@ -254,7 +303,7 @@ int32_t IndexInputStream::fillBuffer(char* start, int32_t space){
 	else if ( avail<space )
         space = (int32_t)avail;
 	
-	input->readBytes((uint8_t*)start,space);
+	input->readBytes((uint8_t*)start,0,space); // TODO: make sure offset should be 0 by default
     return space;
 }
 
