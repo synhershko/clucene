@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	CuString *output = CuStringNew();
 	bool silent = false;
 	bool verbose = false;
-	bool times = false;
+	bool times = true;
 	uint64_t startTime=0;
 
 	cl_tempDir = NULL;
