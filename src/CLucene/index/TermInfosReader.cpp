@@ -21,7 +21,7 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 
-  TermInfosReader::TermInfosReader(Directory* dir, const char* seg, FieldInfos* fis):
+  TermInfosReader::TermInfosReader(Directory* dir, const char* seg, FieldInfos* fis, int32_t readBufferSize):
       directory (dir),fieldInfos (fis)
   {
   //Func - Constructor.
@@ -34,6 +34,8 @@ CL_NS_DEF(index)
 	    
       CND_PRECONDITION(seg != NULL, "seg is NULL");
 
+	  // TODO: Support lock-less commits here
+
 	  //Initialize the name of the segment
       segment    =  seg;
       //There are no indexTerms yet
@@ -41,14 +43,16 @@ CL_NS_DEF(index)
 	  //So there are no indexInfos
 	  indexInfos    = NULL;
 	  //So there are no indexPointers
-	  indexPointers = NULL; 	
+	  indexPointers = NULL;
       //Create a filname fo a Term Info File
 	  char* tisFile = Misc::segmentname(segment,".tis");
 	  char* tiiFile = Misc::segmentname(segment,".tii");
 
+	  indexDivisor = 1;
+
       //Create an SegmentTermEnum for storing all the terms read of the segment
-      origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile ), fieldInfos, false);
-      indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile ), fieldInfos, true);
+      origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile, readBufferSize ), fieldInfos, false);
+      indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile, readBufferSize ), fieldInfos, true);
 
 	  //Check if enumerator points to a valid instance
       CND_CONDITION(origEnum != NULL, "No memory could be allocated for orig enumerator");

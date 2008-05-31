@@ -13,9 +13,11 @@ CL_NS_DEF(store)
 
   IndexOutput::IndexOutput()
   {
+	  copyBuffer = NULL;
   }
 
   IndexOutput::~IndexOutput(){
+	  _CLDELETE_LARRAY(copyBuffer);
   }
 
   BufferedIndexOutput::BufferedIndexOutput()
@@ -142,6 +144,23 @@ CL_NS_DEF(store)
 			writeByte((uint8_t)(0x80 | (code & 0x3F)));
         }
     }
+  }
+
+  void IndexOutput::copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes)
+  {
+	  int64_t left = numBytes;
+	  if (copyBuffer == NULL)
+		  copyBuffer = _CL_NEWARRAY(uint8_t, COPY_BUFFER_SIZE);
+	  while(left > 0) {
+		  int32_t toCopy;
+		  if (left > COPY_BUFFER_SIZE)
+			  toCopy = COPY_BUFFER_SIZE;
+		  else
+			  toCopy = (int32_t) left;
+		  input->readBytes(copyBuffer, 0, toCopy);
+		  writeBytes(copyBuffer, 0, toCopy);
+		  left -= toCopy;
+	  }
   }
 
   int64_t BufferedIndexOutput::getFilePointer() const { return bufferStart + bufferPosition; }

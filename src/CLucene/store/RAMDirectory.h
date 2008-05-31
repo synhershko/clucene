@@ -101,6 +101,10 @@ CL_NS_DEF(store)
 
 	};
 
+	/**
+	* A memory-resident {@link IndexOutput} implementation.
+	*
+	*/
 	class RAMIndexOutput: public /*Buffered*/IndexOutput {
 	public:
 		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
@@ -134,7 +138,7 @@ CL_NS_DEF(store)
   	    /** Copy the current contents of this buffer to the named output. */
         void writeTo(IndexOutput* output);
 
-		void writeByte(const uint8_t b)
+		inline void writeByte(const uint8_t b)
 		{
 			if (bufferPosition == bufferLength) {
 				currentBufferIndex++;
@@ -174,8 +178,8 @@ CL_NS_DEF(store)
 			bufferStart = (int64_t) BUFFER_SIZE * (int64_t) currentBufferIndex;
 		}
 
-		void setFileLength() {
-			int64_t pointer = bufferStart + bufferPosition;
+		inline void setFileLength() {
+			const int64_t pointer = bufferStart + bufferPosition;
 			if (pointer > file->length) {
 				file->setLength(pointer);
 			}
@@ -188,13 +192,17 @@ CL_NS_DEF(store)
 			setFileLength();
 		}
 
-		int64_t getFilePointer() const {
+		inline int64_t getFilePointer() const {
 			return (currentBufferIndex < 0) ? 0 : bufferStart + bufferPosition;
 		}
 
 		virtual const char* getObjectName() { return "RAMIndexOutput"; };
 	};
 
+	/**
+	* A memory-resident {@link IndexInput} implementation.
+	*
+	*/
 	class RAMIndexInput:public IndexInput/*BufferedIndexInput*/ {
 		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=RAMIndexOutput::BUFFER_SIZE);
 	private:
@@ -220,60 +228,23 @@ CL_NS_DEF(store)
 		~RAMIndexInput();
 		IndexInput* clone() const;
 
-		inline uint8_t readByte(){
-			if (bufferPosition >= bufferLength) {
-				currentBufferIndex++;
-				switchCurrentBuffer();
-			}
-			return currentBuffer[bufferPosition++];
-		}
+		inline uint8_t readByte();
 
-		void readBytes(uint8_t* b, int32_t offset, int32_t len) {
-			while (len > 0) {
-				if (bufferPosition >= bufferLength) {
-					currentBufferIndex++;
-					switchCurrentBuffer();
-				}
-
-				const int32_t remainInBuffer = bufferLength - bufferPosition;
-				const int32_t bytesToCopy = (len < remainInBuffer) ? len : remainInBuffer;
-				memcpy((void*)(b + offset), (void*)(currentBuffer + bufferPosition), bytesToCopy * sizeof(uint8_t)); // sizeof wasn't here
-				offset += bytesToCopy;
-				len -= bytesToCopy;
-				bufferPosition += bytesToCopy;
-			}
-		}
+		void readBytes(uint8_t* b, int32_t offset, int32_t len);
 
 		void close();
 		int64_t length() const;
 		const char* getDirectoryType() const;
 
-		int64_t getFilePointer() const {
+		inline int64_t getFilePointer() const {
 			return (currentBufferIndex < 0) ? 0 : (bufferStart + bufferPosition);
 		}
 
-		void seek(const int64_t pos) {
-			if (currentBuffer==NULL || pos < bufferStart || pos >= bufferStart + BUFFER_SIZE) {
-				currentBufferIndex = (int32_t) (pos / BUFFER_SIZE);
-				switchCurrentBuffer();
-			}
-			bufferPosition = (int32_t) (pos % BUFFER_SIZE);
-		}
+		void seek(const int64_t pos);
 
 		virtual const char* getObjectName() { return "RAMIndexInput"; };
 	private:
-		void switchCurrentBuffer() {
-			if (currentBufferIndex >= file->numBuffers()) {
-				// end of file reached, no more buffers left
-				_CLTHROWA(CL_ERR_IO, "Read past EOF");
-			} else {
-				currentBuffer = file->getBuffer(currentBufferIndex);
-				bufferPosition = 0;
-				bufferStart = (int64_t) BUFFER_SIZE * (int64_t) currentBufferIndex;
-				int64_t buflen = _length - bufferStart;
-				bufferLength = (buflen > BUFFER_SIZE) ? BUFFER_SIZE : static_cast<int32_t>(buflen);
-			}
-		}
+		void switchCurrentBuffer();
 	};
 
 

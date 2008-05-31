@@ -112,22 +112,7 @@ private:
 
 public:
 	/** Copy numBytes bytes from input to ourself. */
-	void copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes)
-	{
-		int64_t left = numBytes;
-		if (copyBuffer == NULL)
-			copyBuffer = _CL_NEWARRAY(uint8_t, COPY_BUFFER_SIZE);
-		while(left > 0) {
-			int32_t toCopy;
-			if (left > COPY_BUFFER_SIZE)
-				toCopy = COPY_BUFFER_SIZE;
-			else
-				toCopy = (int32_t) left;
-			input->readBytes(copyBuffer, 0, toCopy);
-			writeBytes(copyBuffer, 0, toCopy);
-			left -= toCopy;
-		}
-	}
+	void copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes);
 };
 
 /** Base implementation class for buffered {@link IndexOutput}. */

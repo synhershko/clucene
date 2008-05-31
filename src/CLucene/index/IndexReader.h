@@ -55,26 +55,29 @@ public:
 		}
 	};
 	
-	
+	// TODO: STORES_PAYLOADS adds a new value that is greater than what one byte can hold.
+	// If that matters, perhaps make ALL = 0 or all values summed up?
 	enum FieldOption {
-		// all fields
+		// All fields
 		ALL = 1,
-		// all indexed fields
+		// All indexed fields
 		INDEXED = 2,
-		// all fields which are not indexed
+		// All fields which are not indexed
 		UNINDEXED = 4,
-		// all fields which are indexed with termvectors enables
+		// All fields which are indexed with termvectors enabled
 		INDEXED_WITH_TERMVECTOR = 8,
-		// all fields which are indexed but don't have termvectors enabled
+		// All fields which are indexed but don't have termvectors enabled
 		INDEXED_NO_TERMVECTOR = 16,
-		// all fields where termvectors are enabled. Please note that only standard termvector fields are returned
+		// All fields where termvectors are enabled. Please note that only standard termvector fields are returned
 		TERMVECTOR = 32,
-		// all field with termvectors wiht positions enabled
+		// All field with termvectors wiht positions enabled
 		TERMVECTOR_WITH_POSITION = 64,
-		// all fields where termvectors with offset position are set
+		// All fields with termvectors with offset values enabled
 		TERMVECTOR_WITH_OFFSET = 128,
-		// all fields where termvectors with offset and position values set
-		TERMVECTOR_WITH_POSITION_OFFSET = 256
+		// All fields with termvectors with offset values and position values enabled
+		TERMVECTOR_WITH_POSITION_OFFSET = 256,
+		// All fields that store payloads
+		STORES_PAYLOADS = 512
 	};
 
 

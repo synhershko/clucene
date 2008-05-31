@@ -66,7 +66,7 @@ CL_NS_DEF(store)
 	}else
      	file = NULL;
   }
-  RAMIndexOutput::RAMIndexOutput(RAMFile* f):file(f) {
+  RAMIndexOutput::RAMIndexOutput(RAMFile* f): file(f) {
     deleteFile = false;
 
     // make sure that we switch to the
@@ -75,7 +75,7 @@ CL_NS_DEF(store)
     currentBuffer = NULL;
   }
   
-  RAMIndexOutput::RAMIndexOutput():
+  RAMIndexOutput::RAMIndexOutput(): IndexOutput(),
      file(_CLNEW RAMFile)
   {
      deleteFile = true;
@@ -88,7 +88,7 @@ CL_NS_DEF(store)
 
   void RAMIndexOutput::writeTo(IndexOutput* out){
     flush();
-    int64_t end = file->length;
+    const int64_t end = file->getLength();
     int64_t pos = 0;
     int32_t p = 0;
     while (pos < end) {
@@ -97,7 +97,7 @@ CL_NS_DEF(store)
       if (nextPos > end) {                        // at the last buffer
         length = (int32_t)(end - pos);
       }
-      out->writeBytes((uint8_t*)file->getBuffer(p++), length);
+      out->writeBytes(file->getBuffer(p++), length);
       pos = nextPos;
     }
   }
@@ -142,7 +142,8 @@ CL_NS_DEF(store)
 
   /** Random-at methods */
   void RAMIndexOutput::seek(const int64_t pos){
-    //BufferedIndexOutput::seek(pos);
+    //BufferedIndexOutput::seek(pos); <-- removed due to new deriviation from IndexOutput
+
     // set the file length in case we seek back
     // and flush() has not been called yet
     setFileLength();
@@ -228,6 +229,51 @@ CL_NS_DEF(store)
 
   void RAMIndexInput::close() {
     //BufferedIndexInput::close();
+  }
+
+  inline uint8_t RAMIndexInput::readByte(){
+	  if (bufferPosition >= bufferLength) {
+		  currentBufferIndex++;
+		  switchCurrentBuffer();
+	  }
+	  return currentBuffer[bufferPosition++];
+  }
+
+  void RAMIndexInput::readBytes(uint8_t* b, int32_t offset, int32_t len) {
+	  while (len > 0) {
+		  if (bufferPosition >= bufferLength) {
+			  currentBufferIndex++;
+			  switchCurrentBuffer();
+		  }
+
+		  const int32_t remainInBuffer = bufferLength - bufferPosition;
+		  const int32_t bytesToCopy = (len < remainInBuffer) ? len : remainInBuffer;
+		  memcpy((void*)(b + offset), (void*)(currentBuffer + bufferPosition), bytesToCopy * sizeof(uint8_t)); // sizeof wasn't here
+		  offset += bytesToCopy;
+		  len -= bytesToCopy;
+		  bufferPosition += bytesToCopy;
+	  }
+  }
+
+  void RAMIndexInput::switchCurrentBuffer() {
+	  if (currentBufferIndex >= file->numBuffers()) {
+		  // end of file reached, no more buffers left
+		  _CLTHROWA(CL_ERR_IO, "Read past EOF");
+	  } else {
+		  currentBuffer = file->getBuffer(currentBufferIndex);
+		  bufferPosition = 0;
+		  bufferStart = (int64_t) BUFFER_SIZE * (int64_t) currentBufferIndex;
+		  int64_t buflen = _length - bufferStart;
+		  bufferLength = (buflen > BUFFER_SIZE) ? BUFFER_SIZE : static_cast<int32_t>(buflen);
+	  }
+  }
+
+  void RAMIndexInput::seek(const int64_t pos) {
+	  if (currentBuffer==NULL || pos < bufferStart || pos >= bufferStart + BUFFER_SIZE) {
+		  currentBufferIndex = (int32_t) (pos / BUFFER_SIZE);
+		  switchCurrentBuffer();
+	  }
+	  bufferPosition = (int32_t) (pos % BUFFER_SIZE);
   }
 
   /*void RAMIndexInput::seekInternal(const int64_t pos) {
