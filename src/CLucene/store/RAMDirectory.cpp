@@ -160,7 +160,7 @@ CL_NS_DEF(store)
   }
 
 
-  RAMIndexInput::RAMIndexInput(RAMFile* f): file(f)
+  RAMIndexInput::RAMIndexInput(RAMFile* f): file(f), bufferPosition(0), bufferLength(0)
   {
     _length = f->length;
 

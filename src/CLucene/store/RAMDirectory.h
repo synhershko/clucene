@@ -210,7 +210,7 @@ CL_NS_DEF(store)
 		int64_t _length;
 
 		uint8_t* currentBuffer;
-		int32_t currentBufferIndex;
+		uint32_t currentBufferIndex;
   
 		int32_t bufferPosition;
 		int64_t bufferStart;

@@ -70,7 +70,7 @@ public:
 	}
 
 
-	void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
+	inline void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
 
 	void close();
 
