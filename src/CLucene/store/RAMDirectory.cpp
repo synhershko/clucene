@@ -66,7 +66,7 @@ CL_NS_DEF(store)
 	}else
      	file = NULL;
   }
-  RAMIndexOutput::RAMIndexOutput(RAMFile* f): file(f) {
+  RAMIndexOutput::RAMIndexOutput(RAMFile* f): file(f), bufferPosition(0), bufferLength(0) {
     deleteFile = false;
 
     // make sure that we switch to the
@@ -76,7 +76,7 @@ CL_NS_DEF(store)
   }
   
   RAMIndexOutput::RAMIndexOutput(): IndexOutput(),
-     file(_CLNEW RAMFile)
+     file(_CLNEW RAMFile), bufferPosition(0), bufferLength(0)
   {
      deleteFile = true;
 
