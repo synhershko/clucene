@@ -91,25 +91,40 @@ bool LowerCaseFilter::next(Token* t){
 	return true;
 }
 
-StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** stopWords):
+bool StopFilter::ENABLE_POSITION_INCREMENTS_DEFAULT = false;
+
+StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase):
 	TokenFilter(in, deleteTokenStream),
-	table(_CLNEW CLSetList<const TCHAR*>(false))
+	stopWords(false),
+	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
+	ignoreCase(_ignoreCase)
 {
-	fillStopTable( table,stopWords );
+	fillStopTable( &stopWords,_stopWords, _ignoreCase );
 }
 
-void StopFilter::fillStopTable(CLSetList<const TCHAR*>* stopTable,
-								  const TCHAR** stopWords) {
-	for (int32_t i = 0; stopWords[i]!=NULL; i++)
-		stopTable->insert(stopWords[i]);
+void StopFilter::fillStopTable(CLSetList<const TCHAR*>* stopTable, const TCHAR** stopWords
+							   , const bool _ignoreCase)
+{
+	if ( _ignoreCase )
+		for (int32_t i = 0; stopWords[i]!=NULL; i++)
+			stopTable->insert( stringCaseFold(const_cast<TCHAR*>(stopWords[i])) );
+	else
+		for (int32_t i = 0; stopWords[i]!=NULL; i++)
+			stopTable->insert( stopWords[i] );
 }
 
 bool StopFilter::next(Token* token) {
 	// return the first non-stop word found
+	int32_t skippedPositions = 0;
 	while (input->next(token)){
-		if (table->find(token->_termText)==table->end()){
+		TCHAR* termText = ignoreCase ? stringCaseFold(token->_termText) : token->_termText;
+		if (stopWords.find(termText)==stopWords.end()){
+			if (enablePositionIncrements) {
+				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
+			}
 			return true;
 		}
+		skippedPositions += token->getPositionIncrement();
 	}
 
 	// reached EOS -- return nothing
@@ -134,8 +149,8 @@ const TCHAR* StopAnalyzer::ENGLISH_STOP_WORDS[]  =
 {
 	_T("a"), _T("an"), _T("and"), _T("are"), _T("as"), _T("at"), _T("be"), _T("but"), _T("by"),
 	_T("for"), _T("if"), _T("in"), _T("into"), _T("is"), _T("it"),
-	_T("no"), _T("not"), _T("of"), _T("on"), _T("or"), _T("s"), _T("such"),
-	_T("t"), _T("that"), _T("the"), _T("their"), _T("then"), _T("there"), _T("these"),
+	_T("no"), _T("not"), _T("of"), _T("on"), _T("or"), _T("such"),
+	_T("that"), _T("the"), _T("their"), _T("then"), _T("there"), _T("these"),
 	_T("they"), _T("this"), _T("to"), _T("was"), _T("will"), _T("with"), NULL
 };
 
@@ -349,7 +364,7 @@ bool KeywordTokenizer::next(Token* token){
 			break;
 		token->growBuffer(token->_termTextLen +rd+1);
 
-		int32_t cp = rd;
+		uint32_t cp = rd;
 		if ( token->_termTextLen + cp > token->bufferLength() )
 			cp = token->bufferLength() -  token->_termTextLen;
 		_tcsncpy(token->_termText+token->_termTextLen,buffer,cp);
@@ -363,7 +378,7 @@ bool KeywordTokenizer::next(Token* token){
 }
 
 
-LengthFilter::LengthFilter(TokenStream* in, int _min, int _max):
+LengthFilter::LengthFilter(TokenStream* in, const size_t _min, const size_t _max):
     TokenFilter(in)
 {
     this->_min = _min;

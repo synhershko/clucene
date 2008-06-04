@@ -202,7 +202,16 @@
 	CLUCENE_ASSERT(filter.next(&token)==false);
   }
 
-
+  void testWordlistLoader(CuTest *tc){
+	  char stopwordsfile[1024];
+	  strcpy(stopwordsfile, clucene_data_location);
+	  strcat(stopwordsfile, "/StopWords.test");
+	  Analyzer* a = _CLNEW StopAnalyzer(stopwordsfile);
+	  assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;"));
+	  assertAnalyzersTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
+    
+	  _CLDELETE(a);
+  }
   
 CuSuite *testanalyzers(void)
 {
@@ -213,6 +222,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testNullAnalyzer);
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
+	SUITE_ADD_TEST(suite, testWordlistLoader);
     return suite; 
 }
 // EOF

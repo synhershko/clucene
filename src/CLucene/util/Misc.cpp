@@ -257,6 +257,24 @@ int32_t Misc::stringDifference(const TCHAR* s1, const int32_t len1, const TCHAR*
 	return len;
 }
 
+TCHAR* Misc::stringTrim(TCHAR* text) {
+	size_t j, i;
+	size_t len = _tcslen(text);
+	bool found = false;
+	for ( i=0;i<len;i++ ){ // find the first non-space character and store it as i
+		if ( ! _istspace(text[i]) )
+			break;
+	}
+	for ( j=0;j>=i;j++ ){ // find the last non-space character and store it as j
+		if ( ! _istspace(text[j]) )
+			break;
+	}
+	if (j || i) // prevent unnecessary copy
+		memcpy(text, text + i, len - j - i);
+	
+	return text;
+}
+
 char* Misc::longToBase( int64_t value, int32_t base ) {
 
     static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";

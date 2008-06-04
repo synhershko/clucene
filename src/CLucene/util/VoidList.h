@@ -39,7 +39,7 @@ public:
 	{
 	}
 
-	void setDoDelete(bool val){ dv=val; }
+	void setDoDelete(const bool val){ dv=val; }
 
 	//sets array to the contents of this array.
 	//array must be size+1, otherwise memory may be overwritten

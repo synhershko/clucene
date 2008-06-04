@@ -135,11 +135,17 @@ class StopFilter: public TokenFilter {
 private:
 	//bvk: i found this to work faster with a non-hash table. the number of items
 	//in the stop table is not like to make it worth having hashing.
-	CL_NS(util)::CLSetList<const TCHAR*>* table;
+	//ish: implement a radix/patricia tree for this?
+	CL_NS(util)::CLSetList<const TCHAR*> stopWords;
+
+	bool enablePositionIncrements;
+	const bool ignoreCase;
 public:
+	static bool ENABLE_POSITION_INCREMENTS_DEFAULT;
+
 	// Constructs a filter which removes words from the input
 	//	TokenStream that are named in the array of words. 
-	StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** stopWords);
+	StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase = false);
 
 	~StopFilter(){}
 
@@ -148,8 +154,11 @@ public:
 	*/
 	StopFilter(TokenStream* in, bool deleteTokenStream, CL_NS(util)::CLSetList<const TCHAR*>* stopTable):
 		TokenFilter(in, deleteTokenStream),
-		table(stopTable)
-	{} 
+		stopWords (*stopTable),
+		enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
+		ignoreCase(false)
+		{
+		}
 	  
 	
 	/**
@@ -159,15 +168,115 @@ public:
 	* Note: the stopWords list must be a static list because the strings are not copied
 	*/
 	static void fillStopTable(CL_NS(util)::CLSetList<const TCHAR*>* stopTable,
-                                      const TCHAR** stopWords);
+                                      const TCHAR** stopWords, const bool _ignoreCase = false);
 
 	/**
 	* Returns the next input Token whose termText() is not a stop word.
 	*/ 
 	bool next(Token* token);
+
+
+	/**
+	* @see #setEnablePositionIncrementsDefault(boolean). 
+	*/
+	static bool getEnablePositionIncrementsDefault() {
+		return ENABLE_POSITION_INCREMENTS_DEFAULT;
+	}
+
+	/**
+	* Set the default position increments behavior of every StopFilter created from now on.
+	* <p>
+	* Note: behavior of a single StopFilter instance can be modified 
+	* with {@link #setEnablePositionIncrements(boolean)}.
+	* This static method allows control over behavior of classes using StopFilters internally, 
+	* for example {@link org.apache.lucene.analysis.standard.StandardAnalyzer StandardAnalyzer}. 
+	* <p>
+	* Default : false.
+	* @see #setEnablePositionIncrements(boolean).
+	*/
+	static void setEnablePositionIncrementsDefault(const bool defaultValue) {
+		ENABLE_POSITION_INCREMENTS_DEFAULT = defaultValue;
+	}
+
+	/**
+	* @see #setEnablePositionIncrements(boolean). 
+	*/
+	bool getEnablePositionIncrements() const { return enablePositionIncrements; }
+
+	/**
+	* Set to <code>true</code> to make <b>this</b> StopFilter enable position increments to result tokens.
+	* <p>
+	* When set, when a token is stopped (omitted), the position increment of 
+	* the following token is incremented.  
+	* <p>
+	* Default: see {@link #setEnablePositionIncrementsDefault(boolean)}.
+	*/
+	void setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
+
 };
 
+/**
+ * Loader for text files that represent a list of stopwords.
+ *
+ */
+class WordlistLoader {
+public:
+	/**
+	* Loads a text file and adds every line as an entry to a HashSet (omitting
+	* leading and trailing whitespace). Every line of the file should contain only
+	* one word. The words need to be in lowercase if you make use of an
+	* Analyzer which uses LowerCaseFilter (like StandardAnalyzer).
+	*
+	* @param wordfile File containing the wordlist
+	* @return A HashSet with the file's words
+	*/
+	static CL_NS(util)::CLSetList<const TCHAR*>* getWordSet(const char* wordfilePath, const char* enc = "ASCII", CL_NS(util)::CLSetList<const TCHAR*>* stopTable = NULL)
+	{
+		CL_NS(util)::FileReader* reader = NULL;
+		try {
+			reader = _CLNEW CL_NS(util)::FileReader(wordfilePath, enc, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
+			stopTable = getWordSet(reader, stopTable);
+		}
+		_CLFINALLY (
+			if (reader != NULL) {
+				//reader->close();
+				_CLLDELETE(reader);
+			}
+		);
+		return stopTable;
+	}
 
+	/**
+	* Reads lines from a Reader and adds every line as an entry to a HashSet (omitting
+	* leading and trailing whitespace). Every line of the Reader should contain only
+	* one word. The words need to be in lowercase if you make use of an
+	* Analyzer which uses LowerCaseFilter (like StandardAnalyzer).
+	*
+	* @param reader Reader containing the wordlist
+	* @return A HashSet with the reader's words
+	*/
+	static CL_NS(util)::CLSetList<const TCHAR*>* getWordSet(CL_NS(util)::Reader* reader, CL_NS(util)::CLSetList<const TCHAR*>* stopTable = NULL, const bool bDeleteReader = false)
+	{
+		if (!stopTable)
+			stopTable = _CLNEW CL_NS(util)::CLSetList<const TCHAR*>(false);
+
+		TCHAR* word = NULL;
+		try {
+			word = _CL_NEWARRAY(TCHAR, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
+			while (reader->readLine(word) > 0) {
+				stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::stringTrim(word)));
+			}
+		}
+		_CLFINALLY (
+			if (bDeleteReader && reader != NULL) {
+				//reader->close();
+				_CLDELETE(reader);
+			}
+			_CLDELETE_ARRAY(word);
+		);
+		return stopTable;
+	}
+};
 
 
 /** Filters LetterTokenizer with LowerCaseFilter and StopFilter. */
@@ -181,6 +290,21 @@ public:
     
     /** Builds an analyzer which removes words in the provided array. */
     StopAnalyzer( const TCHAR** stopWords );
+
+	/** Builds an analyzer with the stop words from the given file.
+	* @see WordlistLoader#getWordSet(File)
+	*/
+	StopAnalyzer(const char* stopwordsFile, const char* enc = "ASCII") {
+		WordlistLoader::getWordSet(stopwordsFile, enc, &stopTable);
+	}
+
+	/** Builds an analyzer with the stop words from the given reader.
+	* @see WordlistLoader#getWordSet(Reader)
+	*/
+	StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false) {
+		WordlistLoader::getWordSet(stopwordsReader, &stopTable, _bDeleteReader);
+	}
+
     /** Filters LowerCaseTokenizer with StopFilter. */
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 	
@@ -289,21 +413,20 @@ public:
  */
 class LengthFilter: public TokenFilter {
 private:
-    int _min;
-    int _max;
+    size_t _min;
+    size_t _max;
 public:
     /**
     * Build a filter that removes words that are too long or too
     * short from the text.
     */
-    LengthFilter(TokenStream* in, int _min, int _max);
+    LengthFilter(TokenStream* in, const size_t _min, const size_t _max);
     
     /**
     * Returns the next input Token whose termText() is the right len
     */
     bool next(Token* token);
 };
-
 
 CL_NS_END
 #endif

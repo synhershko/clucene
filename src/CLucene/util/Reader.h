@@ -37,13 +37,32 @@ public:
 	}
 	inline int read(){
 		const TCHAR*b;
-		int32_t nread = reader->read(b, 1,1);
+		const int32_t nread = reader->read(b, 1,1);
 		if ( nread < -1 ) //if not eof
 			_CLTHROWA(CL_ERR_IO,reader->getError() );
 		else if ( nread == -1 )
 			return -1;
 		else
 			return b[0];
+	}
+
+	// Read one line, return the length of the line read
+	inline int32_t readLine(TCHAR* buffer){
+		int32_t i = 0;
+		while (true) {
+			int32_t b = read();
+			if (b < 1)
+				break;
+			if (b == '\n' || b == '\r') {
+				if (i > 0)
+					break;
+				else
+					continue;
+			}
+			buffer[i++] = b;
+		}
+		buffer[i] = 0;
+		return i;
 	}
 	/**
 	* Read at least 1 character, and as much as is conveniently available

@@ -21,7 +21,11 @@
 
 CL_NS_DEF2(analysis,standard)
 
-	/** Represents a standard analyzer. */
+/**
+* Filters {@link StandardTokenizer} with {@link StandardFilter}, {@link
+* LowerCaseFilter} and {@link StopFilter}, using a list of English stop words.
+*
+*/
 	class StandardAnalyzer : public Analyzer 
 	{
 	private:
@@ -33,15 +37,27 @@ CL_NS_DEF2(analysis,standard)
 		/** Builds an analyzer with the given stop words. */
 		StandardAnalyzer( const TCHAR** stopWords);
 
-		~StandardAnalyzer();
+		/** Builds an analyzer with the stop words from the given file.
+		* @see WordlistLoader#getWordSet(File)
+		*/
+		StandardAnalyzer(const char* stopwordsFile, const char* enc = "ASCII") {
+			WordlistLoader::getWordSet(stopwordsFile, enc, &stopSet);
+		}
 
+		/** Builds an analyzer with the stop words from the given reader.
+		* @see WordlistLoader#getWordSet(Reader)
+		*/
+		StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false) {
+			WordlistLoader::getWordSet(stopwordsReader, &stopSet, _bDeleteReader);
+		}
+
+		~StandardAnalyzer();
 
 		/**
 		* Constructs a StandardTokenizer filtered by a 
 		* StandardFilter, a LowerCaseFilter and a StopFilter.
 		*/
-		TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) 
-		;
+		TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 	};
 CL_NS_END2
 #endif
