@@ -125,7 +125,7 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 	
 	bytes = _CL_NEWARRAY(uint8_t,maxDoc());
 	for (int32_t i = 0; i < subReadersLength; i++)
-	  subReaders[i]->norms(field, bytes, starts[i]);
+	  subReaders[i]->norms(field, bytes + starts[i]);
 	
 	//Unfortunately the data in the normCache can get corrupted, since it's being loaded with string
 	//keys that may be deleted while still in use by the map. To prevent this field is duplicated
@@ -137,7 +137,7 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 	return bytes;
 }
 
-void MultiReader::norms(const TCHAR* field, uint8_t* result, int32_t offset) {
+void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	uint8_t* bytes = normsCache.get(field);
 	if (bytes==NULL && !hasNorms(field)) 
@@ -149,7 +149,7 @@ void MultiReader::norms(const TCHAR* field, uint8_t* result, int32_t offset) {
 	}
 	
 	for (int32_t i = 0; i < subReadersLength; i++)      // read from segments
-	  subReaders[i]->norms(field, result, offset + starts[i]);
+	  subReaders[i]->norms(field, result + starts[i]);
 }
 
 

@@ -10,11 +10,8 @@
 # pragma once
 #endif
 
-#include "IndexInput.h"
-
 CL_NS_DEF(store)
 
-//class IndexInput;
 
 /** Abstract class for output to a file in a Directory.  A random-access output
 * stream.  Used for all Lucene index output operations.
@@ -35,19 +32,9 @@ public:
 	/** Writes an array of bytes.
 	* @param b the bytes to write
 	* @param length the number of bytes to write
-	* @see IndexInput#readBytes(byte[],int,int)
+	* @see IndexInput#readBytes(byte[],int32_t,int32_t)
 	*/
-	virtual void writeBytes(const uint8_t* b, int32_t length) {
-		writeBytes(b, 0, length);
-	}
-
-	/** Writes an array of bytes.
-	* @param b the bytes to write
-	* @param offset the offset in the byte array
-	* @param length the number of bytes to write
-	* @see IndexInput#readBytes(byte[],int,int)
-	*/
-	virtual void writeBytes(const uint8_t* b, int32_t offset, int32_t length) = 0;
+	virtual void writeBytes(const uint8_t* b, const int32_t length) = 0;
 
 	/** Writes an int as four bytes.
 	* @see IndexInput#readInt()
@@ -105,20 +92,12 @@ public:
 
 	/** Forces any buffered output to be written. */
 	virtual void flush() = 0;
-
-private:
-	LUCENE_STATIC_CONSTANT(int32_t, COPY_BUFFER_SIZE = 16384);
-	uint8_t* copyBuffer;
-
-public:
-	/** Copy numBytes bytes from input to ourself. */
-	void copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes);
 };
 
 /** Base implementation class for buffered {@link IndexOutput}. */
 class BufferedIndexOutput : public IndexOutput{
 public:
-	LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=16384);
+	LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
 private:
 	uint8_t* buffer;
 	int64_t bufferStart;			  // position in file of buffer
@@ -138,7 +117,7 @@ public:
 	* @param length the number of bytes to write
 	* @see IndexInput#readBytes(byte[],int32_t,int32_t)
 	*/
-	virtual void writeBytes(const uint8_t* b, int32_t offset, int32_t length);
+	virtual void writeBytes(const uint8_t* b, const int32_t length);
 
 	/** Closes this stream to further operations. */
 	virtual void close();
@@ -164,18 +143,9 @@ protected:
 	/** Expert: implements buffer write.  Writes bytes at the current position in
 	* the output.
 	* @param b the bytes to write
-	* @param offset the offset in the byte array
 	* @param len the number of bytes to write
 	*/
-	virtual void flushBuffer(const uint8_t* b, const int32_t offset, const int32_t len) = 0;
-
-private:
-	/** Expert: implements buffer write.  Writes bytes at the current position in
-	* the output.
-	* @param b the bytes to write
-	* @param len the number of bytes to write
-	*/
-	void flushBuffer(const uint8_t* b, const int32_t len) { flushBuffer(b, 0, len); }
+	virtual void flushBuffer(const uint8_t* b, const int32_t len) = 0;
 };
 
 CL_NS_END

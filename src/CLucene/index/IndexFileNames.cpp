@@ -109,22 +109,5 @@ CL_NS_DEF(index)
 
 		return STRDUP_AtoA( fileName );
 	}
-	
-	bool IndexFileNames::isDocStoreFile( const char* fileName ) {
-		
-		char* p = strchr( fileName, '.' );
-		
-		if ( p != NULL && strcmp( p+1, COMPOUND_FILE_STORE_EXTENSION ) == 0 ) {
-			return true;
-		}
-		
-		for ( int i = 0; i < STORE_INDEX_EXTENSIONS_LENGTH; i++ ) {
-			if ( p != NULL && strcmp( p+1, STORE_INDEX_EXTENSIONS[i] ) == 0 ) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
 		
 CL_NS_END

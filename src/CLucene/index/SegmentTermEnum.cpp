@@ -58,7 +58,7 @@ CL_NS_DEF(index)
          if (format < TermInfosWriter::FORMAT){
             TCHAR err[30];
             _sntprintf(err,30,_T("Unknown format version: %d"), format);
-            _CLTHROWT(CL_ERR_CorruptIndex,err);
+            _CLTHROWT(CL_ERR_Runtime,err);
          }
 
          size = input->readLong();                    // read the size
@@ -74,10 +74,6 @@ CL_NS_DEF(index)
          }else{
             indexInterval = input->readInt();
             skipInterval = input->readInt();
-			if (format == -3) {
-				// this new format introduces multi-level skipping
-				maxSkipLevels = input->readInt();
-			}
          }
       }
 	}
@@ -130,7 +126,7 @@ CL_NS_DEF(index)
         //todo: revisit this... close() should clean up most of everything.
 
 		//Finalize prev
-		_CLDECDELETE(prev);
+		_CLDECDELETE(prev );
 		//Finalize term
 		_CLDECDELETE( _term );
 		
@@ -157,13 +153,8 @@ CL_NS_DEF(index)
 
 		//Increase position by and and check if the end has been reached
 		if (position++ >= size-1) {
-			/** 2.3.2 catchups -- commented out due to refcount errors */
-			//_CLDECDELETE(prev);
-			//prev = _term;
-
 			//delete term
 			_CLDECDELETE(_term);
-
 			return false;
 		}
 

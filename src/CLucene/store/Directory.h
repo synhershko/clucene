@@ -106,67 +106,6 @@ CL_NS_DEF(store)
 		virtual TCHAR* toString() const = 0;
 
 		virtual const char* getDirectoryType() const = 0;
-
-		/**
-		* Copy contents of a directory src to a directory dest.
-		* If a file in src already exists in dest then the
-		* one in dest will be blindly overwritten.
-		*
-		* @param src source directory
-		* @param dest destination directory
-		* @param closeDirSrc if <code>true</code>, call {@link #close()} method on source directory
-		* @throws IOException
-		*/
-		static void copy(Directory* src, Directory* dest, const bool closeDirSrc) {
-			vector<string> files;
-
-			if (src)
-				src->list(&files);
-
-			if ((!src) || files.size() <= 0)
-				_CLTHROWA(CL_ERR_IO, "cannot read source directory: list() returned null");
-
-			uint8_t buf[CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE];
-			for (size_t i = 0; i < files.size(); i++) {
-				IndexOutput* os = NULL;
-				IndexInput* is = NULL;
-				try {
-					// TODO: Use code below?
-					//if ( !CL_NS(index)::IndexReader::isLuceneFile(files[i].c_str()))
-					//	continue;
-
-					// create file in dest directory
-					os = dest->createOutput(files[i].c_str());
-					// read current file
-					is = src->openInput(files[i].c_str());
-					// and copy to dest directory
-					//todo: this could be a problem when copying from big indexes... 
-					int64_t len = is->length();
-					int64_t readCount = 0;
-					while (readCount < len) {
-						int32_t toRead = readCount + CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE > len ? (int32_t)(len - readCount) : CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE;
-						is->readBytes(buf, 0, toRead);
-						os->writeBytes(buf, toRead);
-						readCount += toRead;
-					}
-				} _CLFINALLY(
-					// graceful cleanup
-					try {
-						if (os) {
-							os->close();
-							_CLDELETE(os);
-						}
-				} _CLFINALLY(
-					if (is) {
-						is->close();
-						_CLDELETE(is);
-					}
-					);
-					);
-			}
-			if(closeDirSrc)
-				src->close();
-		}
 	};
 CL_NS_END
 #endif

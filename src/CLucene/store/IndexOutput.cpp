@@ -13,11 +13,9 @@ CL_NS_DEF(store)
 
   IndexOutput::IndexOutput()
   {
-	  copyBuffer = NULL;
   }
 
   IndexOutput::~IndexOutput(){
-	  _CLDELETE_LARRAY(copyBuffer);
   }
 
   BufferedIndexOutput::BufferedIndexOutput()
@@ -47,17 +45,17 @@ CL_NS_DEF(store)
     buffer[bufferPosition++] = b;
   }
 
-  void BufferedIndexOutput::writeBytes(const uint8_t* b, int32_t offset, int32_t length) {
+  void BufferedIndexOutput::writeBytes(const uint8_t* b, const int32_t length) {
 	  if ( length < 0 )
 		  _CLTHROWA(CL_ERR_IllegalArgument, "IO Argument Error. Value must be a positive value.");
 	  int32_t bytesLeft = BUFFER_SIZE - bufferPosition;
 	  // is there enough space in the buffer?
 	  if (bytesLeft >= length) {
 		  // we add the data to the end of the buffer
-		  memcpy((void*)(buffer + bufferPosition), (void*)(b + offset), length  * sizeof(uint8_t)); // sizeof wasn't here
+		  memcpy(buffer + bufferPosition, b, length);
 		  bufferPosition += length;
 		  // if the buffer is full, flush it
-		  if ((BUFFER_SIZE - bufferPosition) == 0)
+		  if (BUFFER_SIZE - bufferPosition == 0)
 			  flush();
 	  } else {
 		  // is data larger then buffer?
@@ -66,7 +64,7 @@ CL_NS_DEF(store)
 			  if (bufferPosition > 0)
 				  flush();
 			  // and write data at once
-			  flushBuffer(b, offset, length);
+			  flushBuffer(b, length);
 			  bufferStart += length;
 		  } else {
 			  // we fill/flush the buffer (until the input is written)
@@ -77,7 +75,7 @@ CL_NS_DEF(store)
 					pieceLength =  length - pos;
 				  else
 					pieceLength = bytesLeft;
-				  memcpy((void*)(buffer + bufferPosition), (void*)(b + (pos + offset)), pieceLength * sizeof(uint8_t)); // sizeof wasn't here
+				  memcpy(buffer + bufferPosition, b + pos, pieceLength);
 				  pos += pieceLength;
 				  bufferPosition += pieceLength;
 				  // if the buffer is full, flush it
@@ -146,24 +144,10 @@ CL_NS_DEF(store)
     }
   }
 
-  void IndexOutput::copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes)
-  {
-	  int64_t left = numBytes;
-	  if (copyBuffer == NULL)
-		  copyBuffer = _CL_NEWARRAY(uint8_t, COPY_BUFFER_SIZE);
-	  while(left > 0) {
-		  int32_t toCopy;
-		  if (left > COPY_BUFFER_SIZE)
-			  toCopy = COPY_BUFFER_SIZE;
-		  else
-			  toCopy = (int32_t) left;
-		  input->readBytes(copyBuffer, 0, toCopy);
-		  writeBytes(copyBuffer, 0, toCopy);
-		  left -= toCopy;
-	  }
-  }
 
-  int64_t BufferedIndexOutput::getFilePointer() const { return bufferStart + bufferPosition; }
+  int64_t BufferedIndexOutput::getFilePointer() const{
+    return bufferStart + bufferPosition;
+  }
 
   void BufferedIndexOutput::seek(const int64_t pos) {
     flush();

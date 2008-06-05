@@ -96,24 +96,22 @@
 			};
 			SharedHandle* handle;
 			int64_t _pos;
-		private:
-			bool _isOpen;
     	protected:
     		FSIndexInput(const FSIndexInput& clone);
     	public:
-			FSIndexInput(const char* path, int32_t bufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
+			FSIndexInput(const char* path, int32_t bufferSize=CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
     		~FSIndexInput();
     
     		IndexInput* clone() const;
     		void close();
-			int64_t length() const { return handle->_length; }
+			int64_t length(){ return handle->_length; }
 			
 			const char* getDirectoryType() const{ return FSDirectory::DirectoryType(); }
     	protected:
     		// Random-access methods 
     		void seekInternal(const int64_t position);
     		// IndexInput methods 
-    		void readInternal(uint8_t* b, const int32_t offset, const int32_t len);
+    		void readInternal(uint8_t* b, const int32_t len);
     	};
 		friend class FSDirectory::FSIndexInput;
 
@@ -122,7 +120,7 @@
     		int32_t fhandle;
     	protected:
     		// output methods: 
-    		void flushBuffer(const uint8_t* b, const int32_t offset, const int32_t size);
+    		void flushBuffer(const uint8_t* b, const int32_t size);
     	public:
     		FSIndexOutput(const char* path);
     		~FSIndexOutput();

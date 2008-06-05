@@ -34,26 +34,12 @@ FieldsWriter::FieldsWriter(Directory* d, const char* segment, FieldInfos* fn):
 	const char* buf = Misc::segmentname(segment,".fdt");
     fieldsStream = d->createOutput ( buf );
     _CLDELETE_CaARRAY( buf );
-
-	CND_CONDITION(indexStream != NULL,"fieldsStream is NULL");
     
 	buf = Misc::segmentname(segment,".fdx");
     indexStream = d->createOutput( buf );
     _CLDELETE_CaARRAY( buf );
       
 	CND_CONDITION(indexStream != NULL,"indexStream is NULL");
-
-	doClose = true;
-}
-
-FieldsWriter::FieldsWriter(CL_NS(store)::IndexOutput* fdx, CL_NS(store)::IndexOutput* fdt, FieldInfos* fn):
-	fieldInfos(fn)
-{
-	CND_CONDITION(fieldsStream != NULL,"fieldsStream is NULL");
-	fieldsStream = fdt;
-	CND_CONDITION(indexStream != NULL,"indexStream is NULL");
-	indexStream = fdx;
-	doClose = false;
 }
 
 FieldsWriter::~FieldsWriter(){
@@ -68,9 +54,6 @@ void FieldsWriter::close() {
 //Func - Closes all streams and frees all resources
 //Pre  - true
 //Post - All streams have been closed all resources have been freed
-
-	if (! doClose )
-		return;
 
 	//Check if fieldsStream is valid
 	if (fieldsStream){
@@ -113,85 +96,76 @@ void FieldsWriter::addDocument(Document* doc) {
 	while (fields->hasMoreElements()) {
 		Field* field = fields->nextElement();
 		if (field->isStored()) {
-			writeField(fieldInfos->fieldInfo(field->name()), field);
+			fieldsStream->writeVInt(fieldInfos->fieldNumber(field->name()));
+
+			uint8_t bits = 0;
+			if (field->isTokenized())
+				bits |= FieldsWriter::FIELD_IS_TOKENIZED;
+            if (field->isBinary())
+                bits |= FieldsWriter::FIELD_IS_BINARY;
+            if (field->isCompressed())
+                bits |= FieldsWriter::FIELD_IS_COMPRESSED;
+
+			fieldsStream->writeByte(bits);
+
+			if ( field->isCompressed() ){
+				_CLTHROWA(CL_ERR_Runtime, "CLucene does not directly support compressed fields. Write a compressed byte array instead");
+			}else{
+
+				//FEATURE: this problem in Java Lucene too, if using Reader, data is not stored.
+				//todo: this is a logic bug...
+				//if the field is stored, and indexed, and is using a reader the field wont get indexed
+				//
+				//if we could write zero prefixed vints (therefore static length), then we could
+				//write a reader directly to the field indexoutput and then go back and write the data
+				//length. however this is not supported in lucene yet...
+				//if this is ever implemented, then it would make sense to also be able to combine the
+				//FieldsWriter and DocumentWriter::invertDocument process, and use a streamfilter to
+				//write the field data while the documentwrite analyses the document! how cool would
+				//that be! it would cut out all these buffers!!!
+				
+				
+				// compression is disabled for the current field
+				if (field->isBinary()) {
+					//todo: since we currently don't support static length vints, we have to
+					//read the entire stream into memory first.... ugly!
+					jstreams::StreamBase<char>* stream = field->streamValue();
+					const char* sd;
+					//how do wemake sure we read the entire index in now???
+					//todo: we need to have a max amount, and guarantee its all in or throw an error...
+					int32_t rl = stream->read(sd,10000000,0);
+
+					if ( rl < 0 ){
+						fieldsStream->writeVInt(0); //todo: could we detect this earlier and not actually write the field??
+					}else{
+						//todo: if this int could be written with a constant length, then
+						//the stream could be read and written a bit at a time then the length
+						//is re-written at the end.
+ 						fieldsStream->writeVInt(rl);
+						fieldsStream->writeBytes((uint8_t*)sd, rl);
+					}
+
+				}else if ( field->stringValue() == NULL ){ //we must be using readerValue
+					CND_PRECONDITION(!field->isIndexed(), "Cannot store reader if it is indexed too")
+					Reader* r = field->readerValue();
+	
+					//read the entire string
+					const TCHAR* rv;
+					int64_t rl = r->read(rv, LUCENE_INT32_MAX_SHOULDBE);
+					if ( rl > LUCENE_INT32_MAX_SHOULDBE )
+						_CLTHROWA(CL_ERR_Runtime,"Field length too long");
+					else if ( rl < 0 )
+						rl = 0;
+
+					fieldsStream->writeString( rv, (int32_t)rl);
+				}else if ( field->stringValue() != NULL ){
+					fieldsStream->writeString(field->stringValue(),_tcslen(field->stringValue()));
+				}else
+					_CLTHROWA(CL_ERR_Runtime, "No values are set for the field");
+			}
 		}
 	}
 	_CLDELETE(fields);
-}
-
-void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
-{
-	// if the field as an instanceof FieldsReader.FieldForMerge, we're in merge mode
-	// and field.binaryValue() already returns the compressed value for a field
-	// with isCompressed()==true, so we disable compression in that case
-	//bool disableCompression = (field instanceof FieldsReader.FieldForMerge);
-
-	fieldsStream->writeVInt(fieldInfos->fieldNumber(field->name()));
-	uint8_t bits = 0;
-	if (field->isTokenized())
-		bits |= FieldsWriter::FIELD_IS_TOKENIZED;
-	if (field->isBinary())
-		bits |= FieldsWriter::FIELD_IS_BINARY;
-	if (field->isCompressed())
-		bits |= FieldsWriter::FIELD_IS_COMPRESSED;
-
-	fieldsStream->writeByte(bits);
-
-	if ( field->isCompressed() ){
-		_CLTHROWA(CL_ERR_Runtime, "CLucene does not directly support compressed fields. Write a compressed byte array instead");
-	}else{
-
-		//FEATURE: this problem in Java Lucene too, if using Reader, data is not stored.
-		//todo: this is a logic bug...
-		//if the field is stored, and indexed, and is using a reader the field wont get indexed
-		//
-		//if we could write zero prefixed vints (therefore static length), then we could
-		//write a reader directly to the field indexoutput and then go back and write the data
-		//length. however this is not supported in lucene yet...
-		//if this is ever implemented, then it would make sense to also be able to combine the
-		//FieldsWriter and DocumentWriter::invertDocument process, and use a streamfilter to
-		//write the field data while the documentwrite analyses the document! how cool would
-		//that be! it would cut out all these buffers!!!
-
-
-		// compression is disabled for the current field
-		if (field->isBinary()) {
-			//todo: since we currently don't support static length vints, we have to
-			//read the entire stream into memory first.... ugly!
-			jstreams::StreamBase<char>* stream = field->streamValue();
-			const char* sd;
-			//how do wemake sure we read the entire index in now???
-			//todo: we need to have a max amount, and guarantee its all in or throw an error...
-			int32_t rl = stream->read(sd,10000000,0);
-
-			if ( rl < 0 ){
-				fieldsStream->writeVInt(0); //todo: could we detect this earlier and not actually write the field??
-			}else{
-				//todo: if this int could be written with a constant length, then
-				//the stream could be read and written a bit at a time then the length
-				//is re-written at the end.
-				fieldsStream->writeVInt(rl);
-				fieldsStream->writeBytes((uint8_t*)sd, rl);
-			}
-
-		}else if ( field->stringValue() == NULL ){ //we must be using readerValue
-			CND_PRECONDITION(!field->isIndexed(), "Cannot store reader if it is indexed too")
-				Reader* r = field->readerValue();
-
-			//read the entire string
-			const TCHAR* rv;
-			int64_t rl = r->read(rv, LUCENE_INT32_MAX_SHOULDBE);
-			if ( rl > LUCENE_INT32_MAX_SHOULDBE )
-				_CLTHROWA(CL_ERR_Runtime,"Field length too long");
-			else if ( rl < 0 )
-				rl = 0;
-
-			fieldsStream->writeString( rv, (int32_t)rl);
-		}else if ( field->stringValue() != NULL ){
-			fieldsStream->writeString(field->stringValue(),_tcslen(field->stringValue()));
-		}else
-			_CLTHROWA(CL_ERR_Runtime, "No values are set for the field");
-	}
 }
 
 CL_NS_END

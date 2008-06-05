@@ -55,29 +55,26 @@ public:
 		}
 	};
 	
-	// TODO: STORES_PAYLOADS adds a new value that is greater than what one byte can hold.
-	// If that matters, perhaps make ALL = 0 or all values summed up?
+	
 	enum FieldOption {
-		// All fields
+		// all fields
 		ALL = 1,
-		// All indexed fields
+		// all indexed fields
 		INDEXED = 2,
-		// All fields which are not indexed
+		// all fields which are not indexed
 		UNINDEXED = 4,
-		// All fields which are indexed with termvectors enabled
+		// all fields which are indexed with termvectors enables
 		INDEXED_WITH_TERMVECTOR = 8,
-		// All fields which are indexed but don't have termvectors enabled
+		// all fields which are indexed but don't have termvectors enabled
 		INDEXED_NO_TERMVECTOR = 16,
-		// All fields where termvectors are enabled. Please note that only standard termvector fields are returned
+		// all fields where termvectors are enabled. Please note that only standard termvector fields are returned
 		TERMVECTOR = 32,
-		// All field with termvectors wiht positions enabled
+		// all field with termvectors wiht positions enabled
 		TERMVECTOR_WITH_POSITION = 64,
-		// All fields with termvectors with offset values enabled
+		// all fields where termvectors with offset position are set
 		TERMVECTOR_WITH_OFFSET = 128,
-		// All fields with termvectors with offset values and position values enabled
-		TERMVECTOR_WITH_POSITION_OFFSET = 256,
-		// All fields that store payloads
-		STORES_PAYLOADS = 512
+		// all fields where termvectors with offset and position values set
+		TERMVECTOR_WITH_POSITION_OFFSET = 256
 	};
 
 
@@ -180,7 +177,7 @@ public:
 	*
 	* @see Field#setBoost(float_t)
 	*/
-	virtual void norms(const TCHAR* field, uint8_t* bytes, int32_t offset) = 0;
+	virtual void norms(const TCHAR* field, uint8_t* bytes) = 0;
 
     /** Expert: Resets the normalization factor for the named field of the named
     * document.

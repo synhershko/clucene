@@ -12,7 +12,7 @@
 #endif
 
 #include "CLucene/util/bufferedstream.h"
-//#include "IndexOutput.h"
+#include "IndexOutput.h"
 
 CL_NS_DEF(store)
 
@@ -22,6 +22,8 @@ CL_NS_DEF(store)
    * @see IndexOutput
    */
 	class IndexInput: LUCENE_BASE {
+	private:
+		void skipChars( const int32_t count);
 	protected:
 		IndexInput();
 		IndexInput(const IndexInput& clone);
@@ -40,27 +42,9 @@ CL_NS_DEF(store)
 		* @param b the array to read bytes into
 		* @param offset the offset in the array to start storing bytes
 		* @param len the number of bytes to read
-		* @see IndexOutput#writeBytes(byte[],int)
+		* @see IndexOutput#writeBytes(byte[],int32_t)
 		*/
-		virtual void readBytes(uint8_t* b, int32_t offset, int32_t len) =0;
-
-		/** Reads a specified number of bytes into an array at the
-		* specified offset with control over whether the read
-		* should be buffered (callers who have their own buffer
-		* should pass in "false" for useBuffer).  Currently only
-		* {@link BufferedIndexInput} respects this parameter.
-		* @param b the array to read bytes into
-		* @param offset the offset in the array to start storing bytes
-		* @param len the number of bytes to read
-		* @param useBuffer set to false if the caller will handle
-		* buffering.
-		* @see IndexOutput#writeBytes(byte[],int)
-		*/
-		virtual void readBytes(uint8_t* b, int32_t offset, int32_t len, const bool useBuffer)
-		{
-			// Default to ignoring useBuffer entirely
-			readBytes(b, offset, len);
-		}
+		virtual void readBytes(uint8_t* b, const int32_t len) =0;
 		
 		/** Reads four bytes and returns an int.
 		* @see IndexOutput#writeInt(int32_t)
@@ -106,17 +90,6 @@ CL_NS_DEF(store)
 		* @see IndexOutput#writeChars(String,int32_t,int32_t)
 		*/
 		void readChars( TCHAR* buffer, const int32_t start, const int32_t len);
-
-		/**
-		* Expert
-		* 
-		* Similar to {@link #readChars(char[], int, int)} but does not do any conversion operations on the bytes it is reading in.  It still
-		* has to invoke {@link #readByte()} just as {@link #readChars(char[], int, int)} does, but it does not need a buffer to store anything
-		* and it does not have to do any of the bitwise operations, since we don't actually care what is in the byte except to determine
-		* how many more bytes to read
-		* @param length The number of chars to read
-		*/
-		void skipChars(int32_t length);
 		
 		/** Closes the stream to futher operations. */
 		virtual void close() =0;
@@ -133,7 +106,7 @@ CL_NS_DEF(store)
 		virtual void seek(const int64_t pos) =0;
 		
 		/** The number of bytes in the file. */
-		virtual int64_t length() const = 0;
+		virtual int64_t length() = 0;
 		
 		virtual const char* getDirectoryType() const = 0;
 		
@@ -146,76 +119,59 @@ CL_NS_DEF(store)
    * @see IndexOutput
    */
 	class BufferedIndexInput: public IndexInput{
-	public:
-		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
-
-		BufferedIndexInput(int32_t bufferSize = BUFFER_SIZE);
-		/** Returns a clone of this stream.
-		*
-		* <p>Clones of a stream access the same data, and are positioned at the same
-		* point as the stream they were cloned from.
-		*
-		* <p>Expert: Subclasses must ensure that clones may be positioned at
-		* different points in the input from each other and from the stream they
-		* were cloned from.
-		*/
-		BufferedIndexInput(const BufferedIndexInput& clone);
-
-		virtual ~BufferedIndexInput();
+	private:
+		uint8_t* buffer; //array of bytes
+		void refill();
 	protected:
 		int32_t bufferSize;				//size of the buffer
-
-		uint8_t* buffer; //array of bytes
-
 		int64_t bufferStart;			  // position in file of buffer
 		int32_t bufferLength;			  // end of valid l_byte_ts
 		int32_t bufferPosition;		  // next uint8_t to read
-	private:
-		void refill();
 
-		void checkBufferSize(int32_t bufferSize) {
-			if (bufferSize <= 0)
-				_CLTHROWA(CL_ERR_IllegalArgument, "bufferSize must be greater than 0 in call to BufferedIndexInput"); //" (got " + bufferSize + ")"
-		}
-
+      /** Returns a clone of this stream.
+      *
+      * <p>Clones of a stream access the same data, and are positioned at the same
+      * point as the stream they were cloned from.
+      *
+      * <p>Expert: Subclasses must ensure that clones may be positioned at
+      * different points in the input from each other and from the stream they
+      * were cloned from.
+      */
+		BufferedIndexInput(const BufferedIndexInput& clone);
+		BufferedIndexInput(int32_t bufferSize = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
 	public:
-
+		
+		virtual ~BufferedIndexInput();
 		virtual IndexInput* clone() const = 0;
 		void close();
-		virtual inline uint8_t readByte(){
+		inline uint8_t readByte(){
 			if (bufferPosition >= bufferLength)
 				refill();
 
 			return buffer[bufferPosition++];
 		}
-
-		/** Change the buffer size used by this IndexInput */
-		void setBufferSize(const int32_t newSize);
-		int32_t getBufferSize() const { return bufferSize; }
-
-		virtual void readBytes(uint8_t* b, int32_t offset, int32_t len) { readBytes(b, offset, len, true); }
-
-		virtual void readBytes(uint8_t* b, int32_t offset, int32_t len, const bool useBuffer);
-
+		void readBytes(uint8_t* b, const int32_t len);
 		int64_t getFilePointer() const;
-		virtual void seek(const int64_t pos);
+		void seek(const int64_t pos);
+
+		void setBufferSize( int32_t newSize );
 		
 		const char* getObjectName(){ return BufferedIndexInput::getClassName(); }
 		static const char* getClassName(){ return "BufferedIndexInput"; }
 
 	protected:
-		/** Expert: implements buffer refill.  Reads bytes from the current position
-		* in the input.
-		* @param b the array to read bytes into
-		* @param offset the offset in the array to start storing bytes
-		* @param length the number of bytes to read
-		*/
-		virtual void readInternal(uint8_t* b, const int32_t offset, const int32_t len) = 0;
+      /** Expert: implements buffer refill.  Reads bytes from the current position
+      * in the input.
+      * @param b the array to read bytes into
+      * @param offset the offset in the array to start storing bytes
+      * @param length the number of bytes to read
+      */
+		virtual void readInternal(uint8_t* b, const int32_t len) = 0;
 
-		/** Expert: implements seek.  Sets current position in this file, where the
-		* next {@link #readInternal(byte[],int,int)} will occur.
-		* @see #readInternal(uint8_t*,int32_t,int32_t)
-		*/
+      /** Expert: implements seek.  Sets current position in this file, where the
+      * next {@link #readInternal(byte[],int32_t,int32_t)} will occur.
+      * @see #readInternal(byte[],int32_t,int32_t)
+      */
 		virtual void seekInternal(const int64_t pos) = 0;
 	};
 	

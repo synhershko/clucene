@@ -46,7 +46,7 @@ private:
 		* @param b the array to read uint8_ts into
 		* @param length the number of uint8_ts to read
 		*/
-		void readInternal(uint8_t* b, const int32_t offset, const int32_t len);
+		void readInternal(uint8_t* b, const int32_t len);
 		void seekInternal(const int64_t pos)
 		{
 		}
@@ -60,7 +60,7 @@ private:
 		void close();
 		CL_NS(store)::IndexInput* clone() const;
 
-		int64_t length() const { return _length; }
+		int64_t length(){ return _length; }
 		
 		const char* getDirectoryType() const{ return CompoundFileReader::DirectoryType(); }
 	};

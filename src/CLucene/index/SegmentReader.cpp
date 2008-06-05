@@ -590,7 +590,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 }
 
 
-  void SegmentReader::norms(const TCHAR* field, uint8_t* bytes, int32_t offset) {
+  void SegmentReader::norms(const TCHAR* field, uint8_t* bytes) {
   //Func - Reads the Norms for field from disk starting at offset in the inputstream
   //Pre  - field != NULL
   //       bytes != NULL is an array of bytes which is to be used to read the norms into.
@@ -619,7 +619,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
     // read from disk
     try{ 
        _normStream->seek(0);
-       _normStream->readBytes(bytes, offset, maxDoc());
+       _normStream->readBytes(bytes, maxDoc());
     }_CLFINALLY(
         //Have the normstream closed
         _normStream->close();
@@ -648,7 +648,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
     if (norm->bytes == NULL) {                     // value not yet read
       uint8_t* bytes = _CL_NEWARRAY(uint8_t, maxDoc());
-      norms(field, bytes, 0);
+      norms(field, bytes);
       norm->bytes = bytes;                         // cache it
     }
     return norm->bytes;

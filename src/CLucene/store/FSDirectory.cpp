@@ -104,54 +104,35 @@ CL_NS_USE(util)
   }
 
   void FSDirectory::FSIndexInput::seekInternal(const int64_t position)  {
-	  // Commented out by ISH to conform with JLucene
-	//CND_PRECONDITION(position>=0 &&position<handle->_length,"Seeking out of range")
-	//_pos = position;
+	CND_PRECONDITION(position>=0 &&position<handle->_length,"Seeking out of range")
+	_pos = position;
   }
 
 /** IndexInput methods */
-void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t offset, const int32_t len) {
+void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	SCOPED_LOCK_MUTEX(handle->THIS_LOCK)
 	CND_PRECONDITION(handle!=NULL,"shared file handle has closed");
 	CND_PRECONDITION(handle->fhandle>=0,"file is not open");
 
-	int64_t position = getFilePointer(); // added by ISH to replace use of _pos
-
-	if ( handle->_fpos != position ){ // if ( handle->_fpos != _pos ){
-		if ( fileSeek(handle->fhandle,position,SEEK_SET) != position ){ // _pos -> position
-			_CLTHROWA( CL_ERR_IO, "FSIndexInput::readInternal File IO Seek error");
+	if ( handle->_fpos != _pos ){
+		if ( fileSeek(handle->fhandle,_pos,SEEK_SET) != _pos ){
+			_CLTHROWA( CL_ERR_IO, "File IO Seek error");
 		}
-		handle->_fpos = position;
+		handle->_fpos = _pos;
 	}
-
-	int32_t total = 0;
-	do {
-		int32_t i = _read(handle->fhandle,b+offset+total,len-total); // was: file.read(b, offset+total, len-total);
-		if (i == -1) {
-			// See comment below in delete code
-			_CLTHROWA(CL_ERR_IO, "FSIndexInput::readInternal read past EOF");
-		}
-		handle->_fpos+=i;
-		total += i;
-	} while (total < len);
-
-
-	/*
-	// Code removed by ISH to conform with JLucene 1.4.3+
 
 	bufferLength = _read(handle->fhandle,b,len); // 2004.10.31:SF 1037836
 	if (bufferLength == 0){
-		_CLTHROWA(CL_ERR_IO, "FSIndexInput::readInternal read past EOF");
+		_CLTHROWA(CL_ERR_IO, "read past EOF");
 	}
 	if (bufferLength == -1){
 		//if (EINTR == errno) we could do something else... but we have
 		//to guarantee some return, or throw EOF
 		
-		_CLTHROWA(CL_ERR_IO, "FSIndexInput::readInternal read error");
+		_CLTHROWA(CL_ERR_IO, "read error");
 	}
 	_pos+=bufferLength;
 	handle->_fpos=_pos;
-	*/
 }
 
   FSDirectory::FSIndexOutput::FSIndexOutput(const char* path){
@@ -187,9 +168,9 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t offset, c
   }
 
   /** output methods: */
-  void FSDirectory::FSIndexOutput::flushBuffer(const uint8_t* b, const int32_t offset, const int32_t size) {
+  void FSDirectory::FSIndexOutput::flushBuffer(const uint8_t* b, const int32_t size) {
 	  CND_PRECONDITION(fhandle>=0,"file is not open");
-      if ( size > 0 && _write(fhandle,b+offset,size) != size )
+      if ( size > 0 && _write(fhandle,b,size) != size )
         _CLTHROWA(CL_ERR_IO, "File IO Write error");
   }
   void FSDirectory::FSIndexOutput::close() {
