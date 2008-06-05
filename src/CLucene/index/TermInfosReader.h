@@ -45,12 +45,15 @@ CL_NS_DEF(index)
 		TermInfo* indexInfos;
 		int64_t* indexPointers;
 
+		int32_t indexDivisor;
+		int32_t totalIndexInterval;
+		
 		DEFINE_MUTEX(THIS_LOCK)
 
 	public:
 		//Constructor.
         //Reads the TermInfos file (.tis) and eventually the Term Info Index file (.tii)
-		TermInfosReader(CL_NS(store)::Directory* dir, const char* segment, FieldInfos* fis);
+		TermInfosReader(CL_NS(store)::Directory* dir, const char* segment, FieldInfos* fis, int32_t readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 		//Destructor
 		~TermInfosReader();
 		//Close the enumeration of TermInfos

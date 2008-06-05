@@ -74,7 +74,9 @@ public:
 		// all fields where termvectors with offset position are set
 		TERMVECTOR_WITH_OFFSET = 128,
 		// all fields where termvectors with offset and position values set
-		TERMVECTOR_WITH_POSITION_OFFSET = 256
+		TERMVECTOR_WITH_POSITION_OFFSET = 256,
+		// all fields that store payloads
+		STORES_PAYLOADS = 512
 	};
 
 

@@ -58,7 +58,7 @@ CL_NS_DEF(index)
          if (format < TermInfosWriter::FORMAT){
             TCHAR err[30];
             _sntprintf(err,30,_T("Unknown format version: %d"), format);
-            _CLTHROWT(CL_ERR_Runtime,err);
+            _CLTHROWT(CL_ERR_CorruptIndex,err);
          }
 
          size = input->readLong();                    // read the size
@@ -74,6 +74,9 @@ CL_NS_DEF(index)
          }else{
             indexInterval = input->readInt();
             skipInterval = input->readInt();
+            if ( format == -3 ) {
+            	maxSkipLevels = input->readInt();
+            }
          }
       }
 	}

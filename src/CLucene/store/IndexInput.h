@@ -140,6 +140,7 @@ CL_NS_DEF(store)
 		BufferedIndexInput(const BufferedIndexInput& clone);
 		BufferedIndexInput(int32_t bufferSize = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
 	public:
+		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
 		
 		virtual ~BufferedIndexInput();
 		virtual IndexInput* clone() const = 0;
