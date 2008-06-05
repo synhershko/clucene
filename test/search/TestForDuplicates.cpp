@@ -38,10 +38,11 @@
 
 			//---    
 			_sntprintf(strDb, 1024, _T("%d"), i);
-			doc->add( *Field::Keyword(_T("id"), strDb ) );
+			doc->add( *_CLNEW Field(_T("id"), strDb,Field::STORE_YES | Field::INDEX_UNTOKENIZED) );
 		    
 			STRCPY_AtoT(strDb, strBody[i%10], 1022);
-			doc->add(*Field::UnStored(_T("body"), strDb ) );
+			
+			doc->add(*_CLNEW Field(_T("body"), strDb,Field::STORE_NO | Field::INDEX_TOKENIZED) );
 			//---
 			writer->addDocument(doc);
 			_CLDELETE(doc);
@@ -98,10 +99,11 @@
 
         for (int32_t j = 0; j < MAX_DOCS; j++) {
 			Document* d = _CLNEW Document();
-			d->add(*Field::Text(_T("priority"), _T("high")));
+			d->add(*_CLNEW Field(_T("priority"), _T("high"),Field::STORE_YES | Field::INDEX_TOKENIZED));
 			TCHAR buf[80];
 			_i64tot(j,buf,10);
-			d->add(*Field::Text(_T("id"), buf));
+
+			d->add(*_CLNEW Field(_T("id"), buf,Field::STORE_YES | Field::INDEX_TOKENIZED));
 			writer->addDocument(d);
 
 			_CLDELETE(d);

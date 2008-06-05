@@ -40,27 +40,27 @@ void _testWildcard(CuTest* tc, IndexSearcher* searcher, const TCHAR* qt, int exp
 		Document *doc = 0;
 		//****
 		doc = _CLNEW Document();
-		doc->add(*Field::UnStored(_T("body"), _T("test")));
+		doc->add(*_CLNEW Field(_T("body"),_T("test"),Field::STORE_NO | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 		//****
 		doc = _CLNEW Document();
-		doc->add(*Field::UnStored(_T("body"), _T("home")));
+		doc->add(*_CLNEW Field(_T("body"),_T("home"),Field::STORE_NO | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 		//****
 		doc = _CLNEW Document();
-		doc->add(*Field::UnStored(_T("body"), _T("pc linux")));
+		doc->add(*_CLNEW Field(_T("body"), _T("pc linux"),Field::STORE_NO | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 		//****
 		doc = _CLNEW Document();
-		doc->add(*Field::UnStored(_T("body"), _T("tested")));
+		doc->add(*_CLNEW Field(_T("body"), _T("tested"),Field::STORE_NO | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 		//****
 		doc = _CLNEW Document();
-		doc->add(*Field::UnStored(_T("body"), _T("source")));
+		doc->add(*_CLNEW Field(_T("body"), _T("source"),Field::STORE_NO | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 
@@ -93,8 +93,8 @@ void _testWildcard(CuTest* tc, IndexSearcher* searcher, const TCHAR* qt, int exp
 		IndexWriter* writer = _CLNEW IndexWriter(&indexStore, &an, true);
 		Document doc1;
 		Document doc2;
-		doc1.add(*Field::Text(_T("body"), _T("metal")));
-		doc2.add(*Field::Text(_T("body"), _T("metals")));
+		doc1.add(*_CLNEW Field(_T("body"), _T("metal"),Field::STORE_YES | Field::INDEX_TOKENIZED));
+		doc2.add(*_CLNEW Field(_T("body"), _T("metals"),Field::STORE_YES | Field::INDEX_TOKENIZED));
 
 		writer->addDocument(&doc1);
 		writer->addDocument(&doc2);
@@ -135,10 +135,10 @@ void _testWildcard(CuTest* tc, IndexSearcher* searcher, const TCHAR* qt, int exp
 		Document doc2;
 		Document doc3;
 		Document doc4;
-		doc1.add(*Field::Text(_T("body"), _T("metal")));
-		doc2.add(*Field::Text(_T("body"), _T("metals")));
-		doc3.add(*Field::Text(_T("body"), _T("mXtals")));
-		doc4.add(*Field::Text(_T("body"), _T("mXtXls")));
+		doc1.add(*_CLNEW Field(_T("body"), _T("metal"),Field::STORE_YES | Field::INDEX_TOKENIZED));
+		doc2.add(*_CLNEW Field(_T("body"), _T("metals"),Field::STORE_YES | Field::INDEX_TOKENIZED));
+		doc3.add(*_CLNEW Field(_T("body"), _T("mXtals"),Field::STORE_YES | Field::INDEX_TOKENIZED));
+		doc4.add(*_CLNEW Field(_T("body"), _T("mXtXls"),Field::STORE_YES | Field::INDEX_TOKENIZED));
 		writer->addDocument(&doc1);
 		writer->addDocument(&doc2);
 		writer->addDocument(&doc3);

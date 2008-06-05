@@ -236,7 +236,7 @@ void SearchTest(CuTest *tc) {
 	for (int j = 0; j < 7; j++) {		
 		Document* d = _CLNEW Document();
 		//no need to delete fields... document takes ownership
-		d->add(*Field::Text(_T("contents"),docs[j]));
+		d->add(*_CLNEW Field(_T("contents"),docs[j],Field::STORE_YES | Field::INDEX_TOKENIZED));
 
 		writer.addDocument(d);
 		_CLDELETE(d);
@@ -325,7 +325,7 @@ void testSrchManyHits(CuTest *tc) {
 		Document* d = _CLNEW Document();
 		//no need to delete fields... document takes ownership
 		int x = j%7;
-		d->add(*Field::Text(_T("contents"),docs[x]));
+		d->add(*_CLNEW Field(Field(_T("contents"),docs[x],Field::STORE_YES | Field::INDEX_TOKENIZED)));
 
 		writer.addDocument(d);
 		_CLDELETE(d);

@@ -19,9 +19,9 @@
      	Document doc;
      	// add time that is in the past
 		TCHAR* tn = DateField::timeToString(now - 1000);
-     	doc.add(*Field::Keyword( _T("datefield"), tn));
+     	doc.add(*_CLNEW Field(_T("datefield"), tn,Field::STORE_YES | Field::INDEX_UNTOKENIZED));
 		_CLDELETE_CARRAY(tn);
-     	doc.add(*Field::Text(_T("body"), _T("Today is a very sunny day in New York City")));
+     	doc.add(*_CLNEW Field(_T("body"), _T("Today is a very sunny day in New York City"),Field::STORE_YES | Field::INDEX_TOKENIZED));
       	writer->addDocument(&doc);
     	writer->close();
 		_CLDELETE( writer );
@@ -98,10 +98,10 @@
 		TCHAR* tf = DateField::timeToString(now + 888888);
 
      	Document* doc = _CLNEW Document;
-		doc->add(*Field::Keyword(_T("datefield"), tf));
+		doc->add(*_CLNEW Field(_T("datefield"), tf,Field::STORE_YES | Field::INDEX_UNTOKENIZED));
 		_CLDELETE_CARRAY(tf);
 
-     	doc->add(*Field::Text(_T("body"), _T("Today is a very sunny day in New York City")));
+     	doc->add(*_CLNEW Field(_T("body"), _T("Today is a very sunny day in New York City"),Field::STORE_YES | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLDELETE(doc);
 

@@ -20,10 +20,10 @@ CL_NS_USE(util)
 	STRCPY_AtoT(tlang,file,CL_MAX_PATH);
 
     Document doc;
-	doc.add(*Field::Keyword(_T("language"),tlang));	   
-	
-	
-	doc.add(*Field::Text(_T("contents"),_CLNEW FileReader(path, "UTF-8",1024)));
+	doc.add(* _CLNEW Field(_T("language"),tlang,Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+
+	doc.add(* _CLNEW Field(_T("contents"),_CLNEW FileReader(path, "UTF-8",1024), Field::STORE_YES | Field::INDEX_TOKENIZED));
+
 	ndx->addDocument(&doc);
   }
   void _Search(CuTest *tc, IndexSearcher* srch, Analyzer* analyzer, char* file, char* query){

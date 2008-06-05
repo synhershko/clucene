@@ -75,8 +75,8 @@ CL_NS_USE(util)
 			fileStat(tmppath,&buf);
 			if ( buf.st_mode & S_IFREG){
 				Document* doc = _CLNEW Document;
-				doc->add(*Field::Text(_T("path"),tpath));
-				doc->add(*Field::Text(_T("contents"), _CLNEW FileReader(tmppath, "ASCII") ));
+				doc->add(*_CLNEW Field(_T("path"),tpath,Field::STORE_YES | Field::INDEX_TOKENIZED));
+				doc->add(*_CLNEW Field(_T("contents"), _CLNEW FileReader(tmppath, "ASCII"),Field::STORE_YES | Field::INDEX_TOKENIZED));
 
 				writer.addDocument( doc );
 				_CLDELETE(doc);

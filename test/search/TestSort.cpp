@@ -49,16 +49,16 @@ Searcher* sort_getIndex (bool even, bool odd){
 	for (int i=0; i<11; ++i) {
 		if (((i%2)==0 && even) || ((i%2)==1 && odd)) {
 			Document doc;
-			doc.add (*_CLNEW Field ( _T("tracer"),   data[i][0], true, false,false));
-			doc.add (*_CLNEW Field ( _T("contents"), data[i][1], false, true,true));
+			doc.add (*_CLNEW Field ( _T("tracer"),   data[i][0], Field::STORE_YES));
+			doc.add (*_CLNEW Field ( _T("contents"), data[i][1], Field::INDEX_TOKENIZED));
 			if (data[i][2] != NULL) 
-                doc.add (*_CLNEW Field (_T("int"),      data[i][2], false, true, false));
+                doc.add (*_CLNEW Field (_T("int"),   data[i][2], Field::INDEX_UNTOKENIZED));
 			if (data[i][3] != NULL) 
-                doc.add (*_CLNEW Field (_T("float"),    data[i][3], false, true, false));
+                doc.add (*_CLNEW Field (_T("float"),    data[i][3], Field::INDEX_UNTOKENIZED));
 			if (data[i][4] != NULL) 
-                doc.add (*_CLNEW Field (_T("string"),   data[i][4], false, true, false));
+                doc.add (*_CLNEW Field (_T("string"),   data[i][4], Field::INDEX_UNTOKENIZED));
 			if (data[i][5] != NULL) 
-                doc.add (*_CLNEW Field (_T("custom"),   data[i][5], false, true, false));
+                doc.add (*_CLNEW Field (_T("custom"),   data[i][5], Field::INDEX_UNTOKENIZED));
 			writer.addDocument (&doc);
 		}
 	}

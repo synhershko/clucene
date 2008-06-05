@@ -23,7 +23,8 @@ void testIWmergeSegments1(CuTest *tc){
         English::IntToEnglish(i,fld,1000);
 
 		Document doc;
-		doc.add ( *Field::Text(_T("field"),fld) );
+		
+		doc.add ( *_CLNEW Field(_T("field"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
 		ndx.addDocument(&doc);
 	}
 	ndx.optimize(); //optimize so we can read terminfosreader with segmentreader
