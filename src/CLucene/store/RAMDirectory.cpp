@@ -8,6 +8,7 @@
 #include "RAMDirectory.h"
 
 #include "Lock.h"
+#include "LockFactory.h"
 #include "Directory.h"
 #include "FSDirectory.h"
 #include "CLucene/index/IndexReader.h"
@@ -17,14 +18,6 @@
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
-
-  RAMFile::RAMFile()
-  {
-     length = 0;
-     lastModified = Misc::currentTimeMillis();
-     directory = NULL;
-     sizeInBytes = 0;
-  }
 
   RAMFile::RAMFile( RAMDirectory* directory )
   {
@@ -100,38 +93,6 @@ CL_NS_DEF(store)
 	  return 0;
   }
   
-  RAMDirectory::RAMLock::RAMLock(const char* name, RAMDirectory* dir):
-    directory(dir)
-  {
-  	fname = STRDUP_AtoA(name);
-  }
-  RAMDirectory::RAMLock::~RAMLock()
-  {
-    _CLDELETE_LCaARRAY( fname );
-    directory = NULL;
-  }
-  TCHAR* RAMDirectory::RAMLock::toString(){
-	  return STRDUP_TtoT(_T("LockFile@RAM"));
-  }
-  bool RAMDirectory::RAMLock::isLocked() {
-   return directory->fileExists(fname);
-  }
-  bool RAMDirectory::RAMLock::obtain(){
-    SCOPED_LOCK_MUTEX(directory->files_mutex);
-    if (!directory->fileExists(fname)) {
-        IndexOutput* tmp = directory->createOutput(fname);
-        tmp->close();
-        _CLDELETE(tmp);
-
-      return true;
-    }
-    return false;
-  }
-
-  void RAMDirectory::RAMLock::release(){
-    directory->deleteFile(fname);
-  }
-
 
   RAMIndexOutput::~RAMIndexOutput(){
 	if ( deleteFile ){
@@ -169,31 +130,6 @@ CL_NS_DEF(store)
 	seek(_ILONGLONG(0));
     file->setLength(_ILONGLONG(0));
   }
-
-//  void RAMIndexOutput::flushBuffer(const uint8_t* src, const int32_t len) {
-//    uint8_t* b = NULL;
-//    int32_t bufferPos = 0;
-//    while (bufferPos != len) {
-//	    uint32_t bufferNumber = pointer/CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE;
-//	    int32_t bufferOffset = pointer%CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE;
-//	    int32_t bytesInBuffer = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE - bufferOffset;
-//	    int32_t remainInSrcBuffer = len - bufferPos;
-//      	int32_t bytesToCopy = bytesInBuffer >= remainInSrcBuffer ? remainInSrcBuffer : bytesInBuffer;
-//	
-//		if (bufferNumber == file->numBuffers()){
-//	      b = file->addBuffer( CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE );
-//		}else{
-//		  b = file->getBuffer(bufferNumber);	
-//		}
-//		memcpy(b+bufferOffset, src+bufferPos, bytesToCopy * sizeof(uint8_t));
-//		bufferPos += bytesToCopy;
-//        pointer += bytesToCopy;
-//	}
-//    if (pointer > file->getLength())
-//      file->setLength(pointer);
-//
-//    file->setLastModified( Misc::currentTimeMillis() );
-//  }
 
   void RAMIndexOutput::close() {
     flush();
@@ -386,10 +322,12 @@ CL_NS_DEF(store)
   RAMDirectory::RAMDirectory():
    Directory(),files(true,true)
   {
+	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
   }
     
   RAMDirectory::~RAMDirectory(){
    //todo: should call close directory?
+	  _CLDELETE( lockFactory );
   }
 
   void RAMDirectory::_copyFromDir(Directory* dir, bool closeDir)
@@ -429,8 +367,8 @@ CL_NS_DEF(store)
   RAMDirectory::RAMDirectory(Directory* dir):
    Directory(),files(true,true)
   {
-    _copyFromDir(dir,false);
-    
+	setLockFactory( _CLNEW SingleInstanceLockFactory() );
+    _copyFromDir(dir,false);    
   }
   
    RAMDirectory::RAMDirectory(const char* dir):
@@ -549,11 +487,10 @@ CL_NS_DEF(store)
     return _CLNEW RAMIndexOutput(file);
   }
 
-  LuceneLock* RAMDirectory::makeLock(const char* name) {
-    return _CLNEW RAMLock(name,this);
+  TCHAR* RAMDirectory::toString() const{
+        TCHAR* ret = _CL_NEWARRAY(TCHAR,13); // 13 = strlen(RAMDirectory);
+        _tcscpy(ret,_T("RAMDirectory"));
+	return ret;
   }
 
-  TCHAR* RAMDirectory::toString() const{
-	return STRDUP_TtoT( _T("RAMDirectory") );
-  }
 CL_NS_END

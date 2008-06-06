@@ -5,6 +5,7 @@ storehdir = $(includedir)/CLucene/store
 libclucene_la_SOURCES     += $(storedir)/FSDirectory.cpp
 libclucene_la_SOURCES     += $(storedir)/IndexInput.cpp
 libclucene_la_SOURCES     += $(storedir)/Lock.cpp
+libclucene_la_SOURCES     += $(storedir)/LockFactory.cpp
 libclucene_la_SOURCES     += $(storedir)/IndexOutput.cpp
 libclucene_la_SOURCES     += $(storedir)/MMapInput.cpp
 libclucene_la_SOURCES     += $(storedir)/RAMDirectory.cpp

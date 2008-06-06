@@ -35,8 +35,7 @@ CL_NS_DEF(store)
 		const char* filename;
         #endif
 
-		RAMFile();
-		RAMFile( RAMDirectory* directory );
+		RAMFile( RAMDirectory* directory=NULL );
 		~RAMFile();
 		
 		int64_t getLength();
@@ -222,10 +221,6 @@ CL_NS_DEF(store)
 		/// Creates a new, empty file in the directory with the given name.
 		///	Returns a stream writing this file. 
 		virtual IndexOutput* createOutput(const char* name);
-
-		/// Construct a {@link Lock}.
-		/// @param name the name of the lock file
-		LuceneLock* makeLock(const char* name);
 
 		/// Returns a stream reading an existing file. 
 		IndexInput* openInput(const char* name);

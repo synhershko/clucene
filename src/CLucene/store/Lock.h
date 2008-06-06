@@ -15,7 +15,8 @@ CL_NS_DEF(store)
   class LuceneLock: LUCENE_BASE{
   public:
       LUCENE_STATIC_CONSTANT(int64_t, LOCK_POLL_INTERVAL = 1000);
-
+      LUCENE_STATIC_CONSTANT(int64_t, LOCK_OBTAIN_WAIT_FOREVER = -1);
+      
       /** Attempts to obtain exclusive access and immediately return
       *  upon success or failure.
       * @return true iff exclusive access is obtained
@@ -45,7 +46,44 @@ CL_NS_DEF(store)
       virtual TCHAR* toString() = 0;
   };
 
+  typedef CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray> LocksType;
+  
+  class SingleInstanceLock: public LuceneLock {
+  private:
+	  const char* lockName;
+	  LocksType* locks;
+	  
+  public:
+	  SingleInstanceLock( LocksType* locks, const char* lockName );
 
+	  bool obtain();
+	  void release();
+	  bool isLocked();
+	  TCHAR* toString();
+  };
+  
+  class NoLock: public LuceneLock {
+	  bool obtain() { return true; }
+	  void release() {}
+	  bool isLocked() { return false; }
+	  TCHAR* toString() { return _T("NoLock"); }
+  };
+  
+  class FSLock: public LuceneLock {
+  private:
+	  char lockFile[CL_MAX_PATH];
+  	  char* lockDir;
+	  
+  public:
+	  FSLock( const char* _lockDir, const char* name );
+	  ~FSLock();
+	  
+	  bool obtain();
+	  void release();
+	  bool isLocked();
+	  TCHAR* toString();	  	  	  
+  };
+  
   // Utility class for executing code with exclusive access.
   template<typename T>
   class LuceneLockWith {

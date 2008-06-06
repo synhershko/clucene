@@ -17,6 +17,7 @@
 
 #include "IndexInput.h"
 #include "IndexOutput.h"
+#include "LockFactory.h"
 
 CL_NS_DEF(store)
 
@@ -34,6 +35,8 @@ CL_NS_DEF(store)
    */
 	class Directory: LUCENE_REFBASE {
 	protected:
+		LockFactory* lockFactory;
+		
 		Directory(){
 		}
 		// Removes an existing file in the directory. 
@@ -98,14 +101,35 @@ CL_NS_DEF(store)
 
 		// Construct a {@link Lock}.
 		// @param name the name of the lock file
-		virtual LuceneLock* makeLock(const char* name) = 0;
+		virtual LuceneLock* makeLock(const char* name) {
+			return lockFactory->makeLock( name );
+		}
 
+		virtual void clearLock(const char* name) {
+			if ( lockFactory != NULL ) {
+				lockFactory->clearLock( name );
+			}
+		}
+		
 		// Closes the store. 
 		virtual void close() = 0;
 		
 		virtual TCHAR* toString() const = 0;
 
 		virtual const char* getDirectoryType() const = 0;
+		
+		void setLockFactory( LockFactory* lockFactory ) {
+			this->lockFactory = lockFactory;
+			lockFactory->setLockPrefix( getLockID() );
+		}
+		
+		LockFactory* getLockFactory() {
+			return lockFactory;
+		}
+		
+		virtual TCHAR* getLockID() {
+			return toString();
+		}
 	};
 CL_NS_END
 #endif

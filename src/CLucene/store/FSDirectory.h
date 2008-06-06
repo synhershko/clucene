@@ -13,6 +13,7 @@
 
 #include "Directory.h"
 #include "Lock.h"
+#include "LockFactory.h"
 #include "CLucene/util/VoidMap.h"
 #include "CLucene/util/StringBuffer.h"
 
@@ -27,19 +28,6 @@
    */
 	class FSDirectory:public Directory{
 	private:
-		class FSLock: public LuceneLock{
-		public:
-			// const char* fname;
-			char lockFile[CL_MAX_PATH];
-			char* lockDir;
-			FSLock ( const char* lockDir, const char* name );
-			~FSLock();
-			bool obtain();
-			void release();
-			bool isLocked();
-			TCHAR* toString();
-		};
-		friend class FSDirectory::FSLock;
 
 #if defined(LUCENE_FS_MMAP)
 		class MMapIndexInput: public IndexInput{
@@ -135,7 +123,7 @@
 		friend class FSDirectory::FSIndexOutput;
 
 	protected:
-		FSDirectory(const char* path, const bool createDir);
+		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
 	private:
 		char directory[CL_MAX_PATH];
 		int refCount;
@@ -184,7 +172,7 @@
 		   @param create if true, create, or erase any existing contents.
 		   @return the FSDirectory for the named file.
         */
-		static FSDirectory* getDirectory(const char* file, const bool create);
+		static FSDirectory* getDirectory(const char* file, const bool create, LockFactory* lockFactory=NULL);
 
 		/// Returns the time the named file was last modified.
 		int64_t fileModified(const char* name) const;
@@ -214,10 +202,6 @@
 		/// Creates a new, empty file in the directory with the given name.
 		///	Returns a stream writing this file. 
 		IndexOutput* createOutput(const char* name);
-
-		/// Construct a {@link Lock}.
-		/// @param name the name of the lock file
-		LuceneLock* makeLock(const char* name);
 
 		  ///Decrease the ref-count to the directory by one. If
 		  ///the object is no longer needed, then the object is

@@ -7,6 +7,7 @@
 #include "CLucene/StdHeader.h"
 #include "FSDirectory.h"
 #include "CLucene/index/IndexReader.h"
+#include "CLucene/index/IndexWriter.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/MD5Digester.h"
 #include "CLucene/debug/condition.h"
@@ -226,7 +227,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		return LOCK_DIR;
 	}
 
-  FSDirectory::FSDirectory(const char* path, const bool createDir):
+  FSDirectory::FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory):
    Directory(),
    refCount(0),
    useMMap(false)
@@ -235,26 +236,23 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   	if ( !directory || !*directory ){
   		strcpy(directory,path);	
   	}
+        
+    bool doClearLockID = false;
     
-		const char* tmplockdir = getLockDir();
-    if ( tmplockdir == NULL ) {
-      strcpy(lockDir,directory);
-    } else {
-      strcpy(lockDir,tmplockdir);
+    if ( lockFactory == NULL ) {
+    	if ( disableLocks ) {
+    		lockFactory = NoLockFactory::getNoLockFactory();
+    	} else {
+    		lockFactory = _CLNEW FSLockFactory( path );
+    		doClearLockID = true;
+    	}
     }
     
-    // Ensure that lockDir exists and is a directory.
-		struct fileStat fstat;
-	  if ( fileStat(tmplockdir,&fstat) != 0 ) {
-			//todo: should construct directory using _mkdirs... have to write replacement
-			if ( _mkdir(directory) == -1 ){
-				_CLTHROWA(CL_ERR_IO,"Cannot create temp directory"); //todo: make richer error
-			}
-		}
-		if ( !(fstat.st_mode & S_IFDIR) ){
-			_CLTHROWA(CL_ERR_IO, "Found regular file where directory expected"); //todo: make richer error: " + lockDir);
+    setLockFactory( lockFactory );
+    
+    if ( doClearLockID ) {
+    	lockFactory->setLockPrefix(NULL);
     }
-	
 
     if (createDir) {
       create();
@@ -266,6 +264,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		strcat(err," is not a directory");
         _CLTHROWA_DEL(CL_ERR_IO, err );
     }
+
   }
 
 
@@ -311,26 +310,8 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     }
     closedir(dir);
 
-		char* lockPrefix = getLockPrefix(); // clear old locks
-		size_t lockPrefixLen = strlen(lockPrefix);
-	
-    dir = opendir(lockDir);
-		if ( dir == NULL )
-			_CLTHROWA(CL_ERR_IO, "Cannot read lock directory"); //todo: richer error: + lockDir.getAbsolutePath());
-		fl = readdir(dir);
-    while ( fl != NULL ){
-			if (strncmp(fl->d_name,lockPrefix,lockPrefixLen)==0){
-				_snprintf(path,CL_MAX_DIR,"%s/%s",lockDir,fl->d_name);
-				if ( _unlink( path ) == -1 ) {
-					closedir(dir);
-					_CLDELETE_CaARRAY(lockPrefix);
-					_CLTHROWA(CL_ERR_IO, "Couldn't delete file "); //todo: make richer error
-				}
-			}
-      fl = readdir(dir);
-    }
-    closedir(dir);
-    _CLDELETE_CaARRAY(lockPrefix);
+    lockFactory->clearLock( CL_NS(index)::IndexWriter::WRITE_LOCK_NAME );
+    
   }
 
   void FSDirectory::priv_getFN(char* buffer, const char* name) const{
@@ -341,6 +322,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   }
 
   FSDirectory::~FSDirectory(){
+	  _CLDELETE( lockFactory );
   }
 
   void FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
@@ -378,7 +360,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   }
 
   //static
-  FSDirectory* FSDirectory::getDirectory(const char* file, const bool _create){
+  FSDirectory* FSDirectory::getDirectory(const char* file, const bool _create, LockFactory* lockFactory){
     FSDirectory* dir = NULL;
 	{
 		if ( !file || !*file )
@@ -387,10 +369,14 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		SCOPED_LOCK_MUTEX(DIRECTORIES.THIS_LOCK)
 		dir = DIRECTORIES.get(file);
 		if ( dir == NULL  ){
-			dir = _CLNEW FSDirectory(file,_create);
+			dir = _CLNEW FSDirectory(file,_create,lockFactory);
 			DIRECTORIES.put( dir->directory, dir);
-		}else if ( _create ){
+		} else if ( _create ) {
 	    	dir->create();
+		} else {
+			if ( lockFactory != NULL && lockFactory != dir->getLockFactory() ) {
+				_CLTHROWA(CL_ERR_IO,"Directory was previously created with a different LockFactory instance, please pass NULL as the lockFactory instance and use setLockFactory to change it");
+			}
 		}
 
 		{
@@ -586,76 +572,6 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		}
 	}
     return _CLNEW FSIndexOutput( fl );
-  }
-
-  LuceneLock* FSDirectory::makeLock(const char* name) {
-	CND_PRECONDITION(directory[0]!=0,"directory is not open");
-
-	char* tmp = getLockPrefix();
-	char* lockFile = _CL_NEWARRAY(char,strlen(tmp)+strlen(name)+2);
-	strcpy(lockFile,tmp);
-	strcat(lockFile,"-");
-	strcat(lockFile,name);
-	_CLDELETE_CaARRAY(tmp);
-
-    // create a lock file
-    LuceneLock* ret = _CLNEW FSLock( lockDir, lockFile );
-	_CLDELETE_CaARRAY(lockFile);
-	return ret;
-  }
-
-
-
-  FSDirectory::FSLock::FSLock ( const char* _lockDir, const char* name )
-  {
-	  this->lockDir = STRDUP_AtoA(_lockDir);
-	  strcpy(lockFile,_lockDir);
-	  strcat(lockFile,PATH_DELIMITERA);
-	  strcat(lockFile,name);
-  }
-  FSDirectory::FSLock::~FSLock(){
-    _CLDELETE_LCaARRAY( lockDir );
-  }
-  TCHAR* FSDirectory::FSLock::toString(){
-	  size_t lflen = strlen(lockFile);
-	  TCHAR* ret = _CL_NEWARRAY(TCHAR,lflen+6);
-	  _tcscpy(ret,_T("Lock@"));
-	  STRCPY_AtoT(ret+5,lockFile,lflen+1);
-	  return ret;
-  }
-  bool FSDirectory::FSLock::obtain() {
-   if (disableLocks)
-      return true;
-
-	if ( !Misc::dir_Exists(lockDir) ){
-       //todo: should construct directory using _mkdirs... have to write replacement
-      if ( _mkdir(lockDir) == -1 ){
-		  char* err = _CL_NEWARRAY(char,34+strlen(lockDir)+1); //34: len of "Couldn't create lock directory: "
-		  strcpy(err,"Couldn't create lock directory: ");
-		  strcat(err,lockDir);
-		  _CLTHROWA_DEL(CL_ERR_IO, err );
-      }
-    }
-    int32_t r = _open(lockFile,  O_RDWR | O_CREAT | O_RANDOM | O_EXCL, 
-    	_S_IREAD | _S_IWRITE); //must do this or file will be created Read only
-	if ( r < 0 )
-	  return false;
-	else{
-	  _close(r);
-	  return true;
-	}
-
-  }
-  bool FSDirectory::FSLock::isLocked(){
-     if (disableLocks)
-          return false;
-
-     return Misc::dir_Exists(lockFile);
-  }
-  void FSDirectory::FSLock::release() {
-    if (disableLocks)
-          return;
-    _unlink( lockFile );
   }
 
   TCHAR* FSDirectory::toString() const{

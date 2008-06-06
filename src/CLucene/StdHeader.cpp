@@ -66,6 +66,9 @@ void _lucene_shutdown(){
 	_CLLDELETE(CL_NS(search)::Similarity::getDefault());
 
     CL_NS(util)::CLStringIntern::shutdown();
+    
+    _CLDELETE(CL_NS(store)::NoLockFactory::singletonLock);
+    _CLDELETE(CL_NS(store)::NoLockFactory::singleton);
 }
 
 void CLDebugBreak(){

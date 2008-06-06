@@ -100,6 +100,7 @@
 #include "CLucene/store/FSDirectory.cpp"
 #include "CLucene/store/IndexInput.cpp"
 #include "CLucene/store/Lock.cpp"
+#include "CLucene/store/LockFactory.cpp"
 #include "CLucene/store/MMapInput.cpp"
 #include "CLucene/store/IndexOutput.cpp"
 #include "CLucene/store/RAMDirectory.cpp"

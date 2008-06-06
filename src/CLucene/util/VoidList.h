@@ -58,6 +58,12 @@ public:
 		(*this)[i] = val;
 	}
 
+	bool contains(_kt k)const{
+		const_iterator itr = base::find(k);
+		bool ret = itr!=base::end();
+		return ret;
+	}
+
 	//todo: check this
 	void delete_back(){
 		if ( base::size() > 0 ){
@@ -100,12 +106,13 @@ public:
 		if ( dv && !dontDelete ) 
 			_valueDeletor::doDelete(key);
 	}
+	
 	void remove(iterator itr, bool dontDelete=false){
 		_kt key = *itr;
 		base::erase( itr );
 		if ( dv && !dontDelete ) 
 			_valueDeletor::doDelete(key);
-	}
+	}	
 
 };
 
