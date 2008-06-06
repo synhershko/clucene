@@ -35,6 +35,7 @@ public:
 	
 	LUCENE_STATIC_CONSTANT(int32_t,COMPOUND_EXTENSIONS_LENGTH=7);
 	LUCENE_STATIC_CONSTANT(int32_t,VECTOR_EXTENSIONS_LENGTH=3);
+	LUCENE_STATIC_CONSTANT(int32_t,STORE_INDEX_EXTENSIONS_LENGTH=5);
 	
 	static const char* INDEX_EXTENSIONS[];
 	static const char* INDEX_EXTENSIONS_IN_COMPOUND_FILE[];
@@ -44,6 +45,7 @@ public:
 	static const char* VECTOR_EXTENSIONS[];
 	
 	static const char* fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
+	static bool isDocStoreFile( const char* fileName );
 	
 };
 

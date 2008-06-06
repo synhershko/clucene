@@ -420,11 +420,11 @@ CL_NS_DEF(index)
 			
 			try {
 				value = doBody( segmentFileName );
-				free( (void*)segmentFileName );
+				//delete [] segmentFileName;
 				return value;    				
 			} catch (...) {
 				
-				free( (void*)segmentFileName );
+				//delete [] segmentFileName;
 				
 				if ( !retry && gen > 1 ) {
 					
@@ -435,7 +435,7 @@ CL_NS_DEF(index)
 							value = doBody( prevSegmentFileName );
 							return value;
 						} _CLFINALLY(
-							delete [] prevSegmentFileName;
+							//delete [] prevSegmentFileName;
 						);
 					}
 				}
