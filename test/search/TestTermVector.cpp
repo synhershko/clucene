@@ -7,7 +7,7 @@
 #include "test.h"
 
 IndexSearcher* tv_searcher;
-RAMDirectory tv_directory;
+RAMDirectory* tv_directory;
 
 void testTermPositionVectors(CuTest *tc) {
     CLUCENE_ASSERT(tv_searcher!=NULL);
@@ -72,11 +72,13 @@ void testTermVectors(CuTest *tc) {
 
 void testTVCleanup(CuTest *tc) {
     _CLDELETE(tv_searcher);
-	tv_directory.close();
+    tv_directory->close();
+    _CLDELETE(tv_directory);
 }
 void testTVSetup(CuTest *tc) {
     SimpleAnalyzer a;
-    IndexWriter writer(&tv_directory, &a, true);
+    tv_directory = _CLNEW RAMDirectory();
+    IndexWriter writer(tv_directory, &a, true);
     writer.setUseCompoundFile(false);
 
     TCHAR buf[200];
@@ -100,7 +102,7 @@ void testTVSetup(CuTest *tc) {
       writer.addDocument(&doc);
     }
     writer.close();
-    tv_searcher = _CLNEW IndexSearcher(&tv_directory);
+    tv_searcher = _CLNEW IndexSearcher(tv_directory);
 }
 
 
