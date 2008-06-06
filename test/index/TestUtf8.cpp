@@ -22,7 +22,7 @@ CL_NS_USE(util)
     Document doc;
 	doc.add(* _CLNEW Field(_T("language"),tlang,Field::STORE_YES | Field::INDEX_UNTOKENIZED));
 
-	doc.add(* _CLNEW Field(_T("contents"),_CLNEW FileReader(path, "UTF-8",1024), Field::STORE_YES | Field::INDEX_TOKENIZED));
+	doc.add(* _CLNEW Field(_T("contents"),_CLNEW FileReader(path, "UTF-8",1024), Field::INDEX_TOKENIZED));
 
 	ndx->addDocument(&doc);
   }
