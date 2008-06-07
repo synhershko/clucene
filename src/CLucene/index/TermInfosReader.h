@@ -14,6 +14,7 @@
 #include "Terms.h"
 #include "SegmentTermEnum.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
 #include "CLucene/util/ThreadLocal.h"
 #include "FieldInfos.h"
 #include "TermInfo.h"
@@ -24,7 +25,7 @@ CL_NS_DEF(index)
 	 * Directory.  Pairs are accessed either by Term or by ordinal position the
 	 * set.  
 	 *
-	 * PORT STATUS: 365707 (jlucene 1.9)
+	 * PORT STATUS: 365707 (jlucene 1.9) -- started port to JLucene 2.3.2
 	 */
 	class TermInfosReader :LUCENE_BASE{
 	private:
@@ -47,13 +48,13 @@ CL_NS_DEF(index)
 
 		int32_t indexDivisor;
 		int32_t totalIndexInterval;
-		
+
 		DEFINE_MUTEX(THIS_LOCK)
 
 	public:
 		//Constructor.
         //Reads the TermInfos file (.tis) and eventually the Term Info Index file (.tii)
-		TermInfosReader(CL_NS(store)::Directory* dir, const char* segment, FieldInfos* fis, int32_t readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
+		TermInfosReader(CL_NS(store)::Directory* dir, const char* segment, FieldInfos* fis, int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 		//Destructor
 		~TermInfosReader();
 		//Close the enumeration of TermInfos
@@ -62,9 +63,9 @@ CL_NS_DEF(index)
 		//Return the size of the enumeration of TermInfos
 		int64_t size() const;
 
-		int32_t getSkipInterval() { return origEnum->skipInterval; }
+		int32_t getSkipInterval() const { return origEnum->skipInterval; }
 		
-		int32_t getMaxSkipLevels() { return origEnum->maxSkipLevels; }
+		int32_t getMaxSkipLevels() const { return origEnum->maxSkipLevels; }
 		
 		// Returns an enumeration of terms starting at or after the named term. 
 		// If no term is specified, an enumeration of all the Terms 

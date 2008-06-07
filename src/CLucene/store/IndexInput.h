@@ -106,7 +106,7 @@ CL_NS_DEF(store)
 		virtual void seek(const int64_t pos) =0;
 		
 		/** The number of bytes in the file. */
-		virtual int64_t length() = 0;
+		virtual int64_t length() const = 0;
 		
 		virtual const char* getDirectoryType() const = 0;
 		

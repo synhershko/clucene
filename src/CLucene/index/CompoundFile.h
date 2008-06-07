@@ -60,7 +60,7 @@ private:
 		void close();
 		CL_NS(store)::IndexInput* clone() const;
 
-		int64_t length(){ return _length; }
+		int64_t length() const { return _length; }
 		
 		const char* getDirectoryType() const{ return CompoundFileReader::DirectoryType(); }
 	};

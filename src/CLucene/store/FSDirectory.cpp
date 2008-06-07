@@ -197,7 +197,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
       _CLTHROWA(CL_ERR_IO, "File IO Seek error");
 	}
   }
-  int64_t FSDirectory::FSIndexOutput::length(){
+  int64_t FSDirectory::FSIndexOutput::length() const {
 	  CND_PRECONDITION(fhandle>=0,"file is not open");
 	  return fileSize(fhandle);
   }

@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "IndexOutput.h"
+#include "IndexInput.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -13,9 +14,11 @@ CL_NS_DEF(store)
 
   IndexOutput::IndexOutput()
   {
+	  copyBuffer = NULL;
   }
 
   IndexOutput::~IndexOutput(){
+	  _CLDELETE_LARRAY(copyBuffer);
   }
 
   BufferedIndexOutput::BufferedIndexOutput()
@@ -147,6 +150,22 @@ CL_NS_DEF(store)
 
   int64_t BufferedIndexOutput::getFilePointer() const{
     return bufferStart + bufferPosition;
+  }
+  void IndexOutput::copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes)
+  {
+	  int64_t left = numBytes;
+	  if (copyBuffer == NULL)
+		  copyBuffer = _CL_NEWARRAY(uint8_t, COPY_BUFFER_SIZE);
+	  while(left > 0) {
+		  int32_t toCopy;
+		  if (left > COPY_BUFFER_SIZE)
+			  toCopy = COPY_BUFFER_SIZE;
+		  else
+			  toCopy = (int32_t) left;
+		  input->readBytes(copyBuffer, toCopy);
+		  writeBytes(copyBuffer, toCopy);
+		  left -= toCopy;
+	  }
   }
 
   void BufferedIndexOutput::seek(const int64_t pos) {

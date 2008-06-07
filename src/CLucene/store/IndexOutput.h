@@ -12,6 +12,7 @@
 
 CL_NS_DEF(store)
 
+class IndexInput;
 
 /** Abstract class for output to a file in a Directory.  A random-access output
 * stream.  Used for all Lucene index output operations.
@@ -32,7 +33,7 @@ public:
 	/** Writes an array of bytes.
 	* @param b the bytes to write
 	* @param length the number of bytes to write
-	* @see IndexInput#readBytes(byte[],int32_t,int32_t)
+	* @see IndexInput#readBytes(uint8_t*,int32_t)
 	*/
 	virtual void writeBytes(const uint8_t* b, const int32_t length) = 0;
 
@@ -88,16 +89,24 @@ public:
 	virtual void seek(const int64_t pos) = 0;
 
 	/** The number of bytes in the file. */
-	virtual int64_t length() = 0;
+	virtual int64_t length() const = 0;
 
 	/** Forces any buffered output to be written. */
 	virtual void flush() = 0;
+
+private:
+	LUCENE_STATIC_CONSTANT(int32_t, COPY_BUFFER_SIZE = 16384);
+	uint8_t* copyBuffer;
+
+public:
+	/** Copy numBytes bytes from input to ourself. */
+	void copyBytes(CL_NS(store)::IndexInput* input, int64_t numBytes);
 };
 
 /** Base implementation class for buffered {@link IndexOutput}. */
 class BufferedIndexOutput : public IndexOutput{
 public:
-	LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
+	LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=16384);
 private:
 	uint8_t* buffer;
 	int64_t bufferStart;			  // position in file of buffer
@@ -134,7 +143,7 @@ public:
 	virtual void seek(const int64_t pos);
 
 	/** The number of bytes in the file. */
-	virtual int64_t length() = 0;
+	virtual int64_t length() const = 0;
 
 	/** Forces any buffered output to be written. */
 	void flush();

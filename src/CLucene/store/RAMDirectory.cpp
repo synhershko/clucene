@@ -146,7 +146,7 @@ CL_NS_DEF(store)
 	  bufferPosition = (int32_t)( pos % BUFFER_SIZE );
   }
   
-  int64_t RAMIndexOutput::length() {
+  int64_t RAMIndexOutput::length() const {
     return file->getLength();
   }
 
@@ -239,7 +239,7 @@ CL_NS_DEF(store)
     return ret;
   }
   
-  int64_t RAMIndexInput::length() {
+  int64_t RAMIndexInput::length() const {
     return _length;
   }
   

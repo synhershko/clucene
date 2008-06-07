@@ -92,7 +92,7 @@
     
     		IndexInput* clone() const;
     		void close();
-			int64_t length(){ return handle->_length; }
+			int64_t length() const { return handle->_length; }
 			
 			const char* getDirectoryType() const{ return FSDirectory::DirectoryType(); }
     	protected:
@@ -118,7 +118,7 @@
     
     		// Random-access methods 
     		void seek(const int64_t pos);
-    		int64_t length();
+    		int64_t length() const;
 		};
 		friend class FSDirectory::FSIndexOutput;
 

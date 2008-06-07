@@ -94,7 +94,7 @@ public:
     /**
      * Returns the byte at the given index.
      */
-	uint8_t byteAt(int index) {
+	uint8_t byteAt(int index) const {
 		if (0 <= index && index < this->length) {
 			return this->data[this->offset + index];    
 		}

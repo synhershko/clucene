@@ -75,6 +75,7 @@ CL_NS_DEF(index)
             indexInterval = input->readInt();
             skipInterval = input->readInt();
             if ( format == -3 ) {
+		// this new format introduces multi-level skipping
             	maxSkipLevels = input->readInt();
             }
          }

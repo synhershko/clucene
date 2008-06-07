@@ -664,15 +664,21 @@ void SegmentMerger::mergeNorms() {
 						inputLen = maxDoc;
 					}
 					reader->norms(fi->name, input);
-
-					//Iterate through all the documents
-					for(int32_t k = 0; k < maxDoc; k++) {
-						//Check if document k is deleted
-						if (!reader->isDeleted(k)){
-							//write the new norm
-							output->writeByte(input[k]);
+					if (!reader->hasDeletions()) {
+						//optimized case for segments without deleted docs
+						output->writeBytes(input, maxDoc);
+					} else {
+						// this segment has deleted docs, so we have to
+						// check for every doc if it is deleted or not
+						for(int32_t k = 0; k < maxDoc; k++) {
+							//Check if document k is deleted
+							if (!reader->isDeleted(k)){
+								//write the new norm
+								output->writeByte(input[k]);
+							}
 						}
 					}
+
 				}
             }_CLFINALLY(
 				if (output != NULL){

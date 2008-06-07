@@ -126,7 +126,7 @@ public:
 	// INITIAL DESIGN
 	uint8_t* getPayload(uint8_t* data, int32_t offset) {
 		if (!needToLoadPayload) {
-			//throw new IOException("Payload cannot be loaded more than once for the same term position.");
+			_CLTHROWA(CL_ERR_IO, "Payload cannot be loaded more than once for the same term position.");
 		}
 
 		// read payloads lazily
@@ -135,14 +135,14 @@ public:
 		if (data == NULL /*|| data.length - offset < payloadLength*/) {
 			// the array is too small to store the payload data,
 			// so we allocate a new one
-			if (data) _CLDELETE_ARRAY(data);
+			_CLDELETE_ARRAY(data);
 			retArray = _CL_NEWARRAY(uint8_t, payloadLength);
 			retOffset = 0;
 		} else {
 			retArray = data;
 			retOffset = offset;
 		}
-		proxStream->readBytes(retArray, retOffset/*, payloadLength*/);
+		proxStream->readBytes(retArray + retOffset, payloadLength);
 		needToLoadPayload = false;
 		return retArray;
 	}

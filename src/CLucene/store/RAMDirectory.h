@@ -77,7 +77,7 @@ CL_NS_DEF(store)
 
 		virtual void close();
 
-		int64_t length();
+		int64_t length() const;
         /** Resets this to an empty buffer. */
         void reset();
   	    /** Copy the current contents of this buffer to the named output. */
@@ -123,7 +123,7 @@ CL_NS_DEF(store)
 		IndexInput* clone() const;
 
 		void close();
-		int64_t length();
+		int64_t length() const;
 		const char* getDirectoryType() const;
 		
 		uint8_t readByte();
