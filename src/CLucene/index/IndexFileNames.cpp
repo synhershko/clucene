@@ -110,7 +110,7 @@ CL_NS_DEF(index)
 		return fileName;
 	}
 	
-	bool IndexFileNames::isDocStoreFile( const char* fileName ) {
+	bool IndexFileNames::isDocStoreFile( char* fileName ) {
 		
 		char* p = strchr( fileName, (int)'.' );
 		

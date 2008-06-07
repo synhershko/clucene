@@ -45,7 +45,7 @@ public:
 	static const char* VECTOR_EXTENSIONS[];
 	
 	static const char* fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
-	static bool isDocStoreFile( const char* fileName );
+	static bool isDocStoreFile( char* fileName );
 	
 };
 
