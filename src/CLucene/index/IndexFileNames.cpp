@@ -107,7 +107,7 @@ CL_NS_DEF(index)
 			free( genStr );
 		}
 
-		return fileName;
+		return STRDUP_AtoA( fileName );
 	}
 	
 	bool IndexFileNames::isDocStoreFile( char* fileName ) {
