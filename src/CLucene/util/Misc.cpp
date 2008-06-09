@@ -265,13 +265,53 @@ TCHAR* Misc::stringTrim(TCHAR* text) {
 		if ( ! _istspace(text[i]) )
 			break;
 	}
-	for ( j=len; j > i; j-- ){ // find the last non-space character and store it as j
-		if ( ! _istspace(text[j]) )
+	for ( j=len-1; j > i; --j ){ // find the last non-space character and store it as j
+		if ( ! _istspace(text[j]) ) {
 			break;
+		}
 	}
 
-	if (i || j<len) // prevent unnecessary copy
+	if (i==0 && j==len-1) // prevent unnecessary copy
+		return text;
+
+	if (i==0)
+		text[j+1]=0;
+	else {
+		j++;
 		STRCPY_TtoT(text, text+i, j-i);
+		text[j-i] = 0;
+	}
+	
+	return text;
+}
+
+TCHAR* Misc::wordTrim(TCHAR* text) {
+	size_t j, i;
+	size_t len = _tcslen(text);
+
+	for ( i=0;i<len;i++ ){ // find the first non-space character and store it as i
+		if ( ! _istspace(text[i]) )
+			break;
+	}
+	for ( j=i; j < len; j++ ){ // find the last non-space character and store it as j
+		if ( _istspace(text[j]) ) {
+			break;
+		}
+	}
+
+	if (i == 0 && j==len)
+		return text;
+
+	if (i==j) // empty string
+		return NULL;
+
+	if (i == 0) {
+		text[j] = 0;
+		return text;
+	} else {
+		STRCPY_TtoT(text, text+i, j-i);
+		text[j-i] = 0;
+	}
 	
 	return text;
 }

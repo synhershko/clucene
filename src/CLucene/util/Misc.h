@@ -47,7 +47,11 @@ CL_NS_DEF(util)
    */
 	static int32_t stringDifference(const TCHAR* s1, const int32_t s1Len, const TCHAR* s2, const int32_t s2Len);
 
+	// In-place trimming for strings and words ("te st" will be returned by stringTrim, while wordTrim will return "te")
+	// This is by design only meant for use with on-memory strings, and calling it like stringTrim(_T("test")) will
+	// be errorneous
 	static TCHAR* stringTrim(TCHAR* s);
+	static TCHAR* wordTrim(TCHAR* s);
 	
 	static char* longToBase( int64_t value, int32_t base );
 	static int64_t base36ToLong( const char* value );	
