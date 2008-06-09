@@ -6,6 +6,19 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
+  void TestFields(CuTest *tc){
+	  Field *f = _CLNEW Field(_T("test"), _T("value"), Field::INDEX_TOKENIZED);
+	  CLUCENE_ASSERT(f->isIndexed() && f->isTokenized());
+	  CLUCENE_ASSERT(!f->isStored() && !f->isBinary() && !f->getOmitNorms());
+	  _CLDELETE(f);
+
+	  f = _CLNEW Field(_T("test"), _T("value"), Field::STORE_YES | Field::INDEX_NONORMS);
+	  CLUCENE_ASSERT(f->isIndexed());
+	  CLUCENE_ASSERT(!f->isTokenized());
+	  CLUCENE_ASSERT(f->getOmitNorms());
+	  CLUCENE_ASSERT(f->isStored() && !f->isBinary());
+	  _CLDELETE(f);
+  }
 
   void TestBinaryDocument(CuTest *tc){
     char factbook[1024];
@@ -104,6 +117,7 @@ CuSuite *testdocument(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Document Test"));
 
-    SUITE_ADD_TEST(suite, TestBinaryDocument);
+	SUITE_ADD_TEST(suite, TestFields);
+	SUITE_ADD_TEST(suite, TestBinaryDocument);
     return suite; 
 }

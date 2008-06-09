@@ -14,6 +14,19 @@
 #include "CLucene/util/Reader.h"
 #include "CLucene/util/streambase.h"
 
+#include "CLucene/analysis/AnalysisHeader.h"
+
+/*
+Fieldable reading:
+https://issues.apache.org/jira/browse/LUCENE-1219?page=com.atlassian.jira.plugin.system.issuetabpanels:comment- tabpanel&focusedCommentId=12578199#action_12578199
+http://lucene.markmail.org/message/ioi4f6z24cbd5bdm?q=Fieldable#query:Fieldable+page:1+mid:fxmvzb6up7zve7k4+state:results
+
+TODO: - Solve some inconsistencies between CL and JL - mainly in the constructors area.
+	  - Write some more tests to make sure we conform with JL - mainly in the tokenizing and omitNorms area
+	  - Is there a bug in JL when calling setOmitNorms after a Tokenized field was created?
+	  - TokenStream* implementation - mend all 3 pointers to one void* ?
+*/
+
 CL_NS_DEF(document)
 /**
 A field is a section of a Document.  Each field has two parts, a name and a
@@ -36,9 +49,8 @@ private:
 	CL_NS(util)::Reader* _readerValue;
     jstreams::StreamBase<char>* _streamValue;
 
-	int config;
+	uint32_t config;
 	float_t boost;
-	bool omitNorms;
 public:
 	enum Store{ 
 		/** Store the original field value in the index. This is useful for short texts
@@ -65,21 +77,28 @@ public:
 		* but one can still access its contents provided it is
 		* {@link Field::Store stored}. */
 		INDEX_NO=16, 
+
 		/** Index the field's value so it can be searched. An Analyzer will be used
 		* to tokenize and possibly further normalize the text before its
 		* terms will be stored in the index. This is useful for common text.
 		*/
 		INDEX_TOKENIZED=32, 
+
 		/** Index the field's value without using an Analyzer, so it can be searched.
 		* As no analyzer is used the value will be stored as a single term. This is
 		* useful for unique Ids like product numbers.
 		*/
 		INDEX_UNTOKENIZED=64, 
+
 		/** Index the field's value without an Analyzer, and disable
 		* the storing of norms.  No norms means that index-time boosting
 		* and field length normalization will be disabled.  The benefit is
 		* less memory usage as norms take up one byte per indexed field
 		* for every document in the index.
+		* Note that once you index a given field <i>with</i> norms enabled,
+		* disabling norms will have no effect.  In other words, for NO_NORMS
+		* to have the above described effect on a field, all instances of that
+		* field must be indexed with NO_NORMS from the beginning.
 		*/
 		INDEX_NONORMS=128
 	};
@@ -87,95 +106,79 @@ public:
 	enum TermVector{
 		/** Do not store term vectors. */
 		TERMVECTOR_NO=256, 
+
 		/** Store the term vectors of each document. A term vector is a list
 		* of the document's terms and their number of occurences in that document. */
-		TERMVECTOR_YES=512,    
+		TERMVECTOR_YES=512,
+
 		/**
 		* Store the term vector + token position information
 		* 
 		* @see #YES
 		*/ 
-		TERMVECTOR_WITH_POSITIONS=1024,
+		TERMVECTOR_WITH_POSITIONS = TERMVECTOR_YES | 1024,
+
 		/**
 		* Store the term vector + Token offset information
 		* 
 		* @see #YES
 		*/ 
-		TERMVECTOR_WITH_OFFSETS=2048
+		TERMVECTOR_WITH_OFFSETS = TERMVECTOR_YES | 2048,
+
+		/**
+		* Store the term vector + Token position and offset information
+		* 
+		* @see #YES
+		* @see #WITH_POSITIONS
+		* @see #WITH_OFFSETS
+		*/ 
+		TERMVECTOR_WITH_POSITIONS_OFFSETS = TERMVECTOR_WITH_OFFSETS | TERMVECTOR_WITH_POSITIONS
 	};
 
-	_CL_DEPRECATED( another overload ) Field(const TCHAR* name, const TCHAR* value, bool store, bool index, bool token, const bool storeTermVector=false);
-	_CL_DEPRECATED( another overload ) Field(const TCHAR* name, CL_NS(util)::Reader* reader, bool store, bool index, bool token, const bool storeTermVector=false);
+	enum { LAZY_YES = 4096 };
 
-	Field(const TCHAR* name, const TCHAR* value, int configs);
-	Field(const TCHAR* name, CL_NS(util)::Reader* reader, int configs);
-	Field(const TCHAR* name, jstreams::StreamBase<char>* stream, int configs);
+	Field(const TCHAR* name, const TCHAR* value, int _config);
+	Field(const TCHAR* name, CL_NS(util)::Reader* reader, int _config);
+	Field(const TCHAR* name, jstreams::StreamBase<char>* stream, int _config);
     ~Field();
-
-	/** Constructs a String-valued Field that is not tokenized, but is indexed
-	* and stored.  Useful for non-text fields, e.g. date or url. 
-	* @deprecated Use new Field(name,value,Field::STORE_YES | Field::INDEX_UNTOKENIZED)
-	*/
-	_CL_DEPRECATED( new Field(*) ) static Field* Keyword(const TCHAR* name, const TCHAR* value);
-
-	/** Constructs a String-valued Field that is not tokenized nor indexed,
-	*	but is stored in the index, for return with hits. 
-	* @deprecated Use new Field(name,value,Field::STORE_YES | Field::INDEX_NO)
-	*/
-	_CL_DEPRECATED( new Field(*) ) static Field* UnIndexed(const TCHAR* name, const TCHAR* value);
-
-	/** Constructs a String-valued Field that is tokenized and indexed,
-	*	and is stored in the index, for return with hits.  Useful for short text
-	*	fields, like "title" or "subject". 
-	* @deprecated Use new Field(name,value,Field::STORE_YES | Field::INDEX_TOKENIZED)
-	*/
-	_CL_DEPRECATED( new Field(*) ) static Field* Text(const TCHAR* name, const TCHAR* value, const bool storeTermVector=false);
-
-	/** Constructs a String-valued Field that is tokenized and indexed,
-	*	but that is not stored in the index.
-	* @deprecated Use new Field(name,value,Field::STORE_NO | Field::INDEX_TOKENIZED)
-	*/
-	_CL_DEPRECATED( new Field(*) ) static Field* UnStored(const TCHAR* name, const TCHAR* value, const bool storeTermVector=false);
-
-	/** Constructs a Reader-valued Field that is tokenized and indexed, but is
-	*	*not* stored in the index verbatim.  Useful for longer text fields, like
-	*	"body".
-	* @deprecated Use new Field(name,value, Field::INDEX_TOKENIZED)
-	*/
-	_CL_DEPRECATED( new Field(*) ) static Field* Text(const TCHAR* name, CL_NS(util)::Reader* value, const bool storeTermVector=false);
 
 	/**  The name of the field (e.g., "date", "subject", "title", "body", etc.)
 	*	as an interned string. */
-	const TCHAR* name(); ///<returns reference
+	const TCHAR* name() const; ///<returns reference
 
 	/** The value of the field as a String, or null.  If null, the Reader value
 	* or binary value is used.  Exactly one of stringValue(), readerValue() and
 	* streamValue() must be set. */
-	TCHAR* stringValue(); ///<returns reference
+	TCHAR* stringValue() const; ///<returns reference
 
 	/** The value of the field as a reader, or null.  If null, the String value
 	* or stream value is used.  Exactly one of stringValue(), readerValue() and
 	* streamValue() must be set. */
-	CL_NS(util)::Reader* readerValue();
+	CL_NS(util)::Reader* readerValue() const;
 
 	/** The value of the field as a String, or null.  If null, the String value
 	* or Reader value is used.  Exactly one of stringValue(), readerValue() and
 	* streamValue() must be set. */
-	jstreams::StreamBase<char>* streamValue();
+	jstreams::StreamBase<char>* streamValue() const;
+
+	/** The value of the field as a TokesStream, or null.  If null, the Reader value,
+	* String value, or binary value is used. Exactly one of stringValue(), 
+	* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
+	CL_NS(analysis)::TokenStream* tokenStreamValue() const { return NULL; }
 
 	//  True iff the value of the field is to be stored in the index for return
 	//	with search hits.  It is an error for this to be true if a field is
 	//	Reader-valued. 
-	bool isStored();
+	bool isStored() const;
 
 	//  True iff the value of the field is to be indexed, so that it may be
 	//	searched on. 
-	bool isIndexed();
+	bool isIndexed() const;
 
 	// True iff the value of the field should be tokenized as text prior to
 	//	indexing.  Un-tokenized fields are indexed as a single word and may not be
 	//	Reader-valued.
-	bool isTokenized();
+	bool isTokenized() const;
 	
 	/** True if the value of the field is stored and compressed within the index 
 	* NOTE: CLucene does not actually support compressed fields, Instead, a reader
@@ -183,12 +186,7 @@ public:
 	* and a UTF8 reader must be used to actually read the content. This flag
 	* will only be set if the index was created by another lucene implementation.
 	*/
-	bool isCompressed();
-
-	//Set configs using XOR. This resets all the settings
-	//For example, to use term vectors with positions and offsets do:
-	//object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
-	void setConfig(int termVector);
+	bool isCompressed() const;
 
 	/** True iff the term or terms used to index this field are stored as a term
 	*  vector, available from {@link IndexReader#getTermFreqVector(int32_t,TCHAR*)}.
@@ -198,18 +196,18 @@ public:
 	*
 	* @see IndexReader#getTermFreqVector(int32_t, String)
 	*/
-	bool isTermVectorStored();
+	bool isTermVectorStored() const;
 
 	/**
 	* True iff terms are stored as term vector together with their offsets 
 	* (start and end positon in source text).
 	*/
-	bool isStoreOffsetWithTermVector();
+	bool isStoreOffsetWithTermVector() const;
 	  
 	/**
 	* True iff terms are stored as term vector together with their token positions.
 	*/
-	bool isStorePositionWithTermVector();
+	bool isStorePositionWithTermVector() const;
 
 	/** Returns the boost factor for hits for this field.
 	*
@@ -222,7 +220,7 @@ public:
 	*
 	* @see #setBoost(float)
 	*/
-	float_t getBoost();
+	float_t getBoost() const;
       
 	/** Sets the boost factor hits on this field.  This value will be
 	* multiplied into the score of all hits on this this field of this
@@ -240,23 +238,81 @@ public:
 	* @see Similarity#lengthNorm(String, int)
 	* @see Similarity#encodeNorm(float)
 	*/
-	void setBoost(float_t value);
+	void setBoost(const float_t value);
 
-	/** True iff the value of the filed is stored as binary */
-	bool isBinary();
+	/** True if the value of the filed is stored as binary */
+	bool isBinary() const;
 	
 	/** True if norms are omitted for this indexed field */
-	bool getOmitNorms();
+	bool getOmitNorms() const;
 
 	/** Expert:
 	*
 	* If set, omit normalization factors associated with this indexed field.
 	* This effectively disables indexing boosts and length normalization for this field.
 	*/
-	void setOmitNorms(bool omitNorms);
+	void setOmitNorms(const bool omitNorms);
+
+	/**
+	* Indicates whether a Field is Lazy or not.  The semantics of Lazy loading are such that if a Field is lazily loaded, retrieving
+	* it's values via {@link #stringValue()} or {@link #binaryValue()} is only valid as long as the {@link org.apache.lucene.index.IndexReader} that
+	* retrieved the {@link Document} is still open.
+	*  
+	* @return true if this field can be loaded lazily
+	*/
+	bool isLazy() const { return (config & LAZY_YES) != 0; };
 
 	// Prints a Field for human consumption.
 	TCHAR* toString();
+
+	/** <p>Expert: change the value of this field.  This can
+	*  be used during indexing to re-use a single Field
+	*  instance to improve indexing speed by avoiding GC cost
+	*  of new'ing and reclaiming Field instances.  Typically
+	*  a single {@link Document} instance is re-used as
+	*  well.  This helps most on small documents.</p>
+	* 
+	*  <p>Note that you should only use this method after the
+	*  Field has been consumed (ie, the {@link Document}
+	*  containing this Field has been added to the index).
+	*  Also, each Field instance should only be used once
+	*  within a single {@link Document} instance.  See <a
+	*  href="http://wiki.apache.org/lucene-java/ImproveIndexingSpeed">ImproveIndexingSpeed</a>
+	*  for details.</p> */
+	void setValue(const TCHAR* value) {
+		_resetValue();
+		_stringValue = stringDuplicate( value );
+	}
+
+	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	void setValue(CL_NS(util)::Reader* value) {
+		_resetValue();
+		_readerValue = value;
+	}
+
+	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	void setValue(jstreams::StreamBase<char>* value) {
+		_resetValue();
+		_streamValue = value;
+	}
+
+	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	void setValue(CL_NS(analysis)::TokenStream* value) {
+		_resetValue();
+		//fieldsData = value;
+	}
+
+protected:
+	//Set configs using XOR. This resets all the settings
+	//For example, to use term vectors with positions and offsets do:
+	//object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
+	inline void setConfig(const uint32_t termVector);
+
+	inline void _resetValue() {
+		_CLDELETE_CARRAY(_stringValue);
+		_CLDELETE(_readerValue);
+		_CLVDELETE( _streamValue );
+	}
 };
 CL_NS_END
 #endif

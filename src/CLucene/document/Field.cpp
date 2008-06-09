@@ -14,117 +14,55 @@
 CL_NS_USE(util)
 CL_NS_DEF(document) 
 
-Field::Field(const TCHAR* Name, const TCHAR* String, bool store, bool index, bool token, const bool storeTermVector)
-{
-//Func - Constructor
-//Pre  - Name != NULL and contains the name of the field
-//       String != NULL and contains the value of the field
-//       store indicates if the field must be stored
-//       index indicates if the field must be indexed
-//       token indicates if the field must be tokenized
-//Post - The instance has been created
-
-	CND_PRECONDITION(Name != NULL, "Name is NULL");
-	CND_PRECONDITION(String != NULL,"String is NULL");
-	CND_PRECONDITION(!(!index && storeTermVector),"cannot store a term vector for fields that are not indexed.");
-
-	_name        = CLStringIntern::intern( Name CL_FILELINE);
-	_stringValue = stringDuplicate( String );
-	_readerValue = NULL;
-	_streamValue = NULL;
-	boost=1.0f;
-	omitNorms = false;
-
-	int cfg = 0;
-	if ( store )
-		cfg |= STORE_YES;
-	if ( index && token )
-		cfg |= INDEX_TOKENIZED;
-	else if ( index && !token )
-		cfg |= INDEX_UNTOKENIZED;
-
-	if ( storeTermVector )
-		_CLTHROWA(CL_ERR_IllegalArgument,"Stored term vector is deprecated with using this constructor");
-
-	setConfig(cfg);
-}
-
-Field::Field(const TCHAR* Name, Reader* reader, bool store, bool index, bool token, const bool storeTermVector)
-{
-//Func - Constructor
-//Pre  - Name != NULL and contains the name of the field
-//       reader != NULL and contains a Reader
-//       store indicates if the field must be stored
-//       index indicates if the field must be indexed
-//       token indicates if the field must be tokenized
-//Post - The instance has been created
-
-	CND_PRECONDITION(Name != NULL, "Name is NULL");
-	CND_PRECONDITION(reader != NULL, "reader is NULL");
-
-	_name        = CLStringIntern::intern( Name  CL_FILELINE);
-	_stringValue = NULL;
-	_readerValue = reader;
-	_streamValue = NULL;
-	boost=1.0f;
-	omitNorms = false;
-
-	int cfg = 0;
-	if ( store )
-		cfg |= STORE_YES;
-	if ( index && token )
-		cfg |= INDEX_TOKENIZED;
-	else if ( index && !token )
-		cfg |= INDEX_UNTOKENIZED;
-
-	if ( storeTermVector )
-		_CLTHROWA(CL_ERR_IllegalArgument,"Stored term vector is deprecated with using this constructor");
-
-	setConfig(cfg);
-}
-
 Field::Field(const TCHAR* Name, Reader* reader, int config)
 {
-	CND_PRECONDITION(Name != NULL, "Name is NULL");
-	CND_PRECONDITION(reader != NULL, "reader is NULL");
+	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
+	CND_PRECONDITION(reader != NULL, "reader cannot be NULL");
 
 	_name        = CLStringIntern::intern( Name  CL_FILELINE);
 	_stringValue = NULL;
 	_readerValue = reader;
 	_streamValue = NULL;
 	boost=1.0f;
-	omitNorms = false;
 
 	setConfig(config);
 }
 
 
-Field::Field(const TCHAR* Name, const TCHAR* Value, int config)
+Field::Field(const TCHAR* Name, const TCHAR* Value, int _config)
 {
-	CND_PRECONDITION(Name != NULL, "Name is NULL");
-	CND_PRECONDITION(Value != NULL, "value is NULL");
+	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
+	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
+	CND_PRECONDITION(_tcslen(Value)>0 && _tcslen(Name)>0, "name and value cannot both be empty");
+
+	/*
+	if (_config & INDEX_NO && _config & STORE_NO)
+		_CLTHROWA(CL_ERR_IllegalArgument,"it doesn't make sense to have a field that is neither indexed nor stored");
+	if (_config & INDEX_NO && _config & TERMVECTOR_YES)
+		_CLTHROWA(CL_ERR_IllegalArgument,"cannot store term vector information for a field that is not indexed");
+	*/
 
 	_name        = CLStringIntern::intern( Name  CL_FILELINE);
 	_stringValue = stringDuplicate( Value );
 	_readerValue = NULL;
 	_streamValue = NULL;
 	boost=1.0f;
-	omitNorms = false;
 
-	setConfig(config);
+	//config = INDEX_TOKENIZED; // default Field is tokenized and indexed
+
+	setConfig(_config);
 }
 
 Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config)
 {
-	CND_PRECONDITION(Name != NULL, "Name is NULL");
-	CND_PRECONDITION(Value != NULL, "value is NULL");
+	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
+	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
 
 	_name        = CLStringIntern::intern( Name  CL_FILELINE);
 	_stringValue = NULL;
 	_readerValue = NULL;
 	_streamValue = Value;
 	boost=1.0f;
-	omitNorms = false;
 
 	setConfig(config);
 }
@@ -135,63 +73,63 @@ Field::~Field(){
 //Post - Instance has been destroyed
 
 	CLStringIntern::unintern(_name);
-	_CLDELETE_CARRAY(_stringValue);
-	_CLDELETE(_readerValue);
-	_CLVDELETE( _streamValue );
+	_resetValue();
 }
 
 
 /*===============FIELDS=======================*/
-const TCHAR* Field::name() 		{ return _name; } ///<returns reference
-TCHAR* Field::stringValue()		{ return _stringValue; } ///<returns reference
-Reader* Field::readerValue()	{ return _readerValue; } ///<returns reference
-jstreams::StreamBase<char>* Field::streamValue()	{ return _streamValue; } ///<returns reference
+const TCHAR* Field::name() const	{ return _name; } ///<returns reference
+TCHAR* Field::stringValue() const	{ return _stringValue; } ///<returns reference
+Reader* Field::readerValue() const	{ return _readerValue; } ///<returns reference
+jstreams::StreamBase<char>* Field::streamValue() const	{ return _streamValue; } ///<returns reference
 
-bool	Field::isStored() 	{ return (config & STORE_YES) != 0; }
-bool 	Field::isIndexed() 	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
-bool 	Field::isTokenized() 	{ return (config & INDEX_TOKENIZED) != 0; }
-bool 	Field::isCompressed() 	{ return (config & STORE_COMPRESS) != 0; }
-bool 	Field::isBinary() 	{ return _streamValue!=NULL; }
+bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
+bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
+bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
+bool 	Field::isCompressed() const	{ return (config & STORE_COMPRESS) != 0; }
+bool 	Field::isBinary() const		{ return _streamValue!=NULL; }
 
-bool	Field::isTermVectorStored() { return (config & TERMVECTOR_YES) != 0; }
-bool	Field::isStoreOffsetWithTermVector() { return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
-bool	Field::isStorePositionWithTermVector() { return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
+bool	Field::isTermVectorStored() const			{ return (config & TERMVECTOR_YES) != 0; }
+bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
+bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
 
-bool Field::getOmitNorms() { return omitNorms; }
-void Field::setOmitNorms(bool omitNorms) { this->omitNorms=omitNorms; }
+bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
+void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
 
-void Field::setBoost(float_t boost) { this->boost = boost; }
-float_t Field::getBoost() { return boost; }
+void Field::setBoost(const float_t boost)	{ this->boost = boost; }
+float_t Field::getBoost() const				{ return boost; }
 
-void Field::setConfig(int x){
-	int newConfig=0;
+void Field::setConfig(const uint32_t x){
+	uint32_t newConfig=0;
 
 	//set storage settings
 	if ( (x & STORE_YES) || (x & STORE_COMPRESS) ){
 		newConfig |= STORE_YES;
 		if ( x & STORE_COMPRESS )
 			newConfig |= STORE_COMPRESS;
-	}else
+	} else
 		newConfig |= STORE_NO;
 
 	if ( (x & INDEX_NO)==0 ){
 		bool index=false;
 
+		if ( x & INDEX_TOKENIZED && x & INDEX_UNTOKENIZED )
+			_CLTHROWA(CL_ERR_IllegalArgument,"it doesn't make sense to have an untokenised and tokenised field");
+
 		if ( x & INDEX_NONORMS ){
+			newConfig |= INDEX_UNTOKENIZED;
 			newConfig |= INDEX_NONORMS;
 			index = true;
 		}
-
-		if ( x & INDEX_TOKENIZED && x & INDEX_UNTOKENIZED )
-			_CLTHROWA(CL_ERR_IllegalArgument,"it doesn't make sense to have an untokenised and tokenised field");
-		if ( x & INDEX_TOKENIZED ){
+		 else if ( x & INDEX_TOKENIZED ){
 			newConfig |= INDEX_TOKENIZED;
 			index = true;
 		}
-		if ( x & INDEX_UNTOKENIZED ){
+		else if ( x & INDEX_UNTOKENIZED ){
 			newConfig |= INDEX_UNTOKENIZED;
 			index = true;
 		}
+
 		if ( !index )
 			newConfig |= INDEX_NO;
 	}else
@@ -206,14 +144,16 @@ void Field::setConfig(int x){
 		if ( x & TERMVECTOR_YES ){
 			termVector=true;
 		}
-		if ( x & TERMVECTOR_WITH_OFFSETS ){
-			newConfig |= TERMVECTOR_WITH_OFFSETS;
-			termVector=true;
-		}
 		if ( x & TERMVECTOR_WITH_POSITIONS ){
 			newConfig |= TERMVECTOR_WITH_POSITIONS;
 			termVector=true;
 		}
+		if ( x & TERMVECTOR_WITH_OFFSETS ){
+			newConfig |= TERMVECTOR_WITH_OFFSETS;
+			termVector=true;
+		}
+		// TERMVECTOR_WITH_POSITIONS_OFFSETS is being automatically handled here
+
 		if ( termVector ){
 			if ( newConfig & INDEX_NO )
 				_CLTHROWA(CL_ERR_IllegalArgument,"cannot store a term vector for fields that are not indexed.");
@@ -231,6 +171,10 @@ TCHAR* Field::toString() {
     CL_NS(util)::StringBuffer result;
 	if (isStored()) {
       result.append( _T("stored") );
+	  if (isCompressed())
+		  result.append( _T("/compressed"));
+	  else
+		  result.append( _T("/uncompressed") );
     }
     if (isIndexed()) {
       if (result.length() > 0)
@@ -265,51 +209,26 @@ TCHAR* Field::toString() {
     if (getOmitNorms()) {
       result.append( _T(",omitNorms") );
     }
+	if (isLazy()){
+      result.append( _T(",lazy") );
+    }
     result.appendChar('<');
     result.append(name());
     result.appendChar(':');
     
-    if (_stringValue != NULL)
-    	result.append(_stringValue);
-    else if ( _readerValue != NULL )
-    	result.append( _T("Reader") );
-    else if ( _streamValue != NULL )
-    	result.append( _T("Stream") );
-    else
-    	result.append( _T("NULL") );
+	if (! isLazy()) {
+		if (_stringValue != NULL)
+			result.append(_stringValue);
+		else if ( _readerValue != NULL )
+			result.append( _T("Reader") );
+		else if ( _streamValue != NULL )
+			result.append( _T("Stream") );
+		else
+			result.append( _T("NULL") );
+	}
     
     result.appendChar('>');
     return result.toString();
-}
-
-
-Field* Field::Keyword(const TCHAR* Name, const TCHAR* Value) {
-	return _CLNEW Field(Name,Value,Field::STORE_YES | Field::INDEX_UNTOKENIZED);
-}
-
-Field* Field::UnIndexed(const TCHAR* Name, const TCHAR* Value) {
-	return _CLNEW Field(Name,Value,Field::STORE_YES | Field::INDEX_NO);
-}
-
-Field* Field::Text(const TCHAR* Name, const TCHAR* Value, const bool storeTermVector) {
-	if ( storeTermVector )
-		return _CLNEW Field(Name,Value,Field::STORE_YES | Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES);
-	else
-		return _CLNEW Field(Name,Value,Field::STORE_YES | Field::INDEX_TOKENIZED);
-}
-
-Field* Field::UnStored(const TCHAR* Name, const TCHAR* Value, const bool storeTermVector) {
-	if ( storeTermVector )
-		return _CLNEW Field(Name,Value,Field::STORE_NO | Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES);
-	else
-		return _CLNEW Field(Name,Value,Field::STORE_NO | Field::INDEX_TOKENIZED);
-}
-
-Field* Field::Text(const TCHAR* Name, Reader* Value, const bool storeTermVector) {
-	if ( storeTermVector )
-		return _CLNEW Field(Name,Value,Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES);
-	else
-		return _CLNEW Field(Name,Value,Field::INDEX_TOKENIZED);
 }
 
 CL_NS_END
