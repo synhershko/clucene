@@ -19,11 +19,11 @@
 CL_NS_USE(util)
 CL_NS_DEF(store)
 
-  RAMFile::RAMFile( RAMDirectory* directory )
+  RAMFile::RAMFile( RAMDirectory* _directory )
   {
      length = 0;  
 	 lastModified = Misc::currentTimeMillis();
-	 this->directory = directory;
+	 this->directory = _directory;
 	 sizeInBytes = 0;
   }
   
@@ -48,43 +48,44 @@ CL_NS_DEF(store)
 	  return lastModified;
   }
   
-  void RAMFile::setLastModified( uint64_t lastModified )
+  void RAMFile::setLastModified( const uint64_t lastModified )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  this->lastModified = lastModified;
   }
   
-  uint8_t* RAMFile::addBuffer( int32_t size )
+  uint8_t* RAMFile::addBuffer( const int32_t size )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  uint8_t* buffer = newBuffer(size);
+	  RAMFileBuffer* rfb = _CLNEW RAMFileBuffer(buffer, size);
 	  if ( directory != NULL ) {
 		  SCOPED_LOCK_MUTEX(directory->THIS_LOCK);
-		  buffers.push_back( buffer );
+		  buffers.push_back( rfb );
 		  directory->sizeInBytes += size;
 	  } else {
-		  buffers.push_back( buffer );
+		buffers.push_back(rfb);
 	  }
 	  return buffer;
   }
   
-  uint8_t* RAMFile::getBuffer( int32_t index )
+  uint8_t* RAMFile::getBuffer( const int32_t index )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
-	  return buffers[index];
+	  return buffers[index]->_buffer;
   }
   
-  int32_t RAMFile::numBuffers()
+  int32_t RAMFile::numBuffers() const
   {
 	  return buffers.size();
   }
   
-  uint8_t* RAMFile::newBuffer( int32_t size )
+  uint8_t* RAMFile::newBuffer( const int32_t size )
   {
 	  return _CL_NEWARRAY( uint8_t, size );
   }
   
-  int64_t RAMFile::getSizeInBytes()
+  int64_t RAMFile::getSizeInBytes() const
   {
 	  if ( directory != NULL ) {
 		  SCOPED_LOCK_MUTEX(directory->THIS_LOCK);
@@ -112,7 +113,7 @@ CL_NS_DEF(store)
 
   void RAMIndexOutput::writeTo(IndexOutput* out){
     flush();
-    int64_t end = file->getLength();
+    const int64_t end = file->getLength();
     int64_t pos = 0;
     int32_t p = 0;
     while (pos < end) {
@@ -137,6 +138,8 @@ CL_NS_DEF(store)
 
   /** Random-at methods */
   void RAMIndexOutput::seek( const int64_t pos ) {
+          // set the file length in case we seek back
+          // and flush() has not been called yet
 	  setFileLength();
 	  if ( pos < bufferStart || pos >= bufferStart + bufferLength ) {
 		  currentBufferIndex = (int32_t)(pos / BUFFER_SIZE);
@@ -182,14 +185,17 @@ CL_NS_DEF(store)
 	  
 	  if ( currentBufferIndex == file->numBuffers() ) {
 		  currentBuffer = file->addBuffer( BUFFER_SIZE );
+		  bufferLength = BUFFER_SIZE;
 	  } else {
 		  currentBuffer = file->getBuffer( currentBufferIndex );
+		  bufferLength = file->getBufferLen(currentBufferIndex);
 	  }
 	  
 	  bufferPosition = 0;
 	  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
-	  bufferLength = BUFFER_SIZE;
   }
+
+
   
   void RAMIndexOutput::setFileLength() {
 	  int64_t pointer = bufferStart + bufferPosition;
@@ -296,13 +302,14 @@ CL_NS_DEF(store)
   
   void RAMIndexInput::switchCurrentBuffer() {
 	  if ( currentBufferIndex >= file->numBuffers() ) {
+		  // end of file reached, no more buffers left
 		  _CLTHROWA(CL_ERR_IO, "Read past EOF");
 	  } else {
 		  currentBuffer = file->getBuffer( currentBufferIndex );
 		  bufferPosition = 0;
 		  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
 		  int64_t bufLen = _length - bufferStart;
-		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : (int32_t)bufLen;
+		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : static_cast<int32_t>bufLen;
 	  }	  
   }
   
@@ -392,10 +399,10 @@ CL_NS_DEF(store)
 	  return f->getLastModified();
   }
 
-  int64_t RAMDirectory::fileLength(const char* name) const{
+  int64_t RAMDirectory::fileLength(const char* name) const {
 	  SCOPED_LOCK_MUTEX(files_mutex);
 	  RAMFile* f = files.get(name);
-      return f->getLength();
+          return f->getLength();
   }
 
 
@@ -449,7 +456,7 @@ CL_NS_DEF(store)
       SCOPED_LOCK_MUTEX(files_mutex);
       file = files.get(name);
 	}
-    uint64_t ts1 = file->getLastModified();
+    const uint64_t ts1 = file->getLastModified();
     uint64_t ts2 = Misc::currentTimeMillis();
 
 	//make sure that the time has actually changed

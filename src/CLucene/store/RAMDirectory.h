@@ -18,15 +18,30 @@
 
 CL_NS_DEF(store)
 
-    class RAMDirectory;
+	// forward declaration
+	class RAMDirectory;
 
 	class RAMFile:LUCENE_BASE {
 	private:
-		CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
+		struct RAMFileBuffer:LUCENE_BASE {
+			uint8_t* _buffer; size_t _len;
+			RAMFileBuffer(uint8_t* buf = NULL, size_t len=0) : _buffer(buf), _len(len) {};
+			~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
+		};
+
+
+		// TODO: Should move to ArrayList ?
+		//CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
+		CL_NS(util)::CLVector<RAMFileBuffer*,CL_NS(util)::Deletor::Object<RAMFileBuffer> > buffers;
+
+
 		int64_t length;
-		uint64_t lastModified;
 		RAMDirectory* directory;
-		int64_t sizeInBytes;
+		int64_t sizeInBytes;                  // Only maintained if in a directory; updates synchronized on directory
+
+		// This is publicly modifiable via Directory::touchFile(), so direct access not supported
+		uint64_t lastModified;
+
 
 	public:
         DEFINE_MUTEX(THIS_LOCK)
@@ -34,22 +49,25 @@ CL_NS_DEF(store)
         #ifdef _DEBUG
 		const char* filename;
         #endif
-
+		// File used as buffer, in no RAMDirectory
 		RAMFile( RAMDirectory* directory=NULL );
 		~RAMFile();
 		
+		// For non-stream access from thread that might be concurrent with writing
 		int64_t getLength();
-		void setLength( int64_t length );
+		void setLength( const int64_t _length );
 		
+		// For non-stream access from thread that might be concurrent with writing
 		uint64_t getLastModified();
-		void setLastModified( uint64_t lastModified );
+		void setLastModified( const uint64_t lastModified );
 		
-		uint8_t* addBuffer( int32_t size );
-		uint8_t* getBuffer( int32_t index );
-		int32_t numBuffers();
-		uint8_t* newBuffer( int32_t size );
+		uint8_t* addBuffer( const int32_t size );
+		uint8_t* getBuffer( const int32_t index );
+		size_t getBufferLen(const int32_t index) const { return buffers[index]->_len; }
+		int32_t numBuffers() const;
+		uint8_t* newBuffer( const int32_t size );
 		
-		int64_t getSizeInBytes();
+		int64_t getSizeInBytes() const;
 	};
 
 	class RAMIndexOutput: public IndexOutput {		
@@ -83,7 +101,7 @@ CL_NS_DEF(store)
   	    /** Copy the current contents of this buffer to the named output. */
         void writeTo(IndexOutput* output);
         
-    	void writeByte(const uint8_t b);
+    	inline void writeByte(const uint8_t b);
     	void writeBytes(const uint8_t* b, const int32_t len);
 
     	void seek(const int64_t pos);
@@ -126,10 +144,10 @@ CL_NS_DEF(store)
 		int64_t length() const;
 		const char* getDirectoryType() const;
 		
-		uint8_t readByte();
+		inline uint8_t readByte();
 		void readBytes( uint8_t* dest, const int32_t len );
 		
-		int64_t getFilePointer() const;
+		inline int64_t getFilePointer() const;
 		
 		void seek(const int64_t pos);
 		
@@ -139,10 +157,16 @@ CL_NS_DEF(store)
 	};
 
 
-   /**
-   * A memory-resident {@link Directory} implementation.
-   */
+	/**
+	* A memory-resident {@link Directory} implementation.  Locking
+	* implementation is by default the {@link SingleInstanceLockFactory}
+	* but can be changed with {@link #setLockFactory}.
+	*
+	*/
 	class RAMDirectory:public Directory{
+		// *****
+		// Lock acquisition sequence:  RAMDirectory, then RAMFile
+		// *****
 
 		class RAMLock: public LuceneLock{
 		private:
