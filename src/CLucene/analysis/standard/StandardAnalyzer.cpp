@@ -19,14 +19,12 @@ CL_NS_USE(analysis)
 
 CL_NS_DEF2(analysis,standard)
 
-	StandardAnalyzer::StandardAnalyzer():
-		stopSet(false)
+	StandardAnalyzer::StandardAnalyzer():stopSet(false)
 	{
       StopFilter::fillStopTable( &stopSet,CL_NS(analysis)::StopAnalyzer::ENGLISH_STOP_WORDS);
 	}
 
-	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):
-		stopSet(false)
+	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):stopSet(false)
 	{
 		StopFilter::fillStopTable( &stopSet,stopWords );
 	}

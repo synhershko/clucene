@@ -113,7 +113,7 @@
 #ifndef _CL_DEPRECATE_TEXT
 #define _CL_DEPRECATE_TEXT(_Text)
 #endif
-#define _CL_DEPRECATED(_NewItem) _CL_DEPRECATE_TEXT("This function or variable has been superceded by newer library or operating system functionality. Consider using" #_NewItem "instead. See online help for details.")
+#define _CL_DEPRECATED(_NewItem) _CL_DEPRECATE_TEXT("This function or variable has been superceded by newer library or operating system functionality. Consider using " #_NewItem " instead. See online help for details.")
 
 
 //cnd-debug exit command

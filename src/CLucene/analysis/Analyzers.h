@@ -17,6 +17,8 @@
 
 CL_NS_DEF(analysis)
 
+typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
+
 /** An abstract base class for simple, character-oriented tokenizers.*/
 class CharTokenizer:public Tokenizer {
 private:
@@ -136,7 +138,8 @@ private:
 	//bvk: i found this to work faster with a non-hash table. the number of items
 	//in the stop table is not like to make it worth having hashing.
 	//ish: implement a radix/patricia tree for this?
-	CL_NS(util)::CLSetList<const TCHAR*> stopWords;
+	CLTCSetList* stopWords;
+	bool deleteStopTable;
 
 	bool enablePositionIncrements;
 	const bool ignoreCase;
@@ -147,16 +150,20 @@ public:
 	//	TokenStream that are named in the array of words. 
 	StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase = false);
 
-	~StopFilter(){}
+	~StopFilter(){
+		if (deleteStopTable)
+			_CLDELETE(stopWords);
+	}
 
 	/** Constructs a filter which removes words from the input
 	*	TokenStream that are named in the CLSetList.
 	*/
-	StopFilter(TokenStream* in, bool deleteTokenStream, CL_NS(util)::CLSetList<const TCHAR*>* stopTable):
+	StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* stopTable, bool _deleteStopTable=false):
 		TokenFilter(in, deleteTokenStream),
-		stopWords (*stopTable),
+		stopWords (stopTable),
 		enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
-		ignoreCase(false)
+		ignoreCase(false),
+		deleteStopTable(_deleteStopTable)
 		{
 		}
 	  
@@ -167,7 +174,7 @@ public:
 	* be cached once when an Analyzer is constructed. 
 	* Note: the stopWords list must be a static list because the strings are not copied
 	*/
-	static void fillStopTable(CL_NS(util)::CLSetList<const TCHAR*>* stopTable,
+	static void fillStopTable(CLTCSetList* stopTable,
                                       const TCHAR** stopWords, const bool _ignoreCase = false);
 
 	/**
@@ -230,7 +237,7 @@ public:
 	* @param wordfile File containing the wordlist
 	* @return A HashSet with the file's words
 	*/
-	static CL_NS(util)::CLSetList<const TCHAR*>* getWordSet(const char* wordfilePath, const char* enc = "ASCII", CL_NS(util)::CLSetList<const TCHAR*>* stopTable = NULL)
+	static CLTCSetList* getWordSet(const char* wordfilePath, const char* enc = "ASCII", CLTCSetList* stopTable = NULL)
 	{
 		CL_NS(util)::FileReader* reader = NULL;
 		try {
@@ -255,16 +262,16 @@ public:
 	* @param reader Reader containing the wordlist
 	* @return A HashSet with the reader's words
 	*/
-	static CL_NS(util)::CLSetList<const TCHAR*>* getWordSet(CL_NS(util)::Reader* reader, CL_NS(util)::CLSetList<const TCHAR*>* stopTable = NULL, const bool bDeleteReader = false)
+	static CLTCSetList* getWordSet(CL_NS(util)::Reader* reader, CLTCSetList* stopTable = NULL, const bool bDeleteReader = false)
 	{
 		if (!stopTable)
-			stopTable = _CLNEW CL_NS(util)::CLSetList<const TCHAR*>(false);
+			stopTable = _CLNEW CLTCSetList(true);
 
 		TCHAR* word = NULL;
 		try {
 			word = _CL_NEWARRAY(TCHAR, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
 			while (reader->readLine(word) > 0) {
-				stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::stringTrim(word)));
+				stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::wordTrim(word)));
 			}
 		}
 		_CLFINALLY (
@@ -281,7 +288,7 @@ public:
 
 /** Filters LetterTokenizer with LowerCaseFilter and StopFilter. */
 class StopAnalyzer: public Analyzer {
-    CL_NS(util)::CLSetList<const TCHAR*> stopTable;
+	CLTCSetList stopTable;
 
 public:
     /** Builds an analyzer which removes words in ENGLISH_STOP_WORDS. */

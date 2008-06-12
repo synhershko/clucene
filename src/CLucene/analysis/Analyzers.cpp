@@ -95,14 +95,15 @@ bool StopFilter::ENABLE_POSITION_INCREMENTS_DEFAULT = false;
 
 StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase):
 	TokenFilter(in, deleteTokenStream),
-	stopWords(false),
 	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
 	ignoreCase(_ignoreCase)
 {
-	fillStopTable( &stopWords,_stopWords, _ignoreCase );
+	deleteStopTable = true;
+	stopWords = _CLNEW CLTCSetList(false);
+	fillStopTable( stopWords,_stopWords, _ignoreCase );
 }
 
-void StopFilter::fillStopTable(CLSetList<const TCHAR*>* stopTable, const TCHAR** stopWords
+void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
 							   , const bool _ignoreCase)
 {
 	if ( _ignoreCase )
@@ -118,7 +119,7 @@ bool StopFilter::next(Token* token) {
 	int32_t skippedPositions = 0;
 	while (input->next(token)){
 		TCHAR* termText = ignoreCase ? stringCaseFold(token->_termText) : token->_termText;
-		if (stopWords.find(termText)==stopWords.end()){
+		if (stopWords->find(termText)==stopWords->end()){
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
 			}
@@ -138,7 +139,7 @@ StopAnalyzer::StopAnalyzer():stopTable(false)
 StopAnalyzer::~StopAnalyzer()
 {
 }
-StopAnalyzer::StopAnalyzer( const TCHAR** stopWords) {
+StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):stopTable(false) {
 	StopFilter::fillStopTable(&stopTable,stopWords);
 }
 TokenStream* StopAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {

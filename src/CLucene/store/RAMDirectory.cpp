@@ -309,7 +309,7 @@ CL_NS_DEF(store)
 		  bufferPosition = 0;
 		  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
 		  int64_t bufLen = _length - bufferStart;
-		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : static_cast<int32_t>bufLen;
+		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : static_cast<int32_t>(bufLen);
 	  }	  
   }
   

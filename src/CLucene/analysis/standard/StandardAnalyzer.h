@@ -29,7 +29,7 @@ CL_NS_DEF2(analysis,standard)
 	class StandardAnalyzer : public Analyzer 
 	{
 	private:
-		CL_NS(util)::CLSetList<const TCHAR*> stopSet;
+		CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> stopSet;
 	public:
 		/** Builds an analyzer.*/
 		StandardAnalyzer();
