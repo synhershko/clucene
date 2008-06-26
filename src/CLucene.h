@@ -9,8 +9,6 @@
 #define _lucene_CLucene_
 
 #include "CLucene/StdHeader.h"
-#include "CLucene/debug/condition.h"
-#include "CLucene/debug/mem.h"
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/index/IndexWriter.h"
 #include "CLucene/index/MultiReader.h"
@@ -24,6 +22,11 @@
 #include "CLucene/search/PrefixQuery.h"
 #include "CLucene/search/RangeQuery.h"
 #include "CLucene/search/BooleanQuery.h"
+#include "CLucene/search/TermQuery.h"
+#include "CLucene/search/Similarity.h"
+#include "CLucene/search/Sort.h"
+#include "CLucene/search/Hits.h"
+#include "CLucene/search/Explanation.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
 #include "CLucene/document/DateField.h"
@@ -32,6 +35,8 @@
 #include "CLucene/queryParser/QueryParser.h"
 #include "CLucene/analysis/standard/StandardAnalyzer.h"
 #include "CLucene/analysis/Analyzers.h"
+#include "CLucene/util/BitSet.h"
 #include "CLucene/util/Reader.h"
+#include "CLucene/util/PriorityQueue.h"
 
 #endif

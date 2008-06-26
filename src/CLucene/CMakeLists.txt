@@ -220,9 +220,9 @@ CHOOSE_FUNCTION(_unlink "_unlink;unlink")
 CHOOSE_FUNCTION(_snprintf "snprintf;_snprintf")
 CHOOSE_FUNCTION(_snwprintf "snwprintf;_snwprintf")
 
-IF ( NOT _CL_HAVE_FUNCTION__REALPATH )
+IF ( NOT HAVE__REALPATH )
     SET (FUNCTION__REALPATH "#define _realpath(rel,abs) ::_fullpath(abs,rel,CL_MAX_PATH)")
-ENDIF ( NOT _CL_HAVE_FUNCTION__REALPATH )
+ENDIF ( NOT HAVE__REALPATH )
 
 CHECK_FUNCTION_EXISTS (_mkdir _CL_HAVE_FUNCTION__MKDIR)
 IF ( NOT _CL_HAVE_FUNCTION__MKDIR )
