@@ -54,8 +54,37 @@ private:
 	DocumentFieldEnumeration::DocumentFieldList* fieldList;
 	float_t boost;
 public:
+	/** Constructs a new document with no fields. */
 	Document();
+
 	~Document();
+
+	/** Sets a boost factor for hits on any field of this document.  This value
+	* will be multiplied into the score of all hits on this document.
+	*
+	* <p>The default value is 1.0.
+	* 
+	* <p>Values are multiplied into the value of {@link Field#getBoost()} of
+	* each field in this document.  Thus, this method in effect sets a default
+	* boost for the fields of this document.
+	*
+	* @see Field#setBoost(float)
+	*/
+	void setBoost(const float_t boost);
+  
+	/** Returns, at indexing time, the boost factor as set by {@link #setBoost(float)}. 
+	*
+	* <p>Note that once a document is indexed this value is no longer available
+	* from the index.  At search time, for retrieved documents, this method always 
+	* returns 1. This however does not mean that the boost value set at  indexing 
+	* time was ignored - it was just combined with other indexing time factors and 
+	* stored elsewhere, for better indexing and search performance. (For more 
+	* information see the "norm(t,d)" part of the scoring formula in 
+	* {@link Similarity}.)
+	*
+	* @see #setBoost(float)
+	*/
+	float_t getBoost() const;
 
 	/**
 	* <p>Adds a field to a document.  Several fields may be added with
@@ -69,50 +98,6 @@ public:
 	*
 	*/
 	void add(Field& field);
-	/** Returns a field with the given name if any exist in this document, or
-	* null.  If multiple fields exists with this name, this method returns the
-	* first value added. 
-	* Note: name is case sensitive
-	*/
-	Field* getField(const TCHAR* name) const;
-	
-	/** Returns the string value of the field with the given name if any exist in
-	* this document, or null.  If multiple fields exist with this name, this
-	* method returns the first value added. If only binary fields with this name
-	* exist, returns null.
-	* Note: name is case sensitive
-	*/
-	const TCHAR* get(const TCHAR* field) const;
-
-	/** Returns an Enumeration of all the fields in a document. */
-	DocumentFieldEnumeration* fields() const;
-	/** Prints the fields of a document for human consumption. */
-	TCHAR* toString() const;
-
-	/** Sets a boost factor for hits on any field of this document.  This value
-	* will be multiplied into the score of all hits on this document.
-	*
-	* <p>Values are multiplied into the value of {@link Field#getBoost()} of
-	* each field in this document.  Thus, this method in effect sets a default
-	* boost for the fields of this document.
-	*
-	* @see Field#setBoost(float_t)
-	*/
-	void setBoost(float_t boost);
-  
-	/** Returns the boost factor for hits on any field of this document.
-	*
-	* <p>The default value is 1.0.
-	*
-	* <p>Note: This value is not stored directly with the document in the index.
-	* Documents returned from {@link IndexReader#document(int32_t, Document*)} and
-	* {@link Hits#doc(int32_t, Document*)} may thus not have the same value present as when
-	* this document was indexed.
-	*
-	* @see #setBoost(float_t)
-	*/
-	float_t getBoost() const;
-
 
 	/**
 	* <p>Removes field with the specified name from the document.
@@ -126,7 +111,7 @@ public:
 	* Note: name is case sensitive
 	*/
 	void removeField(const TCHAR* name);
-        
+
 	/**
 	* <p>Removes all fields with the given name from the document.
 	* If there is no field with the specified name, the document remains unchanged.</p>
@@ -139,13 +124,45 @@ public:
 	*/
 	void removeFields(const TCHAR* name);
 
+	/** Returns a field with the given name if any exist in this document, or
+	* null.  If multiple fields exists with this name, this method returns the
+	* first value added. 
+	* Note: name is case sensitive
+	* Do not use this method with lazy loaded fields.
+	*/
+	Field* getField(const TCHAR* name) const;
+	
+	/** Returns the string value of the field with the given name if any exist in
+	* this document, or null.  If multiple fields exist with this name, this
+	* method returns the first value added. If only binary fields with this name
+	* exist, returns null.
+	* Note: name is case sensitive
+	*/
+	const TCHAR* get(const TCHAR* field) const;
+
+	/** Returns an Enumeration of all the fields in a document.
+	* @deprecated use {@link #getFields()} instead
+	*/
+	_CL_DEPRECATED(  getFields() ) DocumentFieldEnumeration* fields() const;
+
+	/** Returns a List of all the fields in a document.
+	* <p>Note that fields which are <i>not</i> {@link Field#isStored() stored} are
+	* <i>not</i> available in documents retrieved from the index, e.g. with {@link
+	* Hits#doc(int)}, {@link Searcher#doc(int)} or {@link IndexReader#document(int)}.
+	*/
+	DocumentFieldEnumeration* getFields() const;
+
+	/** Prints the fields of a document for human consumption. */
+	TCHAR* toString() const;
+        
+
 	/**
 	* Returns an array of values of the field specified as the method parameter.
 	* This method can return <code>null</code>.
 	* Note: name is case sensitive
 	*
 	* @param name the name of the field
-	* @return a <code>String[]</code> of field values
+	* @return a <code>TCHAR**</code> of field values or <code>null</code>
 	*/
 	TCHAR** getValues(const TCHAR* name);
 	

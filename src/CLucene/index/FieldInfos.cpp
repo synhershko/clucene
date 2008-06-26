@@ -64,7 +64,7 @@ FieldInfos::FieldInfos(Directory* d, const char* name):
 }
 
 void FieldInfos::add(const Document* doc) {
-	DocumentFieldEnumeration* fields  = doc->fields();
+	DocumentFieldEnumeration* fields  = doc->getFields();
 	Field* field;
 	while (fields->hasMoreElements()) {
 			field = fields->nextElement();

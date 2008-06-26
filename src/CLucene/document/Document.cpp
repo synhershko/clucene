@@ -106,7 +106,7 @@ CL_NS_DEF(document)
 		fieldList = _CLNEW DocumentFieldEnumeration::DocumentFieldList(&field, fieldList);
 	}
 
-   void Document::setBoost(float_t boost) {
+   void Document::setBoost(const float_t boost) {
       this->boost = boost;
    }
 
@@ -137,6 +137,10 @@ CL_NS_DEF(document)
 	}
 
 	DocumentFieldEnumeration* Document::fields() const {
+		return getFields();
+	}
+
+	DocumentFieldEnumeration* Document::getFields() const {
 		return _CLNEW DocumentFieldEnumeration(fieldList);
 	}
 
@@ -205,7 +209,7 @@ CL_NS_DEF(document)
    }
 
    TCHAR** Document::getValues(const TCHAR* name) {
-      DocumentFieldEnumeration* it = fields();
+      DocumentFieldEnumeration* it = getFields();
       int32_t count = 0;
       while ( it->hasMoreElements() ){
       	Field* f = it->nextElement();
@@ -214,7 +218,7 @@ CL_NS_DEF(document)
             count++;
       }
       _CLDELETE(it);
-      it = fields();
+      it = getFields();
 
       //todo: there must be a better way of doing this, we are doing two iterations of the fields
       TCHAR** ret = NULL;

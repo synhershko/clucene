@@ -100,7 +100,7 @@ void FieldsWriter::addDocument(Document* doc) {
 	indexStream->writeLong(fieldsStream->getFilePointer());
 
 	int32_t storedCount = 0;
-	DocumentFieldEnumeration* fields = doc->fields();
+	DocumentFieldEnumeration* fields = doc->getFields();
 	while (fields->hasMoreElements()) {
 		Field* field = fields->nextElement();
 		if (field->isStored())
@@ -109,7 +109,7 @@ void FieldsWriter::addDocument(Document* doc) {
 	_CLDELETE(fields);
 	fieldsStream->writeVInt(storedCount);
 
-	fields = doc->fields();
+	fields = doc->getFields();
 	while (fields->hasMoreElements()) {
 		Field* field = fields->nextElement();
 		if (field->isStored()) {

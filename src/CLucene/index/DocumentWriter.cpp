@@ -218,7 +218,7 @@ void DocumentWriter::sortPostingTable(Posting**& array, int32_t& arraySize) {
 
 
 void DocumentWriter::invertDocument(const Document* doc) {
-	DocumentFieldEnumeration* fields = doc->fields();
+	DocumentFieldEnumeration* fields = doc->getFields();
 	try {
 		while (fields->hasMoreElements()) {
 			Field* field = (Field*)fields->nextElement();
