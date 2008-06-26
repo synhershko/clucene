@@ -7,19 +7,18 @@
 #ifndef _lucene_search_FuzzyQuery_
 #define _lucene_search_FuzzyQuery_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/index/Term.h"
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(index,Term)
+//#include "MultiTermQuery.h"
 #include "MultiTermQuery.h"
+#include "FilteredTermEnum.h"
 
 
 CL_NS_DEF(search)
 
   // class FuzzyQuery implements the fuzzy search query
-  class FuzzyQuery: public MultiTermQuery {
+  class CLUCENE_EXPORT FuzzyQuery: public MultiTermQuery {
     private:
 	  float_t minimumSimilarity;
 	  size_t prefixLength;

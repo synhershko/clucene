@@ -4,22 +4,76 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "FieldCacheImpl.h"
+#include "CLucene/_ApiHeader.h"
+#include "_FieldCacheImpl.h"
+#include "CLucene/index/IndexReader.h"
+#include "CLucene/index/Term.h"
+#include "CLucene/index/Terms.h"
+#include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/Misc.h"
+#include "Sort.h"
 
 CL_NS_USE(util)
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-FieldCacheImpl::FieldCacheImpl():
-    cache(false,true){
+///the type that is stored in the field cache. can't use a typedef because
+///the decorated name would become too long
+class fieldcacheCacheReaderType: public CL_NS(util)::CLHashMap<FieldCacheImpl::FileEntry*,
+	FieldCacheAuto*, 
+	FieldCacheImpl::FileEntry::Compare,
+	FieldCacheImpl::FileEntry::Equals,
+	CL_NS(util)::Deletor::Object<FieldCacheImpl::FileEntry>, 
+	CL_NS(util)::Deletor::Object<FieldCacheAuto> >{
+public:
+    fieldcacheCacheReaderType(){
+		setDeleteKey(false);
+		setDeleteValue(false);
+	}
+	~fieldcacheCacheReaderType(){
+		iterator itr = begin();
+		while ( itr != end() ){
+			FieldCacheImpl::FileEntry* f = itr->first;
+			if ( f->getType() != SortField::AUTO )
+				_CLDELETE( itr->second );
+			_CLDELETE( f );
+			++itr;
+		}
+		clear();
+	}
+};
+
+//note: typename gets too long if using cacheReaderType as a typename
+class fieldcacheCacheType: public CL_NS(util)::CLHashMap<
+	CL_NS(index)::IndexReader*, 
+	fieldcacheCacheReaderType*, 
+	CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
+	CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
+	CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
+	CL_NS(util)::Deletor::Object<fieldcacheCacheReaderType> >{ 
+public:
+	fieldcacheCacheType ( const bool deleteKey, const bool deleteValue)
+	{
+	    setDeleteKey(deleteKey);
+	    setDeleteValue(deleteValue);
+	}
+	virtual ~fieldcacheCacheType(){
+		
+	}
+};
+
+
+FieldCacheImpl::FieldCacheImpl()
+{
+    cache = _CLNEW fieldcacheCacheType(false,true);
 }
 FieldCacheImpl::~FieldCacheImpl(){
-    cache.clear();
+    cache->clear();
+    _CLDELETE(cache);
 }
 
 FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
-   this->field = CLStringIntern::intern(field CL_FILELINE);
+   this->field = CLStringIntern::intern(field);
    this->type = type;
    this->custom = NULL;
    this->_hashCode = 0;
@@ -27,7 +81,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
  /** Creates one of these objects for a custom comparator. */
  FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, SortComparatorSource* custom) {
-   this->field = CLStringIntern::intern(field CL_FILELINE);
+   this->field = CLStringIntern::intern(field);
    this->type = SortField::CUSTOM;
    this->custom = custom;
    this->_hashCode = 0;
@@ -99,7 +153,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     FileEntry* entry = _CLNEW FileEntry (field, type);
     {
     	SCOPED_LOCK_MUTEX(THIS_LOCK)
-      	fieldcacheCacheReaderType* readerCache = cache.get(reader);
+      	fieldcacheCacheReaderType* readerCache = cache->get(reader);
       	if (readerCache != NULL) 
           ret = readerCache->get (entry);
       	_CLDELETE(entry);
@@ -114,7 +168,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     FileEntry* entry = _CLNEW FileEntry (field, comparer);
     {
     	SCOPED_LOCK_MUTEX(THIS_LOCK)
-      	fieldcacheCacheReaderType* readerCache = cache.get(reader);
+      	fieldcacheCacheReaderType* readerCache = cache->get(reader);
       	if (readerCache != NULL)
         	ret = readerCache->get (entry);
       	_CLDELETE(entry);
@@ -125,7 +179,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 	void FieldCacheImpl::closeCallback(CL_NS(index)::IndexReader* reader, void* fieldCacheImpl){
 		FieldCacheImpl* fci = (FieldCacheImpl*)fieldCacheImpl;
     	SCOPED_LOCK_MUTEX(fci->THIS_LOCK)
-		fci->cache.remove(reader);
+		fci->cache->remove(reader);
 	}
 
   /** Put an object into the cache. */
@@ -133,10 +187,10 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     FileEntry* entry = _CLNEW FileEntry (field, type);
     {
     	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	  fieldcacheCacheReaderType* readerCache = cache.get(reader);
+	  fieldcacheCacheReaderType* readerCache = cache->get(reader);
 	  if (readerCache == NULL) {
 	    readerCache = _CLNEW fieldcacheCacheReaderType;
-	    cache.put(reader,readerCache);
+	    cache->put(reader,readerCache);
 	    reader->addCloseCallback(closeCallback, this);
 	  }
 	  readerCache->put (entry, value);
@@ -149,10 +203,10 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     FileEntry* entry = _CLNEW FileEntry (field, comparer);
     {
       SCOPED_LOCK_MUTEX(THIS_LOCK)
-      fieldcacheCacheReaderType* readerCache = cache.get(reader);
+      fieldcacheCacheReaderType* readerCache = cache->get(reader);
       if (readerCache == NULL) {
         readerCache = _CLNEW fieldcacheCacheReaderType;
-        cache.put(reader, readerCache);
+        cache->put(reader, readerCache);
 		reader->addCloseCallback(FieldCacheImpl::closeCallback, this);
       }
       readerCache->put(entry, value);
@@ -166,7 +220,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
  // inherit javadocs
  FieldCacheAuto* FieldCacheImpl::getInts (IndexReader* reader, const TCHAR* field) {
-    field = CLStringIntern::intern(field CL_FILELINE);
+    field = CLStringIntern::intern(field);
     FieldCacheAuto* ret = lookup (reader, field, SortField::INT);
     if (ret == NULL) {
       int32_t retLen = reader->maxDoc();
@@ -215,7 +269,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getFloats (IndexReader* reader, const TCHAR* field){
-	field = CLStringIntern::intern(field CL_FILELINE);
+	field = CLStringIntern::intern(field);
     FieldCacheAuto* ret = lookup (reader, field, SortField::FLOAT);
     if (ret == NULL) {
 	  int32_t retLen = reader->maxDoc();
@@ -267,7 +321,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getStrings (IndexReader* reader, const TCHAR* field){
    //todo: this is not really used, i think?
-	field = CLStringIntern::intern(field CL_FILELINE);
+	field = CLStringIntern::intern(field);
     FieldCacheAuto* ret = lookup (reader, field, SortField::STRING);
     if (ret == NULL) {
 	  int32_t retLen = reader->maxDoc();
@@ -317,7 +371,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getStringIndex (IndexReader* reader, const TCHAR* field){
-	field = CLStringIntern::intern(field CL_FILELINE);
+	field = CLStringIntern::intern(field);
     FieldCacheAuto* ret = lookup (reader, field, STRING_INDEX);
     int32_t t = 0;  // current term number
     if (ret == NULL) {
@@ -406,7 +460,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getAuto (IndexReader* reader, const TCHAR* field) {
-	field = CLStringIntern::intern(field CL_FILELINE);
+	field = CLStringIntern::intern(field);
     FieldCacheAuto* ret = lookup (reader, field, SortField::AUTO);
     if (ret == NULL) {
 	  Term* term = _CLNEW Term (field, LUCENE_BLANK_STRING, false);
@@ -466,7 +520,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getCustom (IndexReader* reader, const TCHAR* field, SortComparator* comparator){
-	field = CLStringIntern::intern(field CL_FILELINE);
+	field = CLStringIntern::intern(field);
 
     FieldCacheAuto* ret = lookup (reader, field, comparator);
     if (ret == NULL) {
@@ -511,19 +565,4 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
   }
 
 
-    FieldCacheImpl::fieldcacheCacheReaderType::fieldcacheCacheReaderType(){
-		setDeleteKey(false);
-		setDeleteValue(false);
-	}
-	FieldCacheImpl::fieldcacheCacheReaderType::~fieldcacheCacheReaderType(){
-		iterator itr = begin();
-		while ( itr != end() ){
-			FileEntry* f = itr->first;
-			if ( f->getType() != SortField::AUTO )
-				_CLDELETE( itr->second );
-			_CLDELETE( f );
-			++itr;
-		}
-		clear();
-	}
 CL_NS_END

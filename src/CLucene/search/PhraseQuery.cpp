@@ -4,31 +4,61 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "PhraseQuery.h"
 
 #include "SearchHeader.h"
 #include "Scorer.h"
 #include "BooleanQuery.h"
 #include "TermQuery.h"
+#include "Similarity.h"
+#include "Searchable.h"
+#include "Explanation.h"
 
 #include "CLucene/index/Term.h"
 #include "CLucene/index/Terms.h"
 #include "CLucene/index/IndexReader.h"
 
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringBuffer.h"
 #include "CLucene/util/VoidList.h"
-#include "CLucene/util/Arrays.h"
+#include "CLucene/util/_Arrays.h"
 
-#include "ExactPhraseScorer.h"
-#include "SloppyPhraseScorer.h"
+#include "_ExactPhraseScorer.h"
+#include "_SloppyPhraseScorer.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
+
+
+	class PhraseWeight: public Weight {
+	private:
+		Searcher* searcher;
+		float_t value;
+		float_t idf;
+		float_t queryNorm;
+		float_t queryWeight;
+		PhraseQuery* _this;
+	public:
+		PhraseWeight(Searcher* searcher, PhraseQuery* _this);
+		~PhraseWeight();
+		TCHAR* toString();
+
+		Query* getQuery();
+		float_t getValue();
+
+		float_t sumOfSquaredWeights();
+		void normalize(float_t queryNorm);
+		Scorer* scorer(CL_NS(index)::IndexReader* reader);
+		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+		TCHAR* toString(TCHAR* f);
+		bool equals(PhraseWeight* o);
+	};
+
   PhraseQuery::PhraseQuery():
-	terms(false)
+	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
+	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>)
   {
   //Func - Constructor
   //Pre  - true
@@ -39,21 +69,23 @@ CL_NS_DEF(search)
 	  field = NULL;
   }
   PhraseQuery::PhraseQuery(const PhraseQuery& clone):
-	Query(clone), terms(false)
+	Query(clone), 
+	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
+	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>)
   {
       slop  = clone.slop;
 	  field = clone.field;
-	  int32_t size=clone.positions.size();
+	  int32_t size=clone.positions->size();
 	  { //msvc6 scope fix
 		  for ( int32_t i=0;i<size;i++ ){
-			  int32_t n = clone.positions[i];
-			  this->positions.push_back( n );
+			  int32_t n = (*clone.positions)[i];
+			  this->positions->push_back( n );
 		  }
 	  }
-	  size=clone.terms.size();
+	  size=clone.terms->size();
 	  { //msvc6 scope fix
 		  for ( int32_t i=0;i<size;i++ ){
-			  this->terms.push_back( _CL_POINTER(clone.terms[i]));
+			  this->terms->push_back( _CL_POINTER((*clone.terms)[i]));
 		  }
 	  }
   }
@@ -69,17 +101,17 @@ CL_NS_DEF(search)
       && (this->slop == pq->slop);
 	
 		if ( ret ){
-			CLListEquals<CL_NS(index)::Term,Term::Equals,
+			CLListEquals<CL_NS(index)::Term,CL_NS(index)::Term_Equals,
 				const CL_NS(util)::CLVector<CL_NS(index)::Term*>,
 				const CL_NS(util)::CLVector<CL_NS(index)::Term*> > comp;
-			ret = comp.equals(&this->terms,&pq->terms);
+			ret = comp.equals(this->terms,pq->terms);
 		}
 	
 		if ( ret ){
 			CLListEquals<int32_t,Equals::Int32,
 				const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>,
 				const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32> > comp;
-			ret = comp.equals(&this->positions,&pq->positions);
+			ret = comp.equals(this->positions,pq->positions);
 		}
 		return ret;
   }
@@ -91,10 +123,11 @@ CL_NS_DEF(search)
   //Post 0 The instance has been destroyed
       
 	  //Iterate through all the terms
-	  for (uint32_t i = 0; i < terms.size(); i++){
-        _CLLDECDELETE(terms[i]);
+	  for (uint32_t i = 0; i < terms->size(); i++){
+        _CLLDECDELETE((*terms)[i]);
       }
-	  positions.clear();
+	  _CLDELETE(terms);
+	  _CLDELETE(positions);
   }
 
   size_t PhraseQuery::hashCode() const {
@@ -102,12 +135,12 @@ CL_NS_DEF(search)
 		size_t ret = Similarity::floatToByte(getBoost()) ^ Similarity::floatToByte(slop);
 		
 		{ //msvc6 scope fix
-			for ( int32_t i=0;terms.size();i++ )
-				ret = 31 * ret + terms[i]->hashCode();
+			for ( int32_t i=0;terms->size();i++ )
+				ret = 31 * ret + (*terms)[i]->hashCode();
 		}
 		{ //msvc6 scope fix
-			for ( int32_t i=0;positions.size();i++ )
-				ret = 31 * ret + positions[i];
+			for ( int32_t i=0;positions->size();i++ )
+				ret = 31 * ret + (*positions)[i];
 		}
 		return ret;
 	}
@@ -132,8 +165,8 @@ CL_NS_DEF(search)
 
 		int32_t position = 0;
 
-		if(positions.size() > 0)
-			position = (positions[positions.size()-1]) + 1;
+		if(positions->size() > 0)
+			position = ((*positions)[positions->size()-1]) + 1;
 		
 		add(term, position);
 	}
@@ -145,7 +178,7 @@ CL_NS_DEF(search)
 	//       and true is returned otherwise false is returned
 		CND_PRECONDITION(term != NULL,"term is NULL");
 
-		if (terms.size() == 0)
+		if (terms->size() == 0)
 			field = term->field();
 		else{
 			//Check if the field of the _CLNEW term matches the field of the PhraseQuery
@@ -158,16 +191,16 @@ CL_NS_DEF(search)
 			}
 		}
 		//Store the _CLNEW term
-		terms.push_back(_CL_POINTER(term));
+		terms->push_back(_CL_POINTER(term));
 
-		positions.push_back(position);
+		positions->push_back(position);
 	}
 
 	void PhraseQuery::getPositions(Array<int32_t>& result) const{
-		result.length = positions.size();
+		result.length = positions->size();
 		result.values = _CL_NEWARRAY(int32_t,result.length);
 		for(size_t i = 0; i < result.length; i++){
-			result.values[i] = positions[i];
+			result.values[i] = (*positions)[i];
 		}
 	}
 	int32_t* PhraseQuery::getPositions() const{
@@ -179,8 +212,8 @@ CL_NS_DEF(search)
 	}
   
   Weight* PhraseQuery::_createWeight(Searcher* searcher) {
-    if (terms.size() == 1) {			  // optimize one-term case
-      Term* term = terms[0];
+    if (terms->size() == 1) {			  // optimize one-term case
+      Term* term = (*terms)[0];
       Query* termQuery = _CLNEW TermQuery(term);
       termQuery->setBoost(getBoost());
       Weight* ret = termQuery->_createWeight(searcher);
@@ -197,14 +230,14 @@ CL_NS_DEF(search)
   //Post -
 
 	  //Let size contain the number of terms
-      int32_t size = terms.size();
+      int32_t size = terms->size();
       Term** ret = _CL_NEWARRAY(Term*,size+1);
        
 	  CND_CONDITION(ret != NULL,"Could not allocated memory for ret");
 
 	  //Iterate through terms and copy each pointer to ret
 	  for ( int32_t i=0;i<size;i++ ){
-          ret[i] = terms[i];
+          ret[i] = (*terms)[i];
      }
      ret[size] = NULL;
      return ret;
@@ -215,7 +248,7 @@ CL_NS_DEF(search)
   //Pre  - f != NULL
   //Post - The query string has been returned
 
-      if ( terms.size()== 0 )
+      if ( terms->size()== 0 )
 		  return NULL;
 
       StringBuffer buffer;
@@ -229,16 +262,16 @@ CL_NS_DEF(search)
       Term *T = NULL;
 
 	  //iterate through all terms
-      for (uint32_t i = 0; i < terms.size(); i++) {
+      for (uint32_t i = 0; i < terms->size(); i++) {
 		  //Get the i-th term
-		  T = terms[i];
+		  T = (*terms)[i];
 
 		  //Ensure T is a valid Term
           CND_CONDITION(T !=NULL,"T is NULL");
 
           buffer.append( T->text() );
 		  //Check if i is at the end of terms
-		  if (i != terms.size()-1){
+		  if (i != terms->size()-1){
               buffer.append(_T(" "));
               }
           }
@@ -267,7 +300,7 @@ CL_NS_DEF(search)
 
 
   
- PhraseQuery::PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _this) {
+ PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _this) {
    this->_this=_this;
    this->value = 0;
    this->idf = 0;
@@ -276,35 +309,35 @@ CL_NS_DEF(search)
    this->searcher = searcher;
  }
 
- TCHAR* PhraseQuery::PhraseWeight::toString() { 
+ TCHAR* PhraseWeight::toString() { 
 	return STRDUP_TtoT(_T("weight(PhraseQuery)"));
  }
- PhraseQuery::PhraseWeight::~PhraseWeight(){
+ PhraseWeight::~PhraseWeight(){
  }
 
  
- Query* PhraseQuery::PhraseWeight::getQuery() { return _this; }
- float_t PhraseQuery::PhraseWeight::getValue() { return value; }
+ Query* PhraseWeight::getQuery() { return _this; }
+ float_t PhraseWeight::getValue() { return value; }
 
- float_t PhraseQuery::PhraseWeight::sumOfSquaredWeights(){
-   idf = _this->getSimilarity(searcher)->idf(&_this->terms, searcher);
+ float_t PhraseWeight::sumOfSquaredWeights(){
+   idf = _this->getSimilarity(searcher)->idf(_this->terms, searcher);
    queryWeight = idf * _this->getBoost();    // compute query weight
    return queryWeight * queryWeight;         // square it
  }
 
- void PhraseQuery::PhraseWeight::normalize(float_t queryNorm) {
+ void PhraseWeight::normalize(float_t queryNorm) {
    this->queryNorm = queryNorm;
    queryWeight *= queryNorm;                   // normalize query weight
    value = queryWeight * idf;                  // idf for document 
  }
 
-  Scorer* PhraseQuery::PhraseWeight::scorer(IndexReader* reader)  {
+  Scorer* PhraseWeight::scorer(IndexReader* reader)  {
   //Func -
   //Pre  -
   //Post -
 
 	  //Get the length of terms
-      int32_t tpsLength = _this->terms.size();
+      int32_t tpsLength = _this->terms->size();
 
 	  //optimize zero-term case
       if (tpsLength == 0)			  
@@ -318,10 +351,10 @@ CL_NS_DEF(search)
     TermPositions* p = NULL;
 
 	//Iterate through all terms
-	int32_t size = _this->terms.size();
+	int32_t size = _this->terms->size();
     for (int32_t i = 0; i < size; i++) {
         //Get the termPostitions for the i-th term
-        p = reader->termPositions(_this->terms[i]);
+        p = reader->termPositions((*_this->terms)[i]);
       
 		//Check if p is valid
 		if (p == NULL) {
@@ -364,7 +397,7 @@ CL_NS_DEF(search)
     return ret;
   }
 
- void PhraseQuery::PhraseWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
+ void PhraseWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
    TCHAR descbuf[LUCENE_SEARCH_EXPLANATION_DESC_LEN+1];
    TCHAR* tmp;
    
@@ -377,13 +410,13 @@ CL_NS_DEF(search)
    StringBuffer docFreqs;
    StringBuffer query;
    query.appendChar('\"');
-   for (uint32_t i = 0; i < _this->terms.size(); i++) {
+   for (uint32_t i = 0; i < _this->terms->size(); i++) {
      if (i != 0) {
        docFreqs.appendChar(' ');
        query.appendChar(' ');
      }
 
-     Term* term = _this->terms[i];
+     Term* term = (*_this->terms)[i];
 
      docFreqs.append(term->text());
      docFreqs.appendChar('=');

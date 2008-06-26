@@ -7,9 +7,6 @@
 #ifndef _lucene_debug_error_
 #define _lucene_debug_error_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
 #define CL_ERR_UNKNOWN -1
 #define CL_ERR_IO 1
@@ -45,7 +42,7 @@
 
  #define _THROWS ,_jpr_Throws*/
 #else
-  class CLuceneError
+  class CLUCENE_EXPORT CLuceneError
   {
   	int error_number;
 	char* _awhat;

@@ -17,32 +17,6 @@ CL_NS_DEF(debug)
 //memory debugging tracking and/or reference counting
 class LuceneBase{
 public:
-#ifdef LUCENE_ENABLE_MEMLEAKTRACKING
-	static void* operator new (size_t size);
-	static void operator delete (void *p);
-	int32_t __cl_initnum; ///< The order that the object was created at. This is then used to do a lookup in the objects list
-
-	static void* operator new (size_t size, char const * file, int32_t line);
-	static void operator delete (void *p, char const * file, int32_t line);
-
-	static void* __cl_voidpadd(void* data, const char* file, int line, size_t size); ///<add arbitary data to the lucenbase_list and returns the same data
-	static void __cl_voidpremove(const void* data, const char* file, int line);///<remove arbitary data to the lucenbase_list
-	static void __cl_unregister(const void* obj); ///<un register object from the mem leak and ref count system
-
-	static int32_t __cl_GetUnclosedObjectsCount();  ///< gets the number of unclosed objects
-	static const char* __cl_GetUnclosedObject(int32_t item);  ///< get the name of the nth unclosed object
-	static char* __cl_GetUnclosedObjects();  ///< get a string with the names of the unclosed objects
-	static void __cl_PrintUnclosedObjects(); ///< print unclosed objects to the stdout
-  
-  	///This will clear memory relating to refcounting
-	///other tools can be used to more accurately identify
-	///memory leaks. This should only be called just
-	///before closing, and after retrieving the
-	///unclosed object list
-  	static void __cl_ClearMemory();
-
-#endif //LUCENE_ENABLE_MEMLEAKTRACKING
-
 	int __cl_refcount;
 	LuceneBase(){
 		__cl_refcount=1;
@@ -70,6 +44,14 @@ class LuceneVoidBase{
 	#endif
         virtual ~LuceneVoidBase(){};
 };
+
+#if defined(LUCENE_ENABLE_REFCOUNT)
+   #define LUCENE_BASE public CL_NS(debug)::LuceneBase
+#else
+   #define LUCENE_BASE public CL_NS(debug)::LuceneVoidBase
+#endif
+#define LUCENE_REFBASE public CL_NS(debug)::LuceneBase //this is the base of classes who *always* need refcounting
+
 
 CL_NS_END
 #endif //_lucene_debug_lucenebase_

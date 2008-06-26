@@ -7,17 +7,13 @@
 #ifndef _lucene_analysis_standard_StandardTokenizer
 #define _lucene_analysis_standard_StandardTokenizer
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "../AnalysisHeader.h"
-#include "../Analyzers.h"
+#include "../AnalysisHeader.h" //required for Tokenizer
 #include "StandardTokenizerConstants.h"
-#include "CLucene/util/StringBuffer.h"
-#include "CLucene/util/FastCharStream.h"
-#include "CLucene/util/Reader.h"
-
+CL_CLASS_DEF(analysis,Token)
+CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,StringBuffer)
+CL_CLASS_DEF(util,FastCharStream)
 
 CL_NS_DEF2(analysis,standard)
 

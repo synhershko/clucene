@@ -6,13 +6,11 @@
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_WildcardTermEnum_
 #define _lucene_search_WildcardTermEnum_
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(index,Term)
+CL_CLASS_DEF(index,IndexReader)
+//#include "CLucene/index/Terms.h"
 #include "FilteredTermEnum.h"
 
 CL_NS_DEF(search)
@@ -23,7 +21,7 @@ CL_NS_DEF(search)
      * Term enumerations are always ordered by term->compareTo().  Each term in
      * the enumeration is greater than all that precede it.
      */
-	class WildcardTermEnum: public FilteredTermEnum {
+	class CLUCENE_EXPORT WildcardTermEnum: public FilteredTermEnum {
     private:
         CL_NS(index)::Term* __term;
         TCHAR* pre;

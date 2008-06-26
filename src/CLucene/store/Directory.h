@@ -7,17 +7,16 @@
 #ifndef _lucene_store_Directory
 #define _lucene_store_Directory
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/store/Lock.h"
-#include "CLucene/util/VoidList.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/LuceneThreads.h"
+#include <string>
 
-#include "IndexInput.h"
-#include "IndexOutput.h"
-#include "LockFactory.h"
+CL_CLASS_DEF(store,Lock)
+CL_CLASS_DEF(store,IndexInput)
+CL_CLASS_DEF(store,IndexOutput)
+CL_CLASS_DEF(store,LockFactory)
+CL_CLASS_DEF(store,LuceneLock)
 
 CL_NS_DEF(store)
 
@@ -33,7 +32,7 @@ CL_NS_DEF(store)
    * </ul>
    *
    */
-	class Directory: LUCENE_REFBASE {
+	class CLUCENE_EXPORT Directory: LUCENE_REFBASE {
 	protected:
 		LockFactory* lockFactory;
 		
@@ -44,22 +43,11 @@ CL_NS_DEF(store)
 	public:
 		DEFINE_MUTEX(THIS_LOCK)
 	   
-		virtual ~Directory(){ };
+		virtual ~Directory();
 
 		// Returns an null terminated array of strings, one for each file in the directory. 
-		char** list() const{
-    		vector<string> names;
-    		
-    		list(&names);
-    
-			size_t size = names.size();
-		    char** ret = _CL_NEWARRAY(char*,size+1);
-		    for ( size_t i=0;i<size;i++ )
-		      ret[i] = STRDUP_AtoA(names[i].c_str());
-		    ret[size]=NULL;
-		    return ret;	
-		}
-		virtual void list(vector<string>* names) const = 0;
+		char** list() const;
+		virtual void list(std::vector<std::string>* names) const = 0;
 		       
 		// Returns true iff a file with the given name exists. 
 		virtual bool fileExists(const char* name) const = 0;
@@ -72,24 +60,14 @@ CL_NS_DEF(store)
 
 		// Returns a stream reading an existing file. 
 		virtual IndexInput* openInput(const char* name) = 0;
-		virtual IndexInput* openInput(const char* name, int32_t bufferSize){ 
-			return openInput(name); //implementation didnt overload the bufferSize
-		}
+		virtual IndexInput* openInput(const char* name, int32_t bufferSize);
 
 		/// Set the modified time of an existing file to now. */
 		virtual void touchFile(const char* name) = 0;
 
 		// Removes an existing file in the directory. 
-		virtual bool deleteFile(const char* name, const bool throwError=true){
-			bool ret = doDeleteFile(name);
-			if ( !ret && throwError ){
-		      char buffer[200];
-		      _snprintf(buffer,200,"couldn't delete %s",name);
-		      _CLTHROWA(CL_ERR_IO, buffer );
-		    }
-		    return ret;
-		}
-
+		virtual bool deleteFile(const char* name, const bool throwError=true);
+		
 		// Renames an existing file in the directory.
 		//	If a file already exists with the new name, then it is replaced.
 		//	This replacement should be atomic. 
@@ -101,15 +79,9 @@ CL_NS_DEF(store)
 
 		// Construct a {@link Lock}.
 		// @param name the name of the lock file
-		virtual LuceneLock* makeLock(const char* name) {
-			return lockFactory->makeLock( name );
-		}
+		virtual LuceneLock* makeLock(const char* name);
 
-		virtual void clearLock(const char* name) {
-			if ( lockFactory != NULL ) {
-				lockFactory->clearLock( name );
-			}
-		}
+		virtual void clearLock(const char* name);
 		
 		// Closes the store. 
 		virtual void close() = 0;
@@ -118,20 +90,11 @@ CL_NS_DEF(store)
 
 		virtual const char* getDirectoryType() const = 0;
 		
-		void setLockFactory( LockFactory* lockFactory ) {
-			this->lockFactory = lockFactory;
-			lockFactory->setLockPrefix( getLockID() );
-		}
+		void setLockFactory( LockFactory* lockFactory );
 		
-		LockFactory* getLockFactory() {
-			return lockFactory;
-		}
+		LockFactory* getLockFactory();
 		
-		virtual TCHAR* getLockID() {
-			return toString();
-		}
+		virtual TCHAR* getLockID();
 	};
 CL_NS_END
 #endif
-
-

@@ -5,8 +5,13 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
-#include "CLucene/StdHeader.h"
-#include "DisjunctionSumScorer.h"
+#include "CLucene/_ApiHeader.h"
+#include "Scorer.h"
+#include "ScorerDocQueue.h"
+#include "SearchHeader.h"
+
+#include "_DisjunctionSumScorer.h"
+
 
 CL_NS_DEF(search)
 

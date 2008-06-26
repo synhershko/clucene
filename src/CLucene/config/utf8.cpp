@@ -39,7 +39,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #include "CLucene/StdHeader.h"
+ #include "CLucene/_ApiHeader.h"
 
 typedef unsigned long  gunichar;
 typedef unsigned char  guchar;

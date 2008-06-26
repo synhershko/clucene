@@ -7,11 +7,8 @@
 #ifndef _lucene_search_Similarity_
 #define _lucene_search_Similarity_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "CLucene/index/Term.h"
+CL_CLASS_DEF(index,Term)
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(search)
 
@@ -51,7 +48,7 @@ class DefaultSimilarity;
 * @see IndexWriter#setSimilarity(Similarity)
 * @see Searcher#setSimilarity(Similarity)
 */
-class Similarity:LUCENE_BASE {
+class CLUCENE_EXPORT Similarity:LUCENE_BASE {
 public:
 	virtual ~Similarity();
 	

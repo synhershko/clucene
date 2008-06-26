@@ -7,17 +7,24 @@
 #ifndef _lucene_index_IndexWriter_
 #define _lucene_index_IndexWriter_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/util/VoidList.h"
-#include "CLucene/search/Similarity.h"
-#include "CLucene/store/Lock.h"
-#include "CLucene/store/TransactionalRAMDirectory.h"
+//#include "CLucene/analysis/AnalysisHeader.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
+CL_CLASS_DEF(search,Similarity)
+CL_CLASS_DEF(store,Lock)
+CL_CLASS_DEF(store,TransactionalRAMDirectory)
+CL_CLASS_DEF(analysis,Analyzer)
+CL_CLASS_DEF(store,Directory)
+CL_CLASS_DEF(store,LuceneLock)
+CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(index,SegmentInfos)
+CL_CLASS_DEF(index,IndexReader)
+CL_CLASS_DEF(index,SegmentReader)
+CL_CLASS_DEF(index,SegmentInfos)
 
-#include "SegmentHeader.h"
+//#include "CLucene/store/TransactionalRAMDirectory.h"
+//#include "SegmentHeader.h"
+#include "CLucene/LuceneThreads.h"
 
 CL_NS_DEF(index)
 
@@ -44,39 +51,7 @@ from the index.
 
 @see IndexModifier IndexModifier supports the important methods of IndexWriter plus deletion
 */
-class IndexWriter:LUCENE_BASE {
-	class LockWith2:public CL_NS(store)::LuceneLockWith<void>{
-	public:
-		CL_NS(util)::CLVector<SegmentReader*>* segmentsToDelete;
-		IndexWriter* writer;
-		bool create;
-		void doBody();
-		LockWith2(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout,
-				IndexWriter* wr, 
-				CL_NS(util)::CLVector<SegmentReader*>* std,
-				bool create);
-		~LockWith2(){
-		}
-	};
-	friend class LockWith2;
-
-	class LockWithCFS:public CL_NS(store)::LuceneLockWith<void>{
-	public:
-		CL_NS(store)::Directory* directory;
-		IndexWriter* writer;
-		const char* segName;
-		CL_NS(util)::AStringArrayWithDeletor* filesToDelete;
-		void doBody();
-		LockWithCFS(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout, 
-				CL_NS(store)::Directory* dir, 
-				IndexWriter* wr, 
-				const char* segName, 
-				CL_NS(util)::AStringArrayWithDeletor* ftd);
-		~LockWithCFS(){
-		}
-	};
-    friend class IndexWriter::LockWithCFS;
-
+class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
 	bool isOpen; //indicates if the writers is open - this way close can be called multiple times
 
 	// how to analyze text
@@ -104,7 +79,7 @@ class IndexWriter:LUCENE_BASE {
 	CL_NS(store)::Directory* directory;		
 		
 		
-	int32_t getSegmentsCounter(){ return segmentInfos->counter; }
+	int32_t getSegmentsCounter();
 	int32_t maxFieldLength;
 	int32_t mergeFactor;
 	int32_t minMergeDocs;
@@ -256,7 +231,7 @@ public:
 	*
 	* <p>The default value is {@link #DEFAULT_MAX_MERGE_DOCS}.
 	*/
-	LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_MAX_MERGE_DOCS = LUCENE_INT32_MAX_SHOULDBE);
+	LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_MAX_MERGE_DOCS = 0x7FFFFFFFL);
 	/**Determines the largest number of documents ever merged by addDocument().
 	*  Small values (e.g., less than 10,000) are best for interactive indexing,
 	*  as this limits the length of pauses while indexing to a few seconds.
@@ -373,6 +348,11 @@ public:
 	CL_NS(analysis)::Analyzer* getAnalyzer() { return analyzer; }
 
 private:
+	class LockWith2;
+	class LockWithCFS;
+	friend class LockWith2;
+	friend class LockWithCFS;
+
 	/** Merges all RAM-resident segments. */
 	void flushRamSegments();
 
@@ -388,9 +368,9 @@ private:
 	* single segment. */
 	void mergeSegments(const uint32_t minSegment, const uint32_t end);
 
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files);
-	void readDeleteableFiles(CL_NS(util)::AStringArrayWithDeletor& files);
-	void writeDeleteableFiles(CL_NS(util)::AStringArrayWithDeletor& files);
+	void deleteFiles(AStringArrayWithDeletor& files);
+	void readDeleteableFiles(AStringArrayWithDeletor& files);
+	void writeDeleteableFiles(AStringArrayWithDeletor& files);
     
 	/*
 	* Some operating systems (e.g. Windows) don't permit a file to be deleted
@@ -399,8 +379,8 @@ private:
 	* process, and queue the file for subsequent deletion.
 	*/
 	void deleteSegments(CL_NS(util)::CLVector<SegmentReader*>* segments);
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files, CL_NS(store)::Directory* directory);
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files, CL_NS(util)::AStringArrayWithDeletor& deletable);
+	void deleteFiles(AStringArrayWithDeletor& files, CL_NS(store)::Directory* directory);
+	void deleteFiles(AStringArrayWithDeletor& files, AStringArrayWithDeletor& deletable);
 
 
 	// synchronized

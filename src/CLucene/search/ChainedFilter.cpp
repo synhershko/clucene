@@ -5,8 +5,11 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
-#include <CLucene/StdHeader.h>
-#include <CLucene/util/Misc.h>
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/util/Misc.h"
+#include "CLucene/util/BitSet.h"
+#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/index/IndexReader.h"
 #include "ChainedFilter.h"
 
 CL_NS_DEF(search)

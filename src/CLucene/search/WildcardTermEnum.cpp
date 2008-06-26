@@ -4,8 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "WildcardTermEnum.h"
+#include "CLucene/index/Term.h"
+#include "CLucene/index/IndexReader.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)
@@ -38,7 +40,7 @@ CL_NS_DEF(search)
 		if (tidx == NULL) 
 			tidx = cidx;
 		else if ( cidx && cidx > pre) 
-			tidx = min(sidx, cidx);
+			tidx = cl_min(sidx, cidx);
 		CND_PRECONDITION(tidx != NULL, "tidx==NULL");
 		int32_t idx = (int32_t)(tidx - pre);
 		preLen = idx;

@@ -7,15 +7,6 @@
 #ifndef _lucene_document_Field_
 #define _lucene_document_Field_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "CLucene/util/Reader.h"
-#include "CLucene/util/streambase.h"
-
-#include "CLucene/analysis/AnalysisHeader.h"
-
 /*
 Fieldable reading:
 https://issues.apache.org/jira/browse/LUCENE-1219?page=com.atlassian.jira.plugin.system.issuetabpanels:comment- tabpanel&focusedCommentId=12578199#action_12578199
@@ -26,6 +17,13 @@ TODO: - Solve some inconsistencies between CL and JL - mainly in the constructor
 	  - Is there a bug in JL when calling setOmitNorms after a Tokenized field was created?
 	  - TokenStream* implementation - mend all 3 pointers to one void* ?
 */
+
+CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(analysis,TokenStream)
+namespace jstreams{
+    template <class T>
+    class StreamBase;   
+}
 
 CL_NS_DEF(document)
 /**
@@ -42,15 +40,9 @@ is pointed directly to the field's data, in affect creating a lazy load ability.
 This means that large fields are best saved in binary format (even if they are
 text), so that they can be loaded lazily.
 */
-class Field :LUCENE_BASE{
-private:
-	const TCHAR* _name;
-	TCHAR* _stringValue;
-	CL_NS(util)::Reader* _readerValue;
-    jstreams::StreamBase<char>* _streamValue;
-
-	uint32_t config;
-	float_t boost;
+class CLUCENE_EXPORT Field :LUCENE_BASE{
+    struct Internal;
+    Internal* internal;
 public:
 	enum Store{ 
 		/** Store the original field value in the index. This is useful for short texts
@@ -164,7 +156,7 @@ public:
 	/** The value of the field as a TokesStream, or null.  If null, the Reader value,
 	* String value, or binary value is used. Exactly one of stringValue(), 
 	* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-	CL_NS(analysis)::TokenStream* tokenStreamValue() const { return NULL; }
+	CL_NS(analysis)::TokenStream* tokenStreamValue() const;
 
 	//  True iff the value of the field is to be stored in the index for return
 	//	with search hits.  It is an error for this to be true if a field is
@@ -260,7 +252,7 @@ public:
 	*  
 	* @return true if this field can be loaded lazily
 	*/
-	bool isLazy() const { return (config & LAZY_YES) != 0; };
+	bool isLazy() const;
 
 	// Prints a Field for human consumption.
 	TCHAR* toString();
@@ -279,28 +271,16 @@ public:
 	*  within a single {@link Document} instance.  See <a
 	*  href="http://wiki.apache.org/lucene-java/ImproveIndexingSpeed">ImproveIndexingSpeed</a>
 	*  for details.</p> */
-	void setValue(const TCHAR* value) {
-		_resetValue();
-		_stringValue = stringDuplicate( value );
-	}
+	void setValue(const TCHAR* value);
 
 	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
-	void setValue(CL_NS(util)::Reader* value) {
-		_resetValue();
-		_readerValue = value;
-	}
+	void setValue(CL_NS(util)::Reader* value);
 
 	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
-	void setValue(jstreams::StreamBase<char>* value) {
-		_resetValue();
-		_streamValue = value;
-	}
+	void setValue(jstreams::StreamBase<char>* value) ;
 
 	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
-	void setValue(CL_NS(analysis)::TokenStream* value) {
-		_resetValue();
-		//fieldsData = value;
-	}
+	void setValue(CL_NS(analysis)::TokenStream* value);
 
 protected:
 	//Set configs using XOR. This resets all the settings
@@ -308,11 +288,7 @@ protected:
 	//object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
 	inline void setConfig(const uint32_t termVector);
 
-	inline void _resetValue() {
-		_CLDELETE_CARRAY(_stringValue);
-		_CLDELETE(_readerValue);
-		_CLVDELETE( _streamValue );
-	}
+	inline void _resetValue();
 };
 CL_NS_END
 #endif

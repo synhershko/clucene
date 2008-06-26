@@ -7,12 +7,9 @@
 #ifndef _lucene_store_IndexInput_
 #define _lucene_store_IndexInput_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
+#include "CLucene/LuceneThreads.h"
 
 #include "CLucene/util/bufferedstream.h"
-#include "IndexOutput.h"
 
 CL_NS_DEF(store)
 
@@ -77,10 +74,8 @@ CL_NS_DEF(store)
 		
 		/** Reads a string.
 		* @see IndexOutput#writeString(String)
-		* If unique is true (default) the string will be duplicated.
-		* If false and the length is zero, LUCENE_BLANK_STRING is returned 
 		*/
-		TCHAR* readString(const bool unique=true);
+		TCHAR* readString();
 		
 		
 		/** Reads UTF-8 encoded characters into an array.
@@ -138,7 +133,7 @@ CL_NS_DEF(store)
       * were cloned from.
       */
 		BufferedIndexInput(const BufferedIndexInput& clone);
-		BufferedIndexInput(int32_t bufferSize = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
+		BufferedIndexInput(int32_t bufferSize = -1);
 	public:
 		LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=LUCENE_STREAM_BUFFER_SIZE);
 		

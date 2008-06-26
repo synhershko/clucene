@@ -4,17 +4,21 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "TermInfosReader.h"
+#include "CLucene/_ApiHeader.h"
 
 #include "Term.h"
 #include "Terms.h"
-#include "SegmentTermEnum.h"
-#include "CLucene/store/Directory.h"
-#include "FieldInfos.h"
-#include "TermInfo.h"
-#include "TermInfosWriter.h"
 #include "CLucene/util/Misc.h"
+#include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
+
+#include "_TermInfo.h"
+#include "_FieldInfos.h"
+#include "_SegmentTermEnum.h"
+#include "_FieldInfos.h"
+#include "_TermInfo.h"
+#include "_TermInfosWriter.h"
+#include "_TermInfosReader.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -85,8 +89,9 @@ CL_NS_DEF(index)
 	      //destroy their elements
 #ifdef _DEBUG
          for ( int32_t i=0; i<indexTermsLength;++i ){
-			 if ( indexTerms[i].__cl_refcount != 1 )
+			 if ( indexTerms[i].__cl_refcount != 1 ){
 				 CND_PRECONDITION(indexTerms[i].__cl_refcount==1,"TermInfosReader term was references more than internally");
+			 }
          //   _CLDECDELETE(indexTerms[i]);
             //_CLDELETE(indexInfos[i]);
          }

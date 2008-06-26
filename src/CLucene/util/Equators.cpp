@@ -4,8 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Equators.h"
+#include "Misc.h"
+
 CL_NS_DEF(util)
 
 bool Equals::Int32::operator()( const int32_t val1, const int32_t val2 ) const{
@@ -99,10 +101,11 @@ size_t Compare::WChar::operator()( const wchar_t* val1) const{
 #endif
 
 const TCHAR* Compare::TChar::getValue() const{ return s; }
+
 Compare::TChar::TChar(){
 	s=NULL;
 }
-Compare::TChar::TChar(const TCHAR* str){
+ Compare::TChar::TChar(const TCHAR* str){
 	this->s = str;
 }
 int32_t Compare::TChar::compareTo(void* o){

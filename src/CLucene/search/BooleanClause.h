@@ -7,28 +7,17 @@
 #ifndef _lucene_search_BooleanClause_
 #define _lucene_search_BooleanClause_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-#include "SearchHeader.h"
+//#include "SearchHeader.h"
 
-#include "CLucene/util/StringBuffer.h"
+CL_CLASS_DEF(util,StringBuffer)
+CL_CLASS_DEF(search,Query)
 
 CL_NS_DEF(search)
 
 // A clause in a BooleanQuery. 
-class BooleanClause:LUCENE_BASE {
+class CLUCENE_EXPORT BooleanClause:LUCENE_BASE {
 public:
-	class Compare:public CL_NS_STD(binary_function)<const BooleanClause*,const BooleanClause*,bool>
-	{
-	public:
-		bool operator()( const BooleanClause* val1, const BooleanClause* val2 ) const {
-			return val1->equals(val2);
-		}
-	};
-
 	/** Specifies how clauses are to occur in matching documents. */
-	//class Occur /*: Parameter */ {
 	enum Occur {
 		/** Use this operator for clauses that <i>must</i> appear in the matching documents. */
 		MUST=1,
@@ -46,8 +35,19 @@ public:
 		* of a <code>MUST_NOT</code> clause. */
 		MUST_NOT=4
 	};
-	//};
+private:	
+	/** The query whose matching documents are combined by the boolean query.
+	*     @deprecated use {@link #setQuery(Query)} instead */
+	Query* query;
+	
+	Occur occur;
 
+	/* Middle layer for the Occur enum; will be removed soon enough. */
+	void setFields(Occur occur);
+public:
+	bool deleteQuery;
+
+	
 	int32_t getClauseCount();
 
 
@@ -60,132 +60,36 @@ public:
 	*  <li>For BooleanClause(query, false, true) use BooleanClause(query, BooleanClause.Occur.MUST_NOT)
 	* </ul>
 	*/ 
-	BooleanClause(Query* q, const bool DeleteQuery,const bool req, const bool p):
-	query(q),
-		required(req),
-		prohibited(p),
-		occur(SHOULD),
-		deleteQuery(DeleteQuery)
-	{
-		if (required) {
-			if (prohibited) {
-				// prohibited && required doesn't make sense, but we want the old behaviour:
-				occur = MUST_NOT;
-			} else {
-				occur = MUST;
-			}
-		} else {
-			if (prohibited) {
-				occur = MUST_NOT;
-			} else {
-				occur = SHOULD;
-			}
-		}
-	}
+	BooleanClause(Query* q, const bool DeleteQuery,const bool req, const bool p);
 
-	BooleanClause(const BooleanClause& clone):
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-#elif defined(LUCENE_ENABLE_REFCOUNT)
-#else
-	LuceneVoidBase(),
-#endif
-		query(clone.query->clone()),
-		required(clone.required),
-		prohibited(clone.prohibited),
-		occur(clone.occur),
-		deleteQuery(true)
-	{
-	}
+	BooleanClause(const BooleanClause& clone);
 
 	/** Constructs a BooleanClause.
 	*/ 
-	BooleanClause(Query* q, const bool DeleteQuery, Occur o):
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-#elif defined(LUCENE_ENABLE_REFCOUNT)
-#else
-	LuceneVoidBase(),
-#endif
-		query(query),
-		occur(o),
-		deleteQuery(DeleteQuery)
-	{
-		setFields(occur);
-	}
+	BooleanClause(Query* q, const bool DeleteQuery, Occur o);
 
 
-	BooleanClause* clone() const {
-		BooleanClause* ret = _CLNEW BooleanClause(*this);
-		return ret;
-	}
+	BooleanClause* clone() const;
 
-	~BooleanClause(){
-		if ( deleteQuery )
-			_CLDELETE( query );
-	}
+	~BooleanClause();
 
-	bool deleteQuery;
 
 	/** Returns true if <code>o</code> is equal to this. */
-	bool equals(const BooleanClause* other) const {
-		return this->query->equals(other->query)
-			&& (this->required == other->required)
-			&& (this->prohibited == other->prohibited) // TODO: Remove these
-			&& (this->occur == other->getOccur() );
-	}
+	bool equals(const BooleanClause* other) const;
 
 	/** Returns a hash code value for this object.*/
-	size_t hashCode() const {
-		return query->hashCode() ^ ( (occur == MUST) ?1:0) ^ ( (occur == MUST_NOT)?2:0);
-	}
+	size_t hashCode() const;
 
-	Occur getOccur() const { return occur; };
-	void setOccur(Occur o) {
-		occur = o;
-		setFields(o);
-	};
+	Occur getOccur() const;
+	void setOccur(Occur o);
 
-	Query* getQuery() const { return query; };
-	void setQuery(Query* q) {
-		if ( deleteQuery )
-			_CLDELETE( query );
-		query = q;
-	}
+	Query* getQuery() const;
+	void setQuery(Query* q);
 
-	bool isProhibited() const { return prohibited; /* TODO: return (occur == MUST_NOT); */ }
-	bool isRequired() const { return required; /* TODO: return (occur == MUST); */ }
+	bool isProhibited() const;
+	bool isRequired() const;
 
-	TCHAR* toString() const {
-		CL_NS(util)::StringBuffer buffer;
-		if (occur == MUST)
-			buffer.append(_T("+"));
-		else if (occur == MUST_NOT)
-			buffer.append(_T("-"));
-		buffer.append( query->toString() );
-		return buffer.toString();
-	}
-
-private:
-	/** The query whose matching documents are combined by the boolean query.
-	*     @deprecated use {@link #setQuery(Query)} instead */
-	Query* query;
-
-	Occur occur;
-
-	/* Middle layer for the Occur enum; will be removed soon enough. */
-	void setFields(Occur occur) {
-		if (occur == MUST) {
-			required = true;
-			prohibited = false;
-		} else if (occur == SHOULD) {
-			required = false;
-			prohibited = false;
-		} else if (occur == MUST_NOT) {
-			required = false;
-			prohibited = true;
-		} else {
-			_CLTHROWT (CL_ERR_UnknownOperator,  _T("Unknown operator"));
-		}
-	}
+	TCHAR* toString() const;
 
 public: // TODO: Make private and remove for CLucene 2.3.2
 	/** If true, documents documents which <i>do not</i>

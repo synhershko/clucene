@@ -1,8 +1,14 @@
 
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 
-#include "IndexFileNames.h"
-#include "SegmentInfos.h"
+#include "_IndexFileNames.h"
+#include "_SegmentInfos.h"
+#include "CLucene/util/Misc.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
+
 
 CL_NS_DEF(index)
 
@@ -92,7 +98,7 @@ CL_NS_DEF(index)
 		VECTORS_FIELDS_EXTENSION
 	};
 	
-	const char* IndexFileNames::fileNameFromGeneration( const char* base, const char* extension, int64_t gen ) {
+	char* IndexFileNames::fileNameFromGeneration( const char* base, const char* extension, int64_t gen ) {
 		
 		char fileName[CL_MAX_PATH];
 		

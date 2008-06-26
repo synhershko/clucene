@@ -7,32 +7,20 @@
 #ifndef _lucene_search_multisearcher
 #define _lucene_search_multisearcher
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "SearchHeader.h"
-#include "CLucene/document/Document.h"
-#include "CLucene/index/Term.h"
+//#include "SearchHeader.h"
+#include "Searchable.h"
+CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)
-    
-    class MultiHitCollector: public HitCollector{
-    private:
-      HitCollector* results;
-      int32_t start;
-    public: 
-      MultiHitCollector(HitCollector* _results, int32_t _start);
-      void collect(const int32_t doc, const float_t score) ;
-    };
-    
     
  /** Implements search over a set of <code>Searchables</code>.
 	*
 	* <p>Applications usually need only call the inherited {@link #search(Query)}
 	* or {@link #search(Query,Filter)} methods.
 	*/
-	class MultiSearcher: public Searcher {
+	class CLUCENE_EXPORT MultiSearcher: public Searcher {
   private:
     Searchable** searchables;
 		int32_t searchablesLen;

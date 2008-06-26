@@ -4,16 +4,28 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "IndexWriter.h"
-
 #include "CLucene/document/Document.h"
 #include "CLucene/store/Directory.h"
-#include "CLucene/store/Lock.h"
-#include "CLucene/util/VoidList.h"
-#include "DocumentWriter.h"
-#include "SegmentInfos.h"
-#include "SegmentMerger.h"
+#include "CLucene/search/Similarity.h"
+#include "CLucene/util/Misc.h"
+
+#include "CLucene/store/_Lock.h"
+#include "CLucene/store/_RAMDirectory.h"
+#include "CLucene/store/_TransactionalRAMDirectory.h"
+#include "CLucene/store/FSDirectory.h"
+#include "CLucene/util/Array.h"
+#include "CLucene/util/PriorityQueue.h"
+#include "_DocumentWriter.h"
+#include "_TermInfo.h"
+#include "_SegmentInfos.h"
+#include "_SegmentMerger.h"
+#include "_SegmentHeader.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -24,6 +36,37 @@ CL_NS_DEF(index)
 
   const char* IndexWriter::WRITE_LOCK_NAME = "write.lock";
   const char* IndexWriter::COMMIT_LOCK_NAME = "commit.lock";
+    
+class IndexWriter::LockWith2:public CL_NS(store)::LuceneLockWith<void>{
+public:
+	CL_NS(util)::CLVector<SegmentReader*>* segmentsToDelete;
+	IndexWriter* writer;
+	bool create;
+	void doBody();
+	LockWith2(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout,
+			IndexWriter* wr, 
+			CL_NS(util)::CLVector<SegmentReader*>* std,
+			bool create);
+	~LockWith2(){
+	}
+};
+
+class IndexWriter::LockWithCFS:public CL_NS(store)::LuceneLockWith<void>{
+public:
+	CL_NS(store)::Directory* directory;
+	IndexWriter* writer;
+	const char* segName;
+	AStringArrayWithDeletor* filesToDelete;
+	void doBody();
+	LockWithCFS(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout, 
+			CL_NS(store)::Directory* dir, 
+			IndexWriter* wr, 
+			const char* segName, 
+			AStringArrayWithDeletor* ftd);
+	~LockWithCFS(){
+	}
+};
+
 
   IndexWriter::IndexWriter(const char* path, Analyzer* a, const bool create, const bool _closeDir):
 		directory( FSDirectory::getDirectory(path, create) ),
@@ -127,6 +170,9 @@ CL_NS_DEF(index)
    isOpen = true;
   }
 
+    int32_t IndexWriter::getSegmentsCounter(){ 
+        return segmentInfos->counter; 
+    }
   void IndexWriter::_finalize(){
   //Func - Releases all the resources of the instance
   //Pre  - true
@@ -556,7 +602,7 @@ CL_NS_DEF(index)
 	// merge newly added segments in log(n) passes
 //    while (segmentInfos->size() > start+mergeFactor) {
 //      for (int32_t base = start; base < segmentInfos->size(); base++) {
-//        int32_t end = min(segmentInfos->size(), base+mergeFactor);
+//        int32_t end = cl_min(segmentInfos->size(), base+mergeFactor);
 //        if (end-base > 1) {
 //          mergeSegments(base, end);
 //        }
@@ -656,7 +702,7 @@ CL_NS_DEF(index)
             CL_NS(store)::Directory* dir, 
             IndexWriter* wr, 
             const char* segName, 
-            CL_NS(util)::AStringArrayWithDeletor* ftd):
+            AStringArrayWithDeletor* ftd):
         CL_NS(store)::LuceneLockWith<void>(lock,lockWaitTimeout)
     {
         this->segName = segName;

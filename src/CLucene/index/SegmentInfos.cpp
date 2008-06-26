@@ -4,16 +4,21 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 
-#include "SegmentInfos.h"
-#include "IndexFileNames.h"
-#include "SegmentHeader.h"
+#include "_SegmentInfos.h"
+#include "_IndexFileNames.h"
+#include "_SegmentHeader.h"
 #include "MultiReader.h"
 
 #include "CLucene/store/Directory.h"
-#include "CLucene/util/VoidMap.h"
+//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
+
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -22,12 +27,11 @@ CL_NS_DEF(index)
 
    SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir):
    docCount(DocCount),dir(Dir),delGen(0),normGen(NULL),isCompoundFile(0),hasSingleNorm(false),preLockless(true){
-	
-		STRCPY_AtoA(name,Name,CL_MAX_NAME);
+		name = STRDUP_AtoA(Name);
 	   
    }
 
-   SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen, const int64_t* NormGen, const uint8_t IsCompoundFile, const bool HasSingleNorm, const bool PreLockless ):
+   SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen, int64_t* NormGen, const uint8_t IsCompoundFile, const bool HasSingleNorm, const bool PreLockless ):
 	docCount(DocCount),dir(Dir),delGen(DelGen),normGen(NormGen),isCompoundFile(IsCompoundFile),hasSingleNorm(HasSingleNorm),preLockless(PreLockless){
 	//Func - Constructor. Initialises SegmentInfo.
 	//Pre  - Name holds the unique name in the directory Dir
@@ -35,11 +39,12 @@ CL_NS_DEF(index)
 	//       Dir holds the Directory where the segment resides
 	//Post - The instance has been created. name contains the duplicated string Name.
 	//       docCount = DocCount and dir references Dir
-			STRCPY_AtoA(name,Name,CL_MAX_NAME);
+		name = STRDUP_AtoA(Name);
    }
      
    SegmentInfo::~SegmentInfo(){
 	   	_CLDELETE_ARRAY(normGen);
+		_CLDELETE_CaARRAY(name);
    }
 
 
@@ -290,8 +295,9 @@ CL_NS_DEF(index)
   
   int64_t SegmentInfos::getCurrentSegmentGeneration( CL_NS(store)::Directory* directory ) {
   	char** files = directory->list();
-  	if ( files == NULL )
+	if ( files == NULL ){
   		;//throw new exception
+	}
   	int64_t gen = getCurrentSegmentGeneration( files );
   	_CLDELETE_ARRAY( files );
   	return gen;
@@ -341,7 +347,7 @@ CL_NS_DEF(index)
   
 	void* SegmentInfos::FindSegmentsFile::run() {
 		
-		const char* segmentFileName = NULL;
+		char* segmentFileName = NULL;
 		int64_t lastGen = -1;
 		int64_t gen = 0;
 		int32_t genLookaheadCount = 0;
@@ -359,7 +365,7 @@ CL_NS_DEF(index)
 					
 				gen = getCurrentSegmentGeneration( files );
 
-				_CLDELETE_CARRAY_ALL( files );
+				_CLDELETE_CaARRAY_ALL( files );
 
 				if ( gen == -1 ) {
 					_CLTHROWA(CL_ERR_IO, "No segments* file found");
@@ -435,7 +441,7 @@ CL_NS_DEF(index)
 							value = doBody( prevSegmentFileName );
 							return value;
 						} _CLFINALLY(
-							_CLDELETE_LARRAY( prevSegmentFileName );
+							_CLDELETE_CaARRAY( prevSegmentFileName );
 						);
 					}
 				}

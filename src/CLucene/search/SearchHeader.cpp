@@ -4,10 +4,14 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "SearchHeader.h"
+#include "CLucene/document/Document.h"
+#include "Similarity.h"
 #include "BooleanQuery.h"
-#include "FieldDocSortedHitQueue.h"
+#include "Searchable.h"
+#include "Hits.h"
+#include "_FieldDocSortedHitQueue.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)
@@ -142,5 +146,55 @@ TopDocs::~TopDocs(){
 
 	_CLDELETE_ARRAY(scoreDocs);
 }
+
+
+
+Searcher::Searcher(){
+	similarity = Similarity::getDefault();
+}
+Searcher::~Searcher(){
+
+}
+
+Hits* Searcher::search(Query* query) {
+	return search(query, (Filter*)NULL );
+}
+
+Hits* Searcher::search(Query* query, Filter* filter) {
+	return _CLNEW Hits(this, query, filter);
+}
+
+Hits* Searcher::search(Query* query, const Sort* sort){
+	return _CLNEW Hits(this, query, NULL, sort);
+}
+
+Hits* Searcher::search(Query* query, Filter* filter, const Sort* sort){
+	return _CLNEW Hits(this, query, filter, sort);
+}
+
+void Searcher::_search(Query* query, HitCollector* results) {
+	_search(query, NULL, results);
+}
+
+void Searcher::setSimilarity(Similarity* similarity) {
+	this->similarity = similarity;
+}
+
+Similarity* Searcher::getSimilarity(){
+	return this->similarity;
+}
+
+const TCHAR* Searcher::getClassName(){
+	return _T("Searcher");
+}
+
+TCHAR* Weight::toString(){
+     return STRDUP_TtoT(_T("Weight"));
+}
+
+
+Searchable::~Searchable(){
+}
+
 
 CL_NS_END

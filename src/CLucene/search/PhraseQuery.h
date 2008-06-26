@@ -7,60 +7,34 @@
 #ifndef _lucene_search_PhraseQuery_
 #define _lucene_search_PhraseQuery_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "SearchHeader.h"
-#include "Scorer.h"
-#include "BooleanQuery.h"
-#include "TermQuery.h"
-
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
-#include "CLucene/index/IndexReader.h"
-
-#include "CLucene/util/StringBuffer.h"
-#include "CLucene/util/VoidList.h"
-
-#include "ExactPhraseScorer.h"
-#include "SloppyPhraseScorer.h"
+//#include "SearchHeader.h"
+//#include "Scorer.h"
+//#include "BooleanQuery.h"
+//#include "TermQuery.h"
+#include "Query.h"
+CL_CLASS_DEF(index,Term)
+CL_CLASS_DEF(search,Scorer)
+//#include "CLucene/index/Terms.h"
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(util,StringBuffer)
+//#include "CLucene/util/VoidList.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/Array.h"
+//#include "ExactPhraseScorer.h"
+//#include "SloppyPhraseScorer.h"
 
 CL_NS_DEF(search)
 	// A Query that matches documents containing a particular sequence of terms.
 	// This may be combined with other terms with a {@link BooleanQuery}.
-	class PhraseQuery: public Query {
+	class CLUCENE_EXPORT PhraseQuery: public Query {
 	private:
-		CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32> positions;
+		CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>* positions;
 		int32_t slop;
 
 		const TCHAR* field;
-		CL_NS(util)::CLVector<CL_NS(index)::Term*> terms;
+		CL_NS(util)::CLVector<CL_NS(index)::Term*>* terms;
 
-    
-    	class PhraseWeight: public Weight {
-    	private:
-    		Searcher* searcher;
-    		float_t value;
-    		float_t idf;
-    		float_t queryNorm;
-    		float_t queryWeight;
-    		PhraseQuery* _this;
-    	public:
-    		PhraseWeight(Searcher* searcher, PhraseQuery* _this);
-    		~PhraseWeight();
-    		TCHAR* toString();
-    
-    		Query* getQuery();
-    		float_t getValue();
-    
-    		float_t sumOfSquaredWeights();
-    		void normalize(float_t queryNorm);
-    		Scorer* scorer(CL_NS(index)::IndexReader* reader);
-    		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
-    		TCHAR* toString(TCHAR* f);
-    		bool equals(PhraseWeight* o);
-    	};
     	friend class PhraseWeight;
 	protected:
 		Weight* _createWeight(Searcher* searcher);

@@ -6,9 +6,6 @@
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_store_IndexOutput_
 #define _lucene_store_IndexOutput_
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
 CL_NS_DEF(store)
 

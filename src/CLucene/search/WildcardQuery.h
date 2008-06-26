@@ -6,14 +6,12 @@
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_WildcardQuery_
 #define _lucene_search_WildcardQuery_
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/index/Term.h"
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(index,Term)
 #include "MultiTermQuery.h"
-#include "WildcardTermEnum.h"
+#include "Filter.h"
+//#include "WildcardTermEnum.h"
 
 CL_NS_DEF(search)
 
@@ -26,7 +24,7 @@ CL_NS_DEF(search)
 		 * 
 		 * @see WildcardTermEnum
 		 */
-    class WildcardQuery: public MultiTermQuery {
+    class CLUCENE_EXPORT WildcardQuery: public MultiTermQuery {
     protected:
     	FilteredTermEnum* getEnum(CL_NS(index)::IndexReader* reader);
 		WildcardQuery(const WildcardQuery& clone);

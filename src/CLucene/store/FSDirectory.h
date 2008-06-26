@@ -7,15 +7,17 @@
 #ifndef _lucene_store_FSDirectory_
 #define _lucene_store_FSDirectory_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
 #include "Directory.h"
-#include "Lock.h"
-#include "LockFactory.h"
-#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/StringBuffer.h"
+#include "IndexInput.h"
+#include "IndexOutput.h"
+#include <string>
+#include <vector>
+
+//#include "Lock.h"
+//#include "LockFactory.h"
+//#include "CLucene/util/VoidMap.h"
+CL_CLASS_DEF(util,StringBuffer)
 
    CL_NS_DEF(store)
 
@@ -26,112 +28,23 @@
    *
    * @see Directory
    */
-	class FSDirectory:public Directory{
+	class CLUCENE_EXPORT FSDirectory:public Directory{
 	private:
-
-#if defined(LUCENE_FS_MMAP)
-		class MMapIndexInput: public IndexInput{
-			uint8_t* data;
-			int64_t pos;
-#ifdef _CLCOMPILER_MSVC
-			HANDLE mmaphandle;
-			HANDLE fhandle;
-#else
-			int fhandle;
-#endif
-    		bool isClone;
-			int64_t _length;
-
-			MMapIndexInput(const MMapIndexInput& clone);
-		public:
-    		MMapIndexInput(const char* path);
-			~MMapIndexInput();
-			IndexInput* clone() const;
-
-			inline uint8_t readByte();
-			int32_t readVInt();
-			void readBytes(uint8_t* b, const int32_t len);
-			void close();
-			int64_t getFilePointer() const;
-			void seek(const int64_t pos);
-			int64_t length(){ return _length; }
-			
-			static const char* DirectoryType(){ return "MMAP"; }
-			const char* getDirectoryType() const{ return DirectoryType(); }
-			
-			const char* getObjectName(){ return MMapIndexInput::getClassName(); }
-			static const char* getClassName(){ return "MMapIndexInput"; }			
-		};
-		friend class FSDirectory::MMapIndexInput;
-#endif
-
-    	class FSIndexInput:public BufferedIndexInput {
-			/**
-			* We used a shared handle between all the fsindexinput clones.
-			* This reduces number of file handles we need, and it means
-			* we dont have to use file tell (which is slow) before doing
-			* a read.
-			*/
-			class SharedHandle: LUCENE_REFBASE{
-			public:
-    			int32_t fhandle;
-				int64_t _length;
-				int64_t _fpos;
-    			DEFINE_MUTEX(THIS_LOCK)
-    			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
-    			SharedHandle();
-				~SharedHandle() throw(CLuceneError&);
-			};
-			SharedHandle* handle;
-			int64_t _pos;
-    	protected:
-    		FSIndexInput(const FSIndexInput& clone);
-    	public:
-			FSIndexInput(const char* path, int32_t bufferSize=CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
-    		~FSIndexInput();
-    
-    		IndexInput* clone() const;
-    		void close();
-			int64_t length() const { return handle->_length; }
-			
-			const char* getDirectoryType() const{ return FSDirectory::DirectoryType(); }
-    	protected:
-    		// Random-access methods 
-    		void seekInternal(const int64_t position);
-    		// IndexInput methods 
-    		void readInternal(uint8_t* b, const int32_t len);
-    	};
-		friend class FSDirectory::FSIndexInput;
-
-    	class FSIndexOutput: public BufferedIndexOutput {
-    	private:
-    		int32_t fhandle;
-    	protected:
-    		// output methods: 
-    		void flushBuffer(const uint8_t* b, const int32_t size);
-    	public:
-    		FSIndexOutput(const char* path);
-    		~FSIndexOutput();
-
-    		// output methods:
-    		void close();
-    
-    		// Random-access methods 
-    		void seek(const int64_t pos);
-    		int64_t length() const;
-		};
+		class FSIndexOutput;
+		class FSIndexInput;
 		friend class FSDirectory::FSIndexOutput;
+		friend class FSDirectory::FSIndexInput;
 
 	protected:
 		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
 	private:
-		char directory[CL_MAX_PATH];
+		char* directory;
+		char* lockDir;
 		int refCount;
 		void create();
 		
 		static const char* LOCK_DIR;
 		static const char* getLockDir();
-		char lockDir[CL_MAX_PATH];
 		char* getLockPrefix() const;
 		static bool disableLocks;
 
@@ -149,7 +62,7 @@
 		~FSDirectory();
 
 		/// Get a list of strings, one for each file in the directory. 
-		void list(vector<string>* names) const;
+		void list(std::vector<std::string>* names) const;
 
 		/// Returns true iff a file with the given name exists. 
 		bool fileExists(const char* name) const;
@@ -189,9 +102,7 @@
 		IndexInput* openInput(const char* name);
 		IndexInput* openInput(const char* name, int32_t bufferSize);
 
-#ifdef LUCENE_FS_MMAP
 		IndexInput* openMMapFile(const char* name, int32_t bufferSize=LUCENE_STREAM_BUFFER_SIZE);
-#endif
 
 		/// Renames an existing file in the directory. 
 		void renameFile(const char* from, const char* to);

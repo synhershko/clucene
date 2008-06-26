@@ -7,9 +7,6 @@
 #ifndef _lucene_util_Reader_
 #define _lucene_util_Reader_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
 #include "streambase.h"
 #include "stringreader.h"
@@ -20,7 +17,7 @@ CL_NS_DEF(util)
 /**
 * An inline wrapper that reads from Jos van den Oever's jstreams
 */
-class Reader:LUCENE_BASE {
+class CLUCENE_EXPORT Reader:LUCENE_BASE {
 typedef jstreams::StreamBase<TCHAR> jsReader;
 public:
 	bool deleteReader;

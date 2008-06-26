@@ -4,15 +4,21 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "CLucene/util/Misc.h"
 
 #include "CLucene/search/Sort.h"
 #include "CLucene/search/Similarity.h"
 #include "CLucene/search/FieldCache.h"
 #include "CLucene/search/FieldSortedHitQueue.h"
+#include "CLucene/store/LockFactory.h"
+#include "CLucene/util/_StringIntern.h"
 
-#if defined(_CLCOMPILER_MSVC) && defined(_DEBUG)
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
+
+#if defined(_MSC_VER) && defined(_DEBUG)
 	#define CRTDBG_MAP_ALLOC
 	#include <stdlib.h>
 	#include <crtdbg.h>
@@ -20,16 +26,8 @@
 
 CL_NS_USE(util)
 
-TCHAR* _LUCENE_BLANK_STRING=_T("");
-char* _LUCENE_BLANK_ASTRING="";
-
-#if defined(_LUCENE_THREADMUTEX_USINGDEFAULT)
-	#if defined(_LUCENE_PRAGMA_WARNINGS)
-	 #pragma message ("==================Using clunky thread mutex!!!==================")
-	#else
-	 #warning "==================Using clunky thread mutex!!!=================="
-	#endif
-#endif
+const TCHAR* _LUCENE_BLANK_STRING=_T("");
+const char* _LUCENE_BLANK_ASTRING="";
 
 #if defined(_ASCII)
   #if defined(_LUCENE_PRAGMA_WARNINGS)
@@ -40,21 +38,10 @@ char* _LUCENE_BLANK_ASTRING="";
 #endif
 
 
-//This causes confusion, because CLucene doesn't really need hashed maps/sets. My experience with the
-//hash maps on linux are that there are no significant improvements in using them (infact it adversely
-//affected performance... therefore we'll just silently ignore
-/*#if defined(LUCENE_DISABLE_HASHING)
-  #if defined(_LUCENE_PRAGMA_WARNINGS)
-	 #pragma message ("==================Hashing not available or is disabled! CLucene may run slower than optimal ==================")
-	#else
-	 #warning "==================Hashing not available or is disabled! CLucene may run slower than optimal =================="
-	#endif
-#endif*/
-
 //clears all static memory. do not attempt to do anything else
 //in clucene after calling this function
 void _lucene_shutdown(){
-    CL_NS(search)::FieldSortedHitQueue::Comparators.clear();
+    CL_NS(search)::FieldSortedHitQueue::shutdown();
 	_CLDELETE(CL_NS(search)::Sort::RELEVANCE);
 	_CLDELETE(CL_NS(search)::Sort::INDEXORDER);
 	_CLDELETE(CL_NS(search)::ScoreDocComparator::INDEXORDER);
@@ -66,48 +53,23 @@ void _lucene_shutdown(){
 	_CLLDELETE(CL_NS(search)::Similarity::getDefault());
 
     CL_NS(util)::CLStringIntern::shutdown();
-    
-    _CLDELETE(CL_NS(store)::NoLockFactory::singletonLock);
-    _CLDELETE(CL_NS(store)::NoLockFactory::singleton);
-}
-
-void CLDebugBreak(){
-	//can be used for debug breaking...
-#if defined(_CLCOMPILER_MSVC) && defined(_DEBUG)
-	_CrtDbgBreak();
-#else
-	int i=0; //a line to put breakpoint on
-#endif
+    CL_NS(store)::NoLockFactory::shutdown();
 }
 
 //these are functions that lucene uses which
 //are not replacement functions
-char* lucenestrdup(const char* v CL_FILELINEPARAM){
+char* lucenestrdup(const char* v){
     size_t len = strlen(v);
     char* ret = new char[len+1];
     strncpy(ret,v,len+1);
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-	#if defined(LUCENE_ENABLE_FILELINEINFO)
-		CL_NS(debug)::LuceneBase::__cl_voidpadd((void*)ret,file,line,len);
-	#else
-		CL_NS(debug)::LuceneBase::__cl_voidpadd((void*)ret,__FILE__,__LINE__,len);
-	#endif
-#endif
     return ret;
 }
 
 #ifdef _UCS2
-wchar_t* lucenewcsdup(const wchar_t* v CL_FILELINEPARAM){
+wchar_t* lucenewcsdup(const wchar_t* v){
     size_t len = _tcslen(v);
     wchar_t* ret = new wchar_t[len+1];
     _tcsncpy(ret,v,len+1);
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-	#if defined(LUCENE_ENABLE_FILELINEINFO)
-		CL_NS(debug)::LuceneBase::__cl_voidpadd((void*)ret,file,line,len);
-	#else
-		CL_NS(debug)::LuceneBase::__cl_voidpadd((void*)ret,__FILE__,__LINE__,len);
-	#endif
-#endif
     return ret;
 }
 #endif //ucs2

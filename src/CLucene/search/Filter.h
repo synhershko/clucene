@@ -7,17 +7,13 @@
 #ifndef _lucene_search_Filter_
 #define _lucene_search_Filter_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/BitSet.h"
+CL_CLASS_DEF(util,BitSet)
+CL_CLASS_DEF(index,IndexReader)
 
 CL_NS_DEF(search)
   // Abstract base class providing a mechanism to restrict searches to a subset
   // of an index.
-  class Filter: LUCENE_BASE {
+  class CLUCENE_EXPORT Filter: LUCENE_BASE {
   public:
     virtual ~Filter(){
 	}

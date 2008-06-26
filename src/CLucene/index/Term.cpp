@@ -4,9 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Term.h"
-#include "CLucene/util/StringIntern.h"
+#include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(index)
@@ -22,7 +23,7 @@ Term::Term(){
 	#ifdef LUCENE_TERM_TEXT_LENGTH
 		_text[0]=0;
 	#else
-		_text = LUCENE_BLANK_STRING;
+		_text = STRDUP_TtoT(LUCENE_BLANK_STRING);
 		textLenBuf = 0;
 	#endif
 	textLen = 0;
@@ -45,7 +46,7 @@ Term::Term(const TCHAR* fld, const TCHAR* txt, bool internField){
 	#ifdef LUCENE_TERM_TEXT_LENGTH
 		_text[0]=0;
 	#else
-		_text = LUCENE_BLANK_STRING;
+		_text = STRDUP_TtoT(LUCENE_BLANK_STRING);
 		textLenBuf = 0;
 	#endif
 
@@ -60,7 +61,7 @@ Term::Term(const Term* fieldTerm, const TCHAR* txt){
 	#ifdef LUCENE_TERM_TEXT_LENGTH
 		_text[0]=0;
 	#else
-		_text = LUCENE_BLANK_STRING;
+		_text = STRDUP_TtoT(LUCENE_BLANK_STRING);
 		textLenBuf = 0;
 	#endif
 
@@ -74,7 +75,7 @@ Term::Term(const TCHAR* fld, const TCHAR* txt){
 	#ifdef LUCENE_TERM_TEXT_LENGTH
 		_text[0]=0;
 	#else
-		_text = LUCENE_BLANK_STRING;
+		_text = STRDUP_TtoT(LUCENE_BLANK_STRING);
 		textLenBuf = 0;
 	#endif
 
@@ -93,8 +94,7 @@ Term::~Term(){
 
 #ifndef LUCENE_TERM_TEXT_LENGTH
 	//Deletetext if it is the owner
-	if ( _text != LUCENE_BLANK_STRING)
-		_CLDELETE_CARRAY( _text );
+	_CLDELETE_CARRAY( _text );
 #endif
 }
 
@@ -150,24 +150,14 @@ void Term::set(const TCHAR* fld, const TCHAR* txt,const bool internField){
 
 	//if the term text buffer is bigger than what we have
 	if ( _text && textLen > textLenBuf){
-		if ( _text != LUCENE_BLANK_STRING ){
-			_CLDELETE_ARRAY( _text );
-		}else
-			_text = NULL;
+		_CLDELETE_ARRAY( _text );
 		textLenBuf = 0;
 	}
 
-	if ( _text==LUCENE_BLANK_STRING )
-		_text = LUCENE_BLANK_STRING;
-	else if ( _text==NULL ){
-		if ( txt[0] == 0 ){
-			//if the string is blank and we aren't re-using the buffer...
-			_text = LUCENE_BLANK_STRING;
-		}else{
-			//duplicate the text
-			_text  = stringDuplicate(txt);
-			textLenBuf = textLen;
-		}
+	if ( _text==NULL ){
+		//duplicate the text
+		_text  = stringDuplicate(txt);
+		textLenBuf = textLen;
 	}else{
 		//re-use the buffer
 		_tcscpy(_text,txt);
@@ -177,7 +167,7 @@ void Term::set(const TCHAR* fld, const TCHAR* txt,const bool internField){
 
     //Set Term Field
 	if ( internField )
-		_field = CLStringIntern::intern(fld  CL_FILELINE);
+		_field = CLStringIntern::intern(fld);
 	else
 		_field = fld;
 

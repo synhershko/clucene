@@ -7,9 +7,6 @@
 #ifndef _lucene_analysis_standard_StandardTokenizerConstants
 #define _lucene_analysis_standard_StandardTokenizerConstants
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
 CL_NS_DEF2(analysis,standard)
   enum TokenTypes {

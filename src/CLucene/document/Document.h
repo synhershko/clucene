@@ -7,11 +7,7 @@
 #ifndef _lucene_document_Document_
 #define _lucene_document_Document_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "Field.h"
+CL_CLASS_DEF(document,Field)
 
 ///todo: jlucene has change from using DocumentFieldList/Enumeration
 ///to using a java List... do we want to do this too?
@@ -49,7 +45,7 @@ public:
 * Hits#doc(int32_t, Document*)}, {@link Searcher#doc(int32_t, Document*)} or {@link
 * IndexReader#document(int32_t, Document*)}.
 */
-class Document:LUCENE_BASE {
+class CLUCENE_EXPORT Document:LUCENE_BASE {
 private:
 	DocumentFieldEnumeration::DocumentFieldList* fieldList;
 	float_t boost;

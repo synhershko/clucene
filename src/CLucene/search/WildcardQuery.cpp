@@ -4,9 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "WildcardQuery.h"
+#include "TermQuery.h"
+#include "WildcardTermEnum.h"
+#include "Similarity.h"
+#include "CLucene/index/Term.h"
 #include "CLucene/util/BitSet.h"
+#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/index/IndexReader.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)

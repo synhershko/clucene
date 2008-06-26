@@ -4,15 +4,39 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
+
+#ifdef _CL_HAVE_IO_H
+	#include <io.h>
+#endif
+#ifdef _CL_HAVE_FCNTL_H
+	#include <fcntl.h>
+#endif
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
+#ifdef _CL_HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
+#ifdef _CL_HAVE_DIRECT_H
+	#include <direct.h>
+#endif
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
+#include <errno.h>
+
 #include "FSDirectory.h"
+#include "LockFactory.h"
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/index/IndexWriter.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/util/MD5Digester.h"
-#include "CLucene/debug/condition.h"
+#include "CLucene/util/_MD5Digester.h"
+#include "CLucene/util/_dirent.h" //if we have dirent, then the native one will be used
 
-#include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
 CL_NS_DEF(store)
 CL_NS_USE(util)
@@ -24,6 +48,62 @@ CL_NS_USE(util)
 	static CL_NS(util)::CLHashMap<const char*,FSDirectory*,CL_NS(util)::Compare::Char,CL_NS(util)::Equals::Char> DIRECTORIES(false,false);
 
 	bool FSDirectory::disableLocks=false;
+
+
+	class FSDirectory::FSIndexInput:public BufferedIndexInput {
+		/**
+		* We used a shared handle between all the fsindexinput clones.
+		* This reduces number of file handles we need, and it means
+		* we dont have to use file tell (which is slow) before doing
+		* a read.
+		*/
+		class SharedHandle: LUCENE_REFBASE{
+		public:
+			int32_t fhandle;
+			int64_t _length;
+			int64_t _fpos;
+			DEFINE_MUTEX(THIS_LOCK)
+			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
+			SharedHandle();
+			~SharedHandle() throw(CLuceneError&);
+		};
+		SharedHandle* handle;
+		int64_t _pos;
+	protected:
+		FSIndexInput(const FSIndexInput& clone);
+	public:
+		FSIndexInput(const char* path, int32_t bufferSize=CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
+		~FSIndexInput();
+
+		IndexInput* clone() const;
+		void close();
+		int64_t length() const { return handle->_length; }
+		
+		const char* getDirectoryType() const{ return FSDirectory::DirectoryType(); }
+	protected:
+		// Random-access methods 
+		void seekInternal(const int64_t position);
+		// IndexInput methods 
+		void readInternal(uint8_t* b, const int32_t len);
+	};
+
+	class FSDirectory::FSIndexOutput: public BufferedIndexOutput {
+	private:
+		int32_t fhandle;
+	protected:
+		// output methods: 
+		void flushBuffer(const uint8_t* b, const int32_t size);
+	public:
+		FSIndexOutput(const char* path);
+		~FSIndexOutput();
+
+		// output methods:
+		void close();
+
+		// Random-access methods 
+		void seek(const int64_t pos);
+		int64_t length() const;
+	};
 
 	FSDirectory::FSIndexInput::FSIndexInput(const char* path, int32_t __bufferSize):
 		BufferedIndexInput(__bufferSize)	
@@ -79,7 +159,7 @@ CL_NS_USE(util)
   }
   FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() throw(CLuceneError&){
     if ( fhandle >= 0 ){
-      if ( _close(fhandle) != 0 )
+      if ( ::_close(fhandle) != 0 )
         _CLTHROWA(CL_ERR_IO, "File IO Close error");
       else
         fhandle = -1;
@@ -183,7 +263,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	        throw;
     }
 
-    if ( _close(fhandle) != 0 )
+    if ( ::_close(fhandle) != 0 )
       _CLTHROWA(CL_ERR_IO, "File IO Close error");
     else
       fhandle = -1; //-1 now indicates closed
@@ -230,7 +310,9 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   FSDirectory::FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory):
    Directory(),
    refCount(0),
-   useMMap(false)
+   useMMap(false),
+   directory(_CL_NEWARRAY(char,CL_MAX_PATH)),
+   lockDir(_CL_NEWARRAY(char,CL_MAX_PATH))
   {
   	_realpath(path,directory);//set a realpath so that if we change directory, we can still function
   	if ( !directory || !*directory ){
@@ -323,6 +405,8 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   FSDirectory::~FSDirectory(){
 	  _CLDELETE( lockFactory );
+	  _CLDELETE_CaARRAY(directory);
+	  _CLDELETE_CaARRAY(lockDir);
   }
 
   void FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
@@ -416,7 +500,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     int32_t r = _open(buffer, O_RDWR, _S_IWRITE);
 	if ( r < 0 )
 		_CLTHROWA(CL_ERR_IO,"IO Error while touching file");
-	_close(r);
+	::_close(r);
   }
 
   int64_t FSDirectory::fileLength(const char* name) const {
@@ -434,16 +518,18 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   	return openInput(name, CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
   }
   
-#ifdef LUCENE_FS_MMAP
   IndexInput* FSDirectory::openMMapFile(const char* name, int32_t bufferSize){
+#ifdef LUCENE_FS_MMAP
     char fl[CL_MAX_DIR];
     priv_getFN(fl, name);
 	if ( Misc::file_Size(fl) < LUCENE_INT32_MAX_SHOULDBE ) //todo: would this be bigger on 64bit systems?. i suppose it would be...test first
 		return _CLNEW MMapIndexInput( fl );
 	else
 		return _CLNEW FSIndexInput( fl, bufferSize );
-  }
+#else
+	_CLTHROWA(CL_ERR_Runtime,"MMap not enabled at compilation");
 #endif
+  }
 
   IndexInput* FSDirectory::openInput(const char* name, int32_t bufferSize ){
 	CND_PRECONDITION(directory[0]!=0,"directory is not open")

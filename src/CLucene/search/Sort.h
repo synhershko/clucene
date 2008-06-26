@@ -7,12 +7,12 @@
 #ifndef _lucene_search_Sort_
 #define _lucene_search_Sort_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/IndexReader.h"
-#include "SearchHeader.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "SearchHeader.h"
+//#include "CLucene/util/Equator.h"
+CL_CLASS_DEF(index,IndexReader)
+CL_CLASS_DEF(util,Comparable)
 
 CL_NS_DEF(search)
 
@@ -23,7 +23,7 @@ CL_NS_DEF(search)
  * Expert: Compares two ScoreDoc objects for sorting.
  *
  */
- class ScoreDocComparator:LUCENE_BASE {
+ class CLUCENE_EXPORT ScoreDocComparator:LUCENE_BASE {
  protected:
 	 ScoreDocComparator(){}
  public:
@@ -72,7 +72,7 @@ CL_NS_DEF(search)
  * Expert: returns a comparator for sorting ScoreDocs.
  *
  */
-class SortComparatorSource:LUCENE_BASE {
+class CLUCENE_EXPORT SortComparatorSource:LUCENE_BASE {
 public:
    virtual ~SortComparatorSource(){
    }
@@ -109,7 +109,7 @@ public:
  * array will have entries which reference the same Comparable.
  *
  */
-class SortComparator: public SortComparatorSource {
+class CLUCENE_EXPORT SortComparator: public SortComparatorSource {
 public:
 	virtual ScoreDocComparator* newComparator (CL_NS(index)::IndexReader* reader, const TCHAR* fieldname);
   
@@ -140,7 +140,7 @@ public:
  * field.  Fields must be indexed in order to sort by them.
  *
  */
-class SortField:LUCENE_BASE {
+class CLUCENE_EXPORT SortField:LUCENE_BASE {
 private:
   const TCHAR* field;
   int32_t type;  // defaults to determining type dynamically
@@ -331,7 +331,7 @@ public:
  * simultaneously.
  *
  */
-class Sort:LUCENE_BASE {
+class CLUCENE_EXPORT Sort:LUCENE_BASE {
 	// internal representation of the sort criteria
 	SortField** fields;
 	void clear();

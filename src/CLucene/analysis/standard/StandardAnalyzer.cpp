@@ -4,10 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "StandardAnalyzer.h"
 
-#include "CLucene/util/VoidMap.h"
+////#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Reader.h"
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/analysis/Analyzers.h"
@@ -19,17 +19,34 @@ CL_NS_USE(analysis)
 
 CL_NS_DEF2(analysis,standard)
 
-	StandardAnalyzer::StandardAnalyzer():stopSet(false)
+	StandardAnalyzer::StandardAnalyzer():
+		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
 	{
-      StopFilter::fillStopTable( &stopSet,CL_NS(analysis)::StopAnalyzer::ENGLISH_STOP_WORDS);
+      StopFilter::fillStopTable( stopSet,CL_NS(analysis)::StopAnalyzer::ENGLISH_STOP_WORDS);
 	}
 
-	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):stopSet(false)
+	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):
+		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
 	{
-		StopFilter::fillStopTable( &stopSet,stopWords );
+		StopFilter::fillStopTable( stopSet,stopWords );
+	}
+	
+	StandardAnalyzer::StandardAnalyzer(const char* stopwordsFile, const char* enc):
+		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+	{
+		if ( enc == NULL )
+			enc = "ASCII";
+		WordlistLoader::getWordSet(stopwordsFile, enc, stopSet);
+	}
+	
+	StandardAnalyzer::StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
+		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+	{
+		WordlistLoader::getWordSet(stopwordsReader, stopSet, _bDeleteReader);
 	}
 
 	StandardAnalyzer::~StandardAnalyzer(){
+	    //todo: this is causing segfaults: _CLDELETE(stopSet);
 	}
 
 
@@ -38,7 +55,7 @@ CL_NS_DEF2(analysis,standard)
 		TokenStream* ret = _CLNEW StandardTokenizer(reader);
 		ret = _CLNEW StandardFilter(ret,true);
 		ret = _CLNEW LowerCaseFilter(ret,true);
-		ret = _CLNEW StopFilter(ret,true, &stopSet);
+		ret = _CLNEW StopFilter(ret,true, stopSet);
 		return ret;
 	}
 CL_NS_END2

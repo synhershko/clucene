@@ -40,8 +40,7 @@ protected:
 
 public:
 	CharTokenizer(CL_NS(util)::Reader* in);
-	virtual ~CharTokenizer(){
-	}
+	virtual ~CharTokenizer();
 	bool next(Token* token);
 };
 
@@ -55,10 +54,8 @@ job for some Asian languages, where words are not separated by spaces. */
 class LetterTokenizer:public CharTokenizer {
 public:
 	// Construct a new LetterTokenizer. 
-	LetterTokenizer(CL_NS(util)::Reader* in):
-	CharTokenizer(in) {}
-
-    ~LetterTokenizer(){}
+	LetterTokenizer(CL_NS(util)::Reader* in);
+    virtual ~LetterTokenizer();
 protected:
     /** Collects only characters which satisfy _istalpha.*/
 	bool isTokenChar(const TCHAR c) const;
@@ -79,10 +76,8 @@ protected:
 class LowerCaseTokenizer:public LetterTokenizer {
 public:
 	/** Construct a new LowerCaseTokenizer. */
-	LowerCaseTokenizer(CL_NS(util)::Reader* in):
-	LetterTokenizer(in) {}
-
-    ~LowerCaseTokenizer(){}
+	LowerCaseTokenizer(CL_NS(util)::Reader* in);
+    virtual ~LowerCaseTokenizer();
 protected:
 	/** Collects only characters which satisfy _totlower. */
 	TCHAR normalize(const TCHAR chr) const;
@@ -94,8 +89,8 @@ protected:
 class WhitespaceTokenizer: public CharTokenizer {
 public:
 	/** Construct a new WhitespaceTokenizer. */ 
-	WhitespaceTokenizer(CL_NS(util)::Reader* in):CharTokenizer(in) {}
-	~WhitespaceTokenizer(){}
+	WhitespaceTokenizer(CL_NS(util)::Reader* in);
+	virtual ~WhitespaceTokenizer();
 protected:
 	/** Collects only characters which do not satisfy _istspace.
 	*/
@@ -105,16 +100,18 @@ protected:
 
 /** An Analyzer that uses WhitespaceTokenizer. */
 class WhitespaceAnalyzer: public Analyzer {
- public:
-  TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-  ~WhitespaceAnalyzer(){}
+public:
+    WhitespaceAnalyzer();
+    TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+    virtual ~WhitespaceAnalyzer();
 };
 
 /** An Analyzer that filters LetterTokenizer with LowerCaseFilter. */
-class SimpleAnalyzer: public Analyzer {
+class CLUCENE_EXPORT SimpleAnalyzer: public Analyzer {
 public:
+    SimpleAnalyzer();
 	TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-	~SimpleAnalyzer(){}
+	virtual ~SimpleAnalyzer();
 };
 
 
@@ -124,8 +121,8 @@ public:
 */
 class LowerCaseFilter: public TokenFilter {
 public:
-	LowerCaseFilter(TokenStream* in, bool deleteTokenStream):TokenFilter(in,deleteTokenStream) {}
-	~LowerCaseFilter(){}
+	LowerCaseFilter(TokenStream* in, bool deleteTokenStream);
+	virtual ~LowerCaseFilter();
 	bool next(Token* token);
 };
 
@@ -150,23 +147,12 @@ public:
 	//	TokenStream that are named in the array of words. 
 	StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase = false);
 
-	~StopFilter(){
-		if (deleteStopTable)
-			_CLDELETE(stopWords);
-	}
+	virtual ~StopFilter();
 
 	/** Constructs a filter which removes words from the input
 	*	TokenStream that are named in the CLSetList.
 	*/
-	StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* stopTable, bool _deleteStopTable=false):
-		TokenFilter(in, deleteTokenStream),
-		stopWords (stopTable),
-		enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
-		ignoreCase(false),
-		deleteStopTable(_deleteStopTable)
-		{
-		}
-	  
+	StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* stopTable, bool _deleteStopTable=false);
 	
 	/**
 	* Builds a Hashtable from an array of stop words, appropriate for passing
@@ -186,9 +172,7 @@ public:
 	/**
 	* @see #setEnablePositionIncrementsDefault(boolean). 
 	*/
-	static bool getEnablePositionIncrementsDefault() {
-		return ENABLE_POSITION_INCREMENTS_DEFAULT;
-	}
+	static bool getEnablePositionIncrementsDefault();
 
 	/**
 	* Set the default position increments behavior of every StopFilter created from now on.
@@ -201,14 +185,12 @@ public:
 	* Default : false.
 	* @see #setEnablePositionIncrements(boolean).
 	*/
-	static void setEnablePositionIncrementsDefault(const bool defaultValue) {
-		ENABLE_POSITION_INCREMENTS_DEFAULT = defaultValue;
-	}
+	static void setEnablePositionIncrementsDefault(const bool defaultValue);
 
 	/**
 	* @see #setEnablePositionIncrements(boolean). 
 	*/
-	bool getEnablePositionIncrements() const { return enablePositionIncrements; }
+	bool getEnablePositionIncrements() const;
 
 	/**
 	* Set to <code>true</code> to make <b>this</b> StopFilter enable position increments to result tokens.
@@ -218,7 +200,7 @@ public:
 	* <p>
 	* Default: see {@link #setEnablePositionIncrementsDefault(boolean)}.
 	*/
-	void setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
+	void setEnablePositionIncrements(const bool enable);
 
 };
 
@@ -237,21 +219,7 @@ public:
 	* @param wordfile File containing the wordlist
 	* @return A HashSet with the file's words
 	*/
-	static CLTCSetList* getWordSet(const char* wordfilePath, const char* enc = "ASCII", CLTCSetList* stopTable = NULL)
-	{
-		CL_NS(util)::FileReader* reader = NULL;
-		try {
-			reader = _CLNEW CL_NS(util)::FileReader(wordfilePath, enc, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
-			stopTable = getWordSet(reader, stopTable);
-		}
-		_CLFINALLY (
-			if (reader != NULL) {
-				//reader->close();
-				_CLLDELETE(reader);
-			}
-		);
-		return stopTable;
-	}
+	static CLTCSetList* getWordSet(const char* wordfilePath, const char* enc = NULL, CLTCSetList* stopTable = NULL);
 
 	/**
 	* Reads lines from a Reader and adds every line as an entry to a HashSet (omitting
@@ -262,38 +230,18 @@ public:
 	* @param reader Reader containing the wordlist
 	* @return A HashSet with the reader's words
 	*/
-	static CLTCSetList* getWordSet(CL_NS(util)::Reader* reader, CLTCSetList* stopTable = NULL, const bool bDeleteReader = false)
-	{
-		if (!stopTable)
-			stopTable = _CLNEW CLTCSetList(true);
-
-		TCHAR* word = NULL;
-		try {
-			word = _CL_NEWARRAY(TCHAR, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
-			while (reader->readLine(word) > 0) {
-				stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::wordTrim(word)));
-			}
-		}
-		_CLFINALLY (
-			if (bDeleteReader && reader != NULL) {
-				//reader->close();
-				_CLDELETE(reader);
-			}
-			_CLDELETE_ARRAY(word);
-		);
-		return stopTable;
-	}
+	static CLTCSetList* getWordSet(CL_NS(util)::Reader* reader, CLTCSetList* stopTable = NULL, const bool bDeleteReader = false);
 };
 
 
 /** Filters LetterTokenizer with LowerCaseFilter and StopFilter. */
 class StopAnalyzer: public Analyzer {
-	CLTCSetList stopTable;
+	CLTCSetList* stopTable;
 
 public:
     /** Builds an analyzer which removes words in ENGLISH_STOP_WORDS. */
     StopAnalyzer();
-    ~StopAnalyzer();
+    virtual ~StopAnalyzer();
     
     /** Builds an analyzer which removes words in the provided array. */
     StopAnalyzer( const TCHAR** stopWords );
@@ -301,16 +249,12 @@ public:
 	/** Builds an analyzer with the stop words from the given file.
 	* @see WordlistLoader#getWordSet(File)
 	*/
-	StopAnalyzer(const char* stopwordsFile, const char* enc = "ASCII") {
-		WordlistLoader::getWordSet(stopwordsFile, enc, &stopTable);
-	}
+	StopAnalyzer(const char* stopwordsFile, const char* enc = NULL);
 
 	/** Builds an analyzer with the stop words from the given reader.
 	* @see WordlistLoader#getWordSet(Reader)
 	*/
-	StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false) {
-		WordlistLoader::getWordSet(stopwordsReader, &stopTable, _bDeleteReader);
-	}
+	StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false);
 
     /** Filters LowerCaseTokenizer with StopFilter. */
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
@@ -345,8 +289,10 @@ public:
 class PerFieldAnalyzerWrapper : public Analyzer {
 private:
     Analyzer* defaultAnalyzer;
-    CL_NS(util)::CLHashMap<const TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
-    CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::tcArray,CL_NS(util)::Deletor::Void<Analyzer> > analyzerMap;
+    
+    typedef CL_NS(util)::CLHashMap<const TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
+    	CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::tcArray,CL_NS(util)::Deletor::Void<Analyzer> > AnalyzerMapType;
+    AnalyzerMapType* analyzerMap;
 public:
     /**
     * Constructs with default analyzer.
@@ -355,7 +301,7 @@ public:
     * defined to use a different analyzer will use the one provided here.
     */
     PerFieldAnalyzerWrapper(Analyzer* defaultAnalyzer);
-    ~PerFieldAnalyzerWrapper();
+    virtual ~PerFieldAnalyzerWrapper();
     
     /**
     * Defines an analyzer to use for the specified field.
@@ -377,15 +323,14 @@ public:
  */
 class ISOLatin1AccentFilter: public TokenFilter {
 public:
-	ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
-		TokenFilter(input,deleteTs)
-	{
-	}
+	ISOLatin1AccentFilter(TokenStream* input, bool deleteTs);
 	
 	/**
 	 * To replace accented characters in a String by unaccented equivalents.
 	 */
 	bool next(Token* token);
+	
+	virtual ~ISOLatin1AccentFilter();
 };
 
 
@@ -410,7 +355,7 @@ public:
 class KeywordAnalyzer: public Analyzer {
 public:
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-    virtual ~KeywordAnalyzer(){}
+    virtual ~KeywordAnalyzer();
 };
 
     
@@ -434,6 +379,7 @@ public:
     */
     bool next(Token* token);
 };
+
 
 CL_NS_END
 #endif

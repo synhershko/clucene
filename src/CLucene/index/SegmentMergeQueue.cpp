@@ -4,10 +4,12 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "SegmentMergeQueue.h"
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/util/PriorityQueue.h"
+#include "_SegmentHeader.h"
+#include "_SegmentMergeInfo.h"
+#include "_SegmentMergeQueue.h"
 
-#include "SegmentMergeInfo.h"
 CL_NS_DEF(index)
 
 

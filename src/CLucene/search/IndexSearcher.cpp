@@ -4,12 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "IndexSearcher.h"
 
 #include "SearchHeader.h"
 #include "Scorer.h"
-#include "FieldDocSortedHitQueue.h"
+#include "_HitQueue.h"
+#include "Query.h"
+#include "Filter.h"
+#include "_FieldDocSortedHitQueue.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/index/IndexReader.h"
@@ -349,4 +352,12 @@ CL_NS_DEF(search)
         _CLDELETE(weight);
     }
 
+	CL_NS(index)::IndexReader* IndexSearcher::getReader(){
+		return reader;
+	}
+
+	const TCHAR* IndexSearcher::getClassName(){
+		return _T("IndexSearcher");
+	}
+	
 CL_NS_END

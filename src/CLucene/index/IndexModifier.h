@@ -7,16 +7,18 @@
 #ifndef _lucene_index_IndexModifier_
 #define _lucene_index_IndexModifier_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/store/Directory.h"
-#include "CLucene/document/Document.h"
+CL_CLASS_DEF(store,Directory)
+CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(index, IndexWriter)
+CL_CLASS_DEF(index, IndexReader)
+CL_CLASS_DEF(index, Term)
+CL_CLASS_DEF(index, TermDocs)
+CL_CLASS_DEF(index, TermEnum)
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "Term.h"
-#include "IndexWriter.h"
-#include "IndexReader.h"
+//#include "Term.h"
+//#include "IndexWriter.h"
+//#include "IndexReader.h"
 
 CL_NS_DEF(index)
 

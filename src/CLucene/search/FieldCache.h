@@ -7,13 +7,12 @@
 #ifndef _lucene_search_FieldCache_
 #define _lucene_search_FieldCache_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
+//#include "Sort.h"
 
-#include "CLucene/index/IndexReader.h"
-#include "Sort.h"
-
+CL_CLASS_DEF(index,IndexReader)
+CL_CLASS_DEF(search,SortComparator)
+CL_CLASS_DEF(search,ScoreDocComparator)
+CL_CLASS_DEF(util,Comparable)
 
 CL_NS_DEF(search)
 
@@ -23,7 +22,7 @@ class FieldCacheAuto; //predefine
  * Expert: Maintains caches of term values.
  *
  */
-class FieldCache :LUCENE_BASE {
+class CLUCENE_EXPORT FieldCache :LUCENE_BASE {
 public:
    virtual ~FieldCache(){
    }

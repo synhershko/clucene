@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "QueryToken.h"
 
 CL_NS_DEF(queryParser)
@@ -15,7 +15,7 @@ QueryToken::QueryToken():
 {
     set(UNKNOWN_);
 }
-QueryToken::QueryToken(TCHAR* value, const int32_t start, const int32_t end, const QueryToken::Types type):
+QueryToken::QueryToken(const TCHAR* value, const int32_t start, const int32_t end, const QueryToken::Types type):
 	Value(NULL)
 {
   set(value,start,end,type);
@@ -33,7 +33,7 @@ QueryToken::~QueryToken(){
 
 // Initializes a new instance of the Token class LUCENE_EXPORT.
 //
-QueryToken::QueryToken(TCHAR* value, const QueryToken::Types type):
+QueryToken::QueryToken(const TCHAR* value, const QueryToken::Types type):
 	Value(NULL)
 {
     set(value,type);
@@ -48,10 +48,10 @@ QueryToken::QueryToken(QueryToken::Types type):
 }
 
 
-void QueryToken::set(TCHAR* value, const Types type){
+void QueryToken::set(const TCHAR* value, const Types type){
     set(value,0,-1,type);
 }
-void QueryToken::set(TCHAR* value, const int32_t start, const int32_t end, const Types type){
+void QueryToken::set(const TCHAR* value, const int32_t start, const int32_t end, const Types type){
   #ifndef LUCENE_TOKEN_WORD_LENGTH
 	_CLDELETE_CARRAY(Value);
     Value = STRDUP_TtoT(value);

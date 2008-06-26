@@ -4,10 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "PhrasePositions.h"
-
-#include "CLucene/index/Terms.h"
+#include "CLucene/_ApiHeader.h"
+#include "_PhrasePositions.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)

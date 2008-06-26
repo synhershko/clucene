@@ -4,21 +4,31 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 
-#include "DocumentWriter.h"
-#include "FieldInfos.h"
+#include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexOutput.h"
+#include "CLucene/util/Array.h"
+#include "CLucene/util/Misc.h"
+#include "CLucene/util/Reader.h"
+#include "CLucene/document/Field.h"
+#include "CLucene/document/Document.h"
+#include "_FieldInfos.h"
 #include "IndexWriter.h"
-#include "FieldsWriter.h"
+#include "_FieldsWriter.h"
 #include "Term.h"
-#include "TermInfo.h"
-#include "TermInfosWriter.h"
-
+#include "_TermInfo.h"
+#include "_TermVector.h"
+#include "_TermInfosWriter.h"
 #include "CLucene/analysis/AnalysisHeader.h"
-
 #include "CLucene/search/Similarity.h"
-#include "TermInfosWriter.h"
-#include "FieldsWriter.h"
+#include "_TermInfosWriter.h"
+#include "_FieldsWriter.h"
+#include "_DocumentWriter.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_USE(store)
@@ -64,6 +74,7 @@ DocumentWriter::DocumentWriter(Directory* d, Analyzer* a, CL_NS(search)::Similar
 		directory(d),
 		maxFieldLength(mfl),
 		fieldInfos(NULL),
+		postingTable(_CLNEW PostingTableType),
 		fieldLengths(NULL),
 		similarity(sim),
 		termIndexInterval( IndexWriter::DEFAULT_TERM_INDEX_INTERVAL ),
@@ -87,6 +98,7 @@ DocumentWriter::DocumentWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Anal
 		directory(d),
 		maxFieldLength(writer->getMaxFieldLength()),
 		fieldInfos(NULL),
+		postingTable(_CLNEW PostingTableType),
 		fieldLengths(NULL),
 		similarity(writer->getSimilarity()),
 		termIndexInterval( writer->getTermIndexInterval() ),
@@ -118,17 +130,18 @@ DocumentWriter::~DocumentWriter(){
 	_CLDELETE_ARRAY(fieldOffsets);
 
 	_CLDECDELETE(termBuffer);
+	_CLDELETE(postingTable);
 }
 
 void DocumentWriter::clearPostingTable(){
-	PostingTableType::iterator itr = postingTable.begin();
-	while ( itr != postingTable.end() ){
+	PostingTableType::iterator itr = postingTable->begin();
+	while ( itr != postingTable->end() ){
 		_CLDELETE(itr->second);
 		_CLLDECDELETE(itr->first);
 
 		++itr;
 	}
-	postingTable.clear();
+	postingTable->clear();
 }
 
 void DocumentWriter::addDocument(const char* segment, Document* doc) {
@@ -203,11 +216,11 @@ void DocumentWriter::addDocument(const char* segment, Document* doc) {
 
 void DocumentWriter::sortPostingTable(Posting**& array, int32_t& arraySize) {
 	// copy postingTable into an array
-	arraySize = postingTable.size();
+	arraySize = postingTable->size();
 	array = _CL_NEWARRAY(Posting*,arraySize);
-	PostingTableType::iterator postings = postingTable.begin();
+	PostingTableType::iterator postings = postingTable->begin();
 	int32_t i=0;
-	while ( postings != postingTable.end() ){
+	while ( postings != postingTable->end() ){
 		array[i] = (Posting*)postings->second;
 		postings++;
 		i++;
@@ -363,7 +376,7 @@ void DocumentWriter::addPosition(const TCHAR* field,
     
 	termBuffer->set(field,text,false);
 
-	Posting* ti = postingTable.get(termBuffer);
+	Posting* ti = postingTable->get(termBuffer);
 	if (ti != NULL) {				  // word seen before
 		int32_t freq = ti->freq;
 		if (ti->positions.length == freq) {
@@ -384,7 +397,7 @@ void DocumentWriter::addPosition(const TCHAR* field,
 		ti->freq = freq + 1;			  // update frequency
 	} else {					  // word not seen before
 		Term* term = _CLNEW Term( field, text, false);
-		postingTable.put(term, _CLNEW Posting(term, position, offset));
+		postingTable->put(term, _CLNEW Posting(term, position, offset));
 	}
 }
 

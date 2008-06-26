@@ -7,17 +7,24 @@
 #ifndef _lucene_index_IndexReader_
 #define _lucene_index_IndexReader_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/store/Directory.h"
-#include "CLucene/store/FSDirectory.h"
-#include "CLucene/store/Lock.h"
-#include "CLucene/document/Document.h"
-#include "CLucene/index/TermVector.h"
-#include "SegmentInfos.h"
-#include "Terms.h"
+CL_CLASS_DEF(store,Directory)
+//#include "CLucene/store/FSDirectory.h"
+CL_CLASS_DEF(store,LuceneLock)
+CL_CLASS_DEF(document,Document)
+#include "CLucene/util/Array.h"
+
+//#include "CLucene/index/TermVector.h"
+//#include "SegmentInfos.h"
+//#include "Terms.h"
+CL_CLASS_DEF(index,TermFreqVector)
+CL_CLASS_DEF(index,TermEnum)
+CL_CLASS_DEF(index,Term)
+CL_CLASS_DEF(index,TermDocs)
+CL_CLASS_DEF(index,TermPositions)
+CL_CLASS_DEF(store,Directory)
+#include "CLucene/LuceneThreads.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 
 CL_NS_DEF(index)
@@ -41,64 +48,7 @@ class SegmentInfos;
  <p> An IndexReader can be opened on a directory for which an IndexWriter is
  opened already, but it cannot be used to delete documents from the index then.
 */
-class IndexReader :LUCENE_BASE{
-public:
-	//Callback for classes that need to know if IndexReader is closing.
-	typedef void (*CloseCallback)(IndexReader*, void*);
-
-	class CloseCallbackCompare:public CL_NS(util)::Compare::_base{
-	public:
-		bool operator()( CloseCallback t1, CloseCallback t2 ) const{
-			return t1 > t2;
-		}
-		static void doDelete(CloseCallback dummy){
-		}
-	};
-	
-	
-	enum FieldOption {
-		// all fields
-		ALL = 1,
-		// all indexed fields
-		INDEXED = 2,
-		// all fields which are not indexed
-		UNINDEXED = 4,
-		// all fields which are indexed with termvectors enables
-		INDEXED_WITH_TERMVECTOR = 8,
-		// all fields which are indexed but don't have termvectors enabled
-		INDEXED_NO_TERMVECTOR = 16,
-		// all fields where termvectors are enabled. Please note that only standard termvector fields are returned
-		TERMVECTOR = 32,
-		// all field with termvectors wiht positions enabled
-		TERMVECTOR_WITH_POSITION = 64,
-		// all fields where termvectors with offset position are set
-		TERMVECTOR_WITH_OFFSET = 128,
-		// all fields where termvectors with offset and position values set
-		TERMVECTOR_WITH_POSITION_OFFSET = 256,
-		// all fields that store payloads
-		STORES_PAYLOADS = 512
-	};
-
-
-private:
-	CL_NS(store)::LuceneLock* writeLock;
-
-    bool directoryOwner;
-    bool stale;
-    bool hasChanges;
-    bool closeDirectory;
-    
-    SegmentInfos* segmentInfos;
-
-    CL_NS(store)::Directory* directory;
-	typedef CL_NS(util)::CLSet<CloseCallback, void*, 
-		CloseCallbackCompare,
-		CloseCallbackCompare> CloseCallbackMap;
-	CloseCallbackMap closeCallbacks;
-	
-    /** Internal use. Implements commit */
-    virtual void doCommit() = 0;
-  
+class CLUCENE_EXPORT IndexReader :LUCENE_BASE{
     /**
 	* Tries to acquire the WriteLock on this directory.
 	* this method is only valid if this IndexReader is directory owner.
@@ -142,6 +92,40 @@ protected:
     virtual void doDelete(const int32_t docNum) = 0;
 
 public:
+	//Callback for classes that need to know if IndexReader is closing.
+	typedef void (*CloseCallback)(IndexReader*, void*);
+	
+    /** Internal use. Implements commit */
+    virtual void doCommit() = 0;
+    /** Internal use. */
+	class Internal;
+    /** Internal use. */
+	Internal* internal;
+	
+  
+	enum FieldOption {
+		// all fields
+		ALL = 1,
+		// all indexed fields
+		INDEXED = 2,
+		// all fields which are not indexed
+		UNINDEXED = 4,
+		// all fields which are indexed with termvectors enables
+		INDEXED_WITH_TERMVECTOR = 8,
+		// all fields which are indexed but don't have termvectors enabled
+		INDEXED_NO_TERMVECTOR = 16,
+		// all fields where termvectors are enabled. Please note that only standard termvector fields are returned
+		TERMVECTOR = 32,
+		// all field with termvectors wiht positions enabled
+		TERMVECTOR_WITH_POSITION = 64,
+		// all fields where termvectors with offset position are set
+		TERMVECTOR_WITH_OFFSET = 128,
+		// all fields where termvectors with offset and position values set
+		TERMVECTOR_WITH_POSITION_OFFSET = 256,
+		// all fields that store payloads
+		STORES_PAYLOADS = 512
+	};
+
 
 	DEFINE_MUTEX(THIS_LOCK)
 	
@@ -159,7 +143,7 @@ public:
 	* @return Collection of Strings indicating the names of the fields.
 	* @see IndexReader.FieldOption
 	*/
-	virtual void getFieldNames(FieldOption fldOption, CL_NS(util)::StringArrayWithDeletor& retarray) = 0;
+	virtual void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray) = 0;
 	
 	_CL_DEPRECATED( getFieldNames(FieldOption, StringArrayWithDeletor&) ) virtual TCHAR** getFieldNames();
 	_CL_DEPRECATED( getFieldNames(FieldOption, StringArrayWithDeletor&) ) virtual TCHAR** getFieldNames(bool indexed);
@@ -441,7 +425,7 @@ public:
 	static void unlock(const char* path);
 
 	 /** Returns the directory this index resides in. */
-	CL_NS(store)::Directory* getDirectory() { return directory; }
+	CL_NS(store)::Directory* getDirectory();
 
 	/** Returns true if the file is a lucene filename (based on extension or filename) */
 	static bool isLuceneFile(const char* filename);
@@ -452,32 +436,6 @@ public:
 	*/
 	void addCloseCallback(CloseCallback callback, void* parameter);
 
-protected:
-	class LockWith:public CL_NS(store)::LuceneLockWith<IndexReader*>{
-	public:
-		CL_NS(store)::Directory* directory;
-		IndexReader* indexReader;
-
-		//Constructor	
-		LockWith(CL_NS(store)::LuceneLock* lock, CL_NS(store)::Directory* dir);
-
-		//Reads the segmentinfo file and depending on the number of segments found
-		//it returns a MultiReader or a SegmentReader
-		IndexReader* doBody();
-
-	};
-	friend class IndexReader::LockWith;
-
-    class CommitLockWith:public CL_NS(store)::LuceneLockWith<void>{
-    private:
-	    IndexReader* reader;
-	public:
-			
-	    //Constructor	
-	    CommitLockWith( CL_NS(store)::LuceneLock* lock, IndexReader* r );
-	    void doBody();
-	};
-	friend class IndexReader::CommitLockWith;
 };
 
 CL_NS_END

@@ -4,16 +4,60 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "FieldSortedHitQueue.h"
-#include "FieldDocSortedHitQueue.h"
+#include "_FieldDocSortedHitQueue.h"
+#include "_FieldCacheImpl.h"
 #include "Compare.h"
+#include "CLucene/index/IndexReader.h"
 
 CL_NS_USE(util)
 CL_NS_USE(index)
 CL_NS_DEF(search)
-		
-FieldSortedHitQueue::hitqueueCacheType FieldSortedHitQueue::Comparators(false,true);
+
+
+//note: typename gets too long if using cacheReaderType as a typename
+class hitqueueCacheType: public CL_NS(util)::CLHashMap<CL_NS(index)::IndexReader*, 
+		hitqueueCacheReaderType*, 
+		CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
+		CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
+		CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
+		CL_NS(util)::Deletor::Object<hitqueueCacheReaderType> >{
+public:
+    hitqueueCacheType(bool deleteKey, bool deleteValue){
+	    setDeleteKey(deleteKey);
+	    setDeleteValue(deleteValue);
+    }
+    ~hitqueueCacheType(){
+        clear();
+    }
+};
+
+
+///the type that is stored in the field cache. can't use a typedef because
+///the decorated name would become too long
+class hitqueueCacheReaderType: public CL_NS(util)::CLHashMap<FieldCacheImpl::FileEntry*,
+    ScoreDocComparator*, 
+    FieldCacheImpl::FileEntry::Compare,
+    FieldCacheImpl::FileEntry::Equals,
+    CL_NS(util)::Deletor::Object<FieldCacheImpl::FileEntry>,
+    CL_NS(util)::Deletor::Object<ScoreDocComparator> >{
+
+public:
+    hitqueueCacheReaderType(bool deleteValue){
+	    setDeleteKey(true);
+	    setDeleteValue(deleteValue);
+    }
+    ~hitqueueCacheReaderType(){
+        clear();
+    }
+};
+
+hitqueueCacheType FieldSortedHitQueue::Comparators(false,true);
+
+void FieldSortedHitQueue::shutdown(){
+	Comparators.clear();
+}
 
 FieldSortedHitQueue::FieldSortedHitQueue (IndexReader* reader, SortField** _fields, int32_t size):
 	fieldsLen(0),
@@ -59,7 +103,7 @@ bool FieldSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 
 //static
 ScoreDocComparator* FieldSortedHitQueue::comparatorString (IndexReader* reader, const TCHAR* field) {
-	//const TCHAR* field = CLStringIntern::intern(fieldname CL_FILELINE);
+	//const TCHAR* field = CLStringIntern::intern(fieldname);
 	FieldCacheAuto* fa = FieldCache::DEFAULT->getStringIndex (reader, field);
 	//CLStringIntern::unintern(field);
 
@@ -70,7 +114,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorString (IndexReader* reader, 
 
 //static 
 ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, const TCHAR* field){
-    //const TCHAR* field = CLStringIntern::intern(fieldname CL_FILELINE);
+    //const TCHAR* field = CLStringIntern::intern(fieldname);
     FieldCacheAuto* fa =  FieldCache::DEFAULT->getInts (reader, field);
 	//CLStringIntern::unintern(field);
 
@@ -80,7 +124,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
 
 //static
  ScoreDocComparator* FieldSortedHitQueue::comparatorFloat (IndexReader* reader, const TCHAR* field) {
-	//const TCHAR* field = CLStringIntern::intern(fieldname CL_FILELINE);
+	//const TCHAR* field = CLStringIntern::intern(fieldname);
     FieldCacheAuto* fa = FieldCache::DEFAULT->getFloats (reader, field);
 	//CLStringIntern::unintern(field);
 
@@ -89,7 +133,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
   }
 //static
   ScoreDocComparator* FieldSortedHitQueue::comparatorAuto (IndexReader* reader, const TCHAR* field){
-	//const TCHAR* field = CLStringIntern::intern(fieldname CL_FILELINE);
+	//const TCHAR* field = CLStringIntern::intern(fieldname);
     FieldCacheAuto* fa =  FieldCache::DEFAULT->getAuto (reader, field);
 	//CLStringIntern::unintern(field);
 

@@ -7,13 +7,10 @@
 #ifndef _lucene_index_Terms_
 #define _lucene_index_Terms_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "Term.h"
+//#include "Term.h"
 CL_NS_DEF(index)
 
+class Term;
 class TermEnum; //predefine
 class TermPositions;
 
@@ -98,12 +95,7 @@ public:
 	virtual Term* term()=0;
 	
 	// Returns the current Term in the enumeration.
-	virtual Term* term(bool pointer){
-		Term* ret = term();
-		if ( !pointer )
-			ret->__cl_decref();
-		return ret;
-	}
+	virtual Term* term(bool pointer);
 
 	// Returns the docFreq of the current Term in the enumeration.
 	virtual int32_t docFreq() const=0;
@@ -111,8 +103,7 @@ public:
 	// Closes the enumeration to further activity, freeing resources.
 	virtual void close() =0;
 
-	virtual ~TermEnum(){
-	}
+	virtual ~TermEnum();
 	
 	// Term Vector support
 	/** Skips terms to the first beyond the current whose value is
@@ -128,13 +119,7 @@ public:
 	* </pre>
 	* Some implementations are considerably more efficient than that.
 	*/
-	virtual bool skipTo(Term* target){
-		do {
-			if (!next())
-				return false;
-		} while (target->compareTo(term(false)) > 0);
-		return true;
-	}
+	virtual bool skipTo(Term* target);
 
 	/**
 	* Because we need to know how to cast the object, we need the objects name.
@@ -162,8 +147,7 @@ public:
     */
 	virtual int32_t nextPosition() = 0;
 
-	virtual ~TermPositions(){
-	}
+	virtual ~TermPositions();
 
     /** 
      * Returns the length of the payload at the current term position.

@@ -4,15 +4,17 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "FieldInfos.h"
+#include "CLucene/_ApiHeader.h"
+#include "_FieldInfos.h"
 
 #include "CLucene/store/Directory.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
-#include "CLucene/util/VoidMap.h"
+////#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/util/StringIntern.h"
+#include "CLucene/util/_StringIntern.h"
+#include "CLucene/store/IndexInput.h"
+#include "CLucene/store/IndexOutput.h"
 
 CL_NS_USE(store)
 CL_NS_USE(document)
@@ -28,7 +30,7 @@ FieldInfo::FieldInfo(	const TCHAR* _fieldName,
 						const bool _storePositionWithTermVector,
 						const bool _omitNorms,
 						const bool _storePayloads):
-	name(CLStringIntern::intern(_fieldName CL_FILELINE)),
+	name(CLStringIntern::intern(_fieldName )),
 	isIndexed(_isIndexed),
 	number(_fieldNumber),
 	storeTermVector(_storeTermVector),

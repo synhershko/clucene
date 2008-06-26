@@ -7,9 +7,14 @@
 #ifndef _lucene_util_Equators_
 #define _lucene_util_Equators_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#include <map>
+#include <list>
+#include <set>
+#include <vector>
+#ifdef HAVE_WINDOWS_H
+	#include <windows.h>
 #endif
+//#include "CLucene/LuceneThreads.h"
 
 CL_NS_DEF(util)
 
@@ -122,15 +127,14 @@ public:
 #endif
 
 	class TChar: public _base, public Comparable{
-	  const TCHAR* s;
-	public:
-		const TCHAR* getValue() const;
-
-		TChar();
-		TChar(const TCHAR* str);
-		int32_t compareTo(void* o);
-		bool operator()( const TCHAR* val1, const TCHAR* val2 ) const;
-		size_t operator()( const TCHAR* val1) const;
+	    const TCHAR* s;
+    public:
+    	const TCHAR* getValue() const;
+    	TChar();
+    	TChar(const TCHAR* str);
+    	int32_t compareTo(void* o);
+    	bool operator()( const TCHAR* val1, const TCHAR* val2 ) const;
+    	size_t operator()( const TCHAR* val1) const;
 	};
 
 
@@ -157,67 +161,86 @@ public:
 // allocators
 ////////////////////////////////////////////////////////////////////////////////
 /** @internal */
+class AbstractDeletor{
+public:
+	virtual void Delete(void*) = 0;
+};
 class Deletor{
 public:
+    class tcArray: public AbstractDeletor{
+    public:
+    	void Delete(void* _arr){
+    		doDelete((const TCHAR*)_arr);
+    	}
+    	static void doDelete(const TCHAR* arr){
+    		_CLDELETE_CARRAY(arr);
+    	}
+    };
 
 	template<typename _kt>
-	class Array{
+	class Array: public AbstractDeletor{
 	public:
+		void Delete(void* arr){
+			doDelete((_kt*)arr);
+		}
 		static void doDelete(_kt* arr){
 			_CLDELETE_LARRAY(arr);
 		}
 	};
-	class tcArray{
+	class acArray: public AbstractDeletor{
 	public:
-		static void doDelete(const TCHAR* arr){
-			_CLDELETE_CARRAY(arr);
+		void Delete(void* arr){
+			doDelete((const char*)arr);
 		}
-	};
-	class acArray{
-	public:
 		static void doDelete(const char* arr){
 			_CLDELETE_CaARRAY(arr);
 		}
 	};
-
-	class Unintern{
-	public:
-		static void doDelete(TCHAR* arr);
-	};
+	
 	template<typename _kt>
-	class Object{
+	class Object: public AbstractDeletor{
 	public:
+		void Delete(void* obj){
+			doDelete((_kt*)obj);
+		}
 		static void doDelete(_kt* obj){
 			_CLLDELETE(obj);
 		}
 	};
 	template<typename _kt>
-	class Void{
+	class Void: public AbstractDeletor{
 	public:
+		void Delete(void* obj){
+			doDelete((_kt*)obj);
+		}
 		static void doDelete(_kt* obj){
 			_CLVDELETE(obj);
 		}
 	};
-	class Dummy{
+	class Dummy: public AbstractDeletor{
 	public:
+		void Delete(void* nothing){}
 		static void doDelete(const void* nothing){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
 	};
-	class DummyInt32{
+	class DummyInt32: public AbstractDeletor{
 	public:
+		void Delete(void* nothing){}
 		static void doDelete(const int32_t nothing){
 		}
 	};
-	class DummyFloat{
+	class DummyFloat: public AbstractDeletor{
 	public:
+		void Delete(void* nothing){}
 		static void doDelete(const float_t nothing){
 		}
 	};
 	template <typename _type>
-	class ConstNullVal{
+	class ConstNullVal: public AbstractDeletor{
 	public:
+		void Delete(void* nothing){}
 		static void doDelete(const _type nothing){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
@@ -225,8 +248,9 @@ public:
 	};
 	
 	template <typename _type>
-	class NullVal{
+	class NullVal: public AbstractDeletor{
 	public:
+		void Delete(void* nothing){}
 		static void doDelete(_type nothing){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");

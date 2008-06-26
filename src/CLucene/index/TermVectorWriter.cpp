@@ -4,9 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "TermVector.h"
+#include "CLucene/_ApiHeader.h"
+#include "_TermVector.h"
 #include "CLucene/util/Misc.h"
+#include "CLucene/store/IndexInput.h"
+#include "CLucene/store/IndexOutput.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_DEF(index)

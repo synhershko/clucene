@@ -7,19 +7,26 @@
 #ifndef _lucene_search_FieldSortedHitQueue_
 #define _lucene_search_FieldSortedHitQueue_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "FieldCache.h"
-#include "Sort.h"
-#include "FieldDocSortedHitQueue.h"
-#include "SearchHeader.h"
-#include "FieldCacheImpl.h"
+CL_CLASS_DEF(search,FieldDoc)
+CL_CLASS_DEF(search,SortComparatorSource)
+CL_CLASS_DEF(search,SortField)
+//#include "FieldCache.h"
+//#include "Sort.h"
+//#include "FieldDocSortedHitQueue.h"
+#include "FieldDoc.h" //required to expose destructor
+//#include "SearchHeader.h"
+//#include "FieldCacheImpl.h"
 #include "CLucene/util/PriorityQueue.h"
+#include "CLucene/util/Equators.h"
+
+CL_CLASS_DEF(index,IndexReader)
 
 CL_NS_DEF(search)
 
+class hitqueueCacheReaderType;
+class hitqueueCacheType;
+class ScoreDocComparator;
 
 /**
  * Expert: A hit queue for sorting by hits by terms in more than one field.
@@ -28,42 +35,16 @@ CL_NS_DEF(search)
  * @see Searchable#search(Query,Filter,int32_t,Sort)
  * @see FieldCache
  */
-class FieldSortedHitQueue: public CL_NS(util)::PriorityQueue<FieldDoc*, 
+class CLUCENE_EXPORT FieldSortedHitQueue: public CL_NS(util)::PriorityQueue<FieldDoc*, 
 	CL_NS(util)::Deletor::Object<FieldDoc> > {
 
-    ///the type that is stored in the field cache. can't use a typedef because
-    ///the decorated name would become too long
-    class hitqueueCacheReaderType: public CL_NS(util)::CLHashMap<FieldCacheImpl::FileEntry*,
-	    ScoreDocComparator*, 
-        FieldCacheImpl::FileEntry::Compare,
-        FieldCacheImpl::FileEntry::Equals,
-	    CL_NS(util)::Deletor::Object<FieldCacheImpl::FileEntry>,
-	    CL_NS(util)::Deletor::Object<ScoreDocComparator> >{
-
-    public:
-	    hitqueueCacheReaderType(bool deleteValue){
-		    setDeleteKey(true);
-		    setDeleteValue(deleteValue);
-	    }
-	    ~hitqueueCacheReaderType(){
-            clear();
-	    }
-
-    };
-
 public: //todo: remove this and below after close callback is implemented
-	//note: typename gets too long if using cacheReaderType as a typename
-	typedef CL_NS(util)::CLHashMap<CL_NS(index)::IndexReader*, 
-		hitqueueCacheReaderType*, 
-		CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
-		CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
-		CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
-		CL_NS(util)::Deletor::Object<hitqueueCacheReaderType> > hitqueueCacheType; 
-
+	
 	/** Internal cache of comparators. Similar to FieldCache, only
 	*  caches comparators instead of term values. 
 	*/
 	static hitqueueCacheType Comparators;
+	static void shutdown();
 private:
 	
 	/** Returns a comparator if it is in the cache.*/

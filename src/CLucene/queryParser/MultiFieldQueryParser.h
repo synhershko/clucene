@@ -7,13 +7,11 @@
 #ifndef MultiFieldQueryParser_H
 #define MultiFieldQueryParser_H
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/search/SearchHeader.h"
+//#include "CLucene/analysis/AnalysisHeader.h"
+//#include "CLucene/search/SearchHeader.h"
 #include "QueryParser.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 
 CL_NS_DEF(queryParser)
@@ -30,7 +28,7 @@ typedef CL_NS(util)::CLHashMap<const TCHAR*,
      * A QueryParser which constructs queries to search multiple fields.
      *
      */
-    class MultiFieldQueryParser: public QueryParser
+    class CLUCENE_EXPORT MultiFieldQueryParser: public QueryParser
     {
 	protected:
 		const TCHAR** fields;

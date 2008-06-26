@@ -40,8 +40,8 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
-#include "CLucene/StdHeader.h"
-#include "MD5Digester.h"
+#include "CLucene/_ApiHeader.h"
+#include "_MD5Digester.h"
 CL_NS_DEF(util)
 
 static unsigned char PADDING[64] =

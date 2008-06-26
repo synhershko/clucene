@@ -18,7 +18,7 @@
 //
 //define this if you want condition debugging to be enabled
 #if defined(_DEBUG) && !defined(_CL__CND_DEBUG)
- #define _CL__CND_DEBUG
+ //#define _CL__CND_DEBUG
 #endif
 //
 //define this to print out lots of information about merges, etc
@@ -28,9 +28,11 @@
 //to disable namespaces define this
 //#define DISABLE_NAMESPACE
 //
-//If you have put the google sparse map code in your include path 
-//somewhere, then define this to use it.
-//#define _CL_HAVE_GOOGLE_DENSE_HASH_MAP
+//disable hashmap/set usage. Just use map and set.
+//this has been shown to be quicker than the hash equivalents in some impementations
+#ifndef LUCENE_DISABLE_HASHING
+    #define LUCENE_DISABLE_HASHING
+#endif
 //
 ////////////////////////////////////////////////////////////////////
 
@@ -111,32 +113,7 @@
 //to use less memory, but may run slower.
 //todo: i dont think this actualy changes speed much, just memory
 #define LUCENE_OPTIMIZE_FOR_MEMORY
-//
-//define this if you want the pointer tracking to be enabled
-//this is a useful tool for memory leak tracking
-//The LuceneBase can slow down the code a *lot*
-#if defined(_DEBUG)
-	#if !defined(LUCENE_DISABLE_MEMTRACKING) && !defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-		#define LUCENE_ENABLE_MEMLEAKTRACKING
-	#endif
-#endif 
-//
-//enable use of rich file/line tracking. use CL_FILELINE to pass
-//to functions like stringDuplicate (or use CL_STRDUP* functions instead) and
-//CLStringIntern::x.
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
-	#define LUCENE_ENABLE_FILELINEINFO
-#endif
-//
-//enable creation of clucene.log file. Logs every
-//call to new operator. Must have LUCENE_ENABLE_MEMLEAKTRACKING enabled.
-//writes log in this format.
-//action,file name,file line,allocation size
-//logging can be disabled by setting _lucene_disable_debuglogging to true
-#if defined(LUCENE_ENABLE_MEMLEAKTRACKING) && defined(_DEBUG)
-//#define LUCENE_ENABLE_CONSTRUCTOR_LOG
-#endif
-//
+
 //
 //enable this if you want to enable reference counting. This is
 //not necessary or useful in most cases except when implementing wrappers 
@@ -181,19 +158,10 @@
 //   but can also be changed here if required
 ////////////////////////////////////////////////////////////////////
 //
-//define this if multi-threading support is not required
-//if not defined, multi-thread locking will
-//occur (and its related processing overhead)
-//note: it is recommended to disable multithreading if you do not need it
-//there is a lot of overhead that can be avoided.
-//#define _CL_DISABLE_MULTITHREADING
-//
 //if you want to define your own default file encoding. specify it
 //here - normally defined in the platform specific headers
 //#define PLATFORM_DEFAULT_READER_ENCODING CL_NS(util)::FileReader::ENCODING_ASCII
 //
-//disable hash implementations (if available)
-//#define LUCENE_DISABLE_HASHING
 ////////////////////////////////////////////////////////////////////
 
 

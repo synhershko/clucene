@@ -4,10 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "CLucene/util/StringBuffer.h"
-
-#ifdef __CL_INCLUDE_TPRINTF
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/util/_StringBuffer.h"
 
 CL_NS_USE(util)
 
@@ -45,7 +43,7 @@ void lucene_vfnwprintf(StringBuffer* buffer, size_t count, const wchar_t * forma
 					//todo: this is faulty. it doesn't heed count
 
 					//print a string or null
-					TCHAR *wstr = va_arg(valist, TCHAR *);
+					const TCHAR *wstr = va_arg(valist, TCHAR *);
 					if ( !wstr )
 						wstr = _T("(null)");
 
@@ -124,8 +122,8 @@ int lucene_snwprintf(wchar_t* strbuf, size_t count, const wchar_t * format, ...)
     lucene_vfnwprintf(&buffer,count,format,ap);
     va_end(ap);
 
-	size_t ret = min(count,(size_t)(buffer.length()+1));
-	_tcsncpy(strbuf,buffer.getBuffer(),ret);
+	size_t ret = cl_min(count,(size_t)(buffer.length()+1));
+	wcsncpy(strbuf,buffer.getBuffer(),ret);
     return ret;
 }
 
@@ -141,9 +139,7 @@ void lucene_wprintf(const wchar_t * format, ...){
 int lucene_vsnwprintf(wchar_t * strbuf, size_t count, const wchar_t * format, va_list& ap){
 	StringBuffer buffer;
     lucene_vfnwprintf(&buffer,count,format,ap);
-	int ret = min((int32_t)count,buffer.length()+1);
-	_tcsncpy(strbuf,buffer.getBuffer(),ret);
+	int ret = cl_min((int32_t)count,buffer.length()+1);
+	wcsncpy(strbuf,buffer.getBuffer(),ret);
     return ret;
 }
-
-#endif //__CL_INCLUDE_TPRINTF

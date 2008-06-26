@@ -6,4 +6,4 @@
 ------------------------------------------------------------------------------*/
 
 //this is just a compatibility header for jstreams
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"

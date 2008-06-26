@@ -4,9 +4,11 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "BitSet.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
+#include "CLucene/store/IndexOutput.h"
 
 CL_NS_USE(store)
 CL_NS_DEF(util)

@@ -4,10 +4,11 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "MultiFieldQueryParser.h"
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/search/BooleanQuery.h"
+#include "CLucene/search/BooleanClause.h"
 #include "CLucene/search/PhraseQuery.h"
 #include "CLucene/search/SearchHeader.h"
 #include "QueryParser.h"

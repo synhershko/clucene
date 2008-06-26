@@ -7,18 +7,23 @@
 #ifndef _lucene_search_IndexSearcher_
 #define _lucene_search_IndexSearcher_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "SearchHeader.h"
-#include "CLucene/store/Directory.h"
-#include "CLucene/document/Document.h"
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/util/BitSet.h"
-#include "HitQueue.h"
-#include "FieldSortedHitQueue.h"
+#include "Searchable.h"
+CL_CLASS_DEF(store,Directory)
+CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(index,Term)
+CL_CLASS_DEF(search,TopDocs)
+CL_CLASS_DEF(search,TopFieldDocs)
+CL_CLASS_DEF(search,Query)
+CL_CLASS_DEF(search,Filter)
+CL_CLASS_DEF(search,Sort)
+CL_CLASS_DEF(search,HitCollector)
+CL_CLASS_DEF(search,Explanation)
+CL_CLASS_DEF(index,IndexReader)
+//#include "CLucene/index/IndexReader.h"
+//#include "CLucene/util/BitSet.h"
+//#include "HitQueue.h"
+//#include "FieldSortedHitQueue.h"
 
 CL_NS_DEF(search)
 /** Implements search over a single IndexReader.
@@ -26,7 +31,7 @@ CL_NS_DEF(search)
 * <p>Applications usually need only call the inherited {@link search(Query*)}
 * or {@link search(Query*,Filter*)} methods.
 */
-class IndexSearcher:public Searcher{
+class CLUCENE_EXPORT IndexSearcher:public Searcher{
 	CL_NS(index)::IndexReader* reader;
 	bool readerOwner;
 
@@ -57,16 +62,12 @@ public:
 
 	void _search(Query* query, Filter* filter, HitCollector* results);
 
-	CL_NS(index)::IndexReader* getReader(){
-		return reader;
-	}
+	CL_NS(index)::IndexReader* getReader();
 
 	Query* rewrite(Query* original);
 	void explain(Query* query, int32_t doc, Explanation* ret);
 
-	virtual const TCHAR* getClassName(){
-		return _T("IndexSearcher");
-	}
+	virtual const TCHAR* getClassName();
 };
 CL_NS_END
 #endif

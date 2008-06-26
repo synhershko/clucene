@@ -6,18 +6,16 @@
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_RangeQuery_
 #define _lucene_search_RangeQuery_
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "SearchHeader.h"
-#include "Scorer.h"
-#include "TermQuery.h"
+//#include "SearchHeader.h"
+//#include "Scorer.h"
+//#include "TermQuery.h"
+#include "Query.h"
 
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
+CL_CLASS_DEF(index,Term)
+//#include "CLucene/index/Terms.h"
 
-#include "CLucene/util/StringBuffer.h"
+CL_CLASS_DEF(util,StringBuffer)
 
 
 CL_NS_DEF(search)
@@ -27,7 +25,7 @@ CL_NS_DEF(search)
      * in which case there is no bound on that side, but if there are
      * two terms, both terms <b>must</b> be for the same field.
      */
-	class RangeQuery: public Query
+	class CLUCENE_EXPORT RangeQuery: public Query
     {
     private: 
         CL_NS(index)::Term* lowerTerm;

@@ -4,12 +4,23 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/index/Term.h"
+#include "CLucene/index/IndexReader.h"
+#include "Similarity.h"
+#include "CLucene/util/_StringBuffer.h"
 #include "FuzzyQuery.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
+
+  
+	/** Finds and returns the smallest of three integers 
+		precondition: Must define int32_t __t for temporary storage and result
+	*/
+	#define min3(a, b, c) __t = (a < b) ? a : b; __t = (__t < c) ? __t : c;
+
 
 	/**
      * Constructor for enumeration of all terms from specified <code>reader</code> which share a prefix of
@@ -25,7 +36,7 @@ CL_NS_DEF(search)
 	 FuzzyTermEnum::FuzzyTermEnum(const IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
         distance(0),
         _endEnum(false),
-		prefix(LUCENE_BLANK_STRING),
+		prefix(STRDUP_TtoT(LUCENE_BLANK_STRING)),
 		prefixLength(0),
 		minimumSimilarity(minSimilarity)
 	{
@@ -97,8 +108,7 @@ CL_NS_DEF(search)
 
 	  _CLDELETE_CARRAY(text);
 
-	  if ( prefix != LUCENE_BLANK_STRING )
-		  _CLDELETE_CARRAY(prefix);
+	  _CLDELETE_CARRAY(prefix);
   }
 
   bool FuzzyTermEnum::termCompare(Term* term) {
@@ -125,7 +135,7 @@ CL_NS_DEF(search)
 
 		    //Calculate the Levenshtein distance
 			int32_t dist = editDistance(text, target, textLen, targetLen);
-			distance = 1 - ((float_t)dist / (float_t)min(textLen, targetLen));
+			distance = 1 - ((float_t)dist / (float_t)cl_min(textLen, targetLen));
 			return (distance > minimumSimilarity);
       }
 		_endEnum = true;
@@ -141,11 +151,6 @@ CL_NS_DEF(search)
      return (float_t)((distance - minimumSimilarity) * scale_factor );
   }
   
-  
-	/** Finds and returns the smallest of three integers 
-		precondition: Must define int32_t __t for temporary storage and result
-	*/
-	#define min3(a, b, c) __t = (a < b) ? a : b; __t = (__t < c) ? __t : c;
 
   int32_t FuzzyTermEnum::editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m) {
   //Func - Calculates the Levenshtein distance also known as edit distance is a measure of similiarity
@@ -177,8 +182,8 @@ CL_NS_DEF(search)
         //Delete e if possible
         _CLDELETE_ARRAY(e);
         //resize e
-		eWidth  = max(eWidth, n+1);
-        eHeight = max(eHeight, m+1);
+		eWidth  = cl_max(eWidth, n+1);
+        eHeight = cl_max(eHeight, m+1);
         e = _CL_NEWARRAY(int32_t,eWidth*eHeight);
     }
     

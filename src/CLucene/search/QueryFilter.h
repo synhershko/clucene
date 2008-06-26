@@ -7,25 +7,19 @@
 #ifndef _lucene_search_QueryFilter_
 #define _lucene_search_QueryFilter_
 
-#include "CLucene/util/BitSet.h"
-#include "CLucene/index/IndexReader.h"
-#include "SearchHeader.h"
-#include "CachingWrapperFilter.h"
+//#include "CLucene/util/BitSet.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "SearchHeader.h"
+#include "Filter.h"
+CL_CLASS_DEF(search,Query)
+//#include "CachingWrapperFilter.h"
 
 CL_NS_DEF(search)
 
-class QueryFilter: public Filter
+class CLUCENE_EXPORT QueryFilter: public Filter
 {
 private:
 	Query* query;
-
-	class QFHitCollector: public HitCollector{
-		CL_NS(util)::BitSet* bits;
-	public:    
-		QFHitCollector(CL_NS(util)::BitSet* bits);
-		void collect(const int32_t doc, const float_t score);
-    };
-
 protected:
 	QueryFilter( const QueryFilter& copy );
 public:

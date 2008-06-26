@@ -4,21 +4,37 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "FieldsReader.h"
+#include "CLucene/_ApiHeader.h"
 
-#include "CLucene/util/VoidMap.h"
+#include <assert.h>
+////#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
+#include "CLucene/util/subinputstream.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
-#include "FieldInfos.h"
-#include "FieldsWriter.h"
+#include "_FieldInfos.h"
+#include "_FieldsWriter.h"
+#include "_FieldsReader.h"
 
 CL_NS_USE(store)
 CL_NS_USE(document)
 CL_NS_USE(util)
 CL_NS_DEF(index)
+
+
+class FieldsReader::FieldsStreamHolder: public jstreams::StreamBase<char>{
+    CL_NS(store)::IndexInput* indexInput;
+    CL_NS(store)::IndexInputStream* indexInputStream;
+    jstreams::SubInputStream<char>* subStream;
+public:
+    FieldsStreamHolder(CL_NS(store)::IndexInput* indexInput, int32_t subLength);
+    ~FieldsStreamHolder();
+    int32_t read(const char*& start, int32_t _min, int32_t _max);
+    int64_t skip(int64_t ntoskip);
+    int64_t reset(int64_t pos);
+};
 
 FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn):
 	fieldInfos(fn)
@@ -150,7 +166,7 @@ bool FieldsReader::doc(int32_t n, Document* doc) {
 				}else
 					fieldsStream->seek(fieldsStream->getFilePointer() + fieldLen);
 	        }else {
-				TCHAR* fvalue = fieldsStream->readString(true);
+				TCHAR* fvalue = fieldsStream->readString();
 	          	Field* f = _CLNEW Field(
 					fi->name,     // name
 	                fvalue, // read value

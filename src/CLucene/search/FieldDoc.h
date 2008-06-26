@@ -7,11 +7,7 @@
 #ifndef _lucene_search_FieldDoc_
 #define _lucene_search_FieldDoc_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "ScoreDoc.h"
+#include "SearchHeader.h"
 
 CL_NS_DEF(search)
 
@@ -31,8 +27,10 @@ CL_NS_DEF(search)
  * @see ScoreDoc
  * @see TopFieldDocs
  */
-class FieldDoc: public ScoreDoc {
+class FieldDoc: LUCENE_BASE {
 public:
+	//FieldDoc did inherit from ScoreDoc, but now we make the scoredoc a member
+	struct ScoreDoc scoreDoc;
 
 	/** Expert: The values which are used to sort the referenced document.
 	 * The order of these will match the original sort criteria given by a
@@ -44,27 +42,11 @@ public:
 	CL_NS(util)::Comparable** fields;
 
 	/** Expert: Creates one of these objects with empty sort information. */
-	FieldDoc (int32_t doc, float_t score):
-	   ScoreDoc(doc,score) {
-      fields=NULL;
-	}
-
+	FieldDoc (int32_t doc, float_t score);
 	/** Expert: Creates one of these objects with the given sort information. */
-	FieldDoc (int32_t doc, float_t score, CL_NS(util)::Comparable** fields):
-	   ScoreDoc(doc,score)  
-	{
-		this->fields = fields;
-	}
-
-    ~FieldDoc(){
-        if ( fields != NULL ){
-           for ( int i=0;fields[i]!=NULL;i++ )
-               _CLDELETE(fields[i]);
-           _CLDELETE_ARRAY(fields);
-        }
-    }
+	FieldDoc (int32_t doc, float_t score, CL_NS(util)::Comparable** fields);
+    ~FieldDoc();
 };
 
 CL_NS_END
 #endif
-

@@ -4,14 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "SegmentTermEnum.h"
+#include "CLucene/_ApiHeader.h"
+#include "_SegmentHeader.h"
+#include "_SegmentTermEnum.h"
 
 #include "Terms.h"
-#include "FieldInfos.h"
+#include "_FieldInfos.h"
 #include "Term.h"
-#include "TermInfo.h"
-#include "TermInfosWriter.h"
+#include "_TermInfo.h"
+#include "_TermInfosWriter.h"
 
 CL_NS_USE(store)
 CL_NS_DEF(index)

@@ -4,17 +4,18 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "FieldsWriter.h"
+#include "CLucene/_ApiHeader.h"
+#include "_FieldsWriter.h"
 
-#include "CLucene/util/VoidMap.h"
+//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Reader.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/_RAMDirectory.h"
 #include "CLucene/store/IndexOutput.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
-#include "FieldInfos.h"
+#include "_FieldInfos.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -192,6 +193,33 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 		}else
 			_CLTHROWA(CL_ERR_Runtime, "No values are set for the field");
 	}
+}
+
+void FieldsWriter::flushDocument(int32_t numStoredFields, CL_NS(store)::RAMIndexOutput* buffer) {
+	indexStream->writeLong(fieldsStream->getFilePointer());
+	fieldsStream->writeVInt(numStoredFields);
+	buffer->writeTo(fieldsStream);
+}
+
+void FieldsWriter::flush() {
+  indexStream->flush();
+  fieldsStream->flush();
+}
+
+/** Bulk write a contiguous series of documents.  The
+*  lengths array is the length (in bytes) of each raw
+*  document.  The stream IndexInput is the
+*  fieldsStream from which we should bulk-copy all
+*  bytes. */
+void FieldsWriter::addRawDocuments(CL_NS(store)::IndexInput* stream, const int32_t* lengths, const int32_t numDocs) {
+	int64_t position = fieldsStream->getFilePointer();
+	const int64_t start = position;
+	for(int32_t i=0;i<numDocs;i++) {
+		indexStream->writeLong(position);
+		position += lengths[i];
+	}
+	fieldsStream->copyBytes(stream, position-start);
+	CND_CONDITION(fieldsStream->getFilePointer() == position,"fieldsStream->getFilePointer() != position");
 }
 
 CL_NS_END

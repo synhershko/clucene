@@ -4,32 +4,43 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Field.h"
-#include "CLucene/util/Misc.h"
-#include "CLucene/util/StringIntern.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/Reader.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(document) 
 
-Field::Field(const TCHAR* Name, Reader* reader, int config)
+struct Field::Internal{
+	const TCHAR* _name;
+	TCHAR* _stringValue;
+	CL_NS(util)::Reader* _readerValue;
+    jstreams::StreamBase<char>* _streamValue;
+
+	uint32_t config;
+	float_t boost;
+};
+
+Field::Field(const TCHAR* Name, Reader* reader, int config):
+	internal(_CLNEW Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(reader != NULL, "reader cannot be NULL");
 
-	_name        = CLStringIntern::intern( Name  CL_FILELINE);
-	_stringValue = NULL;
-	_readerValue = reader;
-	_streamValue = NULL;
-	boost=1.0f;
+	internal->_name        = CLStringIntern::intern( Name );
+	internal->_stringValue = NULL;
+	internal->_readerValue = reader;
+	internal->_streamValue = NULL;
+	internal->boost=1.0f;
 
 	setConfig(config);
 }
 
 
-Field::Field(const TCHAR* Name, const TCHAR* Value, int _config)
+Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
+	internal(_CLNEW Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
@@ -42,27 +53,28 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config)
 		_CLTHROWA(CL_ERR_IllegalArgument,"cannot store term vector information for a field that is not indexed");
 	*/
 
-	_name        = CLStringIntern::intern( Name  CL_FILELINE);
-	_stringValue = stringDuplicate( Value );
-	_readerValue = NULL;
-	_streamValue = NULL;
-	boost=1.0f;
+	internal->_name        = CLStringIntern::intern( Name );
+	internal->_stringValue = stringDuplicate( Value );
+	internal->_readerValue = NULL;
+	internal->_streamValue = NULL;
+	internal->boost=1.0f;
 
 	//config = INDEX_TOKENIZED; // default Field is tokenized and indexed
 
 	setConfig(_config);
 }
 
-Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config)
+Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config):
+	internal(_CLNEW Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
 
-	_name        = CLStringIntern::intern( Name  CL_FILELINE);
-	_stringValue = NULL;
-	_readerValue = NULL;
-	_streamValue = Value;
-	boost=1.0f;
+	internal->_name        = CLStringIntern::intern( Name );
+	internal->_stringValue = NULL;
+	internal->_readerValue = NULL;
+	internal->_streamValue = Value;
+	internal->boost=1.0f;
 
 	setConfig(config);
 }
@@ -72,32 +84,56 @@ Field::~Field(){
 //Pre  - true
 //Post - Instance has been destroyed
 
-	CLStringIntern::unintern(_name);
+	CLStringIntern::unintern(internal->_name);
 	_resetValue();
+	_CLDELETE(internal);
 }
 
 
 /*===============FIELDS=======================*/
-const TCHAR* Field::name() const	{ return _name; } ///<returns reference
-TCHAR* Field::stringValue() const	{ return _stringValue; } ///<returns reference
-Reader* Field::readerValue() const	{ return _readerValue; } ///<returns reference
-jstreams::StreamBase<char>* Field::streamValue() const	{ return _streamValue; } ///<returns reference
+const TCHAR* Field::name() const	{ return internal->_name; } ///<returns reference
+TCHAR* Field::stringValue() const	{ return internal->_stringValue; } ///<returns reference
+Reader* Field::readerValue() const	{ return internal->_readerValue; } ///<returns reference
+jstreams::StreamBase<char>* Field::streamValue() const	{ return internal->_streamValue; } ///<returns reference
+CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return NULL; }
+	    
+bool	Field::isStored() const 	{ return (internal->config & STORE_YES) != 0; }
+bool 	Field::isIndexed() const	{ return (internal->config & INDEX_TOKENIZED)!=0 || (internal->config & INDEX_UNTOKENIZED)!=0; }
+bool 	Field::isTokenized() const	{ return (internal->config & INDEX_TOKENIZED) != 0; }
+bool 	Field::isCompressed() const	{ return (internal->config & STORE_COMPRESS) != 0; }
+bool 	Field::isBinary() const		{ return internal->_streamValue!=NULL; }
 
-bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
-bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
-bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
-bool 	Field::isCompressed() const	{ return (config & STORE_COMPRESS) != 0; }
-bool 	Field::isBinary() const		{ return _streamValue!=NULL; }
+bool	Field::isTermVectorStored() const			{ return (internal->config & TERMVECTOR_YES) != 0; }
+bool	Field::isStoreOffsetWithTermVector() const	{ return (internal->config & TERMVECTOR_YES) != 0 && (internal->config & TERMVECTOR_WITH_OFFSETS) != 0; }
+bool	Field::isStorePositionWithTermVector() const{ return (internal->config & TERMVECTOR_YES) != 0 && (internal->config & TERMVECTOR_WITH_POSITIONS) != 0; }
 
-bool	Field::isTermVectorStored() const			{ return (config & TERMVECTOR_YES) != 0; }
-bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
-bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
+bool Field::getOmitNorms() const { return (internal->config & INDEX_NONORMS) != 0; }
+void Field::setOmitNorms(const bool omitNorms) { internal->config |= INDEX_NONORMS; }
+    
+bool Field::isLazy() const { return (internal->config & LAZY_YES) != 0; };
 
-bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
-void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
+void Field::setValue(const TCHAR* value) {
+	_resetValue();
+	internal->_stringValue = stringDuplicate( value );
+}
 
-void Field::setBoost(const float_t boost)	{ this->boost = boost; }
-float_t Field::getBoost() const				{ return boost; }
+void Field::setValue(CL_NS(util)::Reader* value) {
+	_resetValue();
+	internal->_readerValue = value;
+}
+void Field::setValue(jstreams::StreamBase<char>* value) {
+	_resetValue();
+	internal->_streamValue = value;
+}
+
+/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+void Field::setValue(CL_NS(analysis)::TokenStream* value) {
+	_resetValue();
+	//fieldsData = value;
+}
+
+void Field::setBoost(const float_t boost)	{ this->internal->boost = boost; }
+float_t Field::getBoost() const				{ return internal->boost; }
 
 void Field::setConfig(const uint32_t x){
 	uint32_t newConfig=0;
@@ -164,7 +200,7 @@ void Field::setConfig(const uint32_t x){
 	}else
 		newConfig |= TERMVECTOR_NO;
 
-	config = newConfig;
+	internal->config = newConfig;
 }
 
 TCHAR* Field::toString() {
@@ -217,11 +253,11 @@ TCHAR* Field::toString() {
     result.appendChar(':');
     
 	if (! isLazy()) {
-		if (_stringValue != NULL)
-			result.append(_stringValue);
-		else if ( _readerValue != NULL )
+		if (internal->_stringValue != NULL)
+			result.append(internal->_stringValue);
+		else if ( internal->_readerValue != NULL )
 			result.append( _T("Reader") );
-		else if ( _streamValue != NULL )
+		else if ( internal->_streamValue != NULL )
 			result.append( _T("Stream") );
 		else
 			result.append( _T("NULL") );
@@ -229,6 +265,13 @@ TCHAR* Field::toString() {
     
     result.appendChar('>');
     return result.toString();
+}
+
+
+void Field::_resetValue() {
+	_CLDELETE_CARRAY(internal->_stringValue);
+	_CLDELETE(internal->_readerValue);
+	_CLVDELETE( internal->_streamValue );
 }
 
 CL_NS_END

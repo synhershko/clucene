@@ -4,15 +4,20 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "SegmentHeader.h"
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/util/Misc.h"
+#include "_SegmentHeader.h"
 
-#include "FieldInfos.h"
-#include "FieldsReader.h"
+#include "_FieldInfos.h"
+#include "_FieldsReader.h"
 #include "IndexReader.h"
-#include "TermInfosReader.h"
+#include "_TermInfosReader.h"
 #include "Terms.h"
 #include "CLucene/search/Similarity.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_USE(store)
@@ -382,7 +387,7 @@ CL_NS_DEF(index)
       undeleteAll = true;
   }
 
-  void SegmentReader::files(CL_NS(util)::AStringArrayWithDeletor& retarray) {
+  void SegmentReader::files(AStringArrayWithDeletor& retarray) {
   //Func - Returns all file names managed by this SegmentReader
   //Pre  - segment != NULL
   //Post - All filenames managed by this SegmentRead have been returned

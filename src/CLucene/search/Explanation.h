@@ -7,18 +7,16 @@
 #ifndef _lucene_search_Explanation
 #define _lucene_search_Explanation
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(search)
 
    #define LUCENE_SEARCH_EXPLANATION_DESC_LEN 200
-   class Explanation :LUCENE_BASE {
+   class CLUCENE_EXPORT Explanation :LUCENE_BASE {
    private:
       float_t value;                            // the value of this node
       TCHAR description[LUCENE_SEARCH_EXPLANATION_DESC_LEN];                     // what it represents
-      CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> > details;                      // sub-explanations
+      CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >* details;                      // sub-explanations
 
       TCHAR* toString(int32_t depth);
    protected:

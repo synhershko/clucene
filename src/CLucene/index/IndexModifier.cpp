@@ -4,8 +4,13 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "IndexModifier.h"
+
+#include "IndexWriter.h"
+#include "IndexReader.h"
+#include "CLucene/store/FSDirectory.h"
+#include "CLucene/document/Document.h"
 
 CL_NS_DEF(index)
 CL_NS_USE(util)

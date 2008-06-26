@@ -4,20 +4,32 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
+#include "CLucene/index/IndexReader.h"
 #include "MultiSearcher.h"
-
 #include "SearchHeader.h"
-#include "HitQueue.h"
+#include "Query.h"
+#include "_HitQueue.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/index/Term.h"
-#include "FieldDocSortedHitQueue.h"
+#include "_FieldDocSortedHitQueue.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_USE(document)
 
 CL_NS_DEF(search)
+
+
+    class MultiHitCollector: public HitCollector{
+    private:
+      HitCollector* results;
+      int32_t start;
+    public: 
+      MultiHitCollector(HitCollector* _results, int32_t _start);
+      void collect(const int32_t doc, const float_t score) ;
+    };
+    
 
   /** Creates a searcher which searches <i>searchers</i>. */
   MultiSearcher::MultiSearcher(Searchable** _searchables):

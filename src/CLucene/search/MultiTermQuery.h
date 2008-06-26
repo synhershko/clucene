@@ -7,18 +7,18 @@
 #ifndef _lucene_search_MultiTermQuery_
 #define _lucene_search_MultiTermQuery_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/util/StringBuffer.h"
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
-#include "FilteredTermEnum.h"
-#include "SearchHeader.h"
-#include "BooleanQuery.h"
-#include "TermQuery.h"
+CL_CLASS_DEF(util,StringBuffer)
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(index,Term)
+CL_CLASS_DEF(search,FilteredTermEnum)
+CL_CLASS_DEF(index,IndexReader)
+//#include "CLucene/index/Terms.h"
+//#include "FilteredTermEnum.h"
+//#include "SearchHeader.h"
+//#include "BooleanQuery.h"
+//#include "TermQuery.h"
+#include "Query.h"
 
 CL_NS_DEF(search)
     /**
@@ -34,7 +34,7 @@ CL_NS_DEF(search)
      * <code>MultiTermQuery</code> to provide {@link WildcardTermEnum} and
      * {@link FuzzyTermEnum}, respectively.
      */
-    class MultiTermQuery: public Query {
+    class CLUCENE_EXPORT MultiTermQuery: public Query {
     private:
         CL_NS(index)::Term* term;
     protected:

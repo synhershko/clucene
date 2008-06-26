@@ -4,9 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Analyzers.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
@@ -19,6 +19,8 @@ CharTokenizer::CharTokenizer(Reader* in) :
 	ioBuffer(NULL)
 {
 	buffer[0]=0;
+}
+CharTokenizer::~CharTokenizer(){
 }
 
 TCHAR CharTokenizer::normalize(const TCHAR c) const 
@@ -63,25 +65,59 @@ bool CharTokenizer::next(Token* token){
 	return true;
 }
 
+
+LetterTokenizer::LetterTokenizer(CL_NS(util)::Reader* in):
+    CharTokenizer(in) {
+}
+
+LetterTokenizer::~LetterTokenizer(){}
+
 bool LetterTokenizer::isTokenChar(const TCHAR c) const {
 	return _istalpha(c)!=0;
 }
 
+LowerCaseTokenizer::LowerCaseTokenizer(CL_NS(util)::Reader* in):
+    LetterTokenizer(in) {
+}
+
+LowerCaseTokenizer::~LowerCaseTokenizer(){
+}
 
 TCHAR LowerCaseTokenizer::normalize(const TCHAR chr) const {
 	return _totlower(chr);
 }
 
+WhitespaceTokenizer::WhitespaceTokenizer(CL_NS(util)::Reader* in):CharTokenizer(in) {
+}
+WhitespaceTokenizer::~WhitespaceTokenizer(){
+}
+	
 bool WhitespaceTokenizer::isTokenChar(const TCHAR c)  const{
 	return _istspace(c)==0; //(return true if NOT a space)
+}
+
+WhitespaceAnalyzer::WhitespaceAnalyzer(){
+}
+WhitespaceAnalyzer::~WhitespaceAnalyzer(){
 }
 
 TokenStream* WhitespaceAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {
 	return _CLNEW WhitespaceTokenizer(reader);
 }
 
+SimpleAnalyzer::SimpleAnalyzer(){
+}
+SimpleAnalyzer::~SimpleAnalyzer(){
+}
 TokenStream* SimpleAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {
 	return _CLNEW LowerCaseTokenizer(reader);
+}
+
+
+LowerCaseFilter::LowerCaseFilter(TokenStream* in, bool deleteTokenStream):
+    TokenFilter(in,deleteTokenStream) {
+}
+LowerCaseFilter::~LowerCaseFilter(){
 }
 
 bool LowerCaseFilter::next(Token* t){
@@ -93,6 +129,34 @@ bool LowerCaseFilter::next(Token* t){
 
 bool StopFilter::ENABLE_POSITION_INCREMENTS_DEFAULT = false;
 
+StopFilter::~StopFilter(){
+	if (deleteStopTable)
+		_CLDELETE(stopWords);
+}
+
+/** Constructs a filter which removes words from the input
+*	TokenStream that are named in the CLSetList.
+*/
+StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* stopTable, bool _deleteStopTable):
+	TokenFilter(in, deleteTokenStream),
+	stopWords (stopTable),
+	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
+	ignoreCase(false),
+	deleteStopTable(_deleteStopTable)
+{
+}
+//static
+bool StopFilter::getEnablePositionIncrementsDefault() {
+	return ENABLE_POSITION_INCREMENTS_DEFAULT;
+}
+//static 
+void StopFilter::setEnablePositionIncrementsDefault(const bool defaultValue) {
+	ENABLE_POSITION_INCREMENTS_DEFAULT = defaultValue;
+}
+
+bool StopFilter::getEnablePositionIncrements() const { return enablePositionIncrements; }
+void StopFilter::setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
+		
 StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase):
 	TokenFilter(in, deleteTokenStream),
 	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
@@ -132,18 +196,36 @@ bool StopFilter::next(Token* token) {
 	return false;
 }
 
-StopAnalyzer::StopAnalyzer():stopTable(false)
+StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
+	stopTable(_CLNEW CLTCSetList)
 {
-	StopFilter::fillStopTable(&stopTable,ENGLISH_STOP_WORDS);
+	if ( enc == NULL )
+		enc = "ASCII";
+	WordlistLoader::getWordSet(stopwordsFile, enc, stopTable);
+}
+
+StopAnalyzer::StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
+	stopTable(_CLNEW CLTCSetList)
+{
+	WordlistLoader::getWordSet(stopwordsReader, stopTable, _bDeleteReader);
+}
+
+StopAnalyzer::StopAnalyzer():
+	stopTable(_CLNEW CLTCSetList(false))
+{
+	StopFilter::fillStopTable(stopTable,ENGLISH_STOP_WORDS);
 }
 StopAnalyzer::~StopAnalyzer()
 {
+_CLDELETE(stopTable);
 }
-StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):stopTable(false) {
-	StopFilter::fillStopTable(&stopTable,stopWords);
+StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):
+	stopTable(_CLNEW CLTCSetList(false))
+{
+	StopFilter::fillStopTable(stopTable,stopWords);
 }
 TokenStream* StopAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {
-	return _CLNEW StopFilter(_CLNEW LowerCaseTokenizer(reader),true, &stopTable);
+	return _CLNEW StopFilter(_CLNEW LowerCaseTokenizer(reader),true, stopTable);
 }
 
 const TCHAR* StopAnalyzer::ENGLISH_STOP_WORDS[]  = 
@@ -156,21 +238,22 @@ const TCHAR* StopAnalyzer::ENGLISH_STOP_WORDS[]  =
 };
 
 PerFieldAnalyzerWrapper::PerFieldAnalyzerWrapper(Analyzer* defaultAnalyzer):
-    analyzerMap(true,true)
+    analyzerMap(_CLNEW AnalyzerMapType(true,true))
 {
     this->defaultAnalyzer = defaultAnalyzer;
 }
 PerFieldAnalyzerWrapper::~PerFieldAnalyzerWrapper(){
-    analyzerMap.clear();
+    analyzerMap->clear();
+    _CLDELETE(analyzerMap);
     _CLDELETE(defaultAnalyzer);
 }
 
 void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* analyzer) {
-    analyzerMap.put(STRDUP_TtoT(fieldName), analyzer);
+    analyzerMap->put(STRDUP_TtoT(fieldName), analyzer);
 }
 
 TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader* reader) {
-    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap.get(fieldName));
+    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get(fieldName));
     if (analyzer == NULL) {
       analyzer = defaultAnalyzer;
     }
@@ -180,6 +263,12 @@ TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader
 
 
 
+ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
+	TokenFilter(input,deleteTs)
+{
+}
+ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
+}
 bool ISOLatin1AccentFilter::next(Token* token){
 	if ( input->next(token) ){
 		int32_t l = token->termTextLength();
@@ -208,123 +297,123 @@ bool ISOLatin1AccentFilter::next(Token* token){
 			unsigned char c = chars[j];
 			#endif
 			switch (c) {
-				case 0xC0 : // À
-				case 0xC1 : // Á
-				case 0xC2 : // Â
-				case 0xC3 : // Ã
-				case 0xC4 : // Ä
-				case 0xC5 : // Å
+				case 0xC0 : // ï¿½
+				case 0xC1 : // ï¿½
+				case 0xC2 : // ï¿½
+				case 0xC3 : // ï¿½
+				case 0xC4 : // ï¿½
+				case 0xC5 : // ï¿½
 					output.appendChar('A');
 					break;
-				case 0xC6 : // Æ
+				case 0xC6 : // ï¿½
 					output.append(_T("AE"));
 					break;
-				case 0xC7 : // Ç
+				case 0xC7 : // ï¿½
 					output.appendChar('C');
 					break;
-				case 0xC8 : // È
-				case 0xC9 : // É
-				case 0xCA : // Ê
-				case 0xCB : // Ë
+				case 0xC8 : // ï¿½
+				case 0xC9 : // ï¿½
+				case 0xCA : // ï¿½
+				case 0xCB : // ï¿½
 					output.appendChar('E');
 					break;
-				case 0xCC : // Ì
-				case 0xCD : // Í
-				case 0xCE : // Î
-				case 0xCF : // Ï
+				case 0xCC : // ï¿½
+				case 0xCD : // ï¿½
+				case 0xCE : // ï¿½
+				case 0xCF : // ï¿½
 					output.appendChar('I');
 					break;
-				case 0xD0 : // Ð
+				case 0xD0 : // ï¿½
 					output.appendChar('D');
 					break;
-				case 0xD1 : // Ñ
+				case 0xD1 : // ï¿½
 					output.appendChar('N');
 					break;
-				case 0xD2 : // Ò
-				case 0xD3 : // Ó
-				case 0xD4 : // Ô
-				case 0xD5 : // Õ
-				case 0xD6 : // Ö
-				case 0xD8 : // Ø
+				case 0xD2 : // ï¿½
+				case 0xD3 : // ï¿½
+				case 0xD4 : // ï¿½
+				case 0xD5 : // ï¿½
+				case 0xD6 : // ï¿½
+				case 0xD8 : // ï¿½
 					output.appendChar('O');
 					break;
-				case 0xDE : // Þ
+				case 0xDE : // ï¿½
 					output.append(_T("TH"));
 					break;
-				case 0xD9 : // Ù
-				case 0xDA : // Ú
-				case 0xDB : // Û
-				case 0xDC : // Ü
+				case 0xD9 : // ï¿½
+				case 0xDA : // ï¿½
+				case 0xDB : // ï¿½
+				case 0xDC : // ï¿½
 					output.appendChar('U');
 					break;
-				case 0xDD : // Ý
+				case 0xDD : // ï¿½
 					output.appendChar('Y');
 					break;
-				case 0xE0 : // à
-				case 0xE1 : // á
-				case 0xE2 : // â
-				case 0xE3 : // ã
-				case 0xE4 : // ä
-				case 0xE5 : // å
+				case 0xE0 : // ï¿½
+				case 0xE1 : // ï¿½
+				case 0xE2 : // ï¿½
+				case 0xE3 : // ï¿½
+				case 0xE4 : // ï¿½
+				case 0xE5 : // ï¿½
 					output.appendChar('a');
 					break;
-				case 0xE6 : // æ
+				case 0xE6 : // ï¿½
 					output.append(_T("ae"));
 					break;
-				case 0xE7 : // ç
+				case 0xE7 : // ï¿½
 					output.appendChar('c');
 					break;
-				case 0xE8 : // è
-				case 0xE9 : // é
-				case 0xEA : // ê
-				case 0xEB : // ë
+				case 0xE8 : // ï¿½
+				case 0xE9 : // ï¿½
+				case 0xEA : // ï¿½
+				case 0xEB : // ï¿½
 					output.appendChar('e');
 					break;
-				case 0xEC : // ì
-				case 0xED : // í
-				case 0xEE : // î
-				case 0xEF : // ï
+				case 0xEC : // ï¿½
+				case 0xED : // ï¿½
+				case 0xEE : // ï¿½
+				case 0xEF : // ï¿½
 					output.appendChar('i');
 					break;
-				case 0xF0 : // ð
+				case 0xF0 : // ï¿½
 					output.appendChar('d');
 					break;
-				case 0xF1 : // ñ
+				case 0xF1 : // ï¿½
 					output.appendChar('n');
 					break;
-				case 0xF2 : // ò
-				case 0xF3 : // ó
-				case 0xF4 : // ô
-				case 0xF5 : // õ
-				case 0xF6 : // ö
-				case 0xF8 : // ø
+				case 0xF2 : // ï¿½
+				case 0xF3 : // ï¿½
+				case 0xF4 : // ï¿½
+				case 0xF5 : // ï¿½
+				case 0xF6 : // ï¿½
+				case 0xF8 : // ï¿½
 					output.appendChar('o');
 					break;
-				case 0xDF : // ß
+				case 0xDF : // ï¿½
 					output.append(_T("ss"));
 					break;
-				case 0xFE : // þ
+				case 0xFE : // ï¿½
 					output.append(_T("th"));
 					break;
-				case 0xF9 : // ù
-				case 0xFA : // ú
-				case 0xFB : // û
-				case 0xFC : // ü
+				case 0xF9 : // ï¿½
+				case 0xFA : // ï¿½
+				case 0xFB : // ï¿½
+				case 0xFC : // ï¿½
 					output.appendChar('u');
 					break;
-				case 0xFD : // ý
-				case 0xFF : // ÿ
+				case 0xFD : // ï¿½
+				case 0xFF : // ï¿½
 					output.appendChar('y');
 					break;
 
 				#ifdef _UCS2
-				case 0x152 : // Œ
+				case 0x152 : // ï¿½
 					output.append(_T("OE"));
 					break;
-				case 0x153 : // œ
+				case 0x153 : // ï¿½
 					output.append(_T("oe"));
 					break;
-				case 0x178 : // Ÿ
+				case 0x178 : // ï¿½
 					output.appendChar('Y');
 					break;
 				#endif
@@ -340,6 +429,7 @@ bool ISOLatin1AccentFilter::next(Token* token){
 }
 
 
+KeywordAnalyzer::~KeywordAnalyzer(){}
 TokenStream* KeywordAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
     return _CLNEW KeywordTokenizer(reader);
 }
@@ -398,6 +488,48 @@ bool LengthFilter::next(Token* token)
     }
     // reached EOS -- return null
     return false;
+}
+
+
+CLTCSetList* WordlistLoader::getWordSet(const char* wordfilePath, const char* enc, CLTCSetList* stopTable)
+{
+	if ( enc == NULL )
+		enc = "ASCII";
+	CL_NS(util)::FileReader* reader = NULL;
+	try {
+		reader = _CLNEW CL_NS(util)::FileReader(wordfilePath, enc, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
+		stopTable = getWordSet(reader, stopTable);
+	}
+	_CLFINALLY (
+		if (reader != NULL) {
+			//reader->close();
+			_CLLDELETE(reader);
+		}
+	);
+	return stopTable;
+}
+
+//static
+CLTCSetList* WordlistLoader::getWordSet(CL_NS(util)::Reader* reader, CLTCSetList* stopTable, const bool bDeleteReader)
+{
+	if (!stopTable)
+		stopTable = _CLNEW CLTCSetList(true);
+
+	TCHAR* word = NULL;
+	try {
+		word = _CL_NEWARRAY(TCHAR, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
+		while (reader->readLine(word) > 0) {
+			stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::wordTrim(word)));
+		}
+	}
+	_CLFINALLY (
+		if (bDeleteReader && reader != NULL) {
+			//reader->close();
+			_CLDELETE(reader);
+		}
+		_CLDELETE_ARRAY(word);
+	);
+	return stopTable;
 }
 
 

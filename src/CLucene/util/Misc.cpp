@@ -4,23 +4,33 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Misc.h"
 
-#ifdef _CL_TIME_WITH_SYS_TIME
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
+
+#if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
-# include <time.h>
 #else
-# if defined(_CL_HAVE_SYS_TIME_H)
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
+# include <time.h>
 #endif
 
 #ifdef _CL_HAVE_SYS_TIMEB_H
-# include <sys/timeb.h>
+	#include <sys/timeb.h>
 #endif
+#if defined(_CL_HAVE_SYS_STAT_H)
+    #include <sys/stat.h>
+#endif
+#ifdef _CL_HAVE_STRINGS_H
+	#include <strings.h>
+#endif
+
+#include <cctype>
+#include <limits.h>
 
 CL_NS_DEF(util)
 
@@ -55,13 +65,13 @@ size_t Misc::whashCode(const wchar_t* str, size_t len){
 }
 
 //static
-char* Misc::_wideToChar(const wchar_t* s CL_FILELINEPARAM){
+char* Misc::_wideToChar(const wchar_t* s){
    size_t len = _tcslen(s);
    char* msg=_CL_NEWARRAY(char,len+1);
    _cpywideToChar( s,msg,len+1 );
    return msg;
 }
-wchar_t* Misc::_charToWide(const char* s CL_FILELINEPARAM){
+wchar_t* Misc::_charToWide(const char* s){
    size_t len = strlen(s);
    wchar_t* msg = _CL_NEWARRAY(wchar_t,len+1);
    _cpycharToWide(s,msg,len+1);
@@ -82,7 +92,7 @@ void Misc::_cpycharToWide(const char* s, wchar_t* d, size_t len){
 
 //static
 uint64_t Misc::currentTimeMillis() {
-#if defined(_CLCOMPILER_MSVC) || defined(__MINGW32__) || defined(__BORLANDC__)
+#ifndef _CL_HAVE_GETTIMEOFDAY
     struct _timeb tstruct;
     _ftime(&tstruct);
 
@@ -90,7 +100,7 @@ uint64_t Misc::currentTimeMillis() {
 #else
     struct timeval tstruct;
     if (gettimeofday(&tstruct, NULL) < 0) {
-    _CLTHROWA(CL_ERR_Runtime,"Error in gettimeofday call.");
+		_CLTHROWA(CL_ERR_Runtime,"Error in gettimeofday call.");
     }
 
     return (((uint64_t) tstruct.tv_sec) * 1000) + tstruct.tv_usec / 1000;
@@ -278,7 +288,7 @@ TCHAR* Misc::stringTrim(TCHAR* text) {
 		text[j+1]=0;
 	else {
 		j++;
-		STRCPY_TtoT(text, text+i, j-i);
+		_tcsncpy(text, text+i, j-i);
 		text[j-i] = 0;
 	}
 	
@@ -309,7 +319,7 @@ TCHAR* Misc::wordTrim(TCHAR* text) {
 		text[j] = 0;
 		return text;
 	} else {
-		STRCPY_TtoT(text, text+i, j-i);
+		_tcsncpy(text, text+i, j-i);
 		text[j-i] = 0;
 	}
 	

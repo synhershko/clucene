@@ -7,10 +7,6 @@
 #ifndef _lucene_index_Payload_
 #define _lucene_index_Payload_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
 CL_NS_DEF(index)
 
 /**
@@ -40,9 +36,7 @@ protected:
 public:
 
 	/** Creates an empty payload and does not allocate a byte array. */
-	Payload() : data(NULL), dataLen(0), offset(0), length(0) {
-      // nothing to do
-    }
+	Payload();
 
 	/**
 	* Creates a new payload with the the given array as data. 
@@ -57,16 +51,14 @@ public:
 	Payload(uint8_t* _data, const int32_t _dataLen, const int32_t _offset=0, int32_t _length=0);
 
 	/* Desctructor - auto-delete the data container */
-	~Payload() { _CLDELETE_LARRAY(data); }
+	~Payload();
 
 	/**
 	* Sets this payloads data. 
 	* A reference to the passed-in array is held, i. e. no 
 	* copy is made.
 	*/
-	void setData(uint8_t* _data, const int32_t _dataLen) {
-		setData(_data, _dataLen, 0, _dataLen);
-	}
+	void setData(uint8_t* _data, const int32_t _dataLen);
 
 	/**
 	* Sets this payloads data. 
@@ -94,24 +86,13 @@ public:
     /**
      * Returns the byte at the given index.
      */
-	uint8_t byteAt(int index) const {
-		if (0 <= index && index < this->length) {
-			return this->data[this->offset + index];    
-		}
-		_CLTHROWA(CL_ERR_IndexOutOfBounds,"Array index out of bounds at Payload::byteAt");
-	}
+	uint8_t byteAt(int index) const;
 
 	/**
 	* Allocates a new byte array, copies the payload data into it and returns it. Caller is responsible
 	* for deleting it later.
 	*/
-	uint8_t* toByteArray(int32_t &_dataLen) {
-		uint8_t* retArray = _CL_NEWARRAY(uint8_t,this->length);
-		memcpy((void*)retArray, (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
-		_dataLen = this->length;
-
-		return retArray;
-	}
+	uint8_t* toByteArray(int32_t &_dataLen);
 
 	/**
 	* Copies the payload data to a byte array.
@@ -119,22 +100,13 @@ public:
 	* @param target the target byte array
 	* @param targetOffset the offset in the target byte array
 	*/
-	void copyTo(uint8_t* target, const int32_t targetLen, const int32_t targetOffset) {
-		if (this->length > targetLen + targetOffset) {
-			_CLTHROWA(CL_ERR_IndexOutOfBounds,"Array index out of bounds at Payload::byteAt");
-		}
-		memcpy((void*)(target + targetOffset), (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
-	}
+	void copyTo(uint8_t* target, const int32_t targetLen, const int32_t targetOffset);
 
 	/**
 	* Clones this payload by creating a copy of the underlying
 	* byte array.
 	*/
-	Payload* clone() {
-		int32_t i;
-		Payload* clone = _CLNEW Payload(this->toByteArray(i), this->length, 0, this->length);
-		return clone;
-	}
+	Payload* clone();
 
 };
 

@@ -4,14 +4,27 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "AnalysisHeader.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
 
 const TCHAR* Token::defaultType=_T("word");
+
+///Compares the Token for their order
+class OrderCompare:LUCENE_BASE, public CL_NS(util)::Compare::_base //<Token*>
+{
+public:
+	bool operator()( Token* t1, Token* t2 ) const{
+	if(t1->startOffset()>t2->startOffset())
+        return false;
+    if(t1->startOffset()<t2->startOffset())
+        return true;
+	return true;
+}
+};
 
 Token::Token():
 	_startOffset (0),
@@ -111,13 +124,6 @@ size_t Token::termTextLength() {
 }
 void Token::resetTermTextLen(){
 	_termTextLen=-1;
-}
-bool Token::OrderCompare::operator()( Token* t1, Token* t2 ) const{
-	if(t1->startOffset()>t2->startOffset())
-        return false;
-    if(t1->startOffset()<t2->startOffset())
-        return true;
-	return true;
 }
 TCHAR* Token::toString() const{
 	StringBuffer sb;

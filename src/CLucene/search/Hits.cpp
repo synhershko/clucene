@@ -4,8 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-
+#include "CLucene/_ApiHeader.h"
+#include "Hits.h"
 #include "SearchHeader.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/index/IndexReader.h"
@@ -18,6 +18,8 @@ CL_NS_USE(util)
 CL_NS_USE(index)
 
 CL_NS_DEF(search)
+
+
 
 	HitDoc::HitDoc(const float_t s, const int32_t i)
 	{
@@ -50,6 +52,7 @@ CL_NS_DEF(search)
 	//       f is NULL or contains a pointer to a filter
 	//Post - The instance has been created
 
+		hitDocs = _CLNEW CL_NS(util)::CLVector<HitDoc*, CL_NS(util)::Deletor::Object<HitDoc> >;
 		_length  = 0;
 		first   = NULL;
 		last    = NULL;
@@ -65,7 +68,9 @@ CL_NS_DEF(search)
 		_lengthAtStart = _length;
 	}
 
-	Hits::~Hits(){ }
+	Hits::~Hits(){ 
+		_CLDELETE(hitDocs);
+	}
 
 	// count # deletions, return -1 if unknown.
 	int32_t Hits::countDeletions(CL_NS(search)::Searcher* s) {
@@ -113,7 +118,7 @@ CL_NS_DEF(search)
 	void Hits::getMoreDocs(const size_t m){
 		size_t _min = m;
 		{
-			size_t nHits = hitDocs.size();
+			size_t nHits = hitDocs->size();
 			if ( nHits > _min)
 				_min = nHits;
 		}
@@ -126,7 +131,7 @@ CL_NS_DEF(search)
 			topDocs = (TopDocs*)((Searchable*)searcher)->_search(query, filter, n, sort);
 		_length = topDocs->totalHits;
 		ScoreDoc* scoreDocs = topDocs->scoreDocs;
-		int32_t scoreDocsLength = topDocs->scoreDocsLength;
+		size_t scoreDocsLength = topDocs->scoreDocsLength;
 		float_t scoreNorm = 1.0f;
 
 		//Check that scoreDocs is a valid pointer before using it
@@ -135,7 +140,7 @@ CL_NS_DEF(search)
 				scoreNorm = 1.0f / scoreDocs[0].score;
 			}
 
-			int32_t start = hitDocs.size() - nDeletedHits;
+			int32_t start = hitDocs->size() - nDeletedHits;
 
 			// any new deletions?
 			int32_t nDels2 = countDeletions(searcher);
@@ -145,8 +150,8 @@ CL_NS_DEF(search)
 				nDeletedHits = 0;
 				debugCheckedForDeletions = true;
 				int32_t i2 = 0;
-				for (size_t i1=0; i1<hitDocs.size() && i2 < scoreDocsLength; i1++) {
-					int32_t id1 = static_cast<HitDoc*>(hitDocs[i1])->id;
+				for (size_t i1=0; i1<hitDocs->size() && i2 < scoreDocsLength; i1++) {
+					int32_t id1 = ((*hitDocs)[i1])->id;
 					int32_t id2 = scoreDocs[i2].doc;
 					if (id1 == id2) {
 						i2++;
@@ -157,11 +162,11 @@ CL_NS_DEF(search)
 				start = i2;
 			}
 
-			int32_t end = scoreDocsLength < _length ? scoreDocsLength : _length;
+			size_t end = scoreDocsLength < _length ? scoreDocsLength : _length;
 			_length += nDeletedHits;
-			//for (size_t i = hitDocs.size(); i < end; i++) {
-			for (int32_t i = start; i < end; i++) {
-				hitDocs.push_back(_CLNEW HitDoc(scoreDocs[i].score * scoreNorm, scoreDocs[i].doc));
+			//for (size_t i = hitDocs->size(); i < end; i++) {
+			for (size_t i = start; i < end; i++) {
+				hitDocs->push_back(_CLNEW HitDoc(scoreDocs[i].score * scoreNorm, scoreDocs[i].doc));
 			}
 
 			nDeletions = nDels2;
@@ -176,7 +181,7 @@ CL_NS_DEF(search)
             _sntprintf(buf, 100,_T("Not a valid hit number: %d"),n);
 			_CLTHROWT(CL_ERR_IndexOutOfBounds, buf );
 		}
-		if (n >= hitDocs.size())
+		if (n >= hitDocs->size())
 			getMoreDocs(n);
 
 		if (n >= _length) {
@@ -185,7 +190,7 @@ CL_NS_DEF(search)
 			_CLTHROWT(CL_ERR_ConcurrentModification, buf );
 		}
 
-		return hitDocs[n];
+		return (*hitDocs)[n];
 	}
 
 	void Hits::addToFront(HitDoc* hitDoc) {  // insert at front of cache
@@ -217,4 +222,5 @@ CL_NS_DEF(search)
 
 		numDocs--;
 	}
+	
 CL_NS_END

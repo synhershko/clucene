@@ -4,25 +4,26 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "ConjunctionScorer.h"
-#include "CLucene/util/Arrays.h"
+#include "CLucene/_ApiHeader.h"
+#include "_ConjunctionScorer.h"
+#include "Similarity.h"
+#include "CLucene/util/_Arrays.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
   Scorer* ConjunctionScorer::first()  const{ 
-	 if ( scorers.end() == scorers.begin() )
+	 if ( scorers->end() == scorers->begin() )
 		return NULL;
 
-	 return *scorers.begin(); 
+	 return *scorers->begin(); 
   } //get First
   Scorer* ConjunctionScorer::last() {
-	 if ( scorers.end() == scorers.begin() )
+	 if ( scorers->end() == scorers->begin() )
 		return NULL;
 
-	 CL_NS_STD(list)<Scorer*>::iterator i = scorers.end();
+	 CL_NS_STD(list)<Scorer*>::iterator i = scorers->end();
 	 --i;
 	 return *i; 
   } //get Last
@@ -40,16 +41,16 @@ CL_NS_DEF(search)
 
   void ConjunctionScorer::sortScorers() {
     // move scorers to an array
-    int32_t size = scorers.size();
+    int32_t size = scorers->size();
     Scorer** array = _CL_NEWARRAY(Scorer*,size+1);
-	scorers.toArray(array);
-    scorers.clear();                              // empty the list
+	scorers->toArray(array);
+    scorers->clear();                              // empty the list
 
     // note that this comparator is not consistent with equals!
 	__ScorerSorter.sort(array,size,0,size);
 
     for (int32_t i = 0; i<size; i++) {
-      scorers.push_back(array[i]);                  // re-build list, now sorted
+      scorers->push_back(array[i]);                  // re-build list, now sorted
     }
 	_CLDELETE_ARRAY(array);
   }
@@ -57,23 +58,23 @@ CL_NS_DEF(search)
   bool ConjunctionScorer::doNext() {
     while (more && first()->doc() < last()->doc()) { // find doc w/ all clauses
       more = first()->skipTo(last()->doc());      // skip first upto last
-	  Scorer* scorer = *scorers.begin();
-	  scorers.delete_front();
-      scorers.push_back(scorer);   // move first to last
+	  Scorer* scorer = *scorers->begin();
+	  scorers->delete_front();
+      scorers->push_back(scorer);   // move first to last
     }
     return more;                                // found a doc with all clauses
   }
 
   
   void ConjunctionScorer::init()  {
-    more = scorers.size() > 0;
+    more = scorers->size() > 0;
 
     // compute coord factor
-    coord = getSimilarity()->coord(scorers.size(), scorers.size());
+    coord = getSimilarity()->coord(scorers->size(), scorers->size());
 
     // move each scorer to its first entry
-	CL_NS_STD(list)<Scorer*>::iterator i = scorers.begin();
-    while (more && i!=scorers.end()) {
+	CL_NS_STD(list)<Scorer*>::iterator i = scorers->begin();
+    while (more && i!=scorers->end()) {
       more = ((Scorer*)*i)->next();
 	  ++i;
     }
@@ -86,14 +87,15 @@ CL_NS_DEF(search)
 
 	ConjunctionScorer::ConjunctionScorer(Similarity* similarity):
 		Scorer(similarity),
-		scorers(false),
+		scorers(_CLNEW CL_NS(util)::CLLinkedList<Scorer*,CL_NS(util)::Deletor::Object<Scorer> >(false)),
 		firstTime(true),
 		more(true),
 		coord(0.0)
 	{
     }
 	ConjunctionScorer::~ConjunctionScorer(){
-		scorers.setDoDelete(true);
+		scorers->setDoDelete(true);
+		_CLDELETE(scorers);
 	}
 
 	TCHAR *CL_NS(search)::Scorer::toString(void){
@@ -102,7 +104,7 @@ CL_NS_DEF(search)
 	
 
   void ConjunctionScorer::add(Scorer* scorer){
-    scorers.push_back(scorer);
+    scorers->push_back(scorer);
   }
 
 
@@ -118,8 +120,8 @@ CL_NS_DEF(search)
   }
   
   bool ConjunctionScorer::skipTo(int32_t target) {
-    CL_NS_STD(list)<Scorer*>::iterator i = scorers.begin();
-    while (more && i!=scorers.end()) {
+    CL_NS_STD(list)<Scorer*>::iterator i = scorers->begin();
+    while (more && i!=scorers->end()) {
       more = ((Scorer*)*i)->skipTo(target);
 	  ++i;
     }
@@ -130,8 +132,8 @@ CL_NS_DEF(search)
 
   float_t ConjunctionScorer::score(){
     float_t score = 0.0f;                           // sum scores
-    CL_NS_STD(list)<Scorer*>::const_iterator i = scorers.begin();
-	while (i!=scorers.end()){
+    CL_NS_STD(list)<Scorer*>::const_iterator i = scorers->begin();
+	while (i!=scorers->end()){
       score += (*i)->score();
 	  ++i;
 	}

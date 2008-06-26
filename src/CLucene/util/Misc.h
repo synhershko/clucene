@@ -7,13 +7,7 @@
 #ifndef _lucene_util_Misc_H
 #define _lucene_util_Misc_H
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
 CL_NS_DEF(util)
-
-
   /** A class containing various functions. 
   */
   class Misc{
@@ -24,7 +18,7 @@ CL_NS_DEF(util)
 	static int64_t file_Size(const char* path);
 
     static size_t ahashCode(const char* str);
-	  static size_t ahashCode(const char* str, size_t len);
+	static size_t ahashCode(const char* str, size_t len);
 
     static TCHAR* join ( const TCHAR* a, const TCHAR* b, const TCHAR* c=NULL, const TCHAR* d=NULL,const TCHAR* e=NULL,const TCHAR* f=NULL );
     static char* ajoin ( const char* a, const char* b, const char* c=NULL, const char* d=NULL,const char* e=NULL,const char* f=NULL );
@@ -58,11 +52,11 @@ CL_NS_DEF(util)
 
 #ifdef _UCS2
     static size_t whashCode(const wchar_t* str);
-		static size_t whashCode(const wchar_t* str, size_t len);
-		#define thashCode whashCode
-	  
-    static char* _wideToChar(const wchar_t* s CL_FILELINEPARAM);
-    static wchar_t* _charToWide(const char* s CL_FILELINEPARAM);
+	static size_t whashCode(const wchar_t* str, size_t len);
+	#define thashCode whashCode
+
+    static char* _wideToChar(const wchar_t* s);
+    static wchar_t* _charToWide(const char* s);
 
     static void _cpycharToWide(const char* s, wchar_t* d, size_t len);
     static void _cpywideToChar(const wchar_t* s, char* d, size_t len);

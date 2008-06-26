@@ -4,10 +4,18 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "SegmentMerger.h"
+#include "CLucene/_ApiHeader.h"
+#include "_SegmentHeader.h"
+#include "CLucene/util/PriorityQueue.h"
+#include "CLucene/util/Misc.h"
+#include "IndexReader.h"
+#include "IndexWriter.h"
+#include "_SegmentMerger.h"
+#include "_FieldsWriter.h"
+#include "CLucene/document/Document.h"
 
-#include "CLucene/index/IndexFileNames.h"
+#include "CLucene/index/_IndexFileNames.h"
+#include "_CompoundFile.h"
 
 CL_NS_USE(util)
 CL_NS_USE(document)
@@ -120,7 +128,7 @@ for (uint32_t i = 0; i < readers.size(); i++) {  // close readers
 }
 }
 
-void SegmentMerger::createCompoundFile(const char* filename, CL_NS(util)::AStringArrayWithDeletor& files){
+void SegmentMerger::createCompoundFile(const char* filename, AStringArrayWithDeletor& files){
     CompoundFileWriter* cfsWriter = _CLNEW CompoundFileWriter(directory, filename);
 
 	{ //msvc6 scope fix

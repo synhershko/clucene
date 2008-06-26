@@ -4,13 +4,40 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Lock.h"
+#include "_Lock.h"
 #include "CLucene/util/Misc.h"
 
+#ifdef _CL_HAVE_IO_H
+	#include <io.h>
+#endif
+#ifdef _CL_HAVE_FCNTL_H
+	#include <fcntl.h>
+#endif
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
+#ifdef _CL_HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
+#ifdef _CL_HAVE_DIRECT_H
+	#include <direct.h>
+#endif
+  
 CL_NS_USE(util)
 CL_NS_DEF(store)
 
+  class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray>{
+	  
+  };
+
+  LuceneLock::~LuceneLock()
+  {
+  }
    bool LuceneLock::obtain(int64_t lockWaitTimeout) {
       bool locked = obtain();
       if ( lockWaitTimeout < 0 && lockWaitTimeout != LOCK_OBTAIN_WAIT_FOREVER ) {
@@ -30,6 +57,15 @@ CL_NS_DEF(store)
       
       return locked;
    }
+
+   TCHAR* NoLock::toString()
+   {
+	 return STRDUP_TtoT(_T("NoLock"));
+   }
+   bool NoLock::obtain() { return true; }
+   void NoLock::release() {}
+   bool NoLock::isLocked() { return false; }
+   
 
 
    SingleInstanceLock::SingleInstanceLock( LocksType* locks, const char* lockName )
@@ -56,7 +92,7 @@ CL_NS_DEF(store)
    bool SingleInstanceLock::isLocked()
    {
 	   SCOPED_LOCK_MUTEX(locks->THIS_LOCK);
-	   return locks->contains( lockName );
+	   return locks->find( lockName ) == locks->end();
    }
    
    TCHAR* SingleInstanceLock::toString()
@@ -71,6 +107,7 @@ CL_NS_DEF(store)
    
    FSLock::FSLock( const char* _lockDir, const char* name )
    {
+	   this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
    	  this->lockDir = STRDUP_AtoA(_lockDir);
    	  strcpy(lockFile,_lockDir);
    	  strcat(lockFile,PATH_DELIMITERA);
@@ -81,7 +118,7 @@ CL_NS_DEF(store)
    {
 	   _CLDELETE_LCaARRAY( lockDir );
    }
-   
+
    bool FSLock::obtain()
    {
 	   	if ( !Misc::dir_Exists(lockDir) ){

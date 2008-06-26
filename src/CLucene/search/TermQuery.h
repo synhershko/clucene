@@ -7,17 +7,15 @@
 #ifndef _lucene_search_TermQuery_
 #define _lucene_search_TermQuery_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "SearchHeader.h"
-#include "Scorer.h"
-#include "CLucene/index/Term.h"
-#include "TermScorer.h"
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/StringBuffer.h"
-#include "CLucene/index/Terms.h"
+//#include "SearchHeader.h"
+//#include "Scorer.h"
+CL_CLASS_DEF(index,Term)
+//#include "TermScorer.h"
+#include "Query.h"
+//#include "CLucene/index/IndexReader.h"
+CL_CLASS_DEF(util,StringBuffer)
+//#include "CLucene/index/Terms.h"
 
 CL_NS_DEF(search)
 
@@ -25,34 +23,9 @@ CL_NS_DEF(search)
     /** A Query that matches documents containing a term.
 	This may be combined with other terms with a {@link BooleanQuery}.
 	*/
-    class TermQuery: public Query {
+    class CLUCENE_EXPORT TermQuery: public Query {
     private:
 		CL_NS(index)::Term* term;
-
-		
-		class TermWeight: public Weight {
-		private:
-			Searcher* searcher;
-			float_t value;
-			float_t idf;
-			float_t queryNorm;
-			float_t queryWeight;
-			TermQuery* _this;
-			CL_NS(index)::Term* _term;
-
-		public:
-			TermWeight(Searcher* searcher, TermQuery* _this, CL_NS(index)::Term* _term);
-			~TermWeight();
-			TCHAR* toString();
-			Query* getQuery() { return (Query*)_this; }
-			float_t getValue() { return value; }
-
-			float_t sumOfSquaredWeights();
-			void normalize(float_t queryNorm);
-			Scorer* scorer(CL_NS(index)::IndexReader* reader);
-			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
-		};
-
     protected:
         Weight* _createWeight(Searcher* searcher);
         TermQuery(const TermQuery& clone);

@@ -4,15 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "Lexer.h"
-
-#include "CLucene/util/FastCharStream.h"
-#include "CLucene/util/Reader.h"
-#include "CLucene/util/StringBuffer.h"
-#include "TokenList.h"
+#include "CLucene/_ApiHeader.h"
+#include "QueryParser.h"
+#include "_TokenList.h"
 #include "QueryToken.h"
-#include "QueryParserBase.h"
+#include "_Lexer.h"
+
+#include "CLucene/util/Reader.h"
+#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/_FastCharStream.h"
 
 CL_NS_USE(util)
 

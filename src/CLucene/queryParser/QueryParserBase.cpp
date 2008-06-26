@@ -4,8 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "QueryParserBase.h"
+#include "CLucene/_ApiHeader.h"
+#include "QueryParser.h"
 
 #include "CLucene/search/TermQuery.h"
 #include "CLucene/search/PhraseQuery.h"
@@ -13,7 +13,18 @@
 #include "CLucene/search/FuzzyQuery.h"
 #include "CLucene/search/WildcardQuery.h"
 #include "CLucene/search/PrefixQuery.h"
+#include "CLucene/search/BooleanQuery.h"
 
+#include "CLucene/analysis/AnalysisHeader.h"
+#include "CLucene/util/Reader.h"
+#include "CLucene/search/SearchHeader.h"
+#include "CLucene/search/BooleanClause.h"
+#include "CLucene/search/Query.h"
+#include "CLucene/index/Term.h"
+#include "QueryToken.h"
+
+#include "_TokenList.h"
+#include "_Lexer.h"
 
 CL_NS_USE(search)
 CL_NS_USE(util)
@@ -50,7 +61,7 @@ void QueryParserBase::discardEscapeChar(TCHAR* source) const{
 	}
 }
 
-void QueryParserBase::AddClause(vector<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
+void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
 //Func - Adds the next parsed clause.
 //Pre  -
 //Post -

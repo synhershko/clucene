@@ -4,8 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "TransactionalRAMDirectory.h"
+#include "CLucene/_ApiHeader.h"
+#include "_RAMDirectory.h"
+#include "RAMDirectory.h"
+#include "_TransactionalRAMDirectory.h"
 
 CL_NS_DEF(store)
 CL_NS_USE(util)
@@ -31,9 +33,9 @@ CL_NS_USE(util)
 
       // Transfer memory ownership of both the key and the value from files to
       // filesToRestoreOnAbort.
-      const char* origName = files.getKey(name);
-      RAMFile* origFile = files.get(name);
-      files.remove(name, true, true);
+      const char* origName = files->getKey(name);
+      RAMFile* origFile = files->get(name);
+      files->remove(name, true, true);
       filesToRestoreOnAbort.put(origName, origFile);
 
       CND_CONDITION(!fileExists(name), "File should not exist immediately after archival.");
@@ -51,7 +53,7 @@ CL_NS_USE(util)
     RAMFile* origFile = filesToRestoreOnAbort.get(name);
     // Transfer memory ownership back to files from filesToRestoreOnAbort.
     filesToRestoreOnAbort.remove(name, true, true);
-    files.put(origName, origFile);
+    files->put(origName, origFile);
   }
   bool TransactionalRAMDirectory::transIsOpen() const {
     return transOpen;
@@ -125,7 +127,7 @@ CL_NS_USE(util)
       )
     {
       const char* name = itr->first;
-      files.put(name, itr->second);
+      files->put(name, itr->second);
       // We've just transferred ownership of the memory of both the key and the
       // value to files; we must now direct filesToRestoreOnAbort not to delete
       // that memory as it removes the entry.  This is performed in a separate
@@ -196,7 +198,7 @@ CL_NS_USE(util)
       // an additional copy of the filename's memory because the transactional
       // metadata container filesToRemoveOnAbort is not at risk of outliving
       // files.
-      filesToRemoveOnAbort.put(files.getKey(name),NULL);
+      filesToRemoveOnAbort.put(files->getKey(name),NULL);
       return ret;
     } catch (...) {
       if (wasOriginalAndWasArchived) {

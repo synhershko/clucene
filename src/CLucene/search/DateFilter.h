@@ -7,15 +7,12 @@
 #ifndef _lucene_search_DateFilter_
 #define _lucene_search_DateFilter_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/document/DateField.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/BitSet.h"
+//#include "CLucene/document/DateField.h"
+CL_CLASS_DEF(index,Term)
+//#include "CLucene/index/Terms.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "CLucene/util/BitSet.h"
 #include "Filter.h"
 
 CL_NS_DEF(search)
@@ -25,7 +22,7 @@ CL_NS_DEF(search)
  * <p>For this to work, documents must have been indexed with a
  * {@link DateField}.
  */
-  class DateFilter: public Filter {
+  class CLUCENE_EXPORT DateFilter: public Filter {
   private:
 	CL_NS(index)::Term* start;
     CL_NS(index)::Term* end;

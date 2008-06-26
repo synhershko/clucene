@@ -39,7 +39,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #include "CLucene/StdHeader.h"
+ #include "CLucene/_ApiHeader.h"
 
 typedef unsigned long  gunichar;
 typedef unsigned short guint16;
@@ -89,7 +89,7 @@ typedef enum
 } GUnicodeType;
 
 
-#include "gunichartables.h"
+#include "_gunichartables.h"
 
 #define ATTR_TABLE(Page) (((Page) <= G_UNICODE_LAST_PAGE_PART1) \
                           ? attr_table_part1[Page] \
@@ -127,9 +127,9 @@ typedef enum
 
 #if defined(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS)
 #ifdef _LUCENE_PRAGMA_WARNINGS
- #pragma message ("===== Using internal character function =====")
+ #pragma message ("===== Note: using internal character function for compatibility =====")
 #else
- #warning "===== Using internal character function ====="
+ #warning "===== Note: using internal character function for compatibility ====="
 #endif
 
 bool cl_isletter(gunichar c)
@@ -337,7 +337,7 @@ TCHAR cl_tcasefold(const TCHAR ch){
                #ifdef _UCS2
 		           return ret;
                #else
-                   LUCENE_OOR_CHAR(ret)
+                   return LUCENE_OOR_CHAR(ret);
                #endif
             }else if (half == start){
                 break;

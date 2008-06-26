@@ -7,49 +7,32 @@
 #ifndef _lucene_search_Scorer_
 #define _lucene_search_Scorer_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "Similarity.h"
-#include "SearchHeader.h"
-#include "Explanation.h"
+CL_CLASS_DEF(search,Similarity)
+CL_CLASS_DEF(search,HitCollector)
+CL_CLASS_DEF(search,Explanation)
+//#include "Similarity.h"
+//#include "SearchHeader.h"
 
 CL_NS_DEF(search)
    /** Expert: Implements scoring for a class of queries. */
-class Scorer: LUCENE_BASE {
+class CLUCENE_EXPORT Scorer: LUCENE_BASE {
    private:
       Similarity* similarity;
    protected:
       /** Constructs a Scorer. */
-      Scorer(Similarity* similarity) {
-         this->similarity = similarity;
-      }
+      Scorer(Similarity* similarity);
 
 	public:
-		virtual ~Scorer(){
-		}
+		virtual ~Scorer();
 
       /** Returns the Similarity implementation used by this scorer. */
-      Similarity* getSimilarity()  const{
-         return this->similarity;
-      }
+      Similarity* getSimilarity()  const;
 
       /** Scores all documents and passes them to a collector. */
-      virtual void score(HitCollector* hc) {
-         while (next()) {
-            hc->collect(doc(), score());
-         }
-      }
+      virtual void score(HitCollector* hc) ;
 
-      virtual bool score( HitCollector* results, const int32_t maxDoc ) {
-    	  while( doc() < maxDoc ) {
-    		  results->collect( doc(), score() );
-    		  if ( !next() )
-    			  return false;
-    	  }
-    	  return true;
-      }
+      virtual bool score( HitCollector* results, const int32_t maxDoc );
 
       /** Advance to the next document matching the query.  Returns true iff there
          * is another match. */

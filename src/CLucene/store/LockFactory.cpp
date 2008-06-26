@@ -5,12 +5,31 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "LockFactory.h"
+#include "_Lock.h"
 #include "CLucene/util/Misc.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
+
+class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray>
+{
+public:
+	LocksType(bool del)
+	{
+		setDoDelete(del);
+	}
+	virtual ~LocksType(){
+	}
+};
 
 LockFactory::LockFactory()
 {
@@ -60,6 +79,11 @@ void SingleInstanceLockFactory::clearLock( const char* lockName )
 
 NoLockFactory* NoLockFactory::singleton = NULL;
 NoLock* NoLockFactory::singletonLock = NULL;
+
+void NoLockFactory::shutdown(){
+	_CLDELETE(NoLockFactory::singleton);
+	_CLDELETE(NoLockFactory::singletonLock);
+}
 
 NoLockFactory* NoLockFactory::getNoLockFactory()
 {

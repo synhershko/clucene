@@ -4,19 +4,47 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "TermQuery.h"
 
 #include "SearchHeader.h"
 #include "Scorer.h"
 #include "CLucene/index/Term.h"
-#include "TermScorer.h"
+#include "Explanation.h"
+#include "Similarity.h"
+#include "Searchable.h"
+#include "_TermScorer.h"
 #include "CLucene/index/IndexReader.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringBuffer.h"
 #include "CLucene/index/Terms.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)
+
+
+	
+	class TermWeight: public Weight {
+	private:
+		Searcher* searcher;
+		float_t value;
+		float_t idf;
+		float_t queryNorm;
+		float_t queryWeight;
+		TermQuery* _this;
+		CL_NS(index)::Term* _term;
+
+	public:
+		TermWeight(Searcher* searcher, TermQuery* _this, CL_NS(index)::Term* _term);
+		~TermWeight();
+		TCHAR* toString();
+		Query* getQuery() { return (Query*)_this; }
+		float_t getValue() { return value; }
+
+		float_t sumOfSquaredWeights();
+		void normalize(float_t queryNorm);
+		Scorer* scorer(CL_NS(index)::IndexReader* reader);
+		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+	};
 
 
 	/** Constructs a query for the term <code>t</code>. */
@@ -83,7 +111,7 @@ CL_NS_DEF(search)
    }
 
 
-   TermQuery::TermWeight::TermWeight(Searcher* searcher, TermQuery* _this, Term* _term) {
+   TermWeight::TermWeight(Searcher* searcher, TermQuery* _this, Term* _term) {
 		this->_this = _this;
 		this->_term = _term;
 		this->searcher = searcher;
@@ -92,30 +120,30 @@ CL_NS_DEF(search)
 		queryNorm=0;
 		queryWeight=0;
 	}
-   TermQuery::TermWeight::~TermWeight(){
+   TermWeight::~TermWeight(){
    }
 
     //return a *new* string describing this object
-	TCHAR* TermQuery::TermWeight::toString() { 
+	TCHAR* TermWeight::toString() { 
 		int32_t size=_tcslen(_this->getQueryName()) + 10;
 		TCHAR* tmp = _CL_NEWARRAY(TCHAR, size);//_tcslen(weight())
 		_sntprintf(tmp,size,_T("weight(%s)"),_this->getQueryName());
 		return tmp;
 	}
 
-	float_t TermQuery::TermWeight::sumOfSquaredWeights() {
+	float_t TermWeight::sumOfSquaredWeights() {
 		idf = _this->getSimilarity(searcher)->idf(_term, searcher); // compute idf
 		queryWeight = idf * _this->getBoost();             // compute query weight
 		return queryWeight * queryWeight;           // square it
 	}
 
-	void TermQuery::TermWeight::normalize(float_t queryNorm) {
+	void TermWeight::normalize(float_t queryNorm) {
 		this->queryNorm = queryNorm;
 		queryWeight *= queryNorm;                   // normalize query weight
 		value = queryWeight * idf;                  // idf for document 
 	}
 
-	Scorer* TermQuery::TermWeight::scorer(IndexReader* reader) {
+	Scorer* TermWeight::scorer(IndexReader* reader) {
 		TermDocs* termDocs = reader->termDocs(_term);
 		    
 		if (termDocs == NULL)
@@ -125,7 +153,7 @@ CL_NS_DEF(search)
 								reader->norms(_term->field()));
 	}
 
-	void TermQuery::TermWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
+	void TermWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
 		TCHAR buf[LUCENE_SEARCH_EXPLANATION_DESC_LEN];
         TCHAR* tmp;
 

@@ -6,22 +6,21 @@
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_PrefixQuery
 #define _lucene_search_PrefixQuery
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
-#include "CLucene/index/IndexReader.h"
-#include "SearchHeader.h"
-#include "BooleanQuery.h"
-#include "TermQuery.h"
-#include "CLucene/util/StringBuffer.h"
+CL_CLASS_DEF(index,Term)
+//#include "CLucene/index/Terms.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "SearchHeader.h"
+//#include "BooleanQuery.h"
+//#include "TermQuery.h"
+#include "Query.h"
+#include "Filter.h"
+CL_CLASS_DEF(util,StringBuffer)
 
 CL_NS_DEF(search) 
 	//PrefixQuery is a Query that matches documents containing terms with a specified prefix.
 
-	class PrefixQuery: public Query {
+	class CLUCENE_EXPORT PrefixQuery: public Query {
 	private:
 		CL_NS(index)::Term* prefix;
 	protected:

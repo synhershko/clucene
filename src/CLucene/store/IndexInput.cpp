@@ -4,8 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "IndexInput.h"
+#include "IndexOutput.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -82,14 +83,11 @@ CL_NS_DEF(store)
     }
   }
 
-   TCHAR* IndexInput::readString(const bool _unique){
+   TCHAR* IndexInput::readString(){
     int32_t len = readVInt();
       
     if ( len == 0){
-      if ( _unique ) //todo: does non unique ever occur?
-         return stringDuplicate(LUCENE_BLANK_STRING);
-      else
-         return LUCENE_BLANK_STRING;
+      return stringDuplicate(LUCENE_BLANK_STRING);
     }
 
     TCHAR* ret = _CL_NEWARRAY(TCHAR,len+1);
@@ -124,7 +122,7 @@ CL_NS_DEF(store)
 
 BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
 		buffer(NULL),
-		bufferSize(_bufferSize),
+		bufferSize(_bufferSize>=0?_bufferSize:CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE),
 		bufferStart(0),
 		bufferLength(0),
 		bufferPosition(0)

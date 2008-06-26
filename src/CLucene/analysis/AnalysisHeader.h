@@ -7,12 +7,7 @@
 #ifndef _lucene_analysis_AnalysisHeader_
 #define _lucene_analysis_AnalysisHeader_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
-#include "CLucene/util/Reader.h"
-
+CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
   
 
@@ -108,13 +103,6 @@ public:
 	void setType(const TCHAR* val) { _type = val; } ///<returns reference
 
 	TCHAR* toString() const;
-
-	///Compares the Token for their order
-	class OrderCompare:LUCENE_BASE, public CL_NS(util)::Compare::_base //<Token*>
-	{
-	public:
-		bool operator()( Token* t1, Token* t2 ) const;
-	};
 };
 
 /** 
@@ -158,7 +146,7 @@ public:
  *  WARNING: You must override one of the methods defined by this class in your
  *  subclass or the Analyzer will enter an infinite loop.
  */
-class Analyzer:LUCENE_BASE{
+class CLUCENE_EXPORT Analyzer:LUCENE_BASE{
 public:
 	/** Creates a TokenStream which tokenizes all the text in the provided
 	Reader.  Default implementation forwards to tokenStream(Reader) for 

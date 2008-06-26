@@ -7,14 +7,12 @@
 #ifndef _lucene_analysis_standard_StandardFilter
 #define _lucene_analysis_standard_StandardFilter
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "../AnalysisHeader.h"
-#include "../Analyzers.h"
-#include "StandardTokenizerConstants.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/analysis/AnalysisHeader.h"
+//#include "../Analyzers.h"
+//#include "StandardTokenizerConstants.h"
+
+CL_CLASS_DEF(util,StringBuffer)
 
 CL_NS_DEF2(analysis,standard)
 

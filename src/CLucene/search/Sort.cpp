@@ -4,9 +4,12 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Sort.h"
 #include "Compare.h"
+#include "SearchHeader.h"
+#include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/_StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(search)
@@ -23,19 +26,19 @@ CL_NS_DEF(search)
   SortField::SortField (const TCHAR* field) {
      this->type = AUTO;
      this->reverse = false;
-     this->field = CLStringIntern::intern(field  CL_FILELINE);
+     this->field = CLStringIntern::intern(field);
 	 this->factory = NULL;
   }
 
   SortField::SortField (const TCHAR* field, int32_t type, bool reverse) {
-    this->field = (field != NULL) ? CLStringIntern::intern(field  CL_FILELINE) : field;
+    this->field = (field != NULL) ? CLStringIntern::intern(field) : field;
     this->type = type;
     this->reverse = reverse;
 	 this->factory = NULL;
   }
   
   SortField::SortField(const SortField& clone){
-    this->field = (clone.field != NULL) ? CLStringIntern::intern(clone.field  CL_FILELINE) : clone.field;
+    this->field = (clone.field != NULL) ? CLStringIntern::intern(clone.field) : clone.field;
     this->type = clone.type;
     this->reverse = clone.reverse;
 	 this->factory = clone.factory;
@@ -69,7 +72,7 @@ CL_NS_DEF(search)
 
 
   SortField::SortField (const TCHAR* field, SortComparatorSource* comparator, bool reverse) {
-    this->field = (field != NULL) ? CLStringIntern::intern(field  CL_FILELINE): field;
+    this->field = (field != NULL) ? CLStringIntern::intern(field): field;
     this->type = CUSTOM;
     this->reverse = reverse;
     this->factory = comparator;

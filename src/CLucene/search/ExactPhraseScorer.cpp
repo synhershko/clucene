@@ -4,11 +4,13 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "ExactPhraseScorer.h"
-
-#include "PhraseScorer.h"
+#include "CLucene/_ApiHeader.h"
 #include "CLucene/index/Terms.h"
+#include "SearchHeader.h"
+#include "SearchHeader.h"
+#include "Scorer.h"
+#include "_ExactPhraseScorer.h"
+#include "_PhraseScorer.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)

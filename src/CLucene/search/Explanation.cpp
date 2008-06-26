@@ -4,9 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "Explanation.h"
-#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/_StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(search)
@@ -14,35 +14,42 @@ CL_NS_DEF(search)
 
 Explanation::Explanation(float_t value, const TCHAR* description) {
  this->value = value;
+ this->details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >;
  _tcsncpy(this->description,description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
 }
 
 Explanation::Explanation() {
  this->value = 0;
+ this->details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >;
  this->description[0]=0;
 }
 
-Explanation::Explanation(const Explanation& copy){
+Explanation::Explanation(const Explanation& copy):
+	details(NULL)
+{
     set(copy);
 }
 void Explanation::set(const Explanation& copy){
     this->value = copy.value;
-    STRCPY_TtoT(description,copy.description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
+    _tcsncpy(description,copy.description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
 
-    details.clear();
+    _CLDELETE(this->details);
+    this->details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >;
+
     CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >::const_iterator itr;
-    itr = copy.details.begin();
-    while ( itr != copy.details.end() ){
-        details.push_back( (*itr)->clone() );
+    itr = copy.details->begin();
+    while ( itr != copy.details->end() ){
+        details->push_back( (*itr)->clone() );
         ++itr;
     }
 }
 
 Explanation::~Explanation(){
+    _CLDELETE(this->details);
 }
 
 void Explanation::setDescription(const TCHAR* description) {
-   STRCPY_TtoT(this->description,description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
+   _tcsncpy(this->description,description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
 }
 
 
@@ -73,8 +80,8 @@ TCHAR* Explanation::toString(int32_t depth) {
  buffer.append(getDescription());
  buffer.append(_T("\n"));
 
- for ( uint32_t j=0;j<details.size();j++ ){
-   TCHAR* tmp = details[j]->toString(depth+1);
+ for ( uint32_t j=0;j<details->size();j++ ){
+   TCHAR* tmp = (*details)[j]->toString(depth+1);
    buffer.append(tmp);
    _CLDELETE_CARRAY(tmp);
  }
@@ -82,23 +89,23 @@ TCHAR* Explanation::toString(int32_t depth) {
 }
 
 int Explanation::getDetailsLength(){
-    return details.size();
+    return details->size();
 }
 Explanation* Explanation::getDetail(int i){
-    return details[i];
+    return (*details)[i];
 }
 /** The sub-nodes of this explanation node. */
 void Explanation::getDetails(Explanation** ret) {
-    uint32_t size = details.size();
+    uint32_t size = details->size();
     for ( uint32_t i=0;i<size;i++ ){
-        ret[i] = details[i]->clone();
+        ret[i] = (*details)[i]->clone();
     }
     ret[size] = NULL;
 }
 
 /** Adds a sub-node to this explanation node. */
 void Explanation::addDetail(Explanation* detail) {
-   details.push_back(detail);
+   details->push_back(detail);
 }
 
 /** Render an explanation as text. */
@@ -120,8 +127,8 @@ TCHAR* Explanation::toHtml() {
  buffer.append(getDescription());
  buffer.append(_T("</li>\n"));
 
- for ( uint32_t i=0;i<details.size();i++ ){
-   tmp = details[i]->toHtml();
+ for ( uint32_t i=0;i<details->size();i++ ){
+   tmp = (*details)[i]->toHtml();
     buffer.append(tmp);
     _CLDELETE_CARRAY(tmp);
  }

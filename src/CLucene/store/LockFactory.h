@@ -7,13 +7,14 @@
 #ifndef _lucene_store_LockFactory_
 #define _lucene_store_LockFactory_
 
-#include "Lock.h"
+//#include "Lock.h"
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
+
+CL_CLASS_DEF(store,LuceneLock)
+CL_CLASS_DEF(store,NoLock)
 
 CL_NS_DEF(store)
+class LocksType;
 
 class LockFactory: LUCENE_BASE {
 protected:
@@ -32,8 +33,6 @@ public:
 	virtual void clearLock( const char* lockName )=0;
 	
 };
-
-typedef CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray> LocksType;
 
 class SingleInstanceLockFactory: public LockFactory {
 private:
@@ -55,6 +54,9 @@ public:
 	static NoLockFactory* getNoLockFactory();
 	LuceneLock* makeLock( const char* lockName );
 	void clearLock( const char* lockName );
+	
+	/** called when lucene_shutdown is called */
+	static void shutdown();
 };
 
 class FSLockFactory: public LockFactory {

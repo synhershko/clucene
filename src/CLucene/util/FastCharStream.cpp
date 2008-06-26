@@ -4,8 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "FastCharStream.h"
+#include "CLucene/_ApiHeader.h"
+#include "_FastCharStream.h"
 
 #include "CLucene/util/Reader.h"
 

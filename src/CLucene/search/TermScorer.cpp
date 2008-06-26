@@ -4,11 +4,15 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "TermScorer.h"
-
+#include "CLucene/_ApiHeader.h"
+#include "_TermScorer.h"
+#include "SearchHeader.h"
+#include "Explanation.h"
+#include "CLucene/index/Term.h"
 #include "CLucene/index/Terms.h"
 #include "TermQuery.h"
+#include "Similarity.h"
+#include "Explanation.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)

@@ -7,14 +7,11 @@
 #ifndef _lucene_util_BitSet_
 #define _lucene_util_BitSet_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/store/Directory.h"
+CL_CLASS_DEF(store,Directory)
 
 CL_NS_DEF(util)
-class BitSet:LUCENE_BASE {
+class CLUCENE_EXPORT BitSet:LUCENE_BASE {
 	int32_t _size;
 	int32_t _count;
 	uint8_t *bits;

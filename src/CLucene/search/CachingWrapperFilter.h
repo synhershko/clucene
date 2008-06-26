@@ -7,8 +7,8 @@
 #ifndef _lucene_search_CachingWrapperFilter_
 #define _lucene_search_CachingWrapperFilter_
 
-#include "CLucene/util/BitSet.h"
-#include "CLucene/index/IndexReader.h"
+//#include "CLucene/util/BitSet.h"
+//#include "CLucene/index/IndexReader.h"
 #include "Filter.h"
 
 CL_NS_DEF(search)
@@ -17,25 +17,11 @@ CL_NS_DEF(search)
  * filters to implement this and allow itself to be cached. Alternatively,
  * use the CachingWrapperFilter to cache the filter.
  */
-class AbstractCachingFilter: public Filter 
+class CLUCENE_EXPORT AbstractCachingFilter: public Filter 
 {
-	class BitSetHolder: LUCENE_BASE{
-		bool deleteBs;
-	public:
-		BitSetHolder(CL_NS(util)::BitSet* bits, bool deleteBs);
-		~BitSetHolder();
-		CL_NS(util)::BitSet* bits;
-	};
+	struct Internal;
+	Internal* internal;
 	void closeCallback(CL_NS(index)::IndexReader* reader, void* param);
-	typedef CL_NS(util)::CLHashMap<CL_NS(index)::IndexReader*, 
-	  BitSetHolder*, 
-	  CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
-	  CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
-	  CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
-	  CL_NS(util)::Deletor::Object<BitSetHolder> > CacheType; 
-
-	CacheType cache;
-
 protected:
 	AbstractCachingFilter( const AbstractCachingFilter& copy );
 	virtual CL_NS(util)::BitSet* doBits( CL_NS(index)::IndexReader* reader ) = 0;

@@ -7,16 +7,14 @@
 #ifndef _lucene_analysis_standard_StandardAnalyzer
 #define _lucene_analysis_standard_StandardAnalyzer
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/Reader.h"
+//#include "CLucene/util/VoidMap.h"
+CL_CLASS_DEF(util,Reader)
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/analysis/Analyzers.h"
-#include "StandardFilter.h"
-#include "StandardTokenizer.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
+//#include "CLucene/analysis/Analyzers.h"
+//#include "StandardFilter.h"
+//#include "StandardTokenizer.h"
 
 
 CL_NS_DEF2(analysis,standard)
@@ -26,10 +24,10 @@ CL_NS_DEF2(analysis,standard)
 * LowerCaseFilter} and {@link StopFilter}, using a list of English stop words.
 *
 */
-	class StandardAnalyzer : public Analyzer 
+	class CLUCENE_EXPORT StandardAnalyzer : public Analyzer 
 	{
 	private:
-		CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> stopSet;
+		CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>* stopSet;
 	public:
 		/** Builds an analyzer.*/
 		StandardAnalyzer();
@@ -40,16 +38,12 @@ CL_NS_DEF2(analysis,standard)
 		/** Builds an analyzer with the stop words from the given file.
 		* @see WordlistLoader#getWordSet(File)
 		*/
-		StandardAnalyzer(const char* stopwordsFile, const char* enc = "ASCII") {
-			WordlistLoader::getWordSet(stopwordsFile, enc, &stopSet);
-		}
+		StandardAnalyzer(const char* stopwordsFile, const char* enc = NULL);
 
 		/** Builds an analyzer with the stop words from the given reader.
 		* @see WordlistLoader#getWordSet(Reader)
 		*/
-		StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false) {
-			WordlistLoader::getWordSet(stopwordsReader, &stopSet, _bDeleteReader);
-		}
+		StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader = false);
 
 		~StandardAnalyzer();
 

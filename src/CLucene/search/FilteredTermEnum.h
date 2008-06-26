@@ -7,11 +7,8 @@
 #ifndef _lucene_search_FilteredTermEnum_
 #define _lucene_search_FilteredTermEnum_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
 
-#include "CLucene/index/Term.h"
+CL_CLASS_DEF(index,Term)
 #include "CLucene/index/Terms.h"
 
 CL_NS_DEF(search)
@@ -20,7 +17,7 @@ CL_NS_DEF(search)
   //Term enumerations are always ordered by term->compareTo().  Each term in
   //the enumeration is greater than all that precede it. 
   
-  class FilteredTermEnum: public CL_NS(index)::TermEnum {
+  class CLUCENE_EXPORT FilteredTermEnum: public CL_NS(index)::TermEnum {
   public:
       //Constructor
       FilteredTermEnum();

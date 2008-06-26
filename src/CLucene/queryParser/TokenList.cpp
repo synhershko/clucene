@@ -4,10 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
-#include "TokenList.h"
+#include "CLucene/_ApiHeader.h"
+#include "_TokenList.h"
 
-#include "CLucene/util/VoidMap.h"
+//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/VoidList.h"
 #include "QueryToken.h"
 

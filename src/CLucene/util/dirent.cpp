@@ -4,10 +4,13 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 
 #if !defined(_CL_HAVE_DIRENT_H) && !defined(_CL_HAVE_SYS_NDIR_H) && !defined(_CL_HAVE_SYS_DIR_H) && !defined(_CL_HAVE_NDIR_H)
-#include "dirent.h"
+#include "_dirent.h"
+#include <sys/stat.h>
+#include <errno.h>
+
 
 DIR * 
 opendir (const char *szPath)
@@ -30,8 +33,8 @@ opendir (const char *szPath)
 	}
 
 	/* Attempt to determine if the given path really is a directory. */
-	struct _stat rcs;
-	if ( _stat(szPath,&rcs) == -1)
+	struct fileStat rcs;
+	if ( fileStat(szPath,&rcs) == -1)
 	{
 		/* call GetLastError for more error info */
 		errno = ENOENT;
@@ -171,13 +174,13 @@ struct dirent * readdir (DIR * dirp)
 
 		if (!bThisFolderOrUpFolder)
 		{
-			struct _stat buf;
+			struct fileStat buf;
 			char buffer[CL_MAX_DIR];
 			size_t bl = strlen(dirp->dd_name)-strlen(DIRENT_SEARCH_SUFFIX);
 			strncpy(buffer,dirp->dd_name,bl);
 			buffer[bl]=0;
 			strcat(buffer, dirp->dd_dir.d_name);     
-			if ( _stat(buffer,&buf) == 0 )
+			if ( fileStat(buffer,&buf) == 0 )
 			{
 				/* Finally we have a valid entry. */
 				return &dirp->dd_dir;

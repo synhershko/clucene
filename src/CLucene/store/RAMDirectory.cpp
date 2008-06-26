@@ -4,20 +4,43 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 #include "RAMDirectory.h"
-
+#include "_RAMDirectory.h"
 #include "Lock.h"
 #include "LockFactory.h"
 #include "Directory.h"
 #include "FSDirectory.h"
 #include "CLucene/index/IndexReader.h"
-#include "CLucene/util/VoidMap.h"
+//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/debug/condition.h"
+
+#ifdef _CL_HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
+
+
+	// *****
+	// Lock acquisition sequence:  RAMDirectory, then RAMFile
+	// *****
+
+	class RAMLock: public LuceneLock{
+	private:
+		RAMDirectory* directory;
+		char* fname;
+	public:
+		RAMLock(const char* name, RAMDirectory* dir);
+		virtual ~RAMLock();
+		bool obtain();
+		void release();
+		bool isLocked();
+		virtual TCHAR* toString();
+	};
+
+
 
   RAMFile::RAMFile( RAMDirectory* _directory )
   {
@@ -218,7 +241,7 @@ CL_NS_DEF(store)
   	file(f), currentBufferIndex(-1), currentBuffer(NULL), bufferPosition(0), bufferStart(0), bufferLength(0) {
     _length = f->getLength();
     
-    if ( _length/BUFFER_SIZE >= LUCENE_INT32_MAX_SHOULDBE ) {
+    if ( _length/BUFFER_SIZE >= 0x7FFFFFFFL ) {
     	// TODO: throw exception
     }    
   }
@@ -319,15 +342,15 @@ CL_NS_DEF(store)
   void RAMDirectory::list(vector<string>* names) const{
     SCOPED_LOCK_MUTEX(files_mutex);
 
-	FileMap::const_iterator itr = files.begin();
-    while (itr != files.end()){
+	FileMap::const_iterator itr = files->begin();
+    while (itr != files->end()){
         names->push_back(itr->first);
         ++itr;
     }
   }
 
   RAMDirectory::RAMDirectory():
-   Directory(),files(true,true)
+   Directory(),files(_CLNEW FileMap(true,true))
   {
 	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
   }
@@ -335,6 +358,7 @@ CL_NS_DEF(store)
   RAMDirectory::~RAMDirectory(){
    //todo: should call close directory?
 	  _CLDELETE( lockFactory );
+	  _CLDELETE( files );
   }
 
   void RAMDirectory::_copyFromDir(Directory* dir, bool closeDir)
@@ -372,14 +396,14 @@ CL_NS_DEF(store)
        dir->close();
   }
   RAMDirectory::RAMDirectory(Directory* dir):
-   Directory(),files(true,true)
+   Directory(),files( _CLNEW FileMap(true,true) )
   {
 	setLockFactory( _CLNEW SingleInstanceLockFactory() );
     _copyFromDir(dir,false);    
   }
   
    RAMDirectory::RAMDirectory(const char* dir):
-      Directory(),files(true,true)
+      Directory(),files( _CLNEW FileMap(true,true) )
    {
       Directory* fsdir = FSDirectory::getDirectory(dir,false);
       try{
@@ -390,25 +414,25 @@ CL_NS_DEF(store)
 
   bool RAMDirectory::fileExists(const char* name) const {
     SCOPED_LOCK_MUTEX(files_mutex);
-    return files.exists(name);
+    return files->exists(name);
   }
 
   int64_t RAMDirectory::fileModified(const char* name) const {
 	  SCOPED_LOCK_MUTEX(files_mutex);
-	  RAMFile* f = files.get(name);
+	  RAMFile* f = files->get(name);
 	  return f->getLastModified();
   }
 
   int64_t RAMDirectory::fileLength(const char* name) const {
 	  SCOPED_LOCK_MUTEX(files_mutex);
-	  RAMFile* f = files.get(name);
+	  RAMFile* f = files->get(name);
           return f->getLength();
   }
 
 
   IndexInput* RAMDirectory::openInput(const char* name) {
     SCOPED_LOCK_MUTEX(files_mutex);
-    RAMFile* file = files.get(name);
+    RAMFile* file = files->get(name);
     if (file == NULL) { /* DSR:PROPOSED: Better error checking. */
       _CLTHROWA(CL_ERR_IO,"[RAMDirectory::open] The requested file does not exist.");
     }
@@ -417,36 +441,37 @@ CL_NS_DEF(store)
 
   void RAMDirectory::close(){
       SCOPED_LOCK_MUTEX(files_mutex);
-      files.clear();
+      files->clear();
+      _CLDELETE(files);
   }
 
   bool RAMDirectory::doDeleteFile(const char* name) {
     SCOPED_LOCK_MUTEX(files_mutex);
-    files.remove(name);
+    files->remove(name);
     return true;
   }
 
   void RAMDirectory::renameFile(const char* from, const char* to) {
 	SCOPED_LOCK_MUTEX(files_mutex);
-	FileMap::iterator itr = files.find(from);
+	FileMap::iterator itr = files->find(from);
 
     /* DSR:CL_BUG_LEAK:
     ** If a file named $to already existed, its old value was leaked.
     ** My inclination would be to prevent this implicit deletion with an
     ** exception, but it happens routinely in CLucene's internals (e.g., during
     ** IndexWriter.addIndexes with the file named 'segments'). */
-    if (files.exists(to)) {
-      files.remove(to);
+    if (files->exists(to)) {
+      files->remove(to);
     }
-	if ( itr == files.end() ){
+	if ( itr == files->end() ){
 		char tmp[1024];
 		_snprintf(tmp,1024,"cannot rename %s, file does not exist",from);
 		_CLTHROWT(CL_ERR_IO,tmp);
 	}
-	CND_PRECONDITION(itr != files.end(), "itr==files.end()")
+	CND_PRECONDITION(itr != files->end(), "itr==files->end()")
 	RAMFile* file = itr->second;
-    files.removeitr(itr,false,true);
-    files.put(STRDUP_AtoA(to), file);
+    files->removeitr(itr,false,true);
+    files->put(STRDUP_AtoA(to), file);
   }
 
   
@@ -454,7 +479,7 @@ CL_NS_DEF(store)
     RAMFile* file = NULL;
     {
       SCOPED_LOCK_MUTEX(files_mutex);
-      file = files.get(name);
+      file = files->get(name);
 	}
     const uint64_t ts1 = file->getLastModified();
     uint64_t ts2 = Misc::currentTimeMillis();
@@ -477,9 +502,9 @@ CL_NS_DEF(store)
 
     SCOPED_LOCK_MUTEX(files_mutex);
 
-    const char* n = files.getKey(name);
+    const char* n = files->getKey(name);
     if (n != NULL) {
-	   RAMFile* rf = files.get(name);
+	   RAMFile* rf = files->get(name);
       _CLDELETE(rf);
     } else {
       n = STRDUP_AtoA(name);
@@ -489,7 +514,7 @@ CL_NS_DEF(store)
     #ifdef _DEBUG
       file->filename = n;
     #endif
-    files[n] = file;
+    (*files)[n] = file;
 
     return _CLNEW RAMIndexOutput(file);
   }

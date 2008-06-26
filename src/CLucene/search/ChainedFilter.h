@@ -7,9 +7,9 @@
 #ifndef _lucene_search_ChainedFilter_
 #define _lucene_search_ChainedFilter_
 
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/BitSet.h"
-#include "CLucene/search/Filter.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "CLucene/util/BitSet.h"
+#include "Filter.h"
 
 CL_NS_DEF(search)
 
@@ -44,7 +44,7 @@ The only "problem" is that we will return different results then the Java
 Lucene code - though I prefer CLucene to be a correct implementation and only maintain 
 API compat rather than full 100% compat with Lucene.	
 */
-class ChainedFilter: public Filter 
+class CLUCENE_EXPORT ChainedFilter: public Filter 
 {
 public:	
 	LUCENE_STATIC_CONSTANT(int, OR		= 0); //set current bit if the chain is set OR if the filter bit is set

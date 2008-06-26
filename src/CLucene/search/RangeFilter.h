@@ -8,16 +8,16 @@
 #ifndef _lucene_search_RangeFilter_
 #define _lucene_search_RangeFilter_
 
-#include "CLucene/document/DateField.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/index/Terms.h"
-#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/BitSet.h"
-#include "CLucene/search/Filter.h"
+//#include "CLucene/document/DateField.h"
+CL_CLASS_DEF(index,Term)
+//#include "CLucene/index/Terms.h"
+//#include "CLucene/index/IndexReader.h"
+//#include "CLucene/util/BitSet.h"
+#include "Filter.h"
 
 CL_NS_DEF(search)
 
-class RangeFilter: public Filter 
+class CLUCENE_EXPORT RangeFilter: public Filter 
 {
 private:
 	const TCHAR* field;
