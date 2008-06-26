@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
-  void assertAnalyzersTo(CuTest *tc,Analyzer* a, const TCHAR* input, TCHAR* output){
+  void assertAnalyzersTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
    Reader* reader = _CLNEW StringReader(input);
 	TokenStream* ts = a->tokenStream(_T("dummy"), reader );
 
@@ -34,7 +34,7 @@
 
   void testSimpleAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW SimpleAnalyzer();
-	 assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
+	assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
     assertAnalyzersTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo;bar;foo;bar;"));
     assertAnalyzersTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo;bar;foo;bar;"));
     assertAnalyzersTo(tc,a, _T("U.S.A."), _T("u;s;a;") );
@@ -103,18 +103,18 @@
 
   void testISOLatin1AccentFilter(CuTest *tc){
 	  TCHAR str[200];
-	  _tcscpy(str, _T("Des mot cl\xe9s \xc0 LA CHA\xceNE \xc0 \xc1 \xc2 ") //Des mot clés À LA CHAÎNE À Á Â 
-						_T("\xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf") //Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï 
-						_T(" \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd8 \xde \xd9 \xda \xdb") //Ð Ñ Ò Ó Ô Õ Ö Ø Œ Þ Ù Ú Û 
-						_T(" \xdc \xdd \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 ") //Ü Ý à á â ã ä å ç è é 
-						_T("\xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 ") //ê ë ì í î ï ð ñ ò ó ô õ ö 
-						_T("\xf8 \xdf \xfe \xf9 \xfa \xfb \xfc \xfd \xff") //ø ß þ ù ú û ü ý ÿ
+	  _tcscpy(str, _T("Des mot cl\xe9s \xc0 LA CHA\xceNE \xc0 \xc1 \xc2 ") //Des mot clï¿½s ï¿½ LA CHAï¿½NE ï¿½ ï¿½ ï¿½ 
+						_T("\xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf") //ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ 
+						_T(" \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd8 \xde \xd9 \xda \xdb") //ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ 
+						_T(" \xdc \xdd \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 ") //ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ 
+						_T("\xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 ") //ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ 
+						_T("\xf8 \xdf \xfe \xf9 \xfa \xfb \xfc \xfd \xff") //ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½
 						_T("      ") ); //room for extra latin stuff
 	#ifdef _UCS2
 		int p = _tcslen(str)-6;
-		str[p+1] = 0x152;// œ
-		str[p+3] = 0x153;// æ 
-		str[p+5] = 0x178;//Ÿ 
+		str[p+1] = 0x152;// ï¿½
+		str[p+3] = 0x153;// ï¿½ 
+		str[p+5] = 0x178;//ï¿½ 
 	#endif
 	
 	StringReader reader(str);
