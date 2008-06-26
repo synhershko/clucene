@@ -244,7 +244,7 @@ void BooleanScorer2::Coordinator::init()
 	}
 }
 
-BooleanScorer2::SingleMatchScorer::SingleMatchScorer( Scorer* scorer, Coordinator* coordinator ) : Scorer( scorer->getSimilarity() ), scorer(scorer), coordinator(coordinator)
+BooleanScorer2::SingleMatchScorer::SingleMatchScorer( Scorer* scorer, Coordinator* coordinator ) : Scorer( scorer->getSimilarity() ), scorer(scorer), coordinator(coordinator), lastScoredDoc(-1)
 {
 }
 

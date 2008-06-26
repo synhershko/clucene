@@ -107,7 +107,7 @@ CL_NS_DEF(store)
    
    FSLock::FSLock( const char* _lockDir, const char* name )
    {
-	   this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
+	  this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
    	  this->lockDir = STRDUP_AtoA(_lockDir);
    	  strcpy(lockFile,_lockDir);
    	  strcat(lockFile,PATH_DELIMITERA);
@@ -116,6 +116,7 @@ CL_NS_DEF(store)
    
    FSLock::~FSLock()
    {
+	   _CLDELETE_ARRAY( lockFile );
 	   _CLDELETE_LCaARRAY( lockDir );
    }
 
