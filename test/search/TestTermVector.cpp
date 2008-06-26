@@ -106,16 +106,16 @@ void testTVSetup(CuTest *tc) {
 }
 
 
-void setupDoc(Document& doc, TCHAR* text)
+void setupDoc(Document& doc, const TCHAR* text)
 {
 	doc.add(*new Field(_T("field"), text, Field::STORE_YES |
 		Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES));
 }
 void testKnownSetOfDocuments(CuTest *tc) {
-    TCHAR* test1 = _T("eating chocolate in a computer lab"); //6 terms
-    TCHAR* test2 = _T("computer in a computer lab"); //5 terms
-    TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
-    TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
+    const TCHAR* test1 = _T("eating chocolate in a computer lab"); //6 terms
+    const TCHAR* test2 = _T("computer in a computer lab"); //5 terms
+    const TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
+    const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
     
     typedef CL_NS(util)::CLHashMap<const TCHAR*,int32_t,CL_NS(util)::Compare::TChar,
         CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::Dummy,CL_NS(util)::Deletor::DummyInt32> test4MapType;

@@ -13,7 +13,15 @@
 	#include <crtdbg.h>
 #endif
 #endif
-char* cl_tempDir;
+
+#ifdef _CL_HAVE_FCNTL_H
+	#include <fcntl.h>
+#endif
+#ifdef _CL_HAVE_DIRECT_H
+	#include <direct.h>
+#endif
+
+const char* cl_tempDir;
 bool cl_quiet;
 char clucene_data_location[1024];
 

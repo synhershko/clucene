@@ -9,7 +9,7 @@
 #include "CLucene/store/IndexInput.h"
 
 void hashTest(CuTest *tc){
-	CLHashMap<char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
+	CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
 	map.put(STRDUP_AtoA("a1"),1);
 	map.put(STRDUP_AtoA("a1"),2);
 	map.put(STRDUP_AtoA("a2"),3);

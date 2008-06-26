@@ -19,7 +19,7 @@
       
   void testSearchTestForDuplicatesRaw(CuTest *tc){
 		const int MAX_DOCS=1500;
-		char *strBody[10] = {"test", "value", "why not", "computer", "clucene",
+		const char *strBody[10] = {"test", "value", "why not", "computer", "clucene",
 			"sun", "program", "main", "database", "code"};
 		RAMDirectory ram;
 

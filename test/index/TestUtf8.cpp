@@ -1,11 +1,11 @@
 #include "test.h"
-#include "CLucene/util/dirent.h"
+#include "CLucene/util/_dirent.h"
 #include "CLucene/util/Reader.h"
 
 CL_NS_USE(util)
 
 #ifdef _UCS2
-  void _Index(CuTest *tc, IndexWriter* ndx,char* file){
+  void _Index(CuTest *tc, IndexWriter* ndx, const char* file){
     char path[CL_MAX_PATH];
     TCHAR tlang[20];
 
@@ -26,7 +26,7 @@ CL_NS_USE(util)
 
 	ndx->addDocument(&doc);
   }
-  void _Search(CuTest *tc, IndexSearcher* srch, Analyzer* analyzer, char* file, char* query){
+  void _Search(CuTest *tc, IndexSearcher* srch, Analyzer* analyzer, const char* file, const char* query){
 	TCHAR tlang[20];
 	STRCPY_AtoT(tlang,file,CL_MAX_PATH);
 	
@@ -66,16 +66,16 @@ CL_NS_USE(util)
     IndexSearcher srch(&ram);
 	_Search(tc,&srch,&a,"arabic", "\xef\xbb\x9e\xef\xbb\xb4\xef\xbb\xa4\xef\xbb\xb3\xef\xba\xad"); //????? - arabic
 	_Search(tc,&srch,&a,"chinese", "\xe5\x95\xa4\xe9\x85\x92"); //?? - chinese
-	_Search(tc,&srch,&a,"czech", "Bud\xc4\x9bjovick\xc3\xbd" ); //Budejovický - czech
+	_Search(tc,&srch,&a,"czech", "Bud\xc4\x9bjovick\xc3\xbd" ); //Budejovickï¿½ - czech
 	
 	_Search(tc,&srch,&a,"english", "google"); //English - google
-	_Search(tc,&srch,&a,"french", "r\xc3\xa9put\xc3\xa9"); //réputé - french
-	_Search(tc,&srch,&a,"german", "k\xc3\xb6nnen"); //können - german
+	_Search(tc,&srch,&a,"french", "r\xc3\xa9put\xc3\xa9"); //rï¿½putï¿½ - french
+	_Search(tc,&srch,&a,"german", "k\xc3\xb6nnen"); //kï¿½nnen - german
 	_Search(tc,&srch,&a,"greek", "\xcf\x83\xcf\x84\xce\xb5\xce\xaf\xce\xbb\xcf\x84\xce\xb5"); //ste??te - greek
 	_Search(tc,&srch,&a,"hebrew", "\xd7\x91\xd7\x90\xd7\xa8\xd7\xa6\xd7\x95\xd7\xaa" ); //?????? - hebrew
 	_Search(tc,&srch,&a,"japanese", "\xe8\xa6\x8b\xe5\xad\xa6" ); //?? - japanese
 	_Search(tc,&srch,&a,"korean", "\xea\xb8\x88" ); //? - korean
-	_Search(tc,&srch,&a,"polish", "sp\xc3\xb3\xc5\x82ka"); ;//spólka - polish
+	_Search(tc,&srch,&a,"polish", "sp\xc3\xb3\xc5\x82ka"); ;//spï¿½lka - polish
 	_Search(tc,&srch,&a,"russian", "\xd0\x92\xd0\xb5\xd0\xbb\xd0\xb8\xd0\xba\xd0\xb8\xd0\xb5\x20"); //??????? - russian
 
     srch.close();

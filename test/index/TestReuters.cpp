@@ -1,6 +1,10 @@
 #include "test.h"
-#include "CLucene/util/dirent.h"
+#include "CLucene/util/_dirent.h"
 #include "CLucene/util/Reader.h"
+
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
 
 CL_NS_USE(util)
 

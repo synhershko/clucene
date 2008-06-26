@@ -138,7 +138,7 @@ void CuStringRead(CuString *str, TCHAR *path)
  * CuTest
  *-------------------------------------------------------------------------*/
 
-void CuTestInit(CuTest* t, TCHAR* name, TestFunction function)
+void CuTestInit(CuTest* t, const TCHAR* name, TestFunction function)
 {
 	t->name = CuTcsCopy(name);
 	t->notimpl = 0;
@@ -149,7 +149,7 @@ void CuTestInit(CuTest* t, TCHAR* name, TestFunction function)
 //	t->jumpBuf = NULL;
 }
 
-CuTest* CuTestNew(TCHAR* name, TestFunction function)
+CuTest* CuTestNew(const TCHAR* name, TestFunction function)
 {
 	CuTest* tc = CU_ALLOC(CuTest);
 	CuTestInit(tc, name, function);
@@ -300,7 +300,7 @@ void CuTestRun(CuTest* tc)
  * CuSuite
  *-------------------------------------------------------------------------*/
 
-void CuSuiteInit(CuSuite* testSuite, TCHAR *name)
+void CuSuiteInit(CuSuite* testSuite, const TCHAR *name)
 {
 	testSuite->name = NULL;
 	CU_TDUP(testSuite->name,name);
@@ -310,7 +310,7 @@ void CuSuiteInit(CuSuite* testSuite, TCHAR *name)
 	testSuite->timeTaken = 0;
 }
 
-CuSuite* CuSuiteNew(TCHAR *name)
+CuSuite* CuSuiteNew(const TCHAR *name)
 {
 	CuSuite* testSuite = CU_ALLOC(CuSuite);
 	CuSuiteInit(testSuite, name);
@@ -429,7 +429,7 @@ void CuSuiteDetails(CuSuite* testSuite, CuString* details)
  * CuSuiteList
  *-------------------------------------------------------------------------*/
 
-CuSuiteList* CuSuiteListNew(TCHAR *name)
+CuSuiteList* CuSuiteListNew(const TCHAR *name)
 {
 	CuSuiteList* testSuite = CU_ALLOC(CuSuiteList);
 	testSuite->name = NULL;

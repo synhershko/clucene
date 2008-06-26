@@ -6,7 +6,17 @@
 ------------------------------------------------------------------------------*/
 #ifndef TEST_H
 #define TEST_H
+#include "CLucene/_ApiHeader.h"
 #include "CLucene.h"
+#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/store/RAMDirectory.h"
+#include "CLucene/store/Lock.h"
+#include "CLucene/config/repl_wchar.h"
+#include "CLucene/index/TermVector.h"
+#ifdef HAVE_WINDOWS_H
+	#include <windows.h>
+#endif
+
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -51,6 +61,6 @@ extern unittest tests[];
 #define CLUCENE_DATA_LOCATION2 "./test/data/"
 #define CLUCENE_DATA_LOCATIONENV "srcdir"
 
-extern char* cl_tempDir;
+extern const char* cl_tempDir;
 
 #endif

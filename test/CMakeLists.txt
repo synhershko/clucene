@@ -13,6 +13,9 @@ SOURCE_GROUP("store" ./store/*)
 SOURCE_GROUP("util" ./util/*)
 
 ADD_EXECUTABLE(cl_test 
+./tests.cpp
+./CuTest.cpp
+./testall.cpp
 ./queryParser/TestQueryParser.cpp
 ./analysis/TestAnalysis.cpp
 ./analysis/TestAnalyzers.cpp
@@ -31,8 +34,5 @@ ADD_EXECUTABLE(cl_test
 ./index/TestReuters.cpp
 ./util/TestPriorityQueue.cpp
 ./util/English.cpp
-./tests.cpp
-./CuTest.cpp
-./testall.cpp
 )
-TARGET_LINK_LIBRARIES(cl_test clucene-core)
+TARGET_LINK_LIBRARIES(cl_test clucene-core-static)

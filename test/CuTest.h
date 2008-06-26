@@ -56,8 +56,8 @@ struct CuTest
 
 
 void CuInit(int argc, char *argv[]);
-void CuTestInit(CuTest* t, TCHAR* name, TestFunction function);
-CuTest* CuTestNew(TCHAR* name, TestFunction function);
+void CuTestInit(CuTest* t, const TCHAR* name, TestFunction function);
+CuTest* CuTestNew(const TCHAR* name, TestFunction function);
 void CuTestDelete(CuTest* tst);
 void CuFail(CuTest* tc, const TCHAR* format, ...);
 void CuMessage(CuTest* tc, const TCHAR* message,...);
@@ -92,8 +92,8 @@ typedef struct
 } CuSuite;
 
 
-void CuSuiteInit(CuSuite* testSuite, TCHAR* name);
-CuSuite* CuSuiteNew(TCHAR* name);
+void CuSuiteInit(CuSuite* testSuite, const TCHAR* name);
+CuSuite* CuSuiteNew(const TCHAR* name);
 void CuSuiteDelete(CuSuite* suite);
 void CuSuiteAdd(CuSuite* testSuite, CuTest *testCase);
 void CuSuiteAddSuite(CuSuite* testSuite, CuSuite* testSuite2);
@@ -115,7 +115,7 @@ struct unittest {
     CuSuite *(*func)(void);
 };
 
-CuSuiteList* CuSuiteListNew(TCHAR* name);
+CuSuiteList* CuSuiteListNew(const TCHAR* name);
 void CuSuiteListDelete(CuSuiteList* lst);
 void CuSuiteListAdd(CuSuiteList* testSuite, CuSuite *testCase);
 void CuSuiteListRun(CuSuiteList* testSuite);

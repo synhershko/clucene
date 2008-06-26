@@ -7,7 +7,7 @@
 #include "test.h"
 
 	void testError(CuTest *tc){
-		char* msg = "test";
+		const char* msg = "test";
 		CLuceneError err(0,msg,false);
 		CLuceneError err2 = err;
 		CLuceneError* err3 = &err;

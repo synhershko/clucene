@@ -11,7 +11,7 @@
 	WhitespaceAnalyzer aWS;
 	IndexSearcher* s=NULL;
 
-	void _TestSearchesRun( Analyzer* analyzer, Searcher* search, TCHAR* qry){
+	void _TestSearchesRun( Analyzer* analyzer, Searcher* search, const TCHAR* qry){
 		Query* q = NULL;
 		Hits* h = NULL;
 		try{
@@ -224,7 +224,7 @@ void SearchTest(CuTest *tc) {
 	IndexWriter writer( &ram, &analyzer, true);  
 	writer.setUseCompoundFile(false);
 
-	TCHAR* docs[] = { _T("a b c d e"),
+	const TCHAR* docs[] = { _T("a b c d e"),
 		_T("a b c d e a b c d e"),	
 		_T("a b c d e f g h i j"),
 		_T("a c e"),
@@ -245,7 +245,7 @@ void SearchTest(CuTest *tc) {
 
 	IndexReader* reader = IndexReader::open(&ram);
 	IndexSearcher searcher(reader);
-	TCHAR* queries[] = {
+	const TCHAR* queries[] = {
 		_T("\"a b\""),	 	
 		_T("\"a b c\""),	
 		_T("a AND b"),		
@@ -312,7 +312,7 @@ void testSrchManyHits(CuTest *tc) {
 	RAMDirectory ram;
 	IndexWriter writer( &ram, &analyzer, true);
 
-	TCHAR* docs[] = { _T("a b c d e"),
+	const TCHAR* docs[] = { _T("a b c d e"),
 		_T("a b c d e a b c d e"),	
 		_T("a b c d e f g h i j"),
 		_T("a c e"),
