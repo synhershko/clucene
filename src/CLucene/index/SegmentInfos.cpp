@@ -282,7 +282,7 @@ CL_NS_DEF(index)
   	
   	while ( files[i] != NULL ) {
   		char* file = files[i++];
-  		if ( strncmp( file, IndexFileNames::SEGMENTS, sizeof(IndexFileNames::SEGMENTS) ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
+  		if ( strncmp( file, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
   			int64_t gen = generationFromSegmentsFileName( file );
   			if ( gen > max ) {
   				max = gen;
@@ -318,8 +318,8 @@ CL_NS_DEF(index)
   int64_t SegmentInfos::generationFromSegmentsFileName( const char* fileName ) {
   	if ( strcmp( fileName, IndexFileNames::SEGMENTS ) == 0 ) {
   		return 0;
-  	} else if ( strncmp( fileName, IndexFileNames::SEGMENTS, sizeof(IndexFileNames::SEGMENTS) ) == 0 ) {
-  		return CL_NS(util)::Misc::base36ToLong( fileName + sizeof( IndexFileNames::SEGMENTS )+1 );
+  	} else if ( strncmp( fileName, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 ) {
+  		return CL_NS(util)::Misc::base36ToLong( fileName + strlen( IndexFileNames::SEGMENTS )+1 );
   	} else {
   		// throw exception
   		return 0;
