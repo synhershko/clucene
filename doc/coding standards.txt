@@ -1,0 +1,7 @@
+
+Headers:
+* _headername.h headers are private, and will not be distributed. Don't include these files from public headers.
+* Keep _ifdef's in public headers to an absolute minimum.
+* Public headers should contain only classes that are exported (class CLUCENE_EXPORT classname).
+* All classes should have a destructor, 
+  the destructor should be virtual if there is any chance of the class being overridden
