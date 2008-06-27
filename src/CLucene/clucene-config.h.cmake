@@ -32,64 +32,6 @@
 #cmakedefine _CL_HAVE_SYS_TIME_H 1
 #cmakedefine _CL_HAVE_TCHAR_H 1
 
-
-/* CMake will look for these functions: */
-#cmakedefine _CL_HAVE__VSNWPRINTF
-#cmakedefine _CL_HAVE__SNWPRINTF
-#cmakedefine _CL_HAVE_WCSCASECMP
-#cmakedefine _CL_HAVE_WCSCAT  1 
-#cmakedefine _CL_HAVE_WCSCHR  1 
-#cmakedefine _CL_HAVE_WCSCMP  1 
-#cmakedefine _CL_HAVE_WCSCPY  1 
-#cmakedefine _CL_HAVE_WCSCSPN  1 
-#cmakedefine _CL_HAVE_WCSICMP
-#cmakedefine _CL_HAVE_WCSLEN  1 
-#cmakedefine _CL_HAVE_WCSNCMP  1 
-#cmakedefine _CL_HAVE_WCSNCPY  1 
-#cmakedefine _CL_HAVE_WCSSTR  1 
-#cmakedefine _CL_HAVE_WCSTOD
-#cmakedefine _CL_HAVE_WCSTOLL
-#cmakedefine _CL_HAVE_WCSUPR
-#cmakedefine _CL_HAVE_GETTIMEOFDAY
-
-#cmakedefine _CL_HAVE_LLTOA
-#cmakedefine _CL_HAVE_LLTOW
-#cmakedefine _CL_HAVE_PRINTF  1 
-#cmakedefine _CL_HAVE_SNPRINTF  1 
-#cmakedefine _CL_HAVE_MMAP  1 
-#cmakedefine _CL_HAVE_NANOSLEEP  1 
-#cmakedefine _CL_HAVE_STRLWR
-#cmakedefine _CL_HAVE_STRTOLL
-#cmakedefine _CL_HAVE_STRUPR
-#cmakedefine _CL_HAVE_GETPAGESIZE
-
-#define CL_NS_HASHING(func) ${CL_NS_HASHING_VALUE}
-
-${SYMBOL_CL_MAX_PATH}
-${SYMBOL_O_RANDOM}
-${SYMBOL_O_BINARY}
-${SYMBOL__S_IREAD}
-${SYMBOL__S_IWRITE}
-
-#define _ILONG(x) x ## L
-#define _ILONGLONG(x) ${_CL_ILONGLONG_VALUE}
-
-${FUNCTION_FILESTAT}
-${FUNCTION_FILESIZE}
-${FUNCTION_FILESEEK}
-${FUNCTION_FILETELL}
-${FUNCTION_FILEHANDLESTAT}
-${FUNCTION__REALPATH}
-${FUNCTION__RENAME}
-${FUNCTION__CLOSE}
-${FUNCTION__READ}
-${FUNCTION__OPEN}
-${FUNCTION__WRITE}
-${FUNCTION__SNPRINTF}
-${FUNCTION__MKDIR}
-${FUNCTION__UNLINK}
-
-
 // our needed types
 #if !@HAVE_INT8_T@
  #define HAVE_INT8_T 1
@@ -159,8 +101,6 @@ ${FUNCTION__UNLINK}
     typedef unsigned ${TYPEOF_INT64} uint64_t;
 #endif
 
-#define _LUCENE_PRAGMA_WARNINGS
-
 //todo: not sure if this detects correctly? check float.h?
 #if !@HAVE_FLOAT_T@
     typedef double float_t;
@@ -192,20 +132,11 @@ ${FUNCTION__UNLINK}
 /* Define what eval method is required for float_t to be defined (for GCC). */
 #cmakedefine _FLT_EVAL_METHOD  ${_FLT_EVAL_METHOD} 
 
+/* If we use hashmaps, which namespace do we use: */
+#define CL_NS_HASHING(func) ${CL_NS_HASHING_VALUE}
+
 /* define if the compiler implements namespaces */
 #cmakedefine _CL_HAVE_NAMESPACES   
-
-/* Does not support new float byte<->float conversions */
-//todo: not being checked for...
-#cmakedefine _CL_HAVE_NO_FLOAT_BYTE
-
-/* Does not support try/catch blocks */
-//todo: not checked properly
-#cmakedefine _CL_HAVE_NO_FUNCTION_TRY_BLOCKS
-
-/* Define if recursive pthread mutexes are available */
-//todo: not being checked for...
-#cmakedefine _CL_HAVE_PTHREAD_MUTEX_RECURSIVE  1 
 
 /* Defined if the snprintf overflow test fails */
 #cmakedefine _CL_HAVE_SNPRINTF_BUG
@@ -229,18 +160,10 @@ ${FUNCTION__UNLINK}
 //not actually used for anything...
 //#cmakedefine _CL_TIME_WITH_SYS_TIME  1 
 
-/* Number of bits in a file offset, on hosts where this is settable. */
-//todo: should we only define for hosts where this is applicable?
-#define _FILE_OFFSET_BITS 64
-
-/* Define for large files, on AIX-style hosts. */
-//todo: should we only define for hosts where this is applicable?
-#define _LARGE_FILES
-
 /* Define that we will be using -fvisibility=hidden, and 
  * make public classes visible using __attribute__ ((visibility("default")))
  */
-#cmakedefine HAVE_GCCVISIBILITYPATCH 1
+#cmakedefine _CL_HAVE_GCCVISIBILITYPATCH 1
 
 /* Versions, etc */
 

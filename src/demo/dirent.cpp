@@ -9,6 +9,18 @@
 #if !defined(_CL_HAVE_DIRENT_H) && !defined(_CL_HAVE_SYS_NDIR_H) && !defined(_CL_HAVE_SYS_DIR_H) && !defined(_CL_HAVE_NDIR_H)
 #include "dirent.h"
 
+#ifdef _CL_HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
+
+#ifdef _CL_HAVE_SYS_STAT_H
+ #include <sys/stat.h>
+#endif
+
 DIR * 
 opendir (const char *szPath)
 {
@@ -61,6 +73,7 @@ opendir (const char *szPath)
 	}
 
 	/* Create the search expression. */
+	nd->dd_name = _CL_NEWARRAY(char,CL_MAX_PATH);
 	strcpy (nd->dd_name, szFullPath);
 
 	/* Add on a slash if the path does not end with one. */

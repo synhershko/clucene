@@ -24,7 +24,7 @@ class CLuceneThreadIdCompare;
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
 	#elif defined(_CL_HAVE_PTHREAD)
-	    class mutex_pthread
+	    class CLUCENE_EXPORT mutex_pthread
         {
         private:
             struct Internal;
@@ -42,7 +42,7 @@ class CLuceneThreadIdCompare;
         #define _LUCENE_THREADID_TYPE pthread_t
 
 	#elif defined(_CL_HAVE_WIN32_THREADS)
-	    class mutex_win32
+	    class CLUCENE_EXPORT mutex_win32
     	{
     	private:
     		struct Internal;

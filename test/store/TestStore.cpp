@@ -8,6 +8,10 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
+
 void hashTest(CuTest *tc){
 	CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
 	map.put(STRDUP_AtoA("a1"),1);

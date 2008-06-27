@@ -12,6 +12,11 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+#include <cctype>
+
+#ifdef _CL_HAVE_WINDOWS_H
+ #include <windows.h>
+#endif
 
 using namespace std;
 using namespace lucene::index;
@@ -69,7 +74,7 @@ void indexDocs(IndexWriter* writer, char* directory) {
 		struct dirent* fl;
 		
 		char path[CL_MAX_DIR];
-		snprintf(path,CL_MAX_DIR,"%s/",directory);
+		_snprintf(path,CL_MAX_DIR,"%s/",directory);
 		char* pathP = path + strlen(path);
 
 		fl = readdir(dir);

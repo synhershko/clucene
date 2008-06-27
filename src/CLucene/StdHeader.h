@@ -12,24 +12,25 @@
 
 ////////////////////////////////////////////////////////
 // EXPORTS definition
-#ifdef CLUCENE_EXPORT_SYMBOLS
-    #if defined(_WIN32)
-      #ifdef MAKE_CLUCENE_CORE_LIB
-        #define CLUCENE_EXPORT __declspec(dllexport)
-      #else
-        #define CLUCENE_EXPORT __declspec(dllimport)
-      #endif
-      #define CLUCENE_LOCAL
-    #elif defined(HAVE_GCCVISIBILITYPATCH)
-        #define CLUCENE_EXPORT __attribute__ ((visibility("default")))
-        #define CLUCENE_LOCAL __attribute__ ((visibility("hidden")))
-    #else
-        #define CLUCENE_EXPORT
-        #define CLUCENE_LOCAL
+#ifdef MAKE_CLUCENE_CORE_LIB
+	#ifdef CLUCENE_EXPORT_SYMBOLS
+		#if defined(_WIN32)
+			#define CLUCENE_EXPORT __declspec(dllexport)
+		#elif defined(_CL_HAVE_GCCVISIBILITYPATCH)
+			#define CLUCENE_EXPORT __attribute__ ((visibility("default")))
+			#define CLUCENE_LOCAL __attribute__ ((visibility("hidden"))
+		#endif
     #endif
 #else
-    #define CLUCENE_EXPORT
-    #define CLUCENE_LOCAL
+	#if defined(_WIN32) && defined(CLUCENE_IMPORT_SYMBOLS)
+		#define CLUCENE_EXPORT __declspec(dllimport)
+	#endif
+#endif
+#ifndef CLUCENE_EXPORT
+	#define CLUCENE_EXPORT
+#endif
+#ifndef CLUCENE_LOCAL
+	#define CLUCENE_LOCAL
 #endif
 ////////////////////////////////////////////////////////
 
@@ -103,14 +104,6 @@
 	#undef _UNICODE
 	#undef _UCS2
 #endif
-
-
-//this is the max filename... for now its just the same,
-//but this could change, so we use a different name
-#define CL_MAX_NAME CL_MAX_PATH
-//this used to be CL_MAX_NAME * 32, but as Alex Hudson points out, this could come to be 128kb.
-//the above logic for CL_MAX_NAME should be correct enough to handle all file names
-#define CL_MAX_DIR CL_MAX_PATH
 
 
 #define cl_min(a,b) (a>b?b:a)

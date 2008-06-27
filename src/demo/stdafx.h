@@ -15,6 +15,8 @@
 #include <stdio.h>
 //#include <tchar.h>
 
+#define CL_MAX_DIR 1024
+
 #include "CLucene/StdHeader.h"
 
 void strcpy_a2t(TCHAR* to, const char* from, size_t len);

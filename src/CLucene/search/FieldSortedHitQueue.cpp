@@ -53,10 +53,10 @@ public:
     }
 };
 
-hitqueueCacheType FieldSortedHitQueue::Comparators(false,true);
+hitqueueCacheType* FieldSortedHitQueue::Comparators = _CLNEW hitqueueCacheType(false,true);
 
 void FieldSortedHitQueue::shutdown(){
-	Comparators.clear();
+	Comparators->clear();
 }
 
 FieldSortedHitQueue::FieldSortedHitQueue (IndexReader* reader, SortField** _fields, int32_t size):
@@ -208,8 +208,8 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
       : _CLNEW FieldCacheImpl::FileEntry (field, type);
 	
 	{
-		SCOPED_LOCK_MUTEX(Comparators.THIS_LOCK)
-		hitqueueCacheReaderType* readerCache = Comparators.get(reader);
+		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		hitqueueCacheReaderType* readerCache = Comparators->get(reader);
 		if (readerCache == NULL){
 			_CLDELETE(entry);
 			return NULL;
@@ -222,8 +222,8 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
   }
 
 	void FieldSortedHitQueue::closeCallback(CL_NS(index)::IndexReader* reader, void*){
-		SCOPED_LOCK_MUTEX(Comparators.THIS_LOCK)
-		Comparators.remove(reader);
+		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		Comparators->remove(reader);
 	}
 	
   //static
@@ -233,11 +233,11 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
 		: _CLNEW FieldCacheImpl::FileEntry (field, type);
 
 	{
-		SCOPED_LOCK_MUTEX(Comparators.THIS_LOCK)
-		hitqueueCacheReaderType* readerCache = Comparators.get(reader);
+		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		hitqueueCacheReaderType* readerCache = Comparators->get(reader);
 		if (readerCache == NULL) {
 			readerCache = _CLNEW hitqueueCacheReaderType(true);
-			Comparators.put(reader,readerCache);
+			Comparators->put(reader,readerCache);
 			reader->addCloseCallback(FieldSortedHitQueue::closeCallback,NULL);
 		}
 		readerCache->put (entry, value);

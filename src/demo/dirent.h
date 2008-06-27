@@ -9,6 +9,8 @@
 
 #if !defined(_CL_HAVE_DIRENT_H) && !defined(_CL_HAVE_SYS_NDIR_H) && !defined(_CL_HAVE_SYS_DIR_H) && !defined(_CL_HAVE_NDIR_H)
 
+#include <io.h>
+
 /**
 \unit
  * dirent.c
@@ -54,7 +56,7 @@ struct DIR
 	int32_t			dd_stat;
 	
 	/** given path for dir with search pattern (struct is extended) */
-	char			dd_name[CL_MAX_DIR];
+	char*			dd_name;
 
 };
 

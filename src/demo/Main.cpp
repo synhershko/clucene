@@ -7,7 +7,8 @@
 #include "stdafx.h"
 #include "CLucene.h"
 
-#ifdef _CLCOMPILER_MSVC
+//test for memory leaks:
+#ifdef _MSC_VER
 #ifdef _DEBUG
 	#define CRTDBG_MAP_ALLOC
 	#include <stdlib.h>

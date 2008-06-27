@@ -86,7 +86,7 @@ public:
 //
 //<p>Term enumerations are always ordered by Term.compareTo().  Each term in
 //the enumeration is greater than all that precede it.  
-class TermEnum: LUCENE_BASE {
+class CLUCENE_EXPORT TermEnum: LUCENE_BASE {
 public:
 	// Increments the enumeration to the next element.  True if one exists.
 	virtual bool next()=0;

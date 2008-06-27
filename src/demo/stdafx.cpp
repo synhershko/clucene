@@ -15,6 +15,9 @@
 #else
 # include <time.h>
 #endif
+#ifdef _CL_HAVE_SYS_TIMEB_H
+	#include <sys/timeb.h>
+#endif
 
 uint64_t currentTimeMillis() {
 #ifndef _CL_HAVE_GETTIMEOFDAY
@@ -33,6 +36,8 @@ uint64_t currentTimeMillis() {
 }
 
 void strcpy_a2t(wchar_t* to, const char* from, size_t len){
-	for ( size_t i=0;i<len && from[i];i++)
+	size_t i=0;
+	for ( ;i<len && from[i];i++)
 		to[i] = from[i];
+	to[ cl_min(i,len) ] = 0;
 }

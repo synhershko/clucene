@@ -15,7 +15,7 @@ CL_NS_DEF(debug)
 
 //Lucenebase is the superclass of all clucene objects. It provides
 //memory debugging tracking and/or reference counting
-class LuceneBase{
+class CLUCENE_EXPORT LuceneBase{
 public:
 	int __cl_refcount;
 	LuceneBase(){
@@ -35,7 +35,7 @@ public:
     virtual ~LuceneBase(){};
 };
 
-class LuceneVoidBase{
+class CLUCENE_EXPORT LuceneVoidBase{
 	public:
 	#ifdef _DEBUG
 		//a compile time check to make sure that _CLDELETE and _CLDECDELETE is being

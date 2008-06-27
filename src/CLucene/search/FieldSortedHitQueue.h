@@ -43,7 +43,7 @@ public: //todo: remove this and below after close callback is implemented
 	/** Internal cache of comparators. Similar to FieldCache, only
 	*  caches comparators instead of term values. 
 	*/
-	static hitqueueCacheType Comparators;
+	static hitqueueCacheType* Comparators;
 	static void shutdown();
 private:
 	

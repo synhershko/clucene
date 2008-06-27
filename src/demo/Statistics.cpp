@@ -25,7 +25,7 @@ void getStats(const char* directory){
 	printf("Num Docs: %d\n", r->numDocs() );
 	
 	int64_t ver = r->getCurrentVersion(directory);
-    _tprintf(_T("Current Version: %ll\n"), ver );
+    _tprintf(_T("Current Version: %f\n"), (float_t)ver );
 	
 	TermEnum* te = r->terms();
 	int32_t nterms;

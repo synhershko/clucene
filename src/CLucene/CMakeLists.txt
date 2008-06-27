@@ -402,10 +402,10 @@ ENDIF( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
 
 #see if we can hide all symbols by default...
 IF (CMAKE_COMPILER_IS_GNUCXX)
-    CHECK_CXX_COMPILER_FLAG(-fvisibility=hidden HAVE_GCCVISIBILITYPATCH)
-    IF (HAVE_GCCVISIBILITYPATCH)
+    CHECK_CXX_COMPILER_FLAG(-fvisibility=hidden _CL_HAVE_GCCVISIBILITYPATCH)
+    IF (_CL_HAVE_GCCVISIBILITYPATCH)
         ADD_DEFINITIONS(-fvisibility=hidden)
-    ENDIF (HAVE_GCCVISIBILITYPATCH)
+    ENDIF (_CL_HAVE_GCCVISIBILITYPATCH)
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
 
@@ -431,6 +431,7 @@ endforeach(ARG)
 
 #now write out our configuration....
 CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/clucene-config.h.cmake ${clucene-core_BINARY_DIR}/clucene-config.h)
+CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/_clucene-config.h.cmake ${clucene-core_BINARY_DIR}/_clucene-config.h)
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis\\standard" ./analysis/standard/*)
@@ -572,6 +573,13 @@ ELSE(ENABLE_ASCII_MODE)
 	ADD_DEFINITIONS(-D_UNICODE)
 ENDIF(ENABLE_ASCII_MODE)
 
+ADD_DEFINITIONS(-DMAKE_CLUCENE_CORE_LIB)
+
+#todo: this isn't correct...
+IF (MSVC8)
+ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
+ENDIF ( MSVC8)
+
 add_library(clucene-core SHARED 
 	${clucene_core_Files}
 )
@@ -579,16 +587,18 @@ add_library(clucene-core-static STATIC
 	${clucene_core_Files}
 )
 
+
+
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
 #    VERSION "0.9.16a"
 #    SOVERSION "0.9"
-DEFINE_SYMBOL MAKE_CLUCENE_CORE_LIB
+DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
 )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
 #    VERSION "0.9.16a"
 #    SOVERSION "0.9"
-DEFINE_SYMBOL MAKE_CLUCENE_CORE_LIB
+DEFINE_SYMBOL ""
 )
 
 #set_target_properties(clucene-core

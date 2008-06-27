@@ -7,6 +7,9 @@
 #ifndef lucene_internal_apiheader_h
 #define lucene_internal_apiheader_h
 
+//internal config...
+#include "CLucene/_clucene-config.h"
+
 #include "CLucene/StdHeader.h"
 #include "CLucene/debug/_condition.h"
 #include "CLucene/LuceneThreads.h"
@@ -149,5 +152,13 @@ extern const char* _LUCENE_BLANK_ASTRING;
 #else
 #define PATH_DELIMITERA "/"
 #endif
+
+
+//this is the max filename... for now its just the same,
+//but this could change, so we use a different name
+#define CL_MAX_NAME CL_MAX_PATH
+//this used to be CL_MAX_NAME * 32, but as Alex Hudson points out, this could come to be 128kb.
+//the above logic for CL_MAX_NAME should be correct enough to handle all file names
+#define CL_MAX_DIR CL_MAX_PATH
 
 #endif // lucene_apiheader_h

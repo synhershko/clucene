@@ -20,4 +20,10 @@ ADD_EXECUTABLE(cl_demo
 ./stdafx.cpp
 ./dirent.cpp
 )
+
+SET_TARGET_PROPERTIES(cl_demo PROPERTIES
+#    VERSION "0.9.16a"
+#    SOVERSION "0.9"
+DEFINE_SYMBOL CLUCENE_IMPORT_SYMBOLS
+)
 TARGET_LINK_LIBRARIES(cl_demo clucene-core)

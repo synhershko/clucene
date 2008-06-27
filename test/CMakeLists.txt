@@ -2,6 +2,15 @@ PROJECT(clucene-test)
 
 INCLUDE_DIRECTORIES( ${clucene-test_SOURCE_DIR} )
 
+OPTION(ENABLE_ASCII_MODE
+  "enable ascii support"
+  OFF)
+IF(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_ASCII)
+ELSE(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_UNICODE)
+ENDIF(ENABLE_ASCII_MODE)
+
 SOURCE_GROUP("unit_testing" ./*.cpp)
 SOURCE_GROUP("analysis" ./analysis/*)
 SOURCE_GROUP("debug" ./debug/*)
