@@ -34,7 +34,7 @@ int main( int32_t argc, char** argv ){
 	#endif
 	#endif
 
-	uint64_t str = lucene::util::Misc::currentTimeMillis();
+	uint64_t str = currentTimeMillis();
 	try{
 
 		printf("Location of text files to be indexed: ");
@@ -76,6 +76,6 @@ int main( int32_t argc, char** argv ){
 	//if LUCENE_ENABLE_CONSTRUCTOR_LOG is on, dont do log if this is true:
 	//	_lucene_disable_debuglogging
 
-	printf ("\n\nTime taken: %d\n\n",lucene::util::Misc::currentTimeMillis() - str);
+	printf ("\n\nTime taken: %d\n\n",currentTimeMillis() - str);
 	return 0;
 }

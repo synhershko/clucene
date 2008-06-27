@@ -2,6 +2,15 @@ PROJECT(cl_demo)
 
 INCLUDE_DIRECTORIES( ${clucene-demo_SOURCE_DIR} )
 
+OPTION(ENABLE_ASCII_MODE
+  "enable ascii support"
+  OFF)
+IF(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_ASCII)
+ELSE(ENABLE_ASCII_MODE)
+	ADD_DEFINITIONS(-D_UNICODE)
+ENDIF(ENABLE_ASCII_MODE)
+
 ADD_EXECUTABLE(cl_demo 
 ./DeleteFiles.cpp
 ./IndexFiles.cpp
@@ -9,5 +18,6 @@ ADD_EXECUTABLE(cl_demo
 ./SearchFiles.cpp
 ./Statistics.cpp
 ./stdafx.cpp
+./dirent.cpp
 )
 TARGET_LINK_LIBRARIES(cl_demo clucene-core)

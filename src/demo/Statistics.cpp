@@ -7,8 +7,6 @@
 #include "stdafx.h"
 
 #include "CLucene.h"
-#include "CLucene/index/Term.h"
-#include "CLucene/index/SegmentTermEnum.h"
 #include <iostream>
 
 using namespace std;
@@ -27,9 +25,7 @@ void getStats(const char* directory){
 	printf("Num Docs: %d\n", r->numDocs() );
 	
 	int64_t ver = r->getCurrentVersion(directory);
-    TCHAR str[16];
-    _i64tot(ver, str, 10);
-    _tprintf(_T("Current Version: %s\n"), str );
+    _tprintf(_T("Current Version: %ll\n"), ver );
 	
 	TermEnum* te = r->terms();
 	int32_t nterms;

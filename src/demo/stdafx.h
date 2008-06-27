@@ -16,4 +16,10 @@
 //#include <tchar.h>
 
 #include "CLucene/StdHeader.h"
+
+void strcpy_a2t(TCHAR* to, const char* from, size_t len);
+#define STRCPY_AtoT strcpy_a2t
+
+uint64_t currentTimeMillis();
+
 #endif

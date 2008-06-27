@@ -40,10 +40,10 @@ void SearchFiles(const char* index){
 		_tprintf(_T("Searching for: %s\n\n"), buf);
 		_CLDELETE_CARRAY(buf);
 
-		uint64_t str = lucene::util::Misc::currentTimeMillis();
+		uint64_t str = currentTimeMillis();
 		Hits* h = s.search(q);
-		uint64_t srch = lucene::util::Misc::currentTimeMillis() - str;
-		str = lucene::util::Misc::currentTimeMillis();
+		uint64_t srch = currentTimeMillis() - str;
+		str = currentTimeMillis();
 
 		for ( int32_t i=0;i<h->length();i++ ){
 			Document* doc = &h->doc(i);
@@ -53,7 +53,7 @@ void SearchFiles(const char* index){
 		}
 
 		printf("\n\nSearch took: %d ms.\n", srch);
-		printf("Screen dump took: %d ms.\n\n", lucene::util::Misc::currentTimeMillis() - str);
+		printf("Screen dump took: %d ms.\n\n", currentTimeMillis() - str);
 
 		_CLDELETE(h);
 		_CLDELETE(q);

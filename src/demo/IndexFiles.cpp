@@ -8,10 +8,10 @@
 
 #include "CLucene.h"
 #include "CLucene/util/Reader.h"
-#include "CLucene/util/Misc.h"
-#include "CLucene/util/dirent.h"
+#include "dirent.h"
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace lucene::index;
@@ -42,13 +42,7 @@ Document* FileDocument(const char* f){
     //see the contrib/jstreams - they contain various types of stream readers
     FILE* fh = fopen(f,"r");
 	if ( fh != NULL ){
-		StringBuffer str;
-		// use fstat for portability
-		int fn = fileno(fh);
-		struct stat filestat;
-		fstat(fn, &filestat);
-		str.reserve(filestat.st_size);
-		//str.reserve(fileSize(fh->_file));
+		std::wstring str;
 		char abuf[1024];
 		TCHAR tbuf[1024];
 		size_t r;
@@ -57,11 +51,11 @@ Document* FileDocument(const char* f){
 			abuf[r]=0;
 			STRCPY_AtoT(tbuf,abuf,r);
 			tbuf[r]=0;
-			str.append(tbuf);
+			str += tbuf;
 		}while(r>0);
 		fclose(fh);
 
-		doc->add( *_CLNEW Field(_T("contents"),str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
+		doc->add( *_CLNEW Field(_T("contents"),str.c_str(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
 	}
 
 	//_tprintf(_T("%s\n"),doc->toString());
@@ -74,11 +68,8 @@ void indexDocs(IndexWriter* writer, char* directory) {
 	if ( dir != NULL ){
 		struct dirent* fl;
 		
-		struct fileStat buf;
-
 		char path[CL_MAX_DIR];
-		strcpy(path,directory);
-		strcat(path,PATH_DELIMITERA);
+		snprintf(path,CL_MAX_DIR,"%s/",directory);
 		char* pathP = path + strlen(path);
 
 		fl = readdir(dir);
@@ -86,7 +77,9 @@ void indexDocs(IndexWriter* writer, char* directory) {
 			if ( (strcmp(fl->d_name, ".")) && (strcmp(fl->d_name, "..")) ) {
 			pathP[0]=0;
 			strcat(pathP,fl->d_name);
-			int32_t ret = fileStat(path,&buf);
+			
+			struct stat buf;
+			int32_t ret = stat(path,&buf);
 			if ( buf.st_mode & S_IFDIR ) {
 				indexDocs(writer, path );
 			}else{
@@ -133,12 +126,12 @@ void IndexFiles(char* path, char* target, const bool clearIndex){
 		writer->setMaxFieldLength(atoi(mfl));*/
 	//writer->infoStream = cout; //TODO: infoStream - unicode
 
-	uint64_t str = lucene::util::Misc::currentTimeMillis();
+	uint64_t str = currentTimeMillis();
 
 	indexDocs(writer, path);
 	writer->optimize();
 	writer->close();
 	_CLDELETE(writer);
 
-	printf("Indexing took: %d ms.\n\n", lucene::util::Misc::currentTimeMillis() - str);
+	printf("Indexing took: %d ms.\n\n", currentTimeMillis() - str);
 }
