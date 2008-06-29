@@ -20,6 +20,11 @@
 	  _CLDELETE(f);
   }
 
+  void TestDateTools(CuTest *tc) {
+	  TCHAR* t = CL_NS(document)::DateTools::timeToString( Misc::currentTimeMillis() , CL_NS(document)::DateTools::MILLISECOND_FORMAT);
+	  _CLDELETE(t);
+  }
+
   void TestBinaryDocument(CuTest *tc){
     char factbook[1024];
     strcpy(factbook, clucene_data_location);
@@ -119,5 +124,6 @@ CuSuite *testdocument(void)
 
 	SUITE_ADD_TEST(suite, TestFields);
 	SUITE_ADD_TEST(suite, TestBinaryDocument);
+	SUITE_ADD_TEST(suite, TestDateTools);
     return suite; 
 }

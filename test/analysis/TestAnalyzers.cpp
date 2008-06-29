@@ -211,6 +211,31 @@
 	  assertAnalyzersTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
     
 	  _CLDELETE(a);
+
+	  TCHAR* testString = new TCHAR[10];
+	  _tcscpy(testString, _T("test"));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T("test "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T("test  "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T(" test"));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T("  test"));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T(" test "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T(" test  "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T("  test  "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
+	  _tcscpy(testString, _T("  te st  "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("te"));
+	  _tcscpy(testString, _T("tes t"));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("tes"));
+	  _tcscpy(testString, _T(" t est "));
+	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("t"));
+	  delete[] testString;
   }
   
 CuSuite *testanalyzers(void)

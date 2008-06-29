@@ -494,6 +494,7 @@ SET(clucene_core_Files
 	./store/RAMDirectory.cpp
 	./document/Document.cpp
 	./document/DateField.cpp
+	./document/DateTools.cpp
 	./document/Field.cpp
 	./index/IndexFileNames.cpp
 	./index/SegmentMergeInfo.cpp

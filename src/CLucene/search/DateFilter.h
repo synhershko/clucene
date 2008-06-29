@@ -16,6 +16,11 @@ CL_CLASS_DEF(index,Term)
 #include "Filter.h"
 
 CL_NS_DEF(search)
+
+
+// Deprecated. Instead, use RangeFilter combined with DateTools.
+
+
   /**
  * A Filter that restricts search results to a range of time.
  *

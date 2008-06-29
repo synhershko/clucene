@@ -30,6 +30,7 @@
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
 #include "CLucene/document/DateField.h"
+#include "CLucene/document/DateTools.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/FSDirectory.h"
 #include "CLucene/queryParser/QueryParser.h"

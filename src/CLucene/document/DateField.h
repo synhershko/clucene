@@ -32,8 +32,8 @@ CL_NS_DEF(document)
 * indexed when using this class. See {@link DateTools} for an
 * alternative without such a limitation.
 *
-* @deprecated If you build a new index, use {@link DateTools} instead. This class is included for use with existing
-* indices and will be removed in a future release.
+ * @deprecated If you build a new index, use {@link DateTools} instead. This class is included for use with existing
+ * indices and will be removed in a future release.
 */
 class DateField :LUCENE_BASE {
 public:
@@ -44,7 +44,7 @@ public:
 	* @throws RuntimeException if the time specified in the
 	* method argument is negative, that is, before 1970
 	*/
-	static TCHAR* timeToString(const int64_t time);
+	_CL_DEPRECATED( DateTools ) static TCHAR* timeToString(const int64_t time);
 	
 	/**
 	* Converts a millisecond time to a string suitable for indexing.
@@ -52,10 +52,10 @@ public:
 	* method argument is negative, that is, before 1970
 	* @param str must be a character array DATEFIELD_DATE_LEN+1 or longer
 	*/
-	static void timeToString(const int64_t time, TCHAR* str);
+	_CL_DEPRECATED( DateTools ) static void timeToString(const int64_t time, TCHAR* str);
 	
 	/** Converts a string-encoded date into a millisecond time. */
-	static int64_t stringToTime(const TCHAR* s);
+	_CL_DEPRECATED( DateTools ) static int64_t stringToTime(const TCHAR* s);
 };
 CL_NS_END
 #endif
