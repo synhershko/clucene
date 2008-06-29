@@ -45,7 +45,7 @@ struct DIR
 	struct dirent		dd_dir;
 
 	/** _findnext handle */
-	intptr_t			dd_handle;
+	int64_t			dd_handle;
 
 	/**
          * Status of search:

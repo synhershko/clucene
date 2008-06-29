@@ -14,6 +14,7 @@
 #include "CLucene/util/Reader.h"
 #include "AnalysisHeader.h"
 #include "CLucene/util/Misc.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(analysis)
 
