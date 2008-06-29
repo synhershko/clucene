@@ -86,13 +86,15 @@ CL_NS_DEF(index)
       return ret;
   }
 
-  void SegmentInfos::clearto(size_t _min){
-		if (infos.size()>_min) { // Make sure we actually need to remove
-			segmentInfosType::iterator itr,bitr=infos.begin()+_min,eitr=infos.end();
-			for(itr=bitr;itr!=eitr;++itr) {
+  void SegmentInfos::clearto(size_t from, size_t end){
+	size_t range = end - from;
+	  if ( from >= 0 && (infos.size() - from) >= range) { // Make sure we actually need to remove
+		segmentInfosType::iterator itr,bitr=infos.begin()+from,eitr=infos.end();
+		size_t count = 0;	
+		for(itr=bitr;itr!=eitr && count < range;++itr, count++) {
 				_CLLDELETE((*itr));
 			}
-			infos.erase(bitr,eitr);
+			infos.erase(bitr,bitr + count);
 		}
   }
   void SegmentInfos::add(SegmentInfo* info){

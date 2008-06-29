@@ -119,7 +119,7 @@ CL_NS_DEF(index)
 
 		
 		//delete and clears objects 'from' from to 'to'
-		void clearto(size_t to);
+		void clearto(size_t to, size_t end);
 		
 		//count of segment infos
 		int32_t size() const;

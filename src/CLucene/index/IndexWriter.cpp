@@ -435,7 +435,7 @@ public:
 	 fprintf(_CL_DEBUG_INFO,"\n into %s (%d docs)\n",mergedName, mergedDocCount);
 #endif
 
-	segmentInfos->clearto(minSegment);// remove old infos & add new
+	segmentInfos->clearto(minSegment, end);// remove old infos & add new
     segmentInfos->add( _CLNEW SegmentInfo(mergedName, mergedDocCount, directory) );
 
     // close readers before we attempt to delete now-obsolete segments
@@ -578,7 +578,7 @@ public:
 	  
 	  CND_PRECONDITION(dirs != NULL, "dirs is NULL");
 
-	  // start with zero or 1 seg so optimize the current
+	  // start with zero or 1 seg so optimize the current	  
 	  optimize();
 	  
 	  int32_t start = segmentInfos->size();
@@ -635,7 +635,7 @@ public:
     int32_t docCount = merger.merge();                // merge 'em
 
     // pop old infos & add new
-	segmentInfos->clearto(0);
+	segmentInfos->clearto(0, segmentInfos->size());
     segmentInfos->add(_CLNEW SegmentInfo(mergedName, docCount, directory));
 
 	if ( sReader != NULL ){
