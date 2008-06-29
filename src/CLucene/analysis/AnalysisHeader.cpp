@@ -91,7 +91,7 @@ void Token::setText(const TCHAR* text){
 }
 
 void Token::growBuffer(size_t size){
-	if(bufferTextLen>size)
+	if(bufferTextLen>=size)
 		return;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
 	if ( _termText == NULL )
