@@ -153,6 +153,8 @@ CL_NS_DEF(index)
   }
 
   bool SegmentTermDocs::skipTo(const int32_t target){
+    assert(count <= df );
+    
     if (df >= skipInterval) {                      // optimized case
       if (skipStream == NULL)
          skipStream = freqStream->clone(); // lazily clone
