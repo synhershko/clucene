@@ -59,6 +59,7 @@ extern unittest tests[];
 
 #define CLUCENE_DATA_LOCATION1 "../test/data/"
 #define CLUCENE_DATA_LOCATION2 "./test/data/"
+#define CLUCENE_DATA_LOCATION3 "../../test/data/"
 #define CLUCENE_DATA_LOCATIONENV "srcdir"
 
 extern const char* cl_tempDir;

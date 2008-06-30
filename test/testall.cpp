@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
 		strcpy(clucene_data_location, CLUCENE_DATA_LOCATION1);
 	else if ( CL_NS(util)::Misc::dir_Exists(CLUCENE_DATA_LOCATION2 "/reuters-21578-index/segments") )
 		strcpy(clucene_data_location, CLUCENE_DATA_LOCATION2);
+	else if ( CL_NS(util)::Misc::dir_Exists(CLUCENE_DATA_LOCATION3 "/reuters-21578-index/segments") )
+		strcpy(clucene_data_location, CLUCENE_DATA_LOCATION3);
 	else if ( getenv(CLUCENE_DATA_LOCATIONENV) != NULL ){
 		strcpy(clucene_data_location,getenv(CLUCENE_DATA_LOCATIONENV));
 		strcat(clucene_data_location,"/data/reuters-21578-index/segments");
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
 	//todo: make this configurable
 	if ( !*clucene_data_location ){
 		fprintf(stderr,"%s must be run from a subdirectory of the application's root directory\n",argv[0]);
-		fprintf(stderr,"ensure that the test data exists in %s or %s\n",CLUCENE_DATA_LOCATION1, CLUCENE_DATA_LOCATION2);
+		fprintf(stderr,"ensure that the test data exists in %s or %s or %s\n",CLUCENE_DATA_LOCATION1, CLUCENE_DATA_LOCATION2, CLUCENE_DATA_LOCATION3);
 		if ( getenv(CLUCENE_DATA_LOCATIONENV) != NULL )
 			fprintf(stderr,"%s/data was also checked because of the " CLUCENE_DATA_LOCATIONENV " environment variable", getenv(CLUCENE_DATA_LOCATIONENV));
 		ret_result = 1;
