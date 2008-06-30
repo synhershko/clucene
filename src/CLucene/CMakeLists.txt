@@ -434,19 +434,29 @@ CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/clucene-config.h.cmake ${clucene-core_
 CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/_clucene-config.h.cmake ${clucene-core_BINARY_DIR}/_clucene-config.h)
 
 #add the files to our groups and core
-SOURCE_GROUP("analysis\\standard" ./analysis/standard/*)
-SOURCE_GROUP("analysis" ./analysis/*)
-SOURCE_GROUP("config" ./config/*)
-SOURCE_GROUP("debug" ./debug/*)
-SOURCE_GROUP("document" ./document/*)
-SOURCE_GROUP("index" ./index/*)
-SOURCE_GROUP("queryParser" ./queryParser/*)
-SOURCE_GROUP("search" ./search/*)
-SOURCE_GROUP("store" ./store/*)
-SOURCE_GROUP("util" ./util/*)
-SOURCE_GROUP("" FILES ./StdHeader.cpp)
+SOURCE_GROUP("source/analysis\\standard" ./analysis/standard/*.cpp)
+SOURCE_GROUP("source/analysis" ./analysis/*.cpp)
+SOURCE_GROUP("source/config" ./config/*.cpp)
+SOURCE_GROUP("source/debug" ./debug/*.cpp)
+SOURCE_GROUP("source/document" ./document/*.cpp)
+SOURCE_GROUP("source/index" ./index/*.cpp)
+SOURCE_GROUP("source/queryParser" ./queryParser/*.cpp)
+SOURCE_GROUP("source/search" ./search/*.cpp)
+SOURCE_GROUP("source/store" ./store/*.cpp)
+SOURCE_GROUP("source/util" ./util/*.cpp)
+SOURCE_GROUP("source" FILES ./StdHeader.cpp)
 
-file(GLOB_RECURSE clucene_core_Headers ${CMAKE_SOURCE_DIR}/src/[A-Za-z]?*.h)
+SOURCE_GROUP("headers/analysis\\standard" ./analysis/standard/*.h)
+SOURCE_GROUP("headers/analysis" ./analysis/*.h)
+SOURCE_GROUP("headers/config" ./config/*.h)
+SOURCE_GROUP("headers/debug" ./debug/*.h)
+SOURCE_GROUP("headers/document" ./document/*.h)
+SOURCE_GROUP("headers/index" ./index/*.h)
+SOURCE_GROUP("headers/queryParser" ./queryParser/*.h)
+SOURCE_GROUP("headers/search" ./search/*.h)
+SOURCE_GROUP("headers/store" ./store/*.h)
+SOURCE_GROUP("headers/util" ./util/*.h)
+SOURCE_GROUP("headers" FILES ./*.h)
 
 SET(clucene_core_Files
 	./StdHeader.cpp
@@ -562,6 +572,7 @@ SET(clucene_core_Files
 	./search/FieldCache.cpp
 	./search/DateFilter.cpp
 )
+file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/src/CLucene/*.h)
 
 
 
@@ -582,10 +593,10 @@ ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 ENDIF ( MSVC8)
 
 add_library(clucene-core SHARED 
-	${clucene_core_Files}
+	${clucene_core_Files} ${HEADERS}
 )
 add_library(clucene-core-static STATIC 
-	${clucene_core_Files}
+	${clucene_core_Files} ${HEADERS}
 )
 
 
@@ -609,16 +620,19 @@ DEFINE_SYMBOL ""
 #    DEFINE_SYMBOL MAKE_STREAMS_LIB
 #)
 
-file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/src/[A-Za-z]?*.h)
-
 foreach(file ${HEADERS})
 	get_filename_component(apath ${file} PATH)
+	get_filename_component(aname ${file} NAME)
 	file(RELATIVE_PATH relpath ${CMAKE_SOURCE_DIR}/src ${apath})
-	if (relpath STREQUAL "demo")
-	else (relpath STREQUAL "demo")
-		install(FILES ${file} DESTINATION include/${relpath} )
-	endif (relpath STREQUAL "demo")
+
+	IF (NOT relpath STREQUAL "demo" )
+	    IF ( NOT aname MATCHES "^_.*" )
+		    install(FILES ${file} DESTINATION include/${relpath} )
+		ENDIF ( NOT aname MATCHES "^_.*" )
+	ENDIF (NOT relpath STREQUAL "demo" )
 endforeach(file)
+#also install CLucene.h
+install(FILES CLucene.h DESTINATION include/ )
 
 install(TARGETS clucene-core DESTINATION lib)
 install(TARGETS clucene-core-static DESTINATION lib)
