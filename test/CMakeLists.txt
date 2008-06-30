@@ -21,6 +21,8 @@ SOURCE_GROUP("search" ./search/*)
 SOURCE_GROUP("store" ./store/*)
 SOURCE_GROUP("util" ./util/*)
 
+file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
+
 ADD_EXECUTABLE(cl_test 
 ./tests.cpp
 ./CuTest.cpp
@@ -43,5 +45,8 @@ ADD_EXECUTABLE(cl_test
 ./index/TestReuters.cpp
 ./util/TestPriorityQueue.cpp
 ./util/English.cpp
+${HEADERS}
 )
+
+
 TARGET_LINK_LIBRARIES(cl_test clucene-core-static)
