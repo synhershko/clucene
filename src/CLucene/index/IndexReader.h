@@ -259,7 +259,7 @@ public:
 	* @throws IOException if index cannot be accessed
 	* @see org.apache.lucene.document.Field.TermVector
 	*/
-	virtual bool getTermFreqVectors(int32_t docNumber, Array<TermFreqVector*>& result) =0;
+	virtual bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::Array<TermFreqVector*>& result) =0;
 	
 	/**
 	*  Return a term frequency vector for the specified document and field. The

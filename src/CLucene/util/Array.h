@@ -7,6 +7,7 @@
 #ifndef _lucene_util_Array_
 #define _lucene_util_Array_
 
+CL_NS_DEF(util)
 
 template<typename T>
 class CLUCENE_EXPORT Array: LUCENE_BASE{
@@ -54,4 +55,5 @@ public:
 
 };
 
+CL_NS_END
 #endif

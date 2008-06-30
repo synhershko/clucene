@@ -126,6 +126,10 @@ SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR**
 	this->positions = positions;
 }
 
+void SegmentTermPositionVector::indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, CL_NS(util)::Array<int32_t>& ret)
+	{ SegmentTermVector::indexesOf(termNumbers, start, len, ret); }
+
+
 SegmentTermPositionVector::~SegmentTermPositionVector(){
 	if ( offsets ){
 		for (size_t i=0;i<offsets->length;i++){

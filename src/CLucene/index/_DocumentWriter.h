@@ -32,8 +32,8 @@ public:
 	public:
 		Term* term;					  // the Term
 		int32_t freq;					  // its frequency in doc
-		Array<int32_t> positions;				  // positions it occurs at
-		Array<TermVectorOffsetInfo> offsets;
+		CL_NS(util)::Array<int32_t> positions;				  // positions it occurs at
+		CL_NS(util)::Array<TermVectorOffsetInfo> offsets;
 		
 		Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset);
 		~Posting();

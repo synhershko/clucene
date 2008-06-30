@@ -53,7 +53,7 @@ public:
 	*  The size of the returned array is size()
 	*  @memory Returning a pointer to internal data. Do not delete.
 	*/
-	virtual const Array<int32_t>* getTermFrequencies() = 0;
+	virtual const CL_NS(util)::Array<int32_t>* getTermFrequencies() = 0;
 
 
 	/** Return an index in the term numbers array returned from
@@ -73,7 +73,7 @@ public:
 	*  @param start index in the array where the list of terms starts
 	*  @param len the number of terms in the list
 	*/
-	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, Array<int32_t>& ret) = 0;
+	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, CL_NS(util)::Array<int32_t>& ret) = 0;
 
 	/** Solve the diamond inheritence problem by providing a reinterpret function.
     *	No dynamic casting is required and no RTTI data is needed to do this
@@ -87,7 +87,7 @@ struct TermVectorOffsetInfo {
     int startOffset;
     int endOffset;
 public:
-	static Array<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
+	static CL_NS(util)::Array<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
     TermVectorOffsetInfo();
     ~TermVectorOffsetInfo();
     TermVectorOffsetInfo(int32_t startOffset, int32_t endOffset);
@@ -112,7 +112,7 @@ public:
      *  term String array obtained from the <code>indexOf</code> method.
      *  May return null if positions have not been stored.
      */
-    virtual Array<int32_t>* getTermPositions(int32_t index) = 0;
+    virtual CL_NS(util)::Array<int32_t>* getTermPositions(int32_t index) = 0;
   
     /**
      * Returns an array of TermVectorOffsetInfo in which the term is found.
@@ -123,7 +123,7 @@ public:
      * @param index The position in the array to get the offsets from
      * @return An array of TermVectorOffsetInfo objects or the empty list
      */ 
-     virtual Array<TermVectorOffsetInfo>* getOffsets(int32_t index) = 0;
+     virtual CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(int32_t index) = 0;
      
      virtual ~TermPositionVector(){
 	 }

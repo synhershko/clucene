@@ -65,8 +65,8 @@ private:
         ~TVTerm();
 		
 		int32_t freq;
-		Array<int32_t>* positions;
-		Array<TermVectorOffsetInfo>* offsets;
+		CL_NS(util)::Array<int32_t>* positions;
+		CL_NS(util)::Array<TermVectorOffsetInfo>* offsets;
 
 		const TCHAR* getTermText() const;
 		size_t getTermTextLen();
@@ -83,7 +83,7 @@ private:
 	int64_t currentDocPointer;
 
 	void addTermInternal(const TCHAR* termText, const int32_t freq, 
-		Array<int32_t>* positions, Array<TermVectorOffsetInfo>* offsets);
+		CL_NS(util)::Array<int32_t>* positions, CL_NS(util)::Array<TermVectorOffsetInfo>* offsets);
 
 	void writeField();
 	void writeDoc();
@@ -136,7 +136,7 @@ public:
 	* @param vectors
 	* @throws IOException
 	*/
-	void addAllDocVectors(Array<TermFreqVector*>& vectors);
+	void addAllDocVectors(CL_NS(util)::Array<TermFreqVector*>& vectors);
 
 	/** Add term to the field's term vector. Field must already be open.
 	*  Terms should be added in
@@ -146,7 +146,7 @@ public:
 	* @throws IllegalStateException if document or field is not open
 	*/
 	void addTerm(const TCHAR* termText, int32_t freq, 
-		Array<int32_t>* positions = NULL, Array<TermVectorOffsetInfo>* offsets = NULL);
+		CL_NS(util)::Array<int32_t>* positions = NULL, CL_NS(util)::Array<TermVectorOffsetInfo>* offsets = NULL);
 };
 
 /**
@@ -156,12 +156,12 @@ private:
 	const TCHAR* field;
 	TCHAR** terms;
 	int32_t termsLen; //cache
-	Array<int32_t>* termFreqs;
+	CL_NS(util)::Array<int32_t>* termFreqs;
 
 	int32_t binarySearch(TCHAR** a, const int32_t arraylen, const TCHAR* key) const;
 public:
 	//note: termFreqs must be the same length as terms
-	SegmentTermVector(const TCHAR* field, TCHAR** terms, Array<int32_t>* termFreqs);
+	SegmentTermVector(const TCHAR* field, TCHAR** terms, CL_NS(util)::Array<int32_t>* termFreqs);
 	virtual ~SegmentTermVector();
 
 	/**
@@ -172,9 +172,9 @@ public:
 	TCHAR* toString() const;
 	int32_t size();
 	const TCHAR** getTerms();
-	const Array<int32_t>* getTermFrequencies();
+	const CL_NS(util)::Array<int32_t>* getTermFrequencies();
 	int32_t indexOf(const TCHAR* termText);
-	void indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, Array<int32_t>& ret);
+	void indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, CL_NS(util)::Array<int32_t>& ret);
 
 	virtual TermPositionVector* __asTermPositionVector();
 };
@@ -199,7 +199,7 @@ private:
     
     int32_t checkValidFormat(CL_NS(store)::IndexInput* in);
     
-	void readTermVectors(const TCHAR** fields, const int64_t* tvfPointers, const int32_t len, Array<TermFreqVector*>& _return);
+	void readTermVectors(const TCHAR** fields, const int64_t* tvfPointers, const int32_t len, CL_NS(util)::Array<TermFreqVector*>& _return);
 
     /**
     * 
@@ -239,17 +239,17 @@ public:
 	* @return All term frequency vectors
 	* @throws IOException if there is an error reading the term vector files 
 	*/
-	bool get(int32_t docNum, Array<TermFreqVector*>& result);
+	bool get(int32_t docNum, CL_NS(util)::Array<TermFreqVector*>& result);
 };
 
 
 class SegmentTermPositionVector: public SegmentTermVector, public TermPositionVector {
 protected:
-	Array< Array<int32_t> >* positions;
-	Array< Array<TermVectorOffsetInfo> >* offsets;
-	static Array<int32_t> EMPTY_TERM_POS;
+	CL_NS(util)::Array< CL_NS(util)::Array<int32_t> >* positions;
+	CL_NS(util)::Array< CL_NS(util)::Array<TermVectorOffsetInfo> >* offsets;
+	static CL_NS(util)::Array<int32_t> EMPTY_TERM_POS;
 public:
-	SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, Array<int32_t>* termFreqs, Array< Array<int32_t> >* positions, Array< Array<TermVectorOffsetInfo> >* offsets);
+	SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, CL_NS(util)::Array<int32_t>* termFreqs, CL_NS(util)::Array< CL_NS(util)::Array<int32_t> >* positions, CL_NS(util)::Array< CL_NS(util)::Array<TermVectorOffsetInfo> >* offsets);
 	~SegmentTermPositionVector();
 
 	/**
@@ -259,23 +259,22 @@ public:
 	* @return An array of TermVectorOffsetInfo objects or the empty list
 	* @see org.apache.lucene.analysis.Token
 	*/
-	Array<TermVectorOffsetInfo>* getOffsets(int32_t index);
+	CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(int32_t index);
 
 	/**
 	* Returns an array of positions in which the term is found.
 	* Terms are identified by the index at which its number appears in the
 	* term String array obtained from the <code>indexOf</code> method.
 	*/
-	Array<int32_t>* getTermPositions(int32_t index);
+	CL_NS(util)::Array<int32_t>* getTermPositions(int32_t index);
 
 	const TCHAR* getField(){ return SegmentTermVector::getField(); }
 	TCHAR* toString() const{ return SegmentTermVector::toString(); }
 	int32_t size(){ return SegmentTermVector::size(); }
 	const TCHAR** getTerms(){ return SegmentTermVector::getTerms(); }
-	const Array<int32_t>* getTermFrequencies(){ return SegmentTermVector::getTermFrequencies(); }
+	const CL_NS(util)::Array<int32_t>* getTermFrequencies(){ return SegmentTermVector::getTermFrequencies(); }
 	int32_t indexOf(const TCHAR* termText){ return SegmentTermVector::indexOf(termText); }
-	void indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, Array<int32_t>& ret)
-		{ SegmentTermVector::indexesOf(termNumbers, start, len, ret); }
+	void indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, CL_NS(util)::Array<int32_t>& ret);
 
 	virtual TermPositionVector* __asTermPositionVector();
 };

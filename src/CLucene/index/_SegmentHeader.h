@@ -329,7 +329,7 @@ public:
 	*  If no such fields existed, the method returns null.
 	* @throws IOException
 	*/
-	bool getTermFreqVectors(int32_t docNumber, Array<TermFreqVector*>& result);
+	bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::Array<TermFreqVector*>& result);
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir);

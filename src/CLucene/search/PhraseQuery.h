@@ -86,7 +86,7 @@ CL_NS_DEF(search)
         //added by search highlighter
         CL_NS(index)::Term** getTerms() const;
 		_CL_DEPRECATED( deleteDocuments ) int32_t* getPositions() const; ///@deprecated. use getPositions(Array<int32_t>& result)
-		void getPositions(Array<int32_t>& result) const;
+		void getPositions(CL_NS(util)::Array<int32_t>& result) const;
         const TCHAR* getFieldName() const{ return field; }
  
         //Prints a user-readable version of this query. 
