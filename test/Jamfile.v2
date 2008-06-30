@@ -1,4 +1,0 @@
-project tests ;
-
-exe cl_test : ./CLMonolithic_Test.cpp ../build/boost//libclucene
-    	       : <define>_UCS2 ;
