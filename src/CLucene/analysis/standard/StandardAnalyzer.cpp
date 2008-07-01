@@ -20,19 +20,19 @@ CL_NS_USE(analysis)
 CL_NS_DEF2(analysis,standard)
 
 	StandardAnalyzer::StandardAnalyzer():
-		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+		stopSet(_CLNEW CLTCSetList(false))
 	{
       StopFilter::fillStopTable( stopSet,CL_NS(analysis)::StopAnalyzer::ENGLISH_STOP_WORDS);
 	}
 
 	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):
-		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+		stopSet(_CLNEW CLTCSetList)
 	{
 		StopFilter::fillStopTable( stopSet,stopWords );
 	}
 	
 	StandardAnalyzer::StandardAnalyzer(const char* stopwordsFile, const char* enc):
-		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+		stopSet(_CLNEW CLTCSetList)
 	{
 		if ( enc == NULL )
 			enc = "ASCII";
@@ -40,13 +40,13 @@ CL_NS_DEF2(analysis,standard)
 	}
 	
 	StandardAnalyzer::StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
-		stopSet(_CLNEW CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray>)
+		stopSet(_CLNEW CLTCSetList)
 	{
 		WordlistLoader::getWordSet(stopwordsReader, stopSet, _bDeleteReader);
 	}
 
 	StandardAnalyzer::~StandardAnalyzer(){
-	    //todo: this is causing segfaults: _CLDELETE(stopSet);
+		_CLDELETE(stopSet);
 	}
 
 

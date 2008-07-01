@@ -18,8 +18,6 @@
 
 CL_NS_DEF(analysis)
 
-typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
-
 /** An abstract base class for simple, character-oriented tokenizers.*/
 class CharTokenizer:public Tokenizer {
 private:
