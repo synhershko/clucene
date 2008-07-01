@@ -18,6 +18,10 @@
  #include <windows.h>
 #endif
 
+#ifndef _snprintf
+#define _snprintf snprintf
+#endif
+
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -74,7 +78,7 @@ void indexDocs(IndexWriter* writer, char* directory) {
 		struct dirent* fl;
 		
 		char path[CL_MAX_DIR];
-		snprintf(path,CL_MAX_DIR,"%s/",directory);
+		_snprintf(path,CL_MAX_DIR,"%s/",directory);
 		char* pathP = path + strlen(path);
 
 		fl = readdir(dir);

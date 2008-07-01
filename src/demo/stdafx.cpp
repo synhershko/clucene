@@ -18,11 +18,17 @@
 #ifdef _CL_HAVE_SYS_TIMEB_H
 	#include <sys/timeb.h>
 #endif
+#ifndef _timeb
+#define _timeb timeb
+#endif
+#ifndef _ftime
+#define _ftime ftime
+#endif
 
 uint64_t currentTimeMillis() {
 #ifndef _CL_HAVE_GETTIMEOFDAY
-    struct timeb tstruct;
-    ftime(&tstruct);
+    struct _timeb tstruct;
+    _ftime(&tstruct);
 
     return (((uint64_t) tstruct.time) * 1000) + tstruct.millitm;
 #else
