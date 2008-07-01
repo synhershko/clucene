@@ -21,6 +21,18 @@
 # include <sys/timeb.h>
 #endif
 
+// Defining function macros missing in specific enviroments
+#ifndef _tcsftime
+	#ifdef _UCS2
+		#define _tcsftime wcsftime
+	#else
+		#define _tcsftime strftime
+	#endif
+#endif
+#ifndef _ttoi
+	#define _ttoi(x) (int)_tcstoi64(x)
+#endif
+
 #include "DateTools.h"
 #include "CLucene/util/Misc.h"
 CL_NS_USE(util)
@@ -35,7 +47,6 @@ TCHAR* DateTools::timeToString(const int64_t time, Resolution resolution /*= MIL
 void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf) {
 	time_t secs = time / 1000;
 	tm *ptm = gmtime(&secs);
-	size_t len = _tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
 
 	if (resolution == MILLISECOND_FORMAT) {
 		size_t len = _tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
