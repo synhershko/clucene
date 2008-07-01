@@ -30,7 +30,7 @@
 	#endif
 #endif
 #ifndef _ttoi
-	#define _ttoi(x) (int)_tcstoi64(x)
+	#define _ttoi(x) (int)_tcstoi64(x,NULL,10)
 #endif
 
 #include "DateTools.h"
@@ -51,7 +51,7 @@ void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* b
 	if (resolution == MILLISECOND_FORMAT) {
 		size_t len = _tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
 		uint32_t ms = time % 1000;
-		_stprintf(buf + len , _T("%03u"), ms);
+		_sntprintf(buf + len, 3, _T("%03u"), ms);
 	} else if (resolution == SECOND_FORMAT) {
 		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
 	} else if (resolution == MINUTE_FORMAT) {
