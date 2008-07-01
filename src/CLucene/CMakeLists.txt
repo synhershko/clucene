@@ -513,6 +513,7 @@ SET(clucene_core_Files
 	./index/SegmentMerger.cpp
 	./index/IndexWriter.cpp
 	./index/MultiReader.cpp
+	./index/Payload.cpp
 	./index/SegmentTermEnum.cpp
 	./index/TermInfo.cpp
 	./index/IndexModifier.cpp
