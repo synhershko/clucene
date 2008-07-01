@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/StdHeader.h"
+#include "CLucene/_ApiHeader.h"
 
 #ifdef _CL_TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -72,7 +72,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 6: // MONTH_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				s_time.tm_mon = _ttoi(&tmpDate[4]) - 1;
 				tmpDate[4] = 0;
 				s_time.tm_year = _ttoi( tmpDate ) - 1900;
@@ -81,7 +81,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 8: // DAY_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				s_time.tm_mday = _ttoi(&tmpDate[6]);
 				tmpDate[6] = 0;
 				s_time.tm_mon = _ttoi(&tmpDate[4]) - 1;
@@ -92,7 +92,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 10: // HOUR_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				s_time.tm_hour = _ttoi(&tmpDate[8]);
 				tmpDate[8] = 0;
 				s_time.tm_mday = _ttoi(&tmpDate[6]);
@@ -105,7 +105,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 12: // MINUTE_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				s_time.tm_min = _ttoi(&tmpDate[10]);
 				tmpDate[10] = 0;
 				s_time.tm_hour = _ttoi(&tmpDate[8]);
@@ -120,7 +120,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 14: // SECOND_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				s_time.tm_sec = _ttoi(&tmpDate[12]);
 				tmpDate[12] = 0;
 				s_time.tm_min = _ttoi(&tmpDate[10]);
@@ -137,7 +137,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 			}
 		case 17: // MILLISECOND_FORMAT
 			{
-				TCHAR* tmpDate = _tcsdup(dateString);
+				TCHAR* tmpDate = STRDUP_TtoT(dateString);
 				ms = _ttoi(&tmpDate[14]);
 				tmpDate[14] = 0;
 				s_time.tm_sec = _ttoi(&tmpDate[12]);
