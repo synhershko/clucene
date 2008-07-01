@@ -22,7 +22,7 @@
 
   void TestDateTools(CuTest *tc) {
 	  TCHAR* t = CL_NS(document)::DateTools::timeToString( Misc::currentTimeMillis() , CL_NS(document)::DateTools::MILLISECOND_FORMAT);
-	  _CLDELETE(t);
+	  _CLDELETE_ARRAY(t);
   }
 
   void TestBinaryDocument(CuTest *tc){
