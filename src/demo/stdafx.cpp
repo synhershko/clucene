@@ -21,8 +21,8 @@
 
 uint64_t currentTimeMillis() {
 #ifndef _CL_HAVE_GETTIMEOFDAY
-    struct _timeb tstruct;
-    _ftime(&tstruct);
+    struct timeb tstruct;
+    ftime(&tstruct);
 
     return (((uint64_t) tstruct.time) * 1000) + tstruct.millitm;
 #else

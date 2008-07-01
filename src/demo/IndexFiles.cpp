@@ -74,7 +74,7 @@ void indexDocs(IndexWriter* writer, char* directory) {
 		struct dirent* fl;
 		
 		char path[CL_MAX_DIR];
-		_snprintf(path,CL_MAX_DIR,"%s/",directory);
+		snprintf(path,CL_MAX_DIR,"%s/",directory);
 		char* pathP = path + strlen(path);
 
 		fl = readdir(dir);
