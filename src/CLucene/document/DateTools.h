@@ -7,10 +7,6 @@
 #ifndef _lucene_document_DateTools_
 #define _lucene_document_DateTools_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
 CL_NS_DEF(document)
 
 
