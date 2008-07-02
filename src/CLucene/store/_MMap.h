@@ -12,7 +12,7 @@
 		class MMapIndexInput: public IndexInput{
 			uint8_t* data;
 			int64_t pos;
-#ifdef _CLCOMPILER_MSVC
+#ifdef _CL_HAVE_MAPVIEWOFFILE
 			HANDLE mmaphandle;
 			HANDLE fhandle;
 #else

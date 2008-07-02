@@ -10,7 +10,7 @@
 #include "FSDirectory.h"
 #include "CLucene/util/Misc.h"
 
-#ifndef _CLCOMPILER_MSVC
+#ifdef _CL_HAVE_SYS_MMAN_H
 	#include <sys/mman.h>
 #endif
 
@@ -30,7 +30,7 @@ CL_NS_USE(util)
 
 	  CND_PRECONDITION(path != NULL, "path is NULL");
 
-#ifdef _CLCOMPILER_MSVC
+#ifdef _CL_HAVE_MAPVIEWOFFILE
 	  mmaphandle = NULL;
 	  fhandle = CreateFileA(path,GENERIC_READ,FILE_SHARE_READ, 0,OPEN_EXISTING,0,0);
 	  
@@ -80,7 +80,7 @@ CL_NS_USE(util)
 		_CLTHROWA_DEL(CL_ERR_IO,errstr);
 	  }
 
-#else //_CLCOMPILER_MSVC
+#else //_CL_HAVE_MAPVIEWOFFILE
 	 fhandle = ::open (path, O_RDONLY);
   	 if (fhandle < 0){
 		_CLTHROWA(CL_ERR_IO,strerror(errno));	
@@ -111,7 +111,7 @@ CL_NS_USE(util)
   //Pre  - clone is a valide instance of FSIndexInput
   //Post - The instance has been created and initialized by clone
   
-#ifdef _CLCOMPILER_MSVC
+#ifdef _CL_HAVE_MAPVIEWOFFILE
 	  mmaphandle = NULL;
 	  fhandle = NULL;
 #endif
@@ -166,7 +166,7 @@ CL_NS_USE(util)
     //IndexInput::close();
 
 	if ( !isClone ){
-#ifdef _CLCOMPILER_MSVC
+#ifdef _CL_HAVE_MAPVIEWOFFILE
 		if ( data != NULL ){
 			if ( ! UnmapViewOfFile(data) ){
 				CND_PRECONDITION( false, "UnmapViewOfFile(data) failed"); //todo: change to rich error
