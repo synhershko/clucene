@@ -24,6 +24,7 @@
 #cmakedefine _CL_HAVE_WCSTOLL
 #cmakedefine _CL_HAVE_WCSUPR
 #cmakedefine _CL_HAVE_GETTIMEOFDAY
+#cmakedefine _CL_HAVE_MAPVIEWOFFILE
 
 #cmakedefine _CL_HAVE_LLTOA
 #cmakedefine _CL_HAVE_LLTOW
@@ -59,6 +60,7 @@ ${FUNCTION__WRITE}
 ${FUNCTION__SNPRINTF}
 ${FUNCTION__MKDIR}
 ${FUNCTION__UNLINK}
+${FUNCTION__FTIME}
 
 //todo: this is not checked, i think
 #define _LUCENE_PRAGMA_WARNINGS
@@ -85,5 +87,25 @@ ${FUNCTION__UNLINK}
 /* Define for large files, on AIX-style hosts. */
 //todo: should we only define for hosts where this is applicable?
 #define _LARGE_FILES
+
+
+/* Compiler oddities */
+
+//not sure why, but cygwin reports _mkdir, but doesn't actually work...
+#ifdef __CYGWIN__
+    #define _mkdir(x) mkdir(x,0777)
+    #define _open open
+    #define _close close
+	#define _unlink unlink
+	#define _read read
+	#define _write write
+    #define _S_IREAD  0444
+    #define _S_IWRITE 0333  // write and execute permissions
+#endif
+
+//todo: hack! should detect using normal method, but didn't work... look into this.
+#ifndef _timeb
+    #define _timeb timeb
+#endif
 
 #endif

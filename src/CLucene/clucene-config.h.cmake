@@ -31,6 +31,7 @@
 #cmakedefine _CL_HAVE_SYS_TIMEB_H  1 
 #cmakedefine _CL_HAVE_SYS_TIME_H 1
 #cmakedefine _CL_HAVE_TCHAR_H 1
+#cmakedefine _CL_HAVE_SYS_MMAN_H 1
 
 // our needed types
 #if !@HAVE_INT8_T@

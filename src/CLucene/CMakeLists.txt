@@ -14,7 +14,7 @@ SET ( OPTIONAL_HEADERS  string.h sys/time.h memory.h sys/types.h
                         stdint.h unistd.h io.h direct.h sys/dir.h sys/ndir.h dirent.h 
                         stat.h sys/stat.h stdexcept errno.h fcntl.h windows.h wchar.h 
                         wctype.h fcntl.h hash_map hash_set ext/hash_map ext/hash_set 
-                        sys/timeb.h tchar.h strings.h stdexcept)
+                        sys/timeb.h tchar.h strings.h stdexcept sys/mman.h)
 SET ( COMPULSARY_HEADERS stdlib.h cstdarg cstddef stddef.h ctype.h algorithm 
 						 functional map vector list set math.h fcntl.h limits.h)
 
@@ -38,7 +38,7 @@ FOREACH(inc ${COMPULSARY_HEADERS})
 	    SET(_CL_HAVE_${INC} ${INC})
 	ENDIF ( HAVE_${INC} )
 	IF ( NOT HAVE_${INC} )
-		MESSAGE ( FATAL_ERROR, "${inc} could not be found" )
+		MESSAGE ( FATAL_ERROR "${inc} could not be found" )
 	ENDIF ( NOT HAVE_${INC} )
 ENDFOREACH(inc ${COMPULSARY_HEADERS})
 
@@ -106,10 +106,10 @@ CHECK_TYPE_SIZE(intptr_t    INTPTR_T)
 
 INCLUDE (CheckFunctionExists)
 
-SET ( COMPULSARY_FUNCTIONS printf wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
-                           wcscmp wcsncmp wcscspn )
+SET ( COMPULSARY_FUNCTIONS printf wcscpy wcsncpy wcscat wcschr wcsstr wcslen
+                           wcscmp wcsncmp wcscspn)
 
-SET ( OPTIONAL_FUNCTIONS mmap wcsupr wcscasecmp wcsicmp wcstoll wprintf
+SET ( OPTIONAL_FUNCTIONS mmap wcsupr wcscasecmp wcsicmp wcstoll wprintf MapViewOfFile
                          lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf)
 
 #check for compulsary functions
@@ -118,7 +118,7 @@ FOREACH(inc ${COMPULSARY_FUNCTIONS})
 	STRING(REPLACE . _ INC ${INC})
 	CHECK_FUNCTION_EXISTS (${inc} _CL_HAVE_${INC})
 	IF ( NOT _CL_HAVE_${INC} )
-		MESSAGE ( FATAL_ERROR, "${inc} could not be found" )
+		MESSAGE ( FATAL_ERROR "${inc} could not be found" )
 	ENDIF ( NOT _CL_HAVE_${INC} )
 ENDFOREACH(inc ${COMPULSARY_FUNCTIONS})
 
@@ -170,6 +170,9 @@ ENDIF ( HAVE_SYS_STAT_H )
 IF ( HAVE_FCNTL_H )
 	SET (CHOOSE_SYMBOL_INCLUDES "${CHOOSE_SYMBOL_INCLUDES};fcntl.h")
 ENDIF ( HAVE_FCNTL_H )
+IF ( HAVE_SYS_TIMEB_H )
+	SET (CHOOSE_SYMBOL_INCLUDES "${CHOOSE_SYMBOL_INCLUDES};sys/timeb.h")
+ENDIF ( HAVE_SYS_TIMEB_H )
 MACRO(CHOOSE_SYMBOL name options)
     STRING(TOUPPER ${name} NAME)
     FOREACH(option ${options})
@@ -216,6 +219,7 @@ CHOOSE_FUNCTION(_read "_read;read")
 CHOOSE_FUNCTION(_open "_open;open")
 CHOOSE_FUNCTION(_write "_write;write")
 CHOOSE_FUNCTION(_unlink "_unlink;unlink")
+CHOOSE_FUNCTION(_ftime "_ftime;ftime")
 
 CHOOSE_FUNCTION(_snprintf "snprintf;_snprintf")
 CHOOSE_FUNCTION(_snwprintf "snwprintf;_snwprintf")
@@ -425,7 +429,7 @@ endforeach ( ARG )
 SET ( MUSTDEFINE "" )
 foreach(ARG ${MUSTDEFINE})
 	IF ( NOT ${ARG} )
-		MESSAGE( FATAL_ERROR, "The symbol '${ARG}' was not defined." )
+		MESSAGE( FATAL_ERROR "The symbol '${ARG}' was not defined." )
 	ENDIF ( NOT ${ARG} )
 endforeach(ARG)
 

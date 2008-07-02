@@ -58,4 +58,10 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
     #define CND_DEBUGMESSAGE(usermessage)
 #endif
 
+//cnd-debug exit command
+#ifndef debugFatalExit
+ #define debugFatalExit(ret) exit(ret)
+#endif
+
+
 #endif

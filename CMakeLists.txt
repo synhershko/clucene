@@ -52,3 +52,12 @@ ELSEIF(ENABLE_ASCII_MODE)
 	ADD_DEFINITIONS(-D_UNICODE)
 ENDIF(ENABLE_ASCII_MODE)
 
+
+#Single output directory for building all executables and libraries.
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output Directory" FORCE)
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Library Output Directory" FORCE)
+
+#add make check command
+ENABLE_TESTING()
+ADD_TEST(SimpleTest ${EXECUTABLE_OUTPUT_PATH}/cl_test )
+
