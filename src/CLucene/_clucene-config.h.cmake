@@ -104,8 +104,8 @@ ${FUNCTION__FTIME}
 #endif
 
 //todo: hack! should detect using normal method, but didn't work... look into this.
-#ifndef _timeb
-    #define _timeb timeb
-#endif
+//#ifndef _timeb
+//    #define _timeb timeb
+//#endif
 
 #endif
