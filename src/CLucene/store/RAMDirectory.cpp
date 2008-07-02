@@ -520,9 +520,9 @@ CL_NS_DEF(store)
   }
 
   TCHAR* RAMDirectory::toString() const{
-        TCHAR* ret = _CL_NEWARRAY(TCHAR,13); // 13 = strlen(RAMDirectory);
-        _tcscpy(ret,_T("RAMDirectory"));
-	return ret;
+	  TCHAR* ret = _CL_NEWARRAY(TCHAR,13); // 13 = strlen(RAMDirectory);
+	  _tcscpy(ret,_T("RAMDirectory"));
+	  return ret;
   }
 
 CL_NS_END

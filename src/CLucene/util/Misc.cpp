@@ -163,7 +163,6 @@ int64_t Misc::file_Size(const char* path){
 }
 
 //static
-/* DSR:CL_BUG: (See comment for join method in Misc.h): */
 TCHAR* Misc::join ( const TCHAR* a, const TCHAR* b, const TCHAR* c, const TCHAR* d,const TCHAR* e,const TCHAR* f ) {
 #define LEN(x) (x == NULL ? 0 : _tcslen(x))
 const size_t totalLen =

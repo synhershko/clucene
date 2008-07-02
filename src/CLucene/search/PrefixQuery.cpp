@@ -97,7 +97,9 @@ CL_NS_DEF(search)
 	  int32_t prefixLen = prefix->textLength();
       do {
         lastTerm = enumerator->term();
-		if (lastTerm != NULL && lastTerm->field() == prefixField ){
+		if (lastTerm != NULL &&
+			lastTerm->field() == prefixField ) // interned comparison 
+		{
 		  
 		  //now see if term->text() starts with prefixText
 		  int32_t termLen = lastTerm->textLength();
@@ -212,16 +214,9 @@ TCHAR* PrefixFilter::toString()
 {
 	//Instantiate a stringbuffer buffer to store the readable version temporarily
     CL_NS(util)::StringBuffer buffer;
-    //check if field equal to the field of prefix
-    if( prefix->field() != NULL ) {
-	  //Append the field of prefix to the buffer
-      buffer.append(prefix->field());
-	  //Append a colon
-      buffer.append(_T(":") );
-    }
-    //Append the text of the prefix
-    buffer.append(prefix->text());
-    buffer.append(_T("*"));
+	buffer.append(_T("PrefixFilter("));
+	buffer.append(prefix->toString());
+    buffer.append(_T(")"));
 
 	//Convert StringBuffer buffer to TCHAR block and return it
     return buffer.toString();
@@ -277,5 +272,7 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
 
 	return bts;
 }
+
+CL_NS(index)::Term* PrefixFilter::getPrefix() const { return prefix; };
 
 CL_NS_END

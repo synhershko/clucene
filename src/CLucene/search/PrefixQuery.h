@@ -18,8 +18,8 @@ CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(util,StringBuffer)
 
 CL_NS_DEF(search) 
-	//PrefixQuery is a Query that matches documents containing terms with a specified prefix.
-
+/** A Query that matches documents containing terms with a specified prefix. A PrefixQuery
+* is built by QueryParser for input like <code>app*</code>. */
 	class CLUCENE_EXPORT PrefixQuery: public Query {
 	private:
 		CL_NS(index)::Term* prefix;
@@ -68,7 +68,12 @@ CL_NS_DEF(search)
     	CL_NS(util)::BitSet* bits( CL_NS(index)::IndexReader* reader );
     	
     	Filter* clone() const;
+
+		/** Prints a user-readable version of this query. */
     	TCHAR* toString();
+
+		// Returns a reference of internal prefix
+		CL_NS(index)::Term* getPrefix() const;
     };
 CL_NS_END
 #endif
