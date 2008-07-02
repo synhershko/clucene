@@ -221,7 +221,7 @@ void SearchTest(CuTest *tc) {
 
 	SimpleAnalyzer analyzer;
 	RAMDirectory ram;
-	IndexWriter writer( &ram, &analyzer, true);  
+	IndexWriter writer( &ram, &analyzer, true);
 	writer.setUseCompoundFile(false);
 
 	const TCHAR* docs[] = { _T("a b c d e"),

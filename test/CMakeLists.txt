@@ -35,6 +35,7 @@ ADD_EXECUTABLE(cl_test
 ./store/TestStore.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
+./search/TestQueries.cpp
 ./search/TestSearch.cpp
 ./search/TestSort.cpp
 ./search/TestWildcard.cpp

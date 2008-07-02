@@ -37,6 +37,7 @@ CuSuite *testhighfreq(void);
 CuSuite *testhighlight(void);
 CuSuite *testpriorityqueue(void);
 CuSuite *testQueryParser(void);
+CuSuite *testqueries(void);
 CuSuite *testsearch(void);
 CuSuite *testtermvector(void);
 CuSuite *testsort(void);

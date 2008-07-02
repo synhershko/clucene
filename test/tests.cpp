@@ -16,6 +16,7 @@ unittest tests[] = {
     {"priorityqueue", testpriorityqueue},
     {"queryparser", testQueryParser},
     {"search", testsearch},
+	{"queries", testqueries},
     {"termvector",testtermvector},
     {"sort",testsort},
     {"duplicates", testduplicates},

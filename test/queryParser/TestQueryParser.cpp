@@ -104,6 +104,7 @@ void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* inst, c
 
 void testSimple(CuTest *tc) {
 	StandardAnalyzer a;
+	KeywordAnalyzer b;
 	assertQueryEquals(tc,_T("term term term"), NULL, _T("term term term"));
 	
 	TCHAR tmp1[100];
@@ -117,6 +118,9 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,tmp1, NULL, tmp1);
 	assertQueryEquals(tc,tmp1, &a, tmp1);
 #endif
+
+	//assertQueryEquals(tc, _T("\"\""), &b, _T("")); // -- new test, crashes CLucene
+    //assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:")); // -- new test, crashes CLucene
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
@@ -165,6 +169,26 @@ void testSimple(CuTest *tc) {
     StringBuffer sb;
     sb.appendFloat(0.02f,2);
     CuAssertStrEquals(tc, _T("appendFloat failed"), _T("0.02"), sb.getBuffer());
+
+    // make sure OR is the default:
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+	CLUCENE_ASSERT(QueryParser::OR_OPERATOR == qp->getDefaultOperator());
+	qp->setDefaultOperator(QueryParser::AND_OPERATOR);
+	CLUCENE_ASSERT(QueryParser::AND_OPERATOR == qp->getDefaultOperator());
+
+	// try creating a query and make sure it uses AND
+	Query* bq = qp->parse(_T("term1 term2"));
+	CLUCENE_ASSERT( bq != NULL );
+	const TCHAR* s = bq->toString(_T("field"));
+	if ( _tcscmp(s,_T("+term1 +term2")) != 0 ) {
+		CuFail(tc, _T("FAILED Query /term1 term2/ yielded /%s/, expecting +term1 +term2\n"), s);
+	}
+	_CLDELETE_CARRAY(s);
+	_CLDELETE(bq);
+
+	qp->setDefaultOperator(QueryParser::OR_OPERATOR);
+	CLUCENE_ASSERT(QueryParser::OR_OPERATOR == qp->getDefaultOperator());
+	_CLDELETE(qp);
 }
 
 void testPunct(CuTest *tc) {
@@ -210,6 +234,7 @@ void testWildcard(CuTest *tc) {
 
 	assertTrue(tc, _T("term*"), NULL,_T("PrefixQuery"), _T("term*"));
 	assertTrue(tc, _T("term*^2"), NULL,_T("PrefixQuery"), _T("term*^2.0"));
+	assertTrue(tc, _T("t*"), NULL,_T("PrefixQuery"), _T("t*"));
 	assertTrue(tc, _T("term*germ"), NULL,_T("WildcardQuery"), _T("term*germ"));
 }
 
