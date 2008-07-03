@@ -96,6 +96,12 @@ ${FUNCTION__FTIME}
 //TODO: make this work properly (this bit shouldn't be necessary)
 #ifdef __CYGWIN__
     #define _mkdir(x) mkdir(x,0777)
+    #define _open open
+    #define _read read
+    #define _write write
+    #define _close close
+    #define _unlink unlink
+    #define _ftime ftime
 #endif
 
 #endif

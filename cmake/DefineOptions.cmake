@@ -8,9 +8,9 @@ MACRO (DEFINE_OPTIONS extraOptions)
     	SET (${extraOptions} "${${extraOptions}} -DLUCENE_FS_MMAP")
     ENDIF(ENABLE_MMAP)
     
-    IF(ENABLE_MMAP)
+    IF(DISABLE_MULTITHREADING)
     	SET (${extraOptions} "${${extraOptions}} -D_CL_DISABLE_MULTITHREADING")
-    ENDIF(ENABLE_MMAP)
+    ENDIF(DISABLE_MULTITHREADING)
     
     IF(ENABLE_ASCII_MODE)
     	SET (${extraOptions} "${${extraOptions}} -D_ASCII")
