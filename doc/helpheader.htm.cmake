@@ -1,15 +1,16 @@
 <HTML>
 <HEAD>
 <TITLE>
-CLucene API Documentation (Version 0.9.20)
+CLucene API Documentation (Version @VERSION@)
 </TITLE>
 
-<META NAME="keywords" CONTENT="CLucene API Documentation (Version 0.9.20)">
+<LINK HREF="doxygen.css" REL="stylesheet" TYPE="text/css">
+<META NAME="keywords" CONTENT="CLucene API Documentation (Version @VERSION@)">
 
 <SCRIPT type="text/javascript">
 function windowTitle()
 {
-    parent.document.title="CLucene API Documentation (Version 0.9.20)";
+    parent.document.title="CLucene API Documentation (Version @VERSION@)";
 }
 </SCRIPT>
 

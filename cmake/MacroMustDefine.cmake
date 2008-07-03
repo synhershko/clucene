@@ -1,0 +1,59 @@
+#this macro throws an error if any of the vars are not defined
+
+MACRO(MUSTDEFINE_VAR VARS)
+    foreach(ARG ${VARS})
+    	IF ( NOT ${ARG} )
+    		MESSAGE( FATAL_ERROR "The symbol '${ARG}' was not defined." )
+    	ENDIF ( NOT ${ARG} )
+    endforeach(ARG)
+ENDMACRO(MUSTDEFINE_VAR)
+
+#required headers
+MACRO(CHECK_REQUIRED_HEADERS COMPULSARY_HEADERS)
+    FOREACH(inc ${ARGV})
+    	STRING(TOUPPER ${inc} INC)
+    	STRING(REPLACE . _ INC ${INC})
+    	CHECK_INCLUDE_FILE_CXX (${inc} HAVE_${INC})
+    	IF ( HAVE_${INC} )
+    	    SET(_CL_HAVE_${INC} ${INC})
+    	ENDIF ( HAVE_${INC} )
+    	IF ( NOT HAVE_${INC} )
+    		MESSAGE ( FATAL_ERROR "${inc} could not be found" )
+    	ENDIF ( NOT HAVE_${INC} )
+    ENDFOREACH(inc ${COMPULSARY_HEADERS})
+ENDMACRO(CHECK_REQUIRED_HEADERS)
+
+#optional headers
+MACRO(CHECK_OPTIONAL_HEADERS OPTIONAL_HEADERS)
+    FOREACH(inc ${ARGV})
+    	STRING(TOUPPER ${inc} INC)
+    	STRING(REPLACE . _ INC ${INC})
+    	STRING(REPLACE / _ INC ${INC})
+    	CHECK_INCLUDE_FILE_CXX (${inc} HAVE_${INC})
+    	IF ( HAVE_${INC} )
+    	    SET(_CL_HAVE_${INC} ${INC})
+    	ENDIF ( HAVE_${INC} )
+    ENDFOREACH(inc ${OPTIONAL_HEADERS})
+ENDMACRO(CHECK_OPTIONAL_HEADERS)
+
+#check for compulsary functions
+MACRO(CHECK_REQUIRED_FUNCTIONS COMPULSARY_FUNCTIONS)
+    FOREACH(inc ${ARGV})
+    	STRING(TOUPPER ${inc} INC)
+    	STRING(REPLACE . _ INC ${INC})
+    	CHECK_FUNCTION_EXISTS (${inc} _CL_HAVE_${INC})
+    	IF ( NOT _CL_HAVE_${INC} )
+    		MESSAGE ( FATAL_ERROR "${inc} could not be found" )
+    	ENDIF ( NOT _CL_HAVE_${INC} )
+    ENDFOREACH(inc ${COMPULSARY_FUNCTIONS})
+ENDMACRO(CHECK_REQUIRED_FUNCTIONS)
+
+#check for optional functions
+MACRO(CHECK_OPTIONAL_FUNCTIONS OPTIONAL_FUNCTIONS)
+    FOREACH(inc ${ARGV})
+    	STRING(TOUPPER ${inc} INC)
+    	STRING(REPLACE . _ INC ${INC})
+    	CHECK_FUNCTION_EXISTS (${inc} _CL_HAVE_${INC})
+    ENDFOREACH(inc ${OPTIONAL_FUNCTIONS})
+
+ENDMACRO(CHECK_OPTIONAL_FUNCTIONS)
