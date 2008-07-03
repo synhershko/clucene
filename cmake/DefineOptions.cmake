@@ -1,22 +1,24 @@
 #define global options, this makes it easy to use ccmake, or the cmake gui
-MACRO (DEFINE_OPTIONS)
+MACRO (DEFINE_OPTIONS extraOptions)
     IF(ENABLE_DEBUG)
-    	ADD_DEFINITIONS(-D_DEBUG)
+    	SET (${extraOptions} "${${extraOptions}} -D_DEBUG")
     ENDIF(ENABLE_DEBUG)
     
     IF(ENABLE_MMAP)
-    	ADD_DEFINITIONS(-DLUCENE_FS_MMAP)
+    	SET (${extraOptions} "${${extraOptions}} -DLUCENE_FS_MMAP")
     ENDIF(ENABLE_MMAP)
     
     IF(ENABLE_MMAP)
-    	ADD_DEFINITIONS(-D_CL_DISABLE_MULTITHREADING)
+    	SET (${extraOptions} "${${extraOptions}} -D_CL_DISABLE_MULTITHREADING")
     ENDIF(ENABLE_MMAP)
     
     IF(ENABLE_ASCII_MODE)
-    	ADD_DEFINITIONS(-D_ASCII)
-    ELSEIF(ENABLE_ASCII_MODE)
-    	ADD_DEFINITIONS(-D_UCS2)
-    	ADD_DEFINITIONS(-D_UNICODE)
+    	SET (${extraOptions} "${${extraOptions}} -D_ASCII")
+    ELSE(ENABLE_ASCII_MODE)
+    	SET (${extraOptions} "${${extraOptions}} -D_UCS2")
+    	SET (${extraOptions} "${${extraOptions}} -D_UNICODE")
     ENDIF(ENABLE_ASCII_MODE)
+
+
 
 ENDMACRO (DEFINE_OPTIONS)
