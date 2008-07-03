@@ -5,7 +5,6 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "stdafx.h"
-
 #include "CLucene.h"
 #include "CLucene/util/Reader.h"
 #include "dirent.h"
@@ -13,13 +12,10 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <cctype>
-
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
-#endif
+#include <string>
 
 #ifndef _snprintf
-#define _snprintf snprintf
+ //#define _snprintf snprintf
 #endif
 
 using namespace std;
