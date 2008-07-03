@@ -15,9 +15,7 @@
 #endif
 #endif
 
-#ifdef _CL_HAVE_FCNTL_H
-	#include <fcntl.h>
-#endif
+#include <fcntl.h>
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
 #endif

@@ -9,11 +9,11 @@
 #include "_Lock.h"
 #include "CLucene/util/Misc.h"
 
+#ifdef _CL_HAVE_WINDEF_H
+	#include <windef.h> //try to include windef.h as early as possible
+#endif
 #ifdef _CL_HAVE_IO_H
 	#include <io.h>
-#endif
-#ifdef _CL_HAVE_FCNTL_H
-	#include <fcntl.h>
 #endif
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
@@ -21,12 +21,11 @@
 #ifdef _CL_HAVE_UNISTD_H
 	#include <unistd.h>
 #endif
-#ifdef _CL_HAVE_WINDOWS_H
-	#include <windows.h>
-#endif
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
 #endif
+#include <fcntl.h>
+
   
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -130,7 +129,7 @@ CL_NS_DEF(store)
 	   		  _CLTHROWA_DEL(CL_ERR_IO, err );
 	         }
 	       }
-	       int32_t r = _open(lockFile,  O_RDWR | O_CREAT | O_RANDOM | O_EXCL, 
+	       int32_t r = _open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL, 
 	       	_S_IREAD | _S_IWRITE); //must do this or file will be created Read only
 	   	if ( r < 0 ) {
 	   	  return false;

@@ -12,7 +12,7 @@
 #include <set>
 #include <vector>
 #ifdef HAVE_WINDOWS_H
-	#include <windows.h>
+	#include <windef.h>
 #endif
 //#include "CLucene/LuceneThreads.h"
 

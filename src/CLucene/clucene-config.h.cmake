@@ -19,9 +19,9 @@
 #cmakedefine _CL_HAVE_WCTYPE_H   
 #cmakedefine _CL_HAVE_CTYPE_H  1 
 #cmakedefine _CL_HAVE_WINDOWS_H  1 
+#cmakedefine _CL_HAVE_WINDEF_H  1 
 #cmakedefine _CL_HAVE_SYS_TYPES_H  1 
 #cmakedefine _CL_HAVE_DLFCN_H  1 
-#cmakedefine _CL_HAVE_FCNTL_H  1 
 #cmakedefine _CL_HAVE_EXT_HASH_MAP  1 
 #cmakedefine _CL_HAVE_EXT_HASH_SET  1 
 #cmakedefine _CL_HAVE_HASH_MAP
@@ -34,90 +34,17 @@
 #cmakedefine _CL_HAVE_SYS_MMAN_H 1
 
 // our needed types
-#if !@HAVE_INT8_T@
- #define HAVE_INT8_T 1
- #if ${SIZEOF_CHAR}==1 //is char one byte?
-  typedef signed char int8_t;
- #else
-  #error Could not determine type for int8_t!
- #endif
-#endif
+${TYPE_INT8_T}
+${TYPE_UINT8_T}
+${TYPE_INT16_T}
+${TYPE_UINT16_T}
+${TYPE_INT32_T}
+${TYPE_UINT32_T}
+${TYPE_INT64_T}
+${TYPE_UINT64_T}
 
-#if !@HAVE_UINT8_T@
- #define HAVE_UINT8_T 1
- #if ${SIZEOF_CHAR}==1 //is char one byte?
-  typedef unsigned char uint8_t;
- #else
-  #error Could not determine type for uint8_t!
- #endif
-#endif
-
-#if !@HAVE_INT16_T@
- #define HAVE_INT16_T 1
- #if ${SIZEOF_SHORT}==2 //is short two bytes?
-  typedef signed short int16_t;
- #else
-  #error Could not determine type for int16_t!
- #endif
-#endif
-
-#if !@HAVE_UINT16_T@
- #define HAVE_UINT16_T 1
- #if ${SIZEOF_SHORT}==2 //is short two bytes?
-  typedef unsigned short uint16_t;
- #else
-  #error Could not determine type for uint16_t!
- #endif
-#endif
-
-#if !@HAVE_INT32_T@
- #define HAVE_INT32_T 1
- #if ${SIZEOF_INT}==4 //is int four bytes?
-  typedef signed int int32_t;
- #elif ${SIZEOF_LONG}==4 //is long four bytes?
-  typedef signed long int32_t;
- #else
-  #error Could not determine type for int32_t!
- #endif
-#endif
-
-#if !@HAVE_UINT32_T@
- #define HAVE_UINT32_T 1
- #if ${SIZEOF_INT}==4 //is int four bytes?
-  typedef unsigned int uint32_t;
- #elif ${SIZEOF_LONG}==4 //is long four bytes?
-  typedef unsigned long uint32_t;
- #else
-  #error Could not determine type for uint32_t!
- #endif
-#endif
-
-#if !@HAVE_INT64_T@
-    #define HAVE_INT64_T 1
-    typedef signed ${TYPEOF_INT64} int64_t;
-#endif
-
-#if !@HAVE_UINT64_T@
-    #define HAVE_UINT64_T 1
-    typedef unsigned ${TYPEOF_INT64} uint64_t;
-#endif
-
-//todo: not sure if this detects correctly? check float.h?
-#if !@HAVE_FLOAT_T@
-    typedef double float_t;
-#endif
-
-//todo not sure if this detects correctly... (should check string.h??)
-#if !@HAVE_SIZE_T@
- #ifndef _SIZE_T_DEFINED 
-  #ifndef HAVE_SIZE_T
-   typedef unsigned int size_t;
-   #define HAVE_SIZE_T 1
-  #endif
-  #define _SIZE_T_DEFINED 1     // kdewin32 define
- #endif
-#endif
-
+${TYPE_FLOAT_T}
+${TYPE_SIZE_T}
 
 /* CMake will determine these specifics. Things like bugs, etc */
 

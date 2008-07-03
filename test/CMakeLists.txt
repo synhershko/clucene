@@ -1,15 +1,9 @@
 PROJECT(clucene-test)
 
-INCLUDE_DIRECTORIES( ${clucene-test_SOURCE_DIR} )
+INCLUDE (DefineOptions)
+DEFINE_OPTIONS()
 
-OPTION(ENABLE_ASCII_MODE
-  "enable ascii support"
-  OFF)
-IF(ENABLE_ASCII_MODE)
-	ADD_DEFINITIONS(-D_ASCII)
-ELSE(ENABLE_ASCII_MODE)
-	ADD_DEFINITIONS(-D_UNICODE)
-ENDIF(ENABLE_ASCII_MODE)
+INCLUDE_DIRECTORIES( ${clucene-test_SOURCE_DIR} )
 
 SOURCE_GROUP("unit_testing" ./*.cpp)
 SOURCE_GROUP("analysis" ./analysis/*)
@@ -49,5 +43,9 @@ ADD_EXECUTABLE(cl_test
 ${HEADERS}
 )
 
-
+SET_TARGET_PROPERTIES(cl_test PROPERTIES
+#    VERSION "0.9.16a"
+#    SOVERSION "0.9"
+DEFINE_SYMBOL ""
+)
 TARGET_LINK_LIBRARIES(cl_test clucene-core-static)

@@ -6,11 +6,12 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 
+#ifdef _CL_HAVE_WINDEF_H
+	#include <windef.h> //try to include windef.h as early as possible
+#endif
+#include <fcntl.h>
 #ifdef _CL_HAVE_IO_H
 	#include <io.h>
-#endif
-#ifdef _CL_HAVE_FCNTL_H
-	#include <fcntl.h>
 #endif
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
@@ -18,14 +19,11 @@
 #ifdef _CL_HAVE_UNISTD_H
 	#include <unistd.h>
 #endif
-#ifdef _CL_HAVE_WINDOWS_H
-	#include <windows.h>
-#endif
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
 #endif
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
+#ifdef _CL_HAVE_WINDEF_H
+ #include <windef.h>
 #endif
 #include <errno.h>
 
@@ -119,7 +117,7 @@ CL_NS_USE(util)
 	  strcpy(handle->path,path);
 
 	  //Open the file
-	  handle->fhandle  = _open(path, O_BINARY | O_RDONLY | O_RANDOM, _S_IREAD );
+	  handle->fhandle  = _open(path, _O_BINARY | _O_RDONLY | _O_RANDOM, _S_IREAD );
 	  
 	  //Check if a valid handle was retrieved
 	  if (handle->fhandle < 0){
@@ -222,9 +220,9 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	//O_RANDOM - Specifies that caching is optimized for, but not restricted to, random access from disk.
 	//O_WRONLY - Opens file for writing only;
 	if ( Misc::dir_Exists(path) )
-	  fhandle = _open( path, O_BINARY | O_RDWR | O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
+	  fhandle = _open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
 	else // added by JBP
-	  fhandle = _open( path, O_BINARY | O_RDWR | O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
+	  fhandle = _open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
 
 	if ( fhandle < 0 ){
         int err = errno;

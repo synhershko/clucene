@@ -10,7 +10,6 @@
 #include "CLucene/index/Term.h"
 #include "SearchHeader.h"
 #include "Searchable.h"
-#include <math.h>
 
 CL_NS_USE(index)
 CL_NS_DEF(search)

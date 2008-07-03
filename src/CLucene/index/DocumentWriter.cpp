@@ -26,8 +26,8 @@
 #include "_FieldsWriter.h"
 #include "_DocumentWriter.h"
 
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
+#ifdef _CL_HAVE_WINDEF_H
+ #include <windef.h>
 #endif
 
 CL_NS_USE(util)

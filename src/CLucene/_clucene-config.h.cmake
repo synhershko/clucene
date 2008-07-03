@@ -31,17 +31,17 @@
 #cmakedefine _CL_HAVE_PRINTF  1 
 #cmakedefine _CL_HAVE_SNPRINTF  1 
 #cmakedefine _CL_HAVE_MMAP  1 
-#cmakedefine _CL_HAVE_NANOSLEEP  1 
 #cmakedefine _CL_HAVE_STRLWR
 #cmakedefine _CL_HAVE_STRTOLL
 #cmakedefine _CL_HAVE_STRUPR
 #cmakedefine _CL_HAVE_GETPAGESIZE
 
 ${SYMBOL_CL_MAX_PATH}
-${SYMBOL_O_RANDOM}
-${SYMBOL_O_BINARY}
+${SYMBOL__O_RANDOM}
+${SYMBOL__O_BINARY}
 ${SYMBOL__S_IREAD}
 ${SYMBOL__S_IWRITE}
+${TYPE__TIMEB}
 
 #define _ILONG(x) x ## L
 #define _ILONGLONG(x) ${_CL_ILONGLONG_VALUE}
@@ -92,20 +92,9 @@ ${FUNCTION__FTIME}
 /* Compiler oddities */
 
 //not sure why, but cygwin reports _mkdir, but doesn't actually work...
+//TODO: make this work properly (this bit shouldn't be necessary)
 #ifdef __CYGWIN__
     #define _mkdir(x) mkdir(x,0777)
-    #define _open open
-    #define _close close
-	#define _unlink unlink
-	#define _read read
-	#define _write write
-    #define _S_IREAD  0444
-    #define _S_IWRITE 0333  // write and execute permissions
 #endif
-
-//todo: hack! should detect using normal method, but didn't work... look into this.
-//#ifndef _timeb
-//    #define _timeb timeb
-//#endif
 
 #endif

@@ -9,19 +9,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
+#ifdef _CL_HAVE_WINDEF_H
+    #include <windef.h>
 #endif
 
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
-#else
+#elif defined(_CL_HAVE_TIME_H)
 # include <time.h>
 #endif
-
 #ifdef _CL_HAVE_SYS_TIMEB_H
 	#include <sys/timeb.h>
 #endif
+
 #if defined(_CL_HAVE_SYS_STAT_H)
     #include <sys/stat.h>
 #endif

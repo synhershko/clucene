@@ -208,7 +208,6 @@ size_t lucene_wcstoutf8(char * result, const wchar_t * str, size_t result_length
 size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length){
   char *sp = (char*)str;
   wchar_t *rp = result;
-  int i = 0;
 
   while (rp < result + result_length && *sp!=0){
     size_t r = lucene_utf8towc(rp,sp,6);

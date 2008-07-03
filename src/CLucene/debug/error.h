@@ -32,15 +32,26 @@
 //error try/throw/catch definitions
 ////////////////////////////////////////////////////////
 #ifdef _CL_DISABLE_NATIVE_EXCEPTIONS
- /*#define try _jpr_Try
- #define _CLCATCH _jpr_Catch
- #define _CLFINALLY(x) xxxx
- #define _CLTHROWA(y) _jpr_Throw
- #define _THROWA_DEL(y) _jpr_Throw
- #define _RETHROW(x) _jpr_Throw
- #define _CLTHROWT(y) _jpr_Throw
-
- #define _THROWS ,_jpr_Throws*/
+ #include <setjmp.h>
+ /*
+ #define try struct pj_exception_state_t pj_x_except__; int pj_x_code__; \
+                if(1){ \
+                pj_push_exception_handler_(&pj_x_except__); \
+				pj_x_code__ = pj_setjmp(pj_x_except__.state); \
+				if (pj_x_code__ == 0)
+ #define _CLCATCHEND pj_pop_exception_handler_(); \
+			    } else {}
+ #define _CLCATCH else if (pj_x_code__ == (id)) _CLCATCHEND
+ #define _CLCATCHANY else _CLCATCHEND
+ #define _RETHROW pj_throw_exception_(pj_x_code__)
+ 
+ #define _CLFINALLY(x) else{x _RETHROW}_CLCATCHEND x
+ #define _CLTHROWA(number) pj_throw_exception_(number)
+ #define _CLTHROWT(number) pj_throw_exception_(number)
+ #define _THROWA_DEL(number) _CLDELETE_CaARRAY(str); pj_throw_exception_(number)
+ #define _THROWT_DEL(number) _CLDELETE_CARRAY(str); pj_throw_exception_(number)
+ 
+ */
 #else
   class CLUCENE_EXPORT CLuceneError
   {
@@ -60,6 +71,7 @@
   };
 	
  //#define _THROWS //does nothing
+ #define _TRY try
  #define _CLFINALLY(x) catch(...){ x; throw; } x //note: code x is not run if return is called
  #define _CLTHROWA(number, str) throw CLuceneError(number, str,false)
  #define _CLTHROWT(number, str) throw CLuceneError(number, str,false)

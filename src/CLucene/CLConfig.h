@@ -109,9 +109,11 @@
 //   memory handling configurations
 ////////////////////////////////////////////////////////////////////
 //
-//If this is defined, lucene's configurations are changed
-//to use less memory, but may run slower.
-//todo: i dont think this actualy changes speed much, just memory
+/***
+* If this is defined, lucene's configurations are changed
+* to use less memory, but may run slower.
+* todo: i dont think this actualy changes speed much, just memory
+*/
 #define LUCENE_OPTIMIZE_FOR_MEMORY
 
 //

@@ -231,7 +231,6 @@ TCHAR cl_tolower (TCHAR ch)
       if (val >= 0x1000000)
       {
         const gchar *p = special_case_table + val - 0x1000000;
-        int len=0;
 		wchar_t ret=0;
 		lucene_utf8towc(&ret,p,6);
 #ifdef _UCS2
@@ -239,7 +238,6 @@ TCHAR cl_tolower (TCHAR ch)
 #else
         return LUCENE_OOR_CHAR(ret);
 #endif
-        //return cl_utf8_get_char (p, &len);
       }else
         return val ? val : c;
   }else if (t == G_UNICODE_TITLECASE_LETTER){

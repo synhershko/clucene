@@ -58,7 +58,7 @@ CL_NS_DEF(util)
    ///A buffer that contains strings
    TCHAR* buffer;
    ///The length of the buffer
-   int32_t bufferLength;
+   size_t bufferLength;
    bool bufferOwner;
    
    ///Has the buffer grown to a minimum length of minLength or bigger

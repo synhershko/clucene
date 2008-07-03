@@ -15,8 +15,8 @@
 //#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
 
-#ifdef _CL_HAVE_WINDOWS_H
-	#include <windows.h>
+#ifdef _CL_HAVE_WINDEF_H
+	#include <windef.h>
 #endif
 
 CL_NS_USE(util)
@@ -524,5 +524,8 @@ CL_NS_DEF(store)
 	  _tcscpy(ret,_T("RAMDirectory"));
 	  return ret;
   }
+
+  const char* RAMDirectory::DirectoryType() { return "RAM"; }
+  const char* RAMDirectory::getDirectoryType() const{ return DirectoryType(); }
 
 CL_NS_END

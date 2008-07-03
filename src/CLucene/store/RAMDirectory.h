@@ -93,8 +93,8 @@ CL_NS_DEF(store)
 		
 		TCHAR* toString() const;
 
-		static const char* DirectoryType() { return "RAM"; }
-	    const char* getDirectoryType() const{ return DirectoryType(); }
+		static const char* DirectoryType();
+	    const char* getDirectoryType();
 	};
 CL_NS_END
 #endif

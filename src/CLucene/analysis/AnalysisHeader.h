@@ -28,31 +28,31 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
 */
 class Token:LUCENE_BASE{
 private:
-	int32_t _startOffset;				// start in source text
-	int32_t _endOffset;				  // end in source text
-	const TCHAR* _type;				  // lexical type
+	int32_t _startOffset;				///< start in source text
+	int32_t _endOffset;				  ///< end in source text
+	const TCHAR* _type;				  ///< lexical type
 	int32_t positionIncrement;
 	size_t bufferTextLen;
 
 public:
 	#ifndef LUCENE_TOKEN_WORD_LENGTH
-	TCHAR* _termText;				  // the text of the term
+	TCHAR* _termText;				  ///< the text of the term
 	#else
-	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  // the text of the term
+	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term. Internal use only
 	#endif
-	int32_t _termTextLen;
+	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
 	static const TCHAR* defaultType;
 
 	Token();
 	~Token();
-	// Constructs a Token with the given text, start and end offsets, & type. 
+	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=defaultType);
 	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=defaultType);
 	
 	size_t bufferLength(){ return bufferTextLen; }
 	void growBuffer(size_t size);
 	
-	/* Set the position increment.  This determines the position of this
+	/** Set the position increment.  This determines the position of this
 	* token relative to the previous Token in a TokenStream, used in
 	* phrase searching.
 	*
@@ -99,7 +99,7 @@ public:
 	int32_t endOffset() const { return _endOffset; }
 	void setEndOffset(int32_t val){ _endOffset =val; }
 
-	// Returns this Token's lexical type.  Defaults to "word". 
+	/// Returns this Token's lexical type.  Defaults to "word". 
 	const TCHAR* type() const { return _type; } ///<returns reference
 	void setType(const TCHAR* val) { _type = val; } ///<returns reference
 
@@ -129,7 +129,7 @@ public:
 	virtual ~TokenStream(){
 	}
 
-	/* This is for backwards compatibility only. You should pass the token you want to fill
+	/** This is for backwards compatibility only. You should pass the token you want to fill
 	 * to next(), this will save a lot of object construction and destructions.
 	 *  @deprecated. use next(token). Kept only to avoid breaking existing code.
 	 */
