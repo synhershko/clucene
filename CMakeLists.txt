@@ -60,7 +60,7 @@ IF(BUILD_DOCUMENTATION)
     # The DOT_PATH is substituted into the Doxyfile.
     ADD_CUSTOM_TARGET(DoxygenDoc ${DOXYGEN}
         ${PROJECT_BINARY_DIR}/doc/doxyfile
-        COMMAND(tar -czf doc/clucene-core-doc.tar.gz ${PROJECT_BINARY_DIR}/doc/html/)
+        #COMMAND("tar -czf doc/clucene-core-doc.tar.gz ${PROJECT_BINARY_DIR}/doc/html/")
     )
 ENDIF(BUILD_DOCUMENTATION)
 
