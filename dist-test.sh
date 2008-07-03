@@ -38,3 +38,8 @@ done
 #test if headers contain any symbols:
 echo "int main(){return 0;}"  >>$TMP/pub-headers.cpp
 #g++ -Isrc pub-headers.cpp
+
+#find inline code:
+make DoxygenDoc
+echo "These documentation files report inline code. This is not good."
+grep -c "\[inline" doc/html/*.html|grep -v ":0$"|grep -v "util"|grep -v "jstreams" | nl
