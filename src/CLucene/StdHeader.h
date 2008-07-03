@@ -90,7 +90,9 @@
  #undef _UCS2
  #define _ASCII
 #elif defined(_UNICODE)
- #define _UCS2
+ #ifndef _UCS2
+  #define _UCS2
+ #endif
 #elif !defined(_UCS2)
  #define _UCS2
 #endif

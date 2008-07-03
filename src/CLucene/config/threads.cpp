@@ -10,6 +10,11 @@
 
 CL_NS_DEF(util)
 
+
+void lucene_sleep(int ms){
+	Sleep(ms);
+}
+
 #ifndef _CL_DISABLE_MULTITHREADING
 
 #if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)

@@ -16,7 +16,6 @@ class CLuceneThreadIdCompare;
 	#define DEFINE_MUTEX(x)
 	#define DEFINE_MUTABLE_MUTEX(x)
 	#define STATIC_DEFINE_MUTEX(x)
-	#define _LUCENE_SLEEP(x)
 	#define _LUCENE_CURRTHREADID 1
 	#define _LUCENE_THREADID_TYPE char
 
@@ -36,7 +35,6 @@ class CLuceneThreadIdCompare;
         	void lock();
         	void unlock();
         };
-        #define _LUCENE_SLEEP(x) usleep(x*1000) //_LUCENE_SLEEP should be in millis, usleep is in micros
         #define _LUCENE_THREADMUTEX CL_NS(util)::mutex_pthread
         #define _LUCENE_CURRTHREADID pthread_self()
         #define _LUCENE_THREADID_TYPE pthread_t
@@ -55,7 +53,7 @@ class CLuceneThreadIdCompare;
     		void unlock();
     		static uint64_t _GetCurrentThreadId();
     	};
-    	#define _LUCENE_SLEEP(x) Sleep(x)
+    	
     	#define _LUCENE_THREADMUTEX CL_NS(util)::mutex_win32
     	#define _LUCENE_CURRTHREADID mutex_win32::_GetCurrentThreadId()
     	#define _LUCENE_THREADID_TYPE uint64_t
@@ -63,6 +61,9 @@ class CLuceneThreadIdCompare;
 		#error A valid thread library was not found
 	#endif //mutex types
 	
+	void lucene_sleep(int ms);
+	#define _LUCENE_SLEEP(ms) lucene_sleep(ms)
+
 	/** @internal */
 	class mutexGuard
 	{

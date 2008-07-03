@@ -9,9 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _CL_HAVE_WINDEF_H
-    #include <windef.h>
-#endif
 
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>

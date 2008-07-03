@@ -18,6 +18,7 @@ INCLUDE (DefineFloat)
 INCLUDE (DefineLongLongSyntax)
 INCLUDE (DefineStaticSyntax)
 INCLUDE (DefineOptions)
+INCLUDE (DefineMAXPATHValue)
 
 INCLUDE (CheckErrorHandling)
 INCLUDE (CheckHashmaps)
@@ -89,11 +90,11 @@ ENDIF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
 
 CHOOSE_FUNCTION(_realpath "realpath")
 CHOOSE_FUNCTION(_rename "rename")
-CHOOSE_FUNCTION(_close "close;_close")
-CHOOSE_FUNCTION(_read "read;_read")
-CHOOSE_FUNCTION(_open "open;_open")
-CHOOSE_FUNCTION(_write "write;_write")
-CHOOSE_FUNCTION(_unlink "unlink;_unlink")
+CHOOSE_FUNCTION(_close "_close;close")
+CHOOSE_FUNCTION(_read "_read;read")
+CHOOSE_FUNCTION(_open "_open;open")
+CHOOSE_FUNCTION(_write "_write;write")
+CHOOSE_FUNCTION(_unlink "_unlink;unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
 CHOOSE_FUNCTION (_mkdir _mkdir)
 
@@ -123,8 +124,6 @@ ENDIF ( NOT HAVE__FILELENGTH )
 ########################################################################
 # test for symbols
 ########################################################################
-
-CHOOSE_SYMBOL (CL_MAX_PATH "PATH_MAX;MAX_PATH;_MAX_PATH;_POSIX_PATH_MAX")
 CHOOSE_SYMBOL (_O_RANDOM "_O_RANDOM;O_RANDOM")
 CHOOSE_SYMBOL (_O_BINARY "_O_BINARY;O_BINARY")
 CHOOSE_SYMBOL (_S_IREAD  "_S_IREAD;S_IREAD")
@@ -147,6 +146,8 @@ IF ( NOT HAVE_SYMBOL__S_IWRITE )
 	SET (SYMBOL__S_IWRITE "#define _S_IWRITE 0333")
 ENDIF ( NOT HAVE_SYMBOL__S_IWRITE )
 
+#try and figure out the actual value of what _CL_MAX_PATH is
+DEFINE_MAXPATH_VALUE (SYMBOL_CL_MAX_PATH)
 
 ########################################################################
 # test for compiler capabilities.
@@ -187,7 +188,7 @@ DEFINE_STATIC_SYNTAX()
 
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
-MUSTDEFINE_VAR("HAVE_SYMBOL_CL_MAX_PATH;HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T")
+MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T")
 
 
 #now write out our configuration....
@@ -323,14 +324,14 @@ SET(clucene_core_Files
 )
 file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/src/CLucene/*.h)
 
-DEFINE_OPTIONS()
-ADD_DEFINITIONS(-DMAKE_CLUCENE_CORE_LIB)
+DEFINE_OPTIONS(EXTRA_OPTIONS)
+ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
 
 add_library(clucene-core SHARED 
-	${clucene_core_Files} ${HEADERS}
+	${clucene_core_Files} ${HEADERS} ${clucene-core_BINARY_DIR}/clucene-config.h ${clucene-core_BINARY_DIR}/_clucene-config.h
 )
 add_library(clucene-core-static STATIC 
-	${clucene_core_Files} ${HEADERS}
+	${clucene_core_Files} ${HEADERS} ${clucene-core_BINARY_DIR}/clucene-config.h ${clucene-core_BINARY_DIR}/_clucene-config.h
 )
 
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES

@@ -10,10 +10,6 @@
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/store/IndexOutput.h"
 
-#ifdef _CL_HAVE_WINDEF_H
- #include <windef.h>
-#endif
-
 CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)

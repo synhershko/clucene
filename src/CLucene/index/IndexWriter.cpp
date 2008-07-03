@@ -23,9 +23,6 @@
 #include "_SegmentMerger.h"
 #include "_SegmentHeader.h"
 
-#ifdef _CL_HAVE_WINDEF_H
- #include <windef.h>
-#endif
 
 CL_NS_USE(store)
 CL_NS_USE(util)

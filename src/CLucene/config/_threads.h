@@ -11,7 +11,7 @@
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
 	#elif defined(_CL_HAVE_WIN32_THREADS)
-	    #include <windef.h>
+	    #include <windows.h>
 	#elif defined(_CL_HAVE_PTHREAD)
 	    #include <pthread.h>
 	#endif
