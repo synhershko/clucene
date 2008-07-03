@@ -215,7 +215,9 @@ TCHAR* PrefixFilter::toString()
 	//Instantiate a stringbuffer buffer to store the readable version temporarily
     CL_NS(util)::StringBuffer buffer;
 	buffer.append(_T("PrefixFilter("));
-	buffer.append(prefix->toString());
+	buffer.append(prefix->field());
+	buffer.append(_T(":"));
+	buffer.append(prefix->text());
     buffer.append(_T(")"));
 
 	//Convert StringBuffer buffer to TCHAR block and return it

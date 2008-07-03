@@ -230,6 +230,10 @@ TCHAR* Term::toString() const{
 //Post - a string formatted as <field:text> is returned if pre(field) is NULL and
 //       text is NULL the returned string will be formatted as <:>
 
+	// Note: Should this representation ever change, make sure to update Query and Filter classes
+	//       that may be using this format without calling toString (to save on memory allocations)
+	//       For example: PrefixFilter::toString()
+
 	return CL_NS(util)::Misc::join( _field, _T(":"), _text);
 }
 
