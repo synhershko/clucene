@@ -12,7 +12,11 @@ CL_NS_DEF(util)
 
 
 void lucene_sleep(int ms){
-	Sleep(ms);
+    #ifdef _CL_HAVE_USLEEP
+        usleep(ms*1000);//expects microseconds
+    #else
+	    Sleep(ms);
+	#endif
 }
 
 #ifndef _CL_DISABLE_MULTITHREADING

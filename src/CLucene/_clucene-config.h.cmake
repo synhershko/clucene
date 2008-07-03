@@ -25,6 +25,7 @@
 #cmakedefine _CL_HAVE_WCSUPR
 #cmakedefine _CL_HAVE_GETTIMEOFDAY
 #cmakedefine _CL_HAVE_MAPVIEWOFFILE
+#cmakedefine _CL_HAVE_USLEEP
 
 #cmakedefine _CL_HAVE_LLTOA
 #cmakedefine _CL_HAVE_LLTOW

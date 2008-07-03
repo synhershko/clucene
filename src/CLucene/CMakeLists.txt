@@ -71,7 +71,7 @@ CHECK_REQUIRED_FUNCTIONS( printf wcscpy wcsncpy wcscat wcschr wcsstr wcslen
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
 CHECK_OPTIONAL_FUNCTIONS( mmap wcsupr wcscasecmp wcsicmp wcstoll wprintf MapViewOfFile 
-                         lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf)
+                         lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf usleep)
 
 
 #make decisions about which functions to use...
