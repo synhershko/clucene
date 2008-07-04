@@ -336,14 +336,14 @@ add_library(clucene-core-static STATIC
 
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CPACK_PACKAGE_VERSION}
-    SOVERSION ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}
-	DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
+    SOVERSION ${CPACK_PACKAGE_SOVERSION}
+    DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
 )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
     VERSION ${CPACK_PACKAGE_VERSION}
-    SOVERSION ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}
-	DEFINE_SYMBOL ""
+    SOVERSION ${CPACK_PACKAGE_SOVERSION}
+    DEFINE_SYMBOL ""
 )
 
 #install public headers.
@@ -360,6 +360,7 @@ foreach(file ${HEADERS})
 endforeach(file)
 #also install CLucene.h
 install(FILES ../CLucene.h DESTINATION include/ )
+install(FILES ${clucene-core_BINARY_DIR}/clucene-config.h DESTINATION lib/CLucene )
 
 #and install libraries
 install(TARGETS clucene-core DESTINATION lib)

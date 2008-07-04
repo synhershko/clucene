@@ -4,8 +4,8 @@
 # General configuration options
 #---------------------------------------------------------------------------
 
-PROJECT_NAME           = @PACKAGE@
-PROJECT_NUMBER         = @VERSION@
+PROJECT_NAME           = CLucene-core
+PROJECT_NUMBER         = @CPACK_PACKAGE_VERSION@
 
 OUTPUT_DIRECTORY       = ./doc
 OUTPUT_LANGUAGE        = English

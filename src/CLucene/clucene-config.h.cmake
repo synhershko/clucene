@@ -93,14 +93,17 @@ ${TYPE_SIZE_T}
  */
 #cmakedefine _CL_HAVE_GCCVISIBILITYPATCH 1
 
-/* Versions, etc */
 
-/* Version number of package */
-#define _CL_VERSION  "0.9.21-svn" 
+/* Versions, etc */
 
 /* Name of package */
 #define _CL_PACKAGE  "clucene-core" 
 
+/* Version number of package */
+#define _CL_VERSION  "@CPACK_PACKAGE_VERSION@" 
+
+/* So-Version number of package */
+#define _CL_SOVERSION  "@CPACK_PACKAGE_SOVERSION@" 
 
 
 /* Configured options (from command line) */
