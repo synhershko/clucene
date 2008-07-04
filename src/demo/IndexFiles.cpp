@@ -14,8 +14,8 @@
 #include <cctype>
 #include <string>
 
-#ifndef _snprintf
- //#define _snprintf snprintf
+#ifndef _CL_HAVE__SNPRINTF
+ #define _snprintf snprintf
 #endif
 
 using namespace std;
@@ -74,7 +74,7 @@ void indexDocs(IndexWriter* writer, char* directory) {
 		struct dirent* fl;
 		
 		char path[CL_MAX_DIR];
-		snprintf(path,CL_MAX_DIR,"%s/",directory);
+		_snprintf(path,CL_MAX_DIR,"%s/",directory);
 		char* pathP = path + strlen(path);
 
 		fl = readdir(dir);

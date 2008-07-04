@@ -7,6 +7,7 @@ ADD_DEFINITIONS(${EXTRA_OPTIONS})
 INCLUDE_DIRECTORIES( ${clucene-demo_SOURCE_DIR} )
 
 CHECK_FUNCTION_EXISTS (gettimeofday _CL_HAVE_GETTIMEOFDAY)
+CHECK_FUNCTION_EXISTS (_snprintf _CL_HAVE__SNPRINTF)
 CONFIGURE_FILE(${cl_demo_SOURCE_DIR}/config.h.cmake ${cl_demo_BINARY_DIR}/config.h)
 
 file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
@@ -20,6 +21,7 @@ ADD_EXECUTABLE(cl_demo
 ./stdafx.cpp
 ./dirent.cpp
 ${HEADERS}
+${cl_demo_BINARY_DIR}/config.h
 )
 
 
