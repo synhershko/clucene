@@ -33,7 +33,7 @@
 namespace jstreams {
 
 template <class T>
-class BufferedInputStream : public StreamBase<T> {
+class CLUCENE_EXPORT BufferedInputStream : public StreamBase<T> {
 private:
     bool finishedWritingToBuffer;
     InputStreamBuffer<T> buffer;

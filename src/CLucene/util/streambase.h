@@ -47,7 +47,7 @@ enum StreamStatus { Ok, Eof, Error };
  */
 // java mapping: long=int64, int=int32, byte=uint8_t
 template <class T>
-class StreamBase {
+class CLUCENE_EXPORT StreamBase {
 protected:
     int64_t size;
     int64_t position;

@@ -31,7 +31,7 @@
 namespace jstreams {
 
 template <class T>
-class InputStreamBuffer {
+class CLUCENE_EXPORT InputStreamBuffer {
 private:
 public:
     T* start;
