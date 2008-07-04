@@ -125,6 +125,7 @@ Distribution
 ------------
 CPack is used for creating distributions.
 * Create a out-of-source build as per usual
+* Make sure the version number is correct (see <clucene>/CMakeList.txt, right at the top of the file)
 * Next, check that the package is compliant using several tests (must be done from a linux terminal, or cygwin):
 # cd <clucene>/build-name
 # ../dist-check.sh
