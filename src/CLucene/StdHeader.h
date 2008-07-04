@@ -158,6 +158,14 @@
 //some replacement functions...
 int64_t lucene_filelength(int handle);
 
+#ifdef _CL_HAVE_SAFE_CRT
+	#define cl_sprintf sprintf_s
+	#define cl_strcpy(Dst,Src,DstLen) strcpy_s(Dst,DstLen,Src)
+#else
+	#define cl_sprintf _snprintf
+	#define cl_strcpy(Dst,Src,DstLen) strcpy(Dst,Src)
+#endif
+
 //call this at the end of running to clean up memory. 
 extern CLUCENE_EXPORT void _lucene_shutdown();
 

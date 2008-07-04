@@ -306,8 +306,9 @@ CL_NS_DEF(index)
   //static 
   bool SegmentReader::usesCompoundFile(SegmentInfo* si) {
     char buf[CL_MAX_PATH];
-    strcpy(buf,si->name);
-    strcat(buf,".cfs");
+	_snprintf(buf, CL_MAX_PATH, "%s.cfs", si->name);
+    //strcpy(buf,si->name);
+    //strcat(buf,".cfs");
     return si->getDir()->fileExists(buf);
   }
   
@@ -317,8 +318,9 @@ CL_NS_DEF(index)
   	si->getDir()->list(&names);
   	
     char pattern[CL_MAX_PATH];
-    strcpy(pattern,si->name);
-    strcat(pattern,".s");
+	_snprintf(pattern, CL_MAX_PATH, "%s.s", si->name);
+    //strcpy(pattern,si->name);
+    //strcat(pattern,".s");
     size_t patternLength = strlen(pattern);
 
     string res;

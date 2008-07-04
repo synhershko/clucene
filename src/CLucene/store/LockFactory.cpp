@@ -125,11 +125,12 @@ LuceneLock* FSLockFactory::makeLock( const char* lockName )
 	char name[CL_MAX_DIR];
 	
 	if ( lockPrefix != NULL ) {
-		STRCPY_TtoA(name,lockPrefix,_tcslen(lockPrefix)+1);
-		strcat(name,"-");
-		strcat(name,lockName);
+		cl_sprintf(name, CL_MAX_DIR, "%S-%s", lockPrefix, lockName);
+		//STRCPY_TtoA(name,lockPrefix,_tcslen(lockPrefix)+1);
+		//strcat(name,"-");
+		//strcat(name,lockName);
 	} else {
-		strcpy(name,lockName);
+		cl_strcpy(name,lockName,CL_MAX_DIR);
 	}
 	
 	return _CLNEW FSLock( lockDir, name );

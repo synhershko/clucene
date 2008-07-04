@@ -101,11 +101,10 @@ CL_NS_DEF(index)
 		if ( gen == SegmentInfo::NO ) {
 			return NULL;
 		} else if ( gen == SegmentInfo::WITHOUT_GEN ) {
-			strcpy( fileName, base );
-			strcat( fileName, extension );
+			cl_sprintf( fileName, CL_MAX_PATH, "%s%s", base, extension );
 		} else {
 			char *genStr = CL_NS(util)::Misc::longToBase( gen, 36 );
-			sprintf( fileName, "%s_%s%s", base, genStr, extension );
+			cl_sprintf( fileName, CL_MAX_PATH, "%s_%s%s", base, genStr, extension );
 			free( genStr );
 		}
 
