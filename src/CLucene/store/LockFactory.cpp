@@ -20,16 +20,6 @@
 CL_NS_USE(util)
 CL_NS_DEF(store)
 
-class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray>
-{
-public:
-	LocksType(bool del)
-	{
-		setDoDelete(del);
-	}
-	virtual ~LocksType(){
-	}
-};
 
 LockFactory::LockFactory()
 {
