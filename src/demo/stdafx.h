@@ -13,6 +13,7 @@
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <stdio.h>
+#include "demo/config.h"
 //#include <tchar.h>
 
 #define CL_MAX_DIR 1024
