@@ -45,7 +45,7 @@ or
 
     [You can also specify to just build a certain target (such as cl_test, cl_demo, 
     clucene-core (shared library), clucene-core-static (static library).]
-9.) The binary files will be available in <clucene>build-name/build-type/bin
+9.) The binary files will be available in <clucene>build-name/bin
 10.)Test the code. (After building the tests - this is done by default, or by calling make cl_test)
 # ctest -V
 11.)At this point you can install the library:
