@@ -71,7 +71,7 @@ CL_NS_DEF(index)
 * then add all the new documents.
 * 
 */
-class IndexModifier :LUCENE_BASE{
+class CLUCENE_EXPORT IndexModifier :LUCENE_BASE{
 protected:
 	IndexWriter* indexWriter;
 	IndexReader* indexReader;

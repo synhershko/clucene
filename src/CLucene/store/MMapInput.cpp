@@ -8,7 +8,7 @@
 #if defined(LUCENE_FS_MMAP)
 
 #include "FSDirectory.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 
 #ifdef _CL_HAVE_SYS_MMAN_H
 	#include <sys/mman.h>

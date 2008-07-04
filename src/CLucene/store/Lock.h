@@ -12,7 +12,7 @@
 CL_NS_DEF(store)
   class LocksType;
 
-  class LuceneLock: LUCENE_BASE{
+  class CLUCENE_EXPORT LuceneLock: LUCENE_BASE{
   public:
       LUCENE_STATIC_CONSTANT(int64_t, LOCK_POLL_INTERVAL = 1000);
       LUCENE_STATIC_CONSTANT(int64_t, LOCK_OBTAIN_WAIT_FOREVER = -1);

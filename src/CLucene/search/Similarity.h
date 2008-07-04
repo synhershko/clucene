@@ -12,7 +12,7 @@ CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)
 
-class Searcher;//save including the searchheader.h
+class Searcher;
 class DefaultSimilarity;
 
 /** Expert: Scoring API.
@@ -237,7 +237,7 @@ public:
 
 
 /** Expert: Default scoring implementation. */
-class DefaultSimilarity: public Similarity {
+class CLUCENE_EXPORT DefaultSimilarity: public Similarity {
 public:
 	DefaultSimilarity();
 	~DefaultSimilarity();

@@ -35,7 +35,7 @@ intrn indicates if field and text are interned or not. Interning of Strings is t
 converting duplicated strings to shared ones. 
 
 */
-class Term:LUCENE_REFBASE {
+class CLUCENE_EXPORT Term:LUCENE_REFBASE {
   private:
     size_t cachedHashCode;
 	const TCHAR* _field;

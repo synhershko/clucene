@@ -34,7 +34,7 @@
 #endif
 
 #include "DateTools.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 CL_NS_USE(util)
 CL_NS_DEF(document)
 

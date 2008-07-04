@@ -13,7 +13,7 @@
 
 #include "CLucene/store/Directory.h"
 //#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 
 #ifdef _CL_HAVE_WINDEF_H
 	#include <windef.h>

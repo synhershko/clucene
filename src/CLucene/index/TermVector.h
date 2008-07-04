@@ -15,14 +15,14 @@ CL_NS_DEF(index)
 
 //predefine classes
 struct TermVectorOffsetInfo;
-class TermPositionVector; 
+class TermPositionVector;
 
 /** Provides access to stored term vector of 
  *  a document field.  The vector consists of the name of the field, an array of the terms tha occur in the field of the
  * {@link org.apache.lucene.document.Document} and a parallel array of frequencies.  Thus, getTermFrequencies()[5] corresponds with the
  * frequency of getTerms()[5], assuming there are at least 5 terms in the Document.
  */
-class TermFreqVector:LUCENE_BASE {
+class CLUCENE_EXPORT TermFreqVector:LUCENE_BASE {
 public:
 	virtual ~TermFreqVector(){
 	}
@@ -83,7 +83,7 @@ public:
 
 
 
-struct TermVectorOffsetInfo {
+struct CLUCENE_EXPORT TermVectorOffsetInfo {
     int startOffset;
     int endOffset;
 public:
@@ -104,7 +104,7 @@ public:
  *  positions in which each of the terms is found. A TermPositionVector not necessarily
  * contains both positions and offsets, but at least one of these arrays exists.
  */
-class TermPositionVector: public virtual TermFreqVector {
+class CLUCENE_EXPORT TermPositionVector: public virtual TermFreqVector {
 public:
 
     /** Returns an array of positions in which the term is found.

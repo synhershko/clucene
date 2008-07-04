@@ -26,7 +26,7 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
 * belongs to.  For example an end of sentence marker token might be implemented
 * with type "eos".  The default token type is "word".  
 */
-class Token:LUCENE_BASE{
+class CLUCENE_EXPORT Token:LUCENE_BASE{
 private:
 	int32_t _startOffset;				///< start in source text
 	int32_t _endOffset;				  ///< end in source text
@@ -118,7 +118,7 @@ public:
 * whose input is another TokenStream.
 * </ul>
 */
-class TokenStream:LUCENE_BASE {
+class CLUCENE_EXPORT TokenStream:LUCENE_BASE {
 public:
 	/** Sets token to the next token in the stream, returns false at the EOS. */
 	virtual bool next(Token* token) = 0;
@@ -180,7 +180,7 @@ public:
 <p>
 This is an abstract class.
 */
-class Tokenizer:public TokenStream {
+class CLUCENE_EXPORT Tokenizer:public TokenStream {
 protected:
     /** The text source for this Tokenizer. */
 	CL_NS(util)::Reader* input;
@@ -200,7 +200,7 @@ public:
 <p>
 This is an abstract class.
 */
-class TokenFilter:public TokenStream {
+class CLUCENE_EXPORT TokenFilter:public TokenStream {
 protected:
     /** The source of tokens for this filter. */
 	TokenStream* input;

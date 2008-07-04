@@ -65,7 +65,7 @@ class CLuceneThreadIdCompare;
 	#define _LUCENE_SLEEP(ms) lucene_sleep(ms)
 
 	/** @internal */
-	class mutexGuard
+	class CLUCENE_EXPORT mutexGuard
 	{
 	private:
 		_LUCENE_THREADMUTEX* mrMutex;

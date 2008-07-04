@@ -81,7 +81,7 @@ CL_NS_DEF(search)
   *  Term enumerations are always ordered by Term.compareTo().  Each term in
   *  the enumeration is greater than all that precede it.
   */
-  class FuzzyTermEnum: public FilteredTermEnum {
+  class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
   private:
 		float_t distance;
 		bool _endEnum;

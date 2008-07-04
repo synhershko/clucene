@@ -13,7 +13,7 @@
 CL_NS_DEF(queryParser)
 	
 	// Token class that used by QueryParser.
-	class QueryToken:LUCENE_BASE
+	class CLUCENE_EXPORT QueryToken:LUCENE_BASE
 	{
 	public:
 		enum Types

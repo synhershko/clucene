@@ -27,7 +27,7 @@ CL_NS_DEF(search)
  * @see ScoreDoc
  * @see TopFieldDocs
  */
-class FieldDoc: LUCENE_BASE {
+class CLUCENE_EXPORT FieldDoc: LUCENE_BASE {
 public:
 	//FieldDoc did inherit from ScoreDoc, but now we make the scoredoc a member
 	struct ScoreDoc scoreDoc;

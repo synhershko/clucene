@@ -9,17 +9,7 @@ CL_NS_DEF(util)
 
 class CLUCENE_EXPORT ScorerDocQueue:LUCENE_BASE {
 private:
-	class HeapedScorerDoc:LUCENE_BASE {
-	public:
-		Scorer* _scorer;
-		int32_t _doc;
-		
-		HeapedScorerDoc( Scorer* s );
-		HeapedScorerDoc( Scorer* s, int32_t doc );
-		~HeapedScorerDoc();
-		
-		void adjust();
-	};
+	class HeapedScorerDoc;
 	
 	HeapedScorerDoc** heap;
 	HeapedScorerDoc* topHsd;

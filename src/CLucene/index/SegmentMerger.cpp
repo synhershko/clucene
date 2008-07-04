@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "_SegmentHeader.h"
 #include "CLucene/util/PriorityQueue.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 #include "IndexReader.h"
 #include "IndexWriter.h"
 #include "_SegmentMerger.h"

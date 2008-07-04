@@ -13,9 +13,7 @@
 #include "CLucene/store/Lock.h"
 #include "CLucene/config/repl_wchar.h"
 #include "CLucene/index/TermVector.h"
-#ifdef HAVE_WINDOWS_H
-	#include <windows.h>
-#endif
+#include "CLucene/util/_Misc.h"
 
 
 CL_NS_USE(index)

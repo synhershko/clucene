@@ -16,7 +16,7 @@ class IndexInput;
 * @see Directory
 * @see IndexInput
 */
-class IndexOutput:LUCENE_BASE{
+class CLUCENE_EXPORT IndexOutput:LUCENE_BASE{
 	bool isclosed;
 public:
 	IndexOutput();
@@ -101,7 +101,7 @@ public:
 };
 
 /** Base implementation class for buffered {@link IndexOutput}. */
-class BufferedIndexOutput : public IndexOutput{
+class CLUCENE_EXPORT BufferedIndexOutput : public IndexOutput{
 public:
 	LUCENE_STATIC_CONSTANT(int32_t, BUFFER_SIZE=16384);
 private:

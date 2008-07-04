@@ -9,7 +9,7 @@
 #include "CLucene/document/Document.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/search/Similarity.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 
 #include "CLucene/store/_Lock.h"
 #include "CLucene/store/_RAMDirectory.h"

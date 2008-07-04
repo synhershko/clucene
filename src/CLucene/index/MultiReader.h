@@ -16,7 +16,7 @@ CL_CLASS_DEF(document,Document)
 
 CL_NS_DEF(index)
 
-class MultiReader:public IndexReader{
+class CLUCENE_EXPORT MultiReader:public IndexReader{
 private:
     class Internal;
     Internal* internal;

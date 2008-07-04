@@ -13,9 +13,11 @@ CL_CLASS_DEF(document,Field)
 ///to using a java List... do we want to do this too?
 CL_NS_DEF(document)
 
-class Document; //predefine
-class DocumentFieldEnumeration :LUCENE_BASE{
-    class DocumentFieldList :LUCENE_BASE{
+//predefine
+class Document;
+
+class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
+    class CLUCENE_EXPORT DocumentFieldList :LUCENE_BASE{
     public:
     	DocumentFieldList(Field* f, DocumentFieldList* n);
     	~DocumentFieldList();

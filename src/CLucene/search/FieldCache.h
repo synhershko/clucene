@@ -16,7 +16,8 @@ CL_CLASS_DEF(util,Comparable)
 
 CL_NS_DEF(search)
 
-class FieldCacheAuto; //predefine
+//predefine
+class FieldCacheAuto;
 
 /**
  * Expert: Maintains caches of term values.
@@ -28,7 +29,7 @@ public:
    }
 
 	/** Expert: Stores term text values and document ordering data. */
-	class StringIndex:LUCENE_BASE {
+	class CLUCENE_EXPORT StringIndex:LUCENE_BASE {
 	public:
 		/** All the term values, in natural order. */
 		TCHAR** lookup;
@@ -144,10 +145,10 @@ public:
 	2 - float array
 	3 - FieldCache::StringIndex object
 	This class is also used when returning getInt, getFloat, etc
-	because we have no way of returning the size of the array and this
-	class can be used to determine the array size
+	because we have no way of returning the size of the array and
+	this class can be used to determine the array size
 */	
-class FieldCacheAuto:LUCENE_BASE{
+class CLUCENE_EXPORT FieldCacheAuto:LUCENE_BASE{
 public:
 	enum{
 		INT_ARRAY=1,

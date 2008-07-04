@@ -35,7 +35,7 @@ CL_NS_DEF(document)
  * @deprecated If you build a new index, use {@link DateTools} instead. This class is included for use with existing
  * indices and will be removed in a future release.
 */
-class DateField :LUCENE_BASE {
+class CLUCENE_EXPORT DateField :LUCENE_BASE {
 public:
 	~DateField();
 	

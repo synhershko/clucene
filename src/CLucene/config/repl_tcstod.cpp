@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
  
 #include "CLucene/_ApiHeader.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 
 #ifndef _ASCII
 double lucene_tcstod(const TCHAR *value, TCHAR **end){

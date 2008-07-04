@@ -47,7 +47,7 @@ CL_NS_DEF(search)
     
     
     
-class WildcardFilter: public Filter 
+class CLUCENE_EXPORT WildcardFilter: public Filter 
 {
 private:
 	CL_NS(index)::Term* term;

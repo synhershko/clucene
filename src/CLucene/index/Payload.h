@@ -21,7 +21,7 @@ CL_NS_DEF(index)
 *  to retrieve the payloads from the index.<br>
 *
 */
-class Payload:LUCENE_REFBASE {
+class CLUCENE_EXPORT Payload:LUCENE_REFBASE {
 protected:
 	/** the byte array containing the payload data */
     uint8_t*	data;

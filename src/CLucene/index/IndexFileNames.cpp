@@ -3,7 +3,7 @@
 
 #include "_IndexFileNames.h"
 #include "_SegmentInfos.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 
 
 CL_NS_DEF(index)

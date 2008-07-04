@@ -31,7 +31,7 @@ CL_NS_DEF(search)
    
    /** Expert: Returned by low-level search implementations.
 	* @see TopDocs */
-	struct ScoreDoc {
+	struct CLUCENE_EXPORT ScoreDoc {
 		/** Expert: A hit document's number.
 		* @see Searcher#doc(int32_t)
 		*/
@@ -43,7 +43,7 @@ CL_NS_DEF(search)
 
 	/** Expert: Returned by low-level search implementations.
 	* @see Searcher#search(Query,Filter,int32_t) */
-	class TopDocs:LUCENE_BASE {
+	class CLUCENE_EXPORT TopDocs:LUCENE_BASE {
 	public:
 		/** Expert: The total number of hits for the query.
 		 * @see Hits#length()
@@ -65,7 +65,7 @@ CL_NS_DEF(search)
 
     // Lower-level search API.
     // @see Searcher#search(Query,HitCollector)
-	class HitCollector: LUCENE_BASE {
+	class CLUCENE_EXPORT HitCollector: LUCENE_BASE {
     public:
       /** Called once for every non-zero scoring document, with the document number
       * and its score.
@@ -104,7 +104,7 @@ CL_NS_DEF(search)
    * {@link #normalize(float_t)}.  At this point the weighting is complete and a
    * scorer may be constructed by calling {@link #scorer(IndexReader)}.
    */
-	class Weight: LUCENE_BASE {
+	class CLUCENE_EXPORT Weight: LUCENE_BASE {
     public:
 		virtual ~Weight(){
 		};
@@ -130,7 +130,7 @@ CL_NS_DEF(search)
       virtual TCHAR* toString();
    };
 
-   class HitDoc:LUCENE_BASE {
+   class CLUCENE_EXPORT HitDoc:LUCENE_BASE {
     public:
 		float_t score;
 		int32_t id;

@@ -33,7 +33,7 @@ CL_NS_DEF2(analysis,standard)
  * not suit your application, please consider copying this source code
  * directory to your project and maintaining your own grammar-based tokenizer.
  */
-  class StandardTokenizer: public Tokenizer {
+  class CLUCENE_EXPORT StandardTokenizer: public Tokenizer {
   private:
     int32_t rdPos;
     int32_t tokenStart;

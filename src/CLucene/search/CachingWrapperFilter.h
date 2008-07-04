@@ -45,7 +45,7 @@ public:
  * filters to simply filter, and then wrap with this class to add
  * caching, keeping the two concerns decoupled yet composable.
  */
-class CachingWrapperFilter: public AbstractCachingFilter 
+class CLUCENE_EXPORT CachingWrapperFilter: public AbstractCachingFilter 
 {
 private:
 	Filter* filter;

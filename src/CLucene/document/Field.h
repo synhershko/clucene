@@ -22,7 +22,7 @@ CL_CLASS_DEF(util,Reader)
 CL_CLASS_DEF(analysis,TokenStream)
 namespace jstreams{
     template <class T>
-    class StreamBase;   
+    class StreamBase;
 }
 
 CL_NS_DEF(document)

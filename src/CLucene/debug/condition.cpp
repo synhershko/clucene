@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "_condition.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 #ifdef _CL__CND_DEBUG
 
 #define __CND_STR_PRECONDITION    "PRECONDITION"

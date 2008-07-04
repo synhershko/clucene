@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexOutput.h"
-#include "CLucene/util/Misc.h"
+#include "CLucene/util/_Misc.h"
 #include "Term.h"
 #include "_TermInfo.h"
 #include "IndexWriter.h"

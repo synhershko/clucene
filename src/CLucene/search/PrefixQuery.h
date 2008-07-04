@@ -52,7 +52,7 @@ CL_NS_DEF(search)
 	};
 	
 	
-    class PrefixFilter: public Filter 
+    class CLUCENE_EXPORT PrefixFilter: public Filter 
     {
     private:
     	CL_NS(index)::Term* prefix;

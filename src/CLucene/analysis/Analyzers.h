@@ -13,13 +13,12 @@
 
 #include "CLucene/util/Reader.h"
 #include "AnalysisHeader.h"
-#include "CLucene/util/Misc.h"
 #include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(analysis)
 
 /** An abstract base class for simple, character-oriented tokenizers.*/
-class CharTokenizer:public Tokenizer {
+class CLUCENE_EXPORT CharTokenizer:public Tokenizer {
 private:
 	int32_t offset, bufferIndex, dataLen;
 	TCHAR buffer[LUCENE_MAX_WORD_LEN+1];
@@ -50,7 +49,7 @@ by java.lang.Character.isLetter() predicate.
 
 Note: this does a decent job for most European languages, but does a terrible
 job for some Asian languages, where words are not separated by spaces. */
-class LetterTokenizer:public CharTokenizer {
+class CLUCENE_EXPORT LetterTokenizer:public CharTokenizer {
 public:
 	// Construct a new LetterTokenizer. 
 	LetterTokenizer(CL_NS(util)::Reader* in);
@@ -72,7 +71,7 @@ protected:
 * Note: this does a decent job for most European languages, but does a terrible
 * job for some Asian languages, where words are not separated by spaces.
 */
-class LowerCaseTokenizer:public LetterTokenizer {
+class CLUCENE_EXPORT LowerCaseTokenizer:public LetterTokenizer {
 public:
 	/** Construct a new LowerCaseTokenizer. */
 	LowerCaseTokenizer(CL_NS(util)::Reader* in);
@@ -85,7 +84,7 @@ protected:
 
 /** A WhitespaceTokenizer is a tokenizer that divides text at whitespace.
  * Adjacent sequences of non-Whitespace characters form tokens. */
-class WhitespaceTokenizer: public CharTokenizer {
+class CLUCENE_EXPORT WhitespaceTokenizer: public CharTokenizer {
 public:
 	/** Construct a new WhitespaceTokenizer. */ 
 	WhitespaceTokenizer(CL_NS(util)::Reader* in);
@@ -98,7 +97,7 @@ protected:
 
 
 /** An Analyzer that uses WhitespaceTokenizer. */
-class WhitespaceAnalyzer: public Analyzer {
+class CLUCENE_EXPORT WhitespaceAnalyzer: public Analyzer {
 public:
     WhitespaceAnalyzer();
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
@@ -118,7 +117,7 @@ public:
 /**
 * Normalizes token text to lower case.
 */
-class LowerCaseFilter: public TokenFilter {
+class CLUCENE_EXPORT LowerCaseFilter: public TokenFilter {
 public:
 	LowerCaseFilter(TokenStream* in, bool deleteTokenStream);
 	virtual ~LowerCaseFilter();
@@ -129,7 +128,7 @@ public:
 /**
  * Removes stop words from a token stream.
  */
-class StopFilter: public TokenFilter {
+class CLUCENE_EXPORT StopFilter: public TokenFilter {
 private:
 	//bvk: i found this to work faster with a non-hash table. the number of items
 	//in the stop table is not like to make it worth having hashing.
@@ -207,7 +206,7 @@ public:
  * Loader for text files that represent a list of stopwords.
  *
  */
-class WordlistLoader {
+class CLUCENE_EXPORT WordlistLoader {
 public:
 	/**
 	* Loads a text file and adds every line as an entry to a HashSet (omitting
@@ -234,7 +233,7 @@ public:
 
 
 /** Filters LetterTokenizer with LowerCaseFilter and StopFilter. */
-class StopAnalyzer: public Analyzer {
+class CLUCENE_EXPORT StopAnalyzer: public Analyzer {
 	CLTCSetList* stopTable;
 
 public:
@@ -285,7 +284,7 @@ public:
  * <p>A PerFieldAnalyzerWrapper can be used like any other analyzer, for both indexing
  * and query parsing.
  */
-class PerFieldAnalyzerWrapper : public Analyzer {
+class CLUCENE_EXPORT PerFieldAnalyzerWrapper : public Analyzer {
 private:
     Analyzer* defaultAnalyzer;
     
@@ -320,7 +319,7 @@ public:
  * For instance, '&agrave;' will be replaced by 'a'.
  * <p>
  */
-class ISOLatin1AccentFilter: public TokenFilter {
+class CLUCENE_EXPORT ISOLatin1AccentFilter: public TokenFilter {
 public:
 	ISOLatin1AccentFilter(TokenStream* input, bool deleteTs);
 	
@@ -336,7 +335,7 @@ public:
 /**
  * Emits the entire input as a single token.
  */
-class KeywordTokenizer: public Tokenizer {
+class CLUCENE_EXPORT KeywordTokenizer: public Tokenizer {
 private:
     LUCENE_STATIC_CONSTANT(int, DEFAULT_BUFFER_SIZE = 256);
     bool done;
@@ -351,7 +350,7 @@ public:
  * "Tokenizes" the entire stream as a single token. This is useful
  * for data like zip codes, ids, and some product names.
  */
-class KeywordAnalyzer: public Analyzer {
+class CLUCENE_EXPORT KeywordAnalyzer: public Analyzer {
 public:
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
     virtual ~KeywordAnalyzer();
@@ -362,7 +361,7 @@ public:
  * Removes words that are too long and too short from the stream.
  *
  */
-class LengthFilter: public TokenFilter {
+class CLUCENE_EXPORT LengthFilter: public TokenFilter {
 private:
     size_t _min;
     size_t _max;

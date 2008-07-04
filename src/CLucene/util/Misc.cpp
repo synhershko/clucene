@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "Misc.h"
+#include "_Misc.h"
 
 #include <stdio.h>
 #include <stdlib.h>

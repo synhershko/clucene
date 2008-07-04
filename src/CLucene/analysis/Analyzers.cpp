@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Analyzers.h"
 #include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/_Misc.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)

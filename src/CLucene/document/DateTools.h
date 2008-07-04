@@ -10,7 +10,7 @@
 CL_NS_DEF(document)
 
 
-class DateTools :LUCENE_BASE {
+class CLUCENE_EXPORT DateTools :LUCENE_BASE {
 	#define DATETOOLS_BUFFER_SIZE 20
 public:
 

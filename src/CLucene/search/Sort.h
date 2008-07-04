@@ -16,7 +16,8 @@ CL_CLASS_DEF(util,Comparable)
 
 CL_NS_DEF(search)
 
- class SortField; //predefine
+//predefine
+ class SortField;
  class Sort;
 
 /**

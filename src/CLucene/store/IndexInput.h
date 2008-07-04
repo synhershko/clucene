@@ -18,7 +18,7 @@ CL_NS_DEF(store)
    * @see Directory
    * @see IndexOutput
    */
-	class IndexInput: LUCENE_BASE {
+	class CLUCENE_EXPORT IndexInput: LUCENE_BASE {
 	private:
 		void skipChars( const int32_t count);
 	protected:
@@ -113,7 +113,7 @@ CL_NS_DEF(store)
    * @see Directory
    * @see IndexOutput
    */
-	class BufferedIndexInput: public IndexInput{
+	class CLUCENE_EXPORT BufferedIndexInput: public IndexInput{
 	private:
 		uint8_t* buffer; //array of bytes
 		void refill();
@@ -178,7 +178,7 @@ CL_NS_DEF(store)
 	* JStream stream types.
 	*
 	*/
-	class IndexInputStream: public jstreams::BufferedInputStream<char>{
+	class CLUCENE_EXPORT IndexInputStream: public jstreams::BufferedInputStream<char>{
 		IndexInput* input;
 	public:
 		IndexInputStream(IndexInput* input);

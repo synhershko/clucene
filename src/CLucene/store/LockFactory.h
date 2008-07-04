@@ -16,7 +16,7 @@ CL_CLASS_DEF(store,NoLock)
 CL_NS_DEF(store)
 class LocksType;
 
-class LockFactory: LUCENE_BASE {
+class CLUCENE_EXPORT LockFactory: LUCENE_BASE {
 protected:
 	
 	TCHAR* lockPrefix;
@@ -34,7 +34,7 @@ public:
 	
 };
 
-class SingleInstanceLockFactory: public LockFactory {
+class CLUCENE_EXPORT SingleInstanceLockFactory: public LockFactory {
 private:
 	LocksType* locks;
 	
@@ -46,7 +46,7 @@ public:
 	void clearLock( const char* lockName );		
 };
 
-class NoLockFactory: public LockFactory {
+class CLUCENE_EXPORT NoLockFactory: public LockFactory {
 public:
 	static NoLockFactory* singleton;
 	static NoLock* singletonLock;
@@ -59,7 +59,7 @@ public:
 	static void shutdown();
 };
 
-class FSLockFactory: public LockFactory {
+class CLUCENE_EXPORT FSLockFactory: public LockFactory {
 private:
 	const char* lockDir;
 	

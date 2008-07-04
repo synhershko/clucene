@@ -10,8 +10,9 @@
 //#include "Term.h"
 CL_NS_DEF(index)
 
+//predefine
 class Term;
-class TermEnum; //predefine
+class TermEnum;
 class TermPositions;
 
 /** TermDocs provides an interface for enumerating &lt;document, frequency&gt;
@@ -22,7 +23,7 @@ class TermPositions;
 
  @see IndexReader#termDocs()
  */
-class TermDocs: LUCENE_BASE {
+class CLUCENE_EXPORT TermDocs: LUCENE_BASE {
 public:
 	virtual ~TermDocs(){
 	}
@@ -137,7 +138,7 @@ public:
  *
  * @see IndexReader#termPositions()
  */
-class TermPositions: public virtual TermDocs {
+class CLUCENE_EXPORT TermPositions: public virtual TermDocs {
 public:
     /** Returns next position in the current document.  It is an error to call
     this more than {@link #freq()} times

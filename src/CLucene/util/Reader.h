@@ -102,7 +102,7 @@ public:
 };
 
 ///A helper class which constructs a the jstreams StringReader.
-class StringReader: public Reader{
+class CLUCENE_EXPORT StringReader: public Reader{
 public:
 	StringReader ( const TCHAR* value );
     StringReader ( const TCHAR* value, const int32_t length );
@@ -114,7 +114,7 @@ public:
 * more complete InputStreamReader, use the jstreams version
 * located in the contrib package
 */
-class SimpleInputStreamReader: public jstreams::BufferedInputStream<TCHAR>{
+class CLUCENE_EXPORT SimpleInputStreamReader: public jstreams::BufferedInputStream<TCHAR>{
     int32_t decode(TCHAR* start, int32_t space);
 	int encoding;
 	enum{
@@ -137,7 +137,7 @@ public:
 * A helper class which constructs a FileReader with a specified
 * simple encodings, or a given inputstreamreader
 */
-class FileReader: public Reader{
+class CLUCENE_EXPORT FileReader: public Reader{
 	jstreams::FileInputStream* input;
 public:
 	FileReader ( const char* path, const char* enc,

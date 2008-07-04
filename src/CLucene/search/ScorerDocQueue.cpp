@@ -4,6 +4,18 @@
 
 CL_NS_DEF(util)
 
+class ScorerDocQueue::HeapedScorerDoc:LUCENE_BASE {
+public:
+	Scorer* _scorer;
+	int32_t _doc;
+	
+	HeapedScorerDoc( Scorer* s );
+	HeapedScorerDoc( Scorer* s, int32_t doc );
+	~HeapedScorerDoc();
+	
+	void adjust();
+};
+
 ScorerDocQueue::HeapedScorerDoc::HeapedScorerDoc( Scorer* scorer ) : _scorer(scorer), _doc(scorer->doc())
 {
 }
