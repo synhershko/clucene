@@ -359,7 +359,7 @@ foreach(file ${HEADERS})
 	ENDIF (NOT relpath STREQUAL "demo" )
 endforeach(file)
 #also install CLucene.h
-install(FILES CLucene.h DESTINATION include/ )
+install(FILES ../CLucene.h DESTINATION include/ )
 
 #and install libraries
 install(TARGETS clucene-core DESTINATION lib)
