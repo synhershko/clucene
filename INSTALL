@@ -70,6 +70,14 @@ set rlim_fd_cur=1024
 
 Code style
 --------------
+File locations:
+* clucene-config.h is required and is distributed next to the library, so that multiple libraries can exist on the
+  same machine, but use the same header files.
+* _HeaderFile.h files are private, and are not to be used or distributed by anything besides the clucene-core library.
+* _clucene-config.h should NOT be used, it is also internal
+* HeaderFile.h are public and are distributed and the classes within should be exported using CLUCENE_EXPORT.
+* The exception to the internal/public conventions is if you use the static library. In this case the internal
+  symbols will be available (this is the way the tests program tests internal code). However this is not recommended.
 
 Memory management:
 Memory in CLucene has been a bit of a difficult thing to manage because of the
