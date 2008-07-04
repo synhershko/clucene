@@ -253,7 +253,7 @@ SET(clucene_core_Files
 	./store/RAMDirectory.cpp
 	./document/Document.cpp
 	./document/DateField.cpp
-	./document/DateTools.cpp
+#	./document/DateTools.cpp
 	./document/Field.cpp
 	./index/IndexFileNames.cpp
 	./index/SegmentMergeInfo.cpp
@@ -335,15 +335,15 @@ add_library(clucene-core-static STATIC
 )
 
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
-#    VERSION "0.9.16a"
-#    SOVERSION "0.9"
-DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
+    VERSION ${CPACK_PACKAGE_VERSION}
+    SOVERSION ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}
+	DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
 )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
-#    VERSION "0.9.16a"
-#    SOVERSION "0.9"
-DEFINE_SYMBOL ""
+    VERSION ${CPACK_PACKAGE_VERSION}
+    SOVERSION ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}
+	DEFINE_SYMBOL ""
 )
 
 #install public headers.

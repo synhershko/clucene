@@ -1,5 +1,56 @@
 PROJECT (clucene)
 
+#create package command
+
+SET(CPACK_PACKAGE_VERSION_MAJOR "0")
+SET(CPACK_PACKAGE_VERSION_MINOR "9")
+SET(CPACK_PACKAGE_VERSION_PATCH "21")
+SET(CPACK_PACKAGE_VERSION "${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}.${CMake_VERSION_PATCH}")
+
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CLucene")
+SET(CPACK_PACKAGE_VENDOR "Ben van Klinken")
+
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CLucene - a C++ search engine, ported from the popular Apache Lucene")
+
+SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+
+SET(CPACK_GENERATOR "TGZ")
+#SET(CPACK_PACKAGE_FILE_NAME "clucene-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}")
+
+IF(WIN32 AND NOT UNIX)
+	SET(CPACK_SOURCE_GENERATOR "ZIP")
+ELSE(WIN32 AND NOT UNIX)
+	SET(CPACK_SOURCE_GENERATOR "TBZ2;TGZ")
+ENDIF(WIN32 AND NOT UNIX)
+#SET(CPACK_SOURCE_PACKAGE_FILE_NAME "clucene-core-src-${CLUCENE_VERSION}")
+
+#don't include the current binary dir.
+get_filename_component(clucene_BINARY_DIR_name ${clucene_BINARY_DIR} NAME)
+#SET(CPACK_SOURCE_INSTALL_CMAKE_PROJECTS "/home/ben/workspaces/lucene232/gcc;clucene;ALL;/")
+#SET(CPACK_SOURCE_IGNORE_FILES "/CVS/;/\\\\.svn/;\\\\.swp$;\\\\.#;/#")
+SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;\\\\.swp$;\\\\.#;/#;.*~;/${clucene_BINARY_DIR_name}/")
+
+#IF(WIN32 AND NOT UNIX)
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+  #SET(CPACK_GENERATOR "${CPACK_GENERATOR};NSIS")
+  #SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
+  #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
+  #SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} My Famous Project")
+  #SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.my-project-home-page.org")
+  #SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.my-personal-home-page.com")
+  #SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
+  #SET(CPACK_NSIS_MODIFY_PATH ON)
+#ELSE(WIN32 AND NOT UNIX)
+#  SET(CPACK_STRIP_FILES "bin/MyExecutable")
+#  SET(CPACK_SOURCE_STRIP_FILES "")
+#ENDIF(WIN32 AND NOT UNIX)
+#SET(CPACK_PACKAGE_EXECUTABLES "MyExecutable" "My Executable")
+
+INCLUDE(CPack)
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2 FATAL_ERROR)
 
 # include specific modules
