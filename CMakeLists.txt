@@ -37,7 +37,7 @@ SET(CPACK_SOURCE_PACKAGE_FILE_NAME "clucene-core-src-${CPACK_PACKAGE_VERSION}")
 get_filename_component(clucene_BINARY_DIR_name ${clucene_BINARY_DIR} NAME)
 #SET(CPACK_SOURCE_INSTALL_CMAKE_PROJECTS "/home/ben/workspaces/lucene232/gcc;clucene;ALL;/")
 #SET(CPACK_SOURCE_IGNORE_FILES "/CVS/;/\\\\.svn/;\\\\.swp$;\\\\.#;/#")
-SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;\\\\.swp$;\\\\.#;/#;.*~;/${clucene_BINARY_DIR_name}/")
+SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;\\\\.swp$;\\\\.#;/#;.*~;.*\\\\.tmp;/${clucene_BINARY_DIR_name}/")
 
 #IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
