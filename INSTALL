@@ -1,69 +1,140 @@
-Linux Build instructions
-=======================================
+* There are packages available for most linux distributions through the usual channels.
+* The Clucene Sourceforge website also has some distributions available.
 
-If you downloaded CLucene as a tar ball you should be able to skip straight
-to the section titled 'building', otherwise read the next section
-
-
-Rebuilding the autobuild scripts
---------------------------------
-If you made changes to the configure.ac or any of the Makefile.am 
-files you will also need to run through this process.
-
-Requirements:
-GNU autotools is required. I have the following versions installed:
-Autoconf 2.57
-Automake 1.72
-Libtool 1.5a
-
-If you use significantly older versions, I can almost guarantee
-issues.  This is because each of the autotools is constantly changing
-with little regard to backward compatability or even compatiability
-with the other autotools.
-
-Run the autogen.sh file in the root directory of clucene to run the necessary commands.
+Also in this document is information how to build from source, troubleshooting, 
+performance, and how to create a new distribution.
 
 
-Building
---------
-The following will get you building assuming that you have suffciently
-recent buld tools installed.  
-1.) unpack tarball 
-2.) cd into clucene
-3.) if you downloaded a tar version skip to 5
-4.) run ./autogen.sh
-5.) run ./configure
-6.) run make
-7.) things will churn for a very long time, the clucene library will
-be built as well as the examples.
-8.) check the src/demo, test and src directory
+Building from source:
+--------------------
 
-In src/demo you should see:
-cl_demo
+Dependencies:
+* CMake version 2.4.2 or later.
+* A functioning and fairly new C++ compiler. We test mostly on GCC and Visual Studio 6+.
+Anything other than that may not work.
+* Something to unzip/untar the source code.
 
-In test you should see
-cl_test
+Build instructions:
+1.) Download the latest sourcecode from http://www.sourceforge.net/projects/clucene
+    [Choose stable if you want the 'time tested' version of code. However, often
+    the unstable version will suite your needs more since it is newer and has had
+    more work put into it. The decision is up to you.]
+2.) Unpack the tarball/zip/bzip/whatever
+3.) Open a command prompt, terminal window, or cygwin session.
+4.) Change directory into the root of the sourcecode (from now on referred to as <clucene>)
+# cd <clucene>
+5.) Create and change directory into an 'out-of-source' directory for your build. 
+    [This is by far the easiest way to build,  it has the benefit of being able to 
+    create different types of builds in the same source-tree.]
+# mkdir <clucene>/build-name
+# cd <clucene>/build-name
+6.) Configure using cmake. This can be done many different ways, but the basic syntax is
+# cmake [-G "Script name"] ..
+    [Where "Script name" is the name of the scripts to build (e.g. Visual Studio 8 2005).
+    A list of supported build scripts can be found by]
+# cmake --help
+7.) You can configure several options such as the build type, debugging information, 
+    mmap support, etc, by using the CMake GUI or by calling 
+# ccmake ..
+    Make sure you call configure again if you make any changes.
+8.) Start the build. This depends on which build script you specified, but it would be something like
+# make
+or
+# nmake
+    Or open the solution files with your IDE.
 
-In src you should see:
-libclucene.so.0.0.0 libclucene.la libclucene.a 
-and symbolic links to these files.
+    [You can also specify to just build a certain target (such as cl_test, cl_demo, 
+    clucene-core (shared library), clucene-core-static (static library).]
+9.) The binary files will be available in <clucene>build-name/build-type/bin
+10.)Test the code. (After building the tests - this is done by default, or by calling make cl_test)
+# ctest -V
+11.)At this point you can install the library:
+# make install
+    [There are options to do this from the IDE, but I find it easier to create a 
+    distribution (see instructions below) and install that instead.]
+12.)Now you can develop your own code. This is beyond the scope of this document.
+    Read the README for information about documentation or to get help on the mailinglist.
 
-9.) If you want to run make install to copy the clucene files into the system 
-    include and lib directories
-10.) You may have to run
-export LD_LIBRARY_PATH=/path/to/clucene/lib 
 
-11.) run ./cl_test in the test directory and check that the tests all run
+Troubleshooting:
+----------------
 
-Alternative (faster) way of building:
--------------------------------------
-This method does not create library files, so depending on your needs you may not
-find this method useful.
+'Too many open files'
+Some platforms don't provide enough file handles to run CLucene properly.
+To solve this, increase the open file limit:
 
-* Do steps 1-5 of the previous build process.
-* Change directory into src/
-* run make monolithic
-* Change directory into test/ (cd ../test/)
-* run make monolithic
-* You should see cl_test_monolithic in this directory
-* run ./cl_test_monolithic and check that the tests all run
+On Solaris:
+ulimit -n 1024
+set rlim_fd_cur=1024
+
+
+Code style
+--------------
+
+Memory management:
+Memory in CLucene has been a bit of a difficult thing to manage because of the
+unclear specification about who owns what memory. This was mostly a result of
+CLucene's java-esque coding style resulting from porting from java to c++ without
+too much re-writing of the API. However, CLucene is slowly improving
+in this respect and we try and follow these development and coding rules (though
+we dont guarantee that they are all met at this stage):
+
+1. Whenever possible the caller must create the object that is being filled. For example:
+IndexReader->getDocument(id, document);
+As opposed to the old method of document = IndexReader->getDocument(id);
+
+2. Clone always returns a new object that must be cleaned up manually.
+
+Questions:
+1. What should be the convention for an object taking ownership of memory? 
+   Some documenting is available on this, but not much
+
+
+Performance
+-----------
+Very little benchmarking has been done on clucene. Andi Vajda posted some 
+limited statistics on the clucene list a while ago with the following results.
+
+There are 250 HTML files under $JAVA_HOME/docs/api/java/util for about
+6108kb of HTML text. 
+org.apache.lucene.demo.IndexFiles with java and gcj: 
+on mac os x 10.3.1 (panther) powerbook g4 1ghz 1gb:
+    . running with java 1.4.1_01-99 : 20379 ms
+    . running with gcj 3.3.2 -O2    : 17842 ms
+    . running clucene 0.8.9's demo  :  9930 ms 
+
+I recently did some more tests and came up with these rough tests:
+663mb (797 files) of Guttenberg texts 
+on a Pentium 4 running Windows XP with 1 GB of RAM. Indexing max 100,000 fields
+ Jlucene: 646453ms. peak mem usage ~72mb, avg ~14mb ram
+ Clucene: 232141. peak mem usage ~60, avg ~4mb ram
+
+Searching indexing using 10,000 single word queries
+ Jlucene: ~60078ms and used ~13mb ram
+ Clucene: ~48359ms and used ~4.2mb ram
+
+Distribution
+------------
+CPack is used for creating distributions.
+* Create a out-of-source build as per usual
+* Next, check that the package is compliant using several tests (must be done from a linux terminal, or cygwin):
+# cd <clucene>/build-name
+# ../dist-check.sh
+* Make sure the source directory is clean. Make sure there are no unknown svn files:
+# svn stat .. 
+* Run the tests to make sure that the code is ok (documented above)
+* If all tests pass, then run
+# make package
+for the binary package (and header files). This will only create a tar.gz package.
+and/or
+# make package_source
+for the source package. This will create a ZIP on windows, and tar.bz2 and tar.gz packages on other platforms.
+
+There are also options for create RPM, Cygwin, NSIS, Debian packages, etc. It depends on your version of CPack.
+Call 
+# cpack --help
+to get a list of generators. 
+
+Then create a special package by calling
+# cpack -G <GENERATOR> CPackConfig.cmake
+

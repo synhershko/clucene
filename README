@@ -16,11 +16,11 @@ the Apache License, Version 2.0
 See the LGPL.license and APACHE.license for the respective license information.
 Read COPYING for more about the license.
 
+
 Installation
 ------------
-* For Linux, MacOSX, cygwin and MinGW build information, read INSTALL.
-* Boost.Jam files are provided in the root directory and subdirectories.
-* Microsoft Visual Studio (6&7) are provided in the win32 folder.
+Read the INSTALL file
+
 
 Mailing List
 ------------
@@ -31,57 +31,25 @@ Find subscription instructions at
 Suggestions and bug reports can be made on our bug tracking database
   (http://sourceforge.net/tracker/?group_id=80013&atid=558446)
 
+
 The latest version
 ------------------
 Details of the latest version can be found on the CLucene sourceforge project
 web site: http://www.sourceforge.net/projects/clucene
 
+
 Documentation
 -------------
-Documentation is provided at http://clucene.sourceforge.net/doc/doxygen/html/
-You can also build your own documentation by running doxygen from the root directory
-of clucene.
+You can build your own documentation by running 'make DoxygenDoc' from your 
+'out-of-source' cmake-configured build directory.
 CLucene is a very close port of Java Lucene, so you can also try looking at the
 Java Docs on http://lucene.apache.org/java/
+There is an online version (which won't be as up to date as if you build your
+own) at http://clucene.sourceforge.net/doc/html/
 
-
-Performance
------------
-Very little benchmarking has been done on clucene. Andi Vajda posted some 
-limited statistics on the clucene list a while ago with the following results.
-
-There are 250 HTML files under $JAVA_HOME/docs/api/java/util for about
-6108kb of HTML text. 
-org.apache.lucene.demo.IndexFiles with java and gcj: 
-on mac os x 10.3.1 (panther) powerbook g4 1ghz 1gb:
-    . running with java 1.4.1_01-99 : 20379 ms
-    . running with gcj 3.3.2 -O2    : 17842 ms
-    . running clucene 0.8.9's demo  :  9930 ms 
-
-I recently did some more tests and came up with these rough tests:
-663mb (797 files) of Guttenberg texts 
-on a Pentium 4 running Windows XP with 1 GB of RAM. Indexing max 100,000 fields
-• Jlucene: 646453ms. peak mem usage ~72mb, avg ~14mb ram
-• Clucene: 232141. peak mem usage ~60, avg ~4mb ram
-
-Searching indexing using 10,000 single word queries
-• Jlucene: ~60078ms and used ~13mb ram
-• Clucene: ~48359ms and used ~4.2mb ram
-
-Platform notes
---------------
-
-'Too many open files'
-Some platforms don't provide enough file handles to run CLucene properly.
-To solve this, increase the open file limit:
-
-On Solaris:
-ulimit -n 1024
-set rlim_fd_cur=1024
 
 Acknowledgments
 ----------------
-
 The Apache Lucene project is the basis for this software, so the biggest
 acknoledgment goes to that project.
 
@@ -91,26 +59,5 @@ make up portions of the CLucene software:
 This software contains code derived from the RSA Data Security
 Inc. MD5 Message-Digest Algorithm.
 
-CLucene relies heavily on the use of autoconf and libtool to provide
-a build environment.
-
-Memory Management
-------------------
-Memory in CLucene has been a bit of a difficult thing to manage because of the
-unclear specification about who owns what memory. This was mostly a result of
-CLucene's java-esque coding style that was a result of porting from java to
-c++ without too much re-writing of the API. However, CLucene is slowly improving
-in this respect and we try and follow these development and coding rules (though
-we dont guarantee that they are all met at this stage):
-
-1. Whenever possible the caller must create the object that is being filled. For example:
-IndexReader->getDocument(id, document);
-As opposed to the old method of document = IndexReader->getDocument(id);
-
-2. Clone always returns a new object that must be cleaned up manually.
-
-Questions:
-1. What should be the convention for an object taking ownership of memory? Documenting this would be a minimum.
-
-
+CLucene relies heavily on the use of cmake to provide a stable build environment.
 
