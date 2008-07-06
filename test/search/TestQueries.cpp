@@ -21,16 +21,20 @@
 		}
 		writer.close();
 
-		PrefixQuery *query = _CLNEW PrefixQuery(_CLNEW Term(_T("category"), _T("/Computers")));
+		Term* t = _CLNEW Term(_T("category"), _T("/Computers"));
+		PrefixQuery *query = _CLNEW PrefixQuery(t);
 		IndexSearcher searcher(&directory);
 		Hits *hits = searcher.search(query);
 		CLUCENE_ASSERT(3 == hits->length()); // All documents in /Computers category and below
 		_CLDELETE(query);
+		_CLDELETE(t);
 
-		query = _CLNEW PrefixQuery(_CLNEW Term(_T("category"), _T("/Computers/Mac")));
+		t = _CLNEW Term(_T("category"), _T("/Computers/Mac"));
+		query = _CLNEW PrefixQuery(t);
 		hits = searcher.search(query);
 		CLUCENE_ASSERT(1 == hits->length()); // One in /Computers/Mac
 		_CLDELETE(query);
+		_CLDELETE(t);
 		_CLDELETE(hits);
 	}
 
