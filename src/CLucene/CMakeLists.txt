@@ -197,8 +197,9 @@ CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/clucene-config.h.cmake ${clucene-core_
 CONFIGURE_FILE(${clucene-core_SOURCE_DIR}/_clucene-config.h.cmake ${clucene-core_BINARY_DIR}/_clucene-config.h)
 
 #add the files to our groups and core
-SOURCE_GROUP("analysis\\standard" ./analysis/standard/*)
 SOURCE_GROUP("analysis" ./analysis/*)
+#seems to be a bug in cmake, can't put these in analysis\\standard folder :(
+SOURCE_GROUP("analysis-standard" ./analysis/standard/*)
 SOURCE_GROUP("config" ./config/*)
 SOURCE_GROUP("debug" ./debug/*)
 SOURCE_GROUP("document" ./document/*)
