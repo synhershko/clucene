@@ -7,8 +7,6 @@
 #ifndef _lucene_analysis_AnalysisHeader_
 #define _lucene_analysis_AnalysisHeader_
 
-#include "CLucene/util/_ThreadLocal.h"
-
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
 
@@ -151,6 +149,8 @@ public:
  */
 class CLUCENE_EXPORT Analyzer:LUCENE_BASE{
 public:
+	Analyzer();
+
 	/** Creates a TokenStream which tokenizes all the text in the provided
 	Reader.  Default implementation forwards to tokenStream(Reader) for 
 	compatibility with older version.  Override to allow Analyzer to choose 
@@ -165,31 +165,22 @@ public:
 	*  analyzer should use this method for better
 	*  performance.
 	*/
-	virtual TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
-		return tokenStream(fieldName, reader);
-	}
-
+	virtual TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 private:
-	CL_NS(util)::ThreadLocal<TokenStream*,
-		CL_NS(util)::Deletor::Object<TokenStream> > tokenStreams;
 
 	DEFINE_MUTEX(THIS_LOCK)
-
+	struct Internal;
+	Internal* internal;
 protected:
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to retrieve previously saved TokenStreams for re-use
 	*  by the same thread. */
-	TokenStream* getPreviousTokenStream() {
-		return tokenStreams.get();
-	}
+	TokenStream* getPreviousTokenStream();
 
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to save a TokenStream for later re-use by the same
 	*  thread. */
-	void setPreviousTokenStream(TokenStream* obj) {
-		tokenStreams.set(obj);
-	}
-
+	void setPreviousTokenStream(TokenStream* obj);
 public:
 	/**
 	* Invoked before indexing a Field instance if
@@ -206,7 +197,7 @@ public:
 	*/
 	virtual int32_t getPositionIncrementGap(const TCHAR* fieldName);
 
-	virtual ~Analyzer(){}
+	virtual ~Analyzer();
 };
 
 

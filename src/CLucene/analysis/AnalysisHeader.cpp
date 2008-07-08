@@ -7,11 +7,34 @@
 #include "CLucene/_ApiHeader.h"
 #include "AnalysisHeader.h"
 #include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
 
 const TCHAR* Token::defaultType=_T("word");
+
+Analyzer::~Analyzer(){
+	delete internal;
+}
+struct Analyzer::Internal{
+	CL_NS(util)::ThreadLocal<TokenStream*,
+		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
+};
+Analyzer::Analyzer(){
+	internal = new Internal;
+	internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
+		CL_NS(util)::Deletor::Object<TokenStream> >;
+}
+TokenStream* Analyzer::getPreviousTokenStream() {
+	return internal->tokenStreams->get();
+}
+void Analyzer::setPreviousTokenStream(TokenStream* obj) {
+	internal->tokenStreams->set(obj);
+}
+TokenStream* Analyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+	return tokenStream(fieldName, reader);
+}
 
 ///Compares the Token for their order
 class OrderCompare:LUCENE_BASE, public CL_NS(util)::Compare::_base //<Token*>
