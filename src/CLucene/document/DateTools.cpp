@@ -22,13 +22,6 @@
 #endif
 
 // Defining function macros missing in specific enviroments
-#ifndef _tcsftime
-	#ifdef _UCS2
-		#define _tcsftime wcsftime
-	#else
-		#define _tcsftime strftime
-	#endif
-#endif
 #ifndef _ttoi
 	#define _ttoi(x) (int)_tcstoi64(x,NULL,10)
 #endif
@@ -38,33 +31,39 @@
 CL_NS_USE(util)
 CL_NS_DEF(document)
 
+#define DATETOOLS_BUFFER_SIZE 30
+
 TCHAR* DateTools::timeToString(const int64_t time, Resolution resolution /*= MILLISECOND_FORMAT*/) {
 	TCHAR* buf = _CL_NEWARRAY(TCHAR, DATETOOLS_BUFFER_SIZE);
-	timeToString(time, resolution, buf);
+	timeToString(time, resolution, buf, DATETOOLS_BUFFER_SIZE);
 	return buf;
 }
 
-void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf) {
+void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf, size_t bufLength) {
 	time_t secs = time / 1000;
 	tm *ptm = gmtime(&secs);
+	
+	char abuf[DATETOOLS_BUFFER_SIZE];
 
 	if (resolution == MILLISECOND_FORMAT) {
-		size_t len = _tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
+		size_t len = strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H%M%S", ptm);
 		uint32_t ms = time % 1000;
-		_sntprintf(buf + len, 3, _T("%03u"), ms);
+		_snprintf(abuf + len, 4, "%03u", ms);
 	} else if (resolution == SECOND_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M%S"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H%M%S", ptm);
 	} else if (resolution == MINUTE_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H%M"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H%M", ptm);
 	} else if (resolution == YEAR_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y", ptm);
 	} else if (resolution == MONTH_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m", ptm);
 	} else if (resolution == DAY_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d", ptm);
 	} else if (resolution == HOUR_FORMAT) {
-		_tcsftime(buf, DATETOOLS_BUFFER_SIZE, _T("%Y%m%d%H"), ptm);
+		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H", ptm);
 	}
+	
+	STRCPY_AtoT(buf,abuf, bufLength);
 }
 
 

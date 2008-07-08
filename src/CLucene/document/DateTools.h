@@ -11,7 +11,6 @@ CL_NS_DEF(document)
 
 
 class CLUCENE_EXPORT DateTools :LUCENE_BASE {
-	#define DATETOOLS_BUFFER_SIZE 20
 public:
 
 	enum Resolution {
@@ -34,7 +33,7 @@ public:
 	*/
 	static TCHAR* timeToString(const int64_t time, Resolution resolution = MILLISECOND_FORMAT);
 
-	static void timeToString(const int64_t time, Resolution resolution, TCHAR* buf);
+	static void timeToString(const int64_t time, Resolution resolution, TCHAR* buf, size_t bufLength);
 
 	/**
 	* Converts a string produced by <code>timeToString</code> or
