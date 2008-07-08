@@ -23,10 +23,10 @@ typedef CL_NS(util)::CLMultiMap<_LUCENE_THREADID_TYPE, _ThreadLocal*,
 		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal*> > ThreadLocalsType;
 		
 
-STATIC_DEFINE_MUTEX(ThreadLocalBase_LOCK)
-static ThreadLocalsType  ThreadLocalBase_threadLocals(false,false); //list of thread locals
+static _LUCENE_THREADMUTEX *ThreadLocalBase_LOCK = NULL;
+static ThreadLocalsType*  ThreadLocalBase_threadLocals; //list of thread locals
 //todo: make shutdown hooks generic
-static ShutdownHooksType ThreadLocalBase_shutdownHooks(false); //list of shutdown hooks.
+static ShutdownHooksType* ThreadLocalBase_shutdownHooks; //list of shutdown hooks.
 
 
 class _ThreadLocal::Internal{
@@ -64,8 +64,15 @@ _ThreadLocal::_ThreadLocal(CL_NS(util)::AbstractDeletor* _deletor):
 	//add this object to the base's list of ThreadLocalBase_threadLocals to be
 	//notified in case of UnregisterThread()
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
-	SCOPED_LOCK_MUTEX(ThreadLocalBase_LOCK)
-	ThreadLocalBase_threadLocals.put( id, this );
+	if ( ThreadLocalBase_LOCK == NULL ){
+		ThreadLocalBase_LOCK = _CLNEW _LUCENE_THREADMUTEX;
+	}
+	if ( ThreadLocalBase_threadLocals == NULL ){
+		ThreadLocalBase_threadLocals = _CLNEW ThreadLocalsType(false,false);
+	}
+
+	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
+	ThreadLocalBase_threadLocals->put( id, this );
 }
 
 _ThreadLocal::~_ThreadLocal(){
@@ -73,13 +80,13 @@ _ThreadLocal::~_ThreadLocal(){
 
 	//remove this object from the ThreadLocalBase threadLocal list
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
-	SCOPED_LOCK_MUTEX(ThreadLocalBase_LOCK)
+	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
 
-	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals.lower_bound(id);
-	ThreadLocalsType::iterator end = ThreadLocalBase_threadLocals.upper_bound(id);
+	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals->lower_bound(id);
+	ThreadLocalsType::iterator end = ThreadLocalBase_threadLocals->upper_bound(id);
 	while ( itr != end ){
 		if ( itr->second == this){
-			ThreadLocalBase_threadLocals.erase(itr);
+			ThreadLocalBase_threadLocals->erase(itr);
 			break;
 		}
 		++itr;
@@ -111,33 +118,37 @@ void _ThreadLocal::set(void* t){
 
 void _ThreadLocal::UnregisterCurrentThread(){
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
-	SCOPED_LOCK_MUTEX(ThreadLocalBase_LOCK)
+	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
 	
-	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals.lower_bound(id);
-	ThreadLocalsType::iterator end = ThreadLocalBase_threadLocals.upper_bound(id);
+	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals->lower_bound(id);
+	ThreadLocalsType::iterator end = ThreadLocalBase_threadLocals->upper_bound(id);
 	while ( itr != end ){
 		itr->second->setNull();
 		++itr;
 	}
 }
 void _ThreadLocal::shutdown(){
-	SCOPED_LOCK_MUTEX(ThreadLocalBase_LOCK)
+	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
 	
-	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals.begin();
-	while ( itr != ThreadLocalBase_threadLocals.end() ){
+	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals->begin();
+	while ( itr != ThreadLocalBase_threadLocals->end() ){
 		itr->second->setNull();
 		++itr;
 	}
 
-	ShutdownHooksType::iterator itr2 = ThreadLocalBase_shutdownHooks.begin();
-	while ( itr2 != ThreadLocalBase_shutdownHooks.end() ){
-		ShutdownHook* hook = *itr2;
-		hook(false);
+	if ( ThreadLocalBase_shutdownHooks != NULL ){
+		ShutdownHooksType::iterator itr2 = ThreadLocalBase_shutdownHooks->begin();
+		while ( itr2 != ThreadLocalBase_shutdownHooks->end() ){
+			ShutdownHook* hook = *itr2;
+			hook(false);
+		}
 	}
 }
 void _ThreadLocal::registerShutdownHook(ShutdownHook* hook){
-	SCOPED_LOCK_MUTEX(ThreadLocalBase_LOCK)
-	ThreadLocalBase_shutdownHooks.insert(hook);
+	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
+	if ( ThreadLocalBase_shutdownHooks == NULL )
+		ThreadLocalBase_shutdownHooks = _CLNEW ShutdownHooksType(false);
+	ThreadLocalBase_shutdownHooks->insert(hook);
 }
 
 
