@@ -51,6 +51,8 @@ TARGET_LINK_LIBRARIES(cl_test clucene-core-static)
 ############################
 #special tests:
 ############################
+
+IF ( ENABLE_COMPILE_TESTS )
    
 SET(test_monolithic_Files ./CLMonolithic_Test.cpp ../src/CLucene/CLMonolithic.cpp)
 
@@ -122,6 +124,8 @@ ADD_CUSTOM_TARGET(test-all
     COMMAND ${CMAKE_COMMAND} test-singlethreading
     COMMAND ${CMAKE_COMMAND} test-refcnt
 )
+
+ENDIF ( ENABLE_COMPILE_TESTS )
 
 ############################
 

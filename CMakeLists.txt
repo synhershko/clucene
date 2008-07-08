@@ -89,7 +89,18 @@ OPTION(DISABLE_MULTITHREADING
   "disable multithreading - remove all locking code"
   OFF)
 OPTION(ENABLE_ASCII_MODE
-  "enable ascii support")
+  "enable ascii support"
+  OFF)
+
+SET ( ENABLE_COMPILE_TESTS_VALUE ON )
+IF ( MSVC )
+	#this is annoying...
+	SET ( ENABLE_COMPILE_TESTS_VALUE OFF )
+ENDIF(MSVC)
+
+OPTION(ENABLE_COMPILE_TESTS
+  "enable various projects that test alternative build switches"
+  ${ENABLE_COMPILE_TESTS_VALUE})
 
 #Single output directory for building all executables and libraries.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output Directory" FORCE)

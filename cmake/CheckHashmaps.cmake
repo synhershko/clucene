@@ -3,14 +3,14 @@
 #DisableHashing is set if we can't support hashing
 
 #find hashing namespace (internal, use CHECK_HASH_MAPS) ...
-MACRO(HASHMAP_TEST namespace)
+MACRO(HASHMAP_TEST HashingValue namespace)
 	IF ( NOT ${HashingValue} )
-        IF ( _CL_HAVE_EXT_HASH_MAP )
-            SET(CMAKE_REQUIRED_DEFINITIONS "-D_CL_HAVE_EXT_HASH_MAP=1")
-        ENDIF ( _CL_HAVE_EXT_HASH_MAP )
         IF ( _CL_HAVE_HASH_MAP )
             SET(CMAKE_REQUIRED_DEFINITIONS "-D_CL_HAVE_HASH_MAP=1")
         ENDIF ( _CL_HAVE_HASH_MAP )
+        IF ( _CL_HAVE_EXT_HASH_MAP )
+            SET(CMAKE_REQUIRED_DEFINITIONS "-D_CL_HAVE_EXT_HASH_MAP=1")
+        ENDIF ( _CL_HAVE_EXT_HASH_MAP )
         
         STRING(TOUPPER ${namespace} NAMESPACE)
         STRING(REPLACE / _ NAMESPACE ${NAMESPACE})
@@ -37,14 +37,16 @@ ENDMACRO(HASHMAP_TEST)
 
 MACRO ( CHECK_HASH_MAPS HashingValue DisableHashing)
     IF ( _CL_HAVE_EXT_HASH_MAP OR _CL_HAVE_HASH_MAP )
-        HASHMAP_TEST (std)
-        HASHMAP_TEST (stdext)
-        HASHMAP_TEST (__gnu_cxx)
+        HASHMAP_TEST (${HashingValue} std)
+        HASHMAP_TEST (${HashingValue} stdext)
+        HASHMAP_TEST (${HashingValue} __gnu_cxx)
     
         IF ( NOT ${HashingValue} )
-            MESSAGE ( STATUS "Namespace for hash maps/sets not determined, disabling hashing (not a big problem)")
+            MESSAGE ( STATUS "Namespace for hash maps/sets not determined, disabling hashing")
             SET(${DisableHashing} 1)
         ENDIF ( NOT ${HashingValue} )
     
     ENDIF ( _CL_HAVE_EXT_HASH_MAP OR _CL_HAVE_HASH_MAP )
+    
+    SET(CMAKE_REQUIRED_DEFINITIONS)
 ENDMACRO ( CHECK_HASH_MAPS )
