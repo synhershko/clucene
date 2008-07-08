@@ -23,7 +23,7 @@ class CLuceneThreadIdCompare;
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
 	#elif defined(_CL_HAVE_PTHREAD)
-	    class CLUCENE_EXPORT mutex_pthread
+	    class CLUCENE_EXPORT mutex_pthread: LUCENE_BASE
         {
         private:
             struct Internal;
@@ -40,7 +40,7 @@ class CLuceneThreadIdCompare;
         #define _LUCENE_THREADID_TYPE pthread_t
 
 	#elif defined(_CL_HAVE_WIN32_THREADS)
-	    class CLUCENE_EXPORT mutex_win32
+	    class CLUCENE_EXPORT mutex_win32: LUCENE_BASE
     	{
     	private:
     		struct Internal;
@@ -61,9 +61,6 @@ class CLuceneThreadIdCompare;
 		#error A valid thread library was not found
 	#endif //mutex types
 	
-	void lucene_sleep(int ms);
-	#define _LUCENE_SLEEP(ms) lucene_sleep(ms)
-
 	/** @internal */
 	class CLUCENE_EXPORT mutexGuard
 	{

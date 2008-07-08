@@ -113,6 +113,15 @@ SimpleAnalyzer::~SimpleAnalyzer(){
 TokenStream* SimpleAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {
 	return _CLNEW LowerCaseTokenizer(reader);
 }
+TokenStream* SimpleAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+	Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
+	if (tokenizer == NULL) {
+		tokenizer = _CLNEW LowerCaseTokenizer(reader);
+		setPreviousTokenStream(tokenizer);
+	} else
+		tokenizer->reset(reader);
+	return tokenizer;
+}
 
 
 LowerCaseFilter::LowerCaseFilter(TokenStream* in, bool deleteTokenStream):

@@ -141,7 +141,7 @@ protected:
 
 
 
-class MultiReader::Internal{
+class MultiReader::Internal: LUCENE_BASE{
 public:
     bool _hasDeletions;
 	IndexReader** subReaders;

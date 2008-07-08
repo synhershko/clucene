@@ -8,16 +8,18 @@
 #include "CLucene/LuceneThreads.h"
 #include "_threads.h"
 
-CL_NS_DEF(util)
-
-
-void lucene_sleep(int ms){
-    #ifdef _CL_HAVE_USLEEP
+//this is global...
+void lucene_sleep(const int ms){
+    #if defined(_CL_HAVE_USLEEP)
         usleep(ms*1000);//expects microseconds
-    #else
-	    Sleep(ms);
+    #elif defined(SLEEPFUNCTION)
+	    SLEEPFUNCTION(ms);
+	#else
+	    #error no sleep function???
 	#endif
 }
+
+CL_NS_DEF(util)
 
 #ifndef _CL_DISABLE_MULTITHREADING
 
@@ -37,12 +39,12 @@ void lucene_sleep(int ms){
 	};
 
 	mutex_win32::mutex_win32(const mutex_win32& clone):
-		internal(_CLNEW Internal)
+		internal(new Internal)
 	{
 		InitializeCriticalSection(&internal->mtx); 
 	}
 	mutex_win32::mutex_win32():
-		internal(_CLNEW Internal)
+		internal(new Internal)
 	{ 
 		InitializeCriticalSection(&internal->mtx); 
 	}
@@ -50,7 +52,7 @@ void lucene_sleep(int ms){
 	mutex_win32::~mutex_win32()
 	{ 
 		DeleteCriticalSection(&internal->mtx); 
-		_CLDELETE(internal);
+		delete internal;
 	}
 	
 	void mutex_win32::lock()
@@ -89,7 +91,7 @@ void lucene_sleep(int ms){
     };
 
 	mutex_pthread::mutex_pthread(const mutex_pthread& clone):
-		internal(_CLNEW Internal)
+		internal(new Internal)
 	{
 		
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
@@ -105,7 +107,7 @@ void lucene_sleep(int ms){
 		#endif
 	}
 	mutex_pthread::mutex_pthread():
-		internal(_CLNEW Internal)
+		internal(new Internal)
 	{ 
 
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
@@ -129,7 +131,7 @@ void lucene_sleep(int ms){
 	mutex_pthread::~mutex_pthread()
 	{ 
 		_CLPTHREAD_CHECK(pthread_mutex_destroy(&internal->mtx), "~mutex_pthread destructor failed") 
-		_CLDELETE(internal);
+		delete internal;
 	}
 	
 	void mutex_pthread::lock()

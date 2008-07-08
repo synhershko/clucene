@@ -10,9 +10,9 @@ CHECK_FUNCTION_EXISTS (gettimeofday _CL_HAVE_GETTIMEOFDAY)
 CHECK_FUNCTION_EXISTS (_snprintf _CL_HAVE__SNPRINTF)
 CONFIGURE_FILE(${cl_demo_SOURCE_DIR}/config.h.cmake ${cl_demo_BINARY_DIR}/config.h)
 
-file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
+file(GLOB_RECURSE demo_HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
 
-ADD_EXECUTABLE(cl_demo 
+ADD_EXECUTABLE(cl_demo EXCLUDE_FROM_ALL
 ./DeleteFiles.cpp
 ./IndexFiles.cpp
 ./Main.cpp
@@ -20,7 +20,7 @@ ADD_EXECUTABLE(cl_demo
 ./Statistics.cpp
 ./stdafx.cpp
 ./dirent.cpp
-${HEADERS}
+${demo_HEADERS}
 ${cl_demo_BINARY_DIR}/config.h
 )
 

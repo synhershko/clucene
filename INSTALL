@@ -52,6 +52,9 @@ or
 # make install
     [There are options to do this from the IDE, but I find it easier to create a 
     distribution (see instructions below) and install that instead.]
+or
+# make cl_demo
+    [This creates the demo application, which demonstrates a simple text indexing and searching].
 12.)Now you can develop your own code. This is beyond the scope of this document.
     Read the README for information about documentation or to get help on the mailinglist.
 

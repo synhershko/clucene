@@ -45,15 +45,15 @@ struct AbstractCachingFilter::Internal{
 };
 
 AbstractCachingFilter::AbstractCachingFilter():
-	internal(_CLNEW Internal())
+	internal(new Internal)
 {
 }
 AbstractCachingFilter::AbstractCachingFilter(const AbstractCachingFilter& copy):
-	internal(_CLNEW Internal())
+	internal(new Internal)
 {
 }
 AbstractCachingFilter::~AbstractCachingFilter(){
-	_CLDELETE(internal);
+	delete internal;
 }
 
 BitSet* AbstractCachingFilter::bits(IndexReader* reader){

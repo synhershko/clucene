@@ -476,7 +476,7 @@ CL_NS_DEF(search)
 	
 	
 	BooleanClause::BooleanClause(Query* q, const bool DeleteQuery,const bool req, const bool p):
-	query(q),
+	    query(q),
 		required(req),
 		prohibited(p),
 		occur(SHOULD),
@@ -499,7 +499,6 @@ CL_NS_DEF(search)
 	}
 
 	BooleanClause::BooleanClause(const BooleanClause& clone):
-    	LuceneVoidBase(),
 		query(clone.query->clone()),
 		required(clone.required),
 		prohibited(clone.prohibited),
@@ -509,7 +508,6 @@ CL_NS_DEF(search)
 	}
 
 	BooleanClause::BooleanClause(Query* q, const bool DeleteQuery, Occur o):
-    	LuceneVoidBase(),
 		query(query),
 		occur(o),
 		deleteQuery(DeleteQuery)

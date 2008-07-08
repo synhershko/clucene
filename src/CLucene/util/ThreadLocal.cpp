@@ -53,7 +53,7 @@ public:
 			itr = locals.begin();
 		}
 		
-		_CLDELETE(_deletor);
+		delete _deletor;
 	}
 };
 
@@ -76,8 +76,6 @@ _ThreadLocal::_ThreadLocal(CL_NS(util)::AbstractDeletor* _deletor):
 }
 
 _ThreadLocal::~_ThreadLocal(){
-	_CLDELETE(internal);
-
 	//remove this object from the ThreadLocalBase threadLocal list
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
 	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
@@ -91,7 +89,7 @@ _ThreadLocal::~_ThreadLocal(){
 		}
 		++itr;
 	}
-	
+	delete internal;	
 }
 
 

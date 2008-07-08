@@ -60,6 +60,10 @@ INCLUDE(CPack)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2 FATAL_ERROR)
 
+if(WIN32)
+ set(CMAKE_DEBUG_POSTFIX "d")
+endif(WIN32)
+
 # include specific modules
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -92,6 +96,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Library Output Directory" FORCE)
 
 #add tests
+#todo: why does 'make test' not work???
 ENABLE_TESTING()
 ADD_TEST(SimpleTest ${EXECUTABLE_OUTPUT_PATH}/cl_test )
 
@@ -128,4 +133,6 @@ INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src )
 INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src )
 
 #include the projects
-SUBDIRS (src/CLucene test src/demo)
+ADD_SUBDIRECTORY (src/CLucene)
+ADD_SUBDIRECTORY (test)
+ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)

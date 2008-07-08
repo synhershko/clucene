@@ -440,12 +440,12 @@ BooleanScorer2::Internal::~Internal(){
 BooleanScorer2::BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch, bool allowDocsOutOfOrder ):
 	Scorer( similarity )
 {
-	internal = _CLNEW Internal(this, minNrShouldMatch,allowDocsOutOfOrder);
+	internal = new Internal(this, minNrShouldMatch,allowDocsOutOfOrder);
 }
 
 BooleanScorer2::~BooleanScorer2()
 {
-	_CLDELETE(internal);
+	delete internal;
 }
 
 void BooleanScorer2::add( Scorer* scorer, bool required, bool prohibited )

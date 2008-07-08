@@ -55,7 +55,6 @@
 	    
 	#define CL_STRUCT_DEF(sub,clazz) namespace lucene { namespace sub{ struct clazz; } }
 	#define CL_CLASS_DEF(sub,clazz) namespace lucene { namespace sub{ class clazz; } }
-	#define CL_CLASS_DEF1(sub,clazz) namespace sub{ class clazz; }
 #else
 	#define CL_NS_DEF(sub)
 	#define CL_NS_DEF2(sub, sub2)
@@ -67,6 +66,7 @@
 	#define CL_NS2(sub,sub2)
 	#define CL_CLASS_DEF(sub,clazz) class clazz;
 #endif
+#define CL_CLASS_DEF_JSTREAM(clazz) namespace jstream{ class clazz; }
 
 #if defined(LUCENE_NO_STDC_NAMESPACE)
    //todo: haven't actually tested this on a non-stdc compliant compiler

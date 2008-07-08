@@ -24,7 +24,7 @@ struct Field::Internal{
 };
 
 Field::Field(const TCHAR* Name, Reader* reader, int config):
-	internal(_CLNEW Internal)
+	internal(new Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(reader != NULL, "reader cannot be NULL");
@@ -40,7 +40,7 @@ Field::Field(const TCHAR* Name, Reader* reader, int config):
 
 
 Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
-	internal(_CLNEW Internal)
+	internal(new Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
@@ -65,7 +65,7 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
 }
 
 Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config):
-	internal(_CLNEW Internal)
+	internal(new Internal)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
@@ -86,7 +86,7 @@ Field::~Field(){
 
 	CLStringIntern::unintern(internal->_name);
 	_resetValue();
-	_CLDELETE(internal);
+	delete internal;
 }
 
 

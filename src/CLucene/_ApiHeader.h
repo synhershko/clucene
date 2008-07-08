@@ -133,6 +133,7 @@ TCHAR cl_toupper (TCHAR c);
 
 int cl_tcscasefoldcmp(const TCHAR * dst, const TCHAR * src);
 TCHAR* cl_tcscasefold( TCHAR * str, int len=-1 );
+void lucene_sleep(const int ms);
 
 //we provide utf8 conversion functions
 size_t lucene_utf8towc  (wchar_t *ret, const char *s, size_t n);
@@ -153,6 +154,8 @@ extern const char* _LUCENE_BLANK_ASTRING;
 #define PATH_DELIMITERA "/"
 #endif
 
+
+#define _LUCENE_SLEEP(ms) lucene_sleep(ms)
 
 //this is the max filename... for now its just the same,
 //but this could change, so we use a different name

@@ -4,7 +4,6 @@ INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckIncludeFileCXX)
 INCLUDE (CheckCXXSourceCompiles)
 INCLUDE (CheckCXXSourceRuns)
-INCLUDE (CheckCXXCompilerFlag)
 INCLUDE (CheckFunctionExists)
 
 #local macros
@@ -66,12 +65,12 @@ DEFINE_FLOAT()
 ########################################################################
 
 
-CHECK_REQUIRED_FUNCTIONS( printf wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
-                           wcscmp wcsncmp wcscspn)
+CHECK_REQUIRED_FUNCTIONS( printf strftime wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
+                           wcscmp wcsncmp wcscspn )
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
 CHECK_OPTIONAL_FUNCTIONS( mmap wcsupr wcscasecmp wcsicmp wcstoll wprintf MapViewOfFile 
-                         lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf usleep)
+                         lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf )
 
 
 #make decisions about which functions to use...
@@ -97,6 +96,8 @@ CHOOSE_FUNCTION(_write "_write;write")
 CHOOSE_FUNCTION(_unlink "_unlink;unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
 CHOOSE_FUNCTION (_mkdir _mkdir)
+CHOOSE_FUNCTION (SLEEPFUNCTION "usleep;Sleep;_sleep")
+
 
 CHOOSE_FUNCTION(_snprintf "snprintf;_snprintf")
 CHOOSE_FUNCTION(_snwprintf "snwprintf;_snwprintf")
@@ -188,7 +189,7 @@ DEFINE_STATIC_SYNTAX()
 
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
-MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T")
+MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;")
 
 
 #now write out our configuration....
@@ -327,10 +328,10 @@ file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/src/CLucene/*.h)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
 
-add_library(clucene-core SHARED 
+add_library(clucene-core SHARED
 	${clucene_core_Files} ${HEADERS} ${clucene-core_BINARY_DIR}/clucene-config.h ${clucene-core_BINARY_DIR}/_clucene-config.h
 )
-add_library(clucene-core-static STATIC 
+add_library(clucene-core-static STATIC
 	${clucene_core_Files} ${HEADERS} ${clucene-core_BINARY_DIR}/clucene-config.h ${clucene-core_BINARY_DIR}/_clucene-config.h
 )
 
@@ -338,12 +339,14 @@ SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CPACK_PACKAGE_VERSION}
     SOVERSION ${CPACK_PACKAGE_SOVERSION}
     DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
+    COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
     VERSION ${CPACK_PACKAGE_VERSION}
     SOVERSION ${CPACK_PACKAGE_SOVERSION}
     DEFINE_SYMBOL ""
+    COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
 #install public headers.

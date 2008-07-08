@@ -30,5 +30,6 @@
 #include "search/TestTermVector.cpp"
 #include "search/TestForDuplicates.cpp"
 #include "search/TestDateFilter.cpp"
+#include "search/TestQueries.cpp"
 #include "search/TestWildcard.cpp"
 #include "store/TestStore.cpp"

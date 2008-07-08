@@ -193,6 +193,11 @@ void Tokenizer::close(){
 	}
 }
 
+void Tokenizer::reset(CL_NS(util)::Reader* _input) {
+	// ? delete input;
+	this->input = _input;
+}
+
 Tokenizer::~Tokenizer(){ 
     close();
 }

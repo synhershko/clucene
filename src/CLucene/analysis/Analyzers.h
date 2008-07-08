@@ -109,6 +109,8 @@ class CLUCENE_EXPORT SimpleAnalyzer: public Analyzer {
 public:
     SimpleAnalyzer();
 	TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+	TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+
 	virtual ~SimpleAnalyzer();
 };
 

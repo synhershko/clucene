@@ -59,7 +59,7 @@ CL_NS_DEF(index)
 	};
 	    
 	    
-    class IndexReader::Internal{
+    class IndexReader::Internal: LUCENE_BASE{
     public:
     	CL_NS(store)::LuceneLock* writeLock;
     

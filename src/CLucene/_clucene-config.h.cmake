@@ -25,7 +25,6 @@
 #cmakedefine _CL_HAVE_WCSUPR
 #cmakedefine _CL_HAVE_GETTIMEOFDAY
 #cmakedefine _CL_HAVE_MAPVIEWOFFILE
-#cmakedefine _CL_HAVE_USLEEP
 
 #cmakedefine _CL_HAVE_LLTOA
 #cmakedefine _CL_HAVE_LLTOW
@@ -36,6 +35,7 @@
 #cmakedefine _CL_HAVE_STRTOLL
 #cmakedefine _CL_HAVE_STRUPR
 #cmakedefine _CL_HAVE_GETPAGESIZE
+#cmakedefine _CL_HAVE_USLEEP
 
 ${SYMBOL_CL_MAX_PATH}
 ${SYMBOL__O_RANDOM}
@@ -62,6 +62,7 @@ ${FUNCTION__SNPRINTF}
 ${FUNCTION__MKDIR}
 ${FUNCTION__UNLINK}
 ${FUNCTION__FTIME}
+${FUNCTION_SLEEPFUNCTION}
 
 //todo: this is not checked, i think
 #define _LUCENE_PRAGMA_WARNINGS
@@ -102,6 +103,9 @@ ${FUNCTION__FTIME}
     #define _close close
     #define _unlink unlink
     #define _ftime ftime
+    
+    #define _S_IREAD 0333
+    #define _S_IWRITE 0333
 #endif
 
 #endif

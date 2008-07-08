@@ -7,6 +7,8 @@
 #ifndef _lucene_analysis_AnalysisHeader_
 #define _lucene_analysis_AnalysisHeader_
 
+#include "CLucene/util/_ThreadLocal.h"
+
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
 
@@ -155,10 +157,40 @@ public:
 	strategy based on document and/or field.  Must be able to handle null
 	field name for backward compatibility. */
 	virtual TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)=0;
-	  
-	virtual ~Analyzer(){
-    }
 
+	/** Creates a TokenStream that is allowed to be re-used
+	*  from the previous time that the same thread called
+	*  this method.  Callers that do not need to use more
+	*  than one TokenStream at the same time from this
+	*  analyzer should use this method for better
+	*  performance.
+	*/
+	virtual TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+		return tokenStream(fieldName, reader);
+	}
+
+private:
+	CL_NS(util)::ThreadLocal<TokenStream*,
+		CL_NS(util)::Deletor::Object<TokenStream> > tokenStreams;
+
+	DEFINE_MUTEX(THIS_LOCK)
+
+protected:
+	/** Used by Analyzers that implement reusableTokenStream
+	*  to retrieve previously saved TokenStreams for re-use
+	*  by the same thread. */
+	TokenStream* getPreviousTokenStream() {
+		return tokenStreams.get();
+	}
+
+	/** Used by Analyzers that implement reusableTokenStream
+	*  to save a TokenStream for later re-use by the same
+	*  thread. */
+	void setPreviousTokenStream(TokenStream* obj) {
+		tokenStreams.set(obj);
+	}
+
+public:
 	/**
 	* Invoked before indexing a Field instance if
 	* terms have already been added to that field.  This allows custom
@@ -173,6 +205,8 @@ public:
 	* @return position increment gap, added to the next token emitted from {@link #tokenStream(TCHAR*, Reader*)}
 	*/
 	virtual int32_t getPositionIncrementGap(const TCHAR* fieldName);
+
+	virtual ~Analyzer(){}
 };
 
 
@@ -191,8 +225,14 @@ public:
     /** Construct a token stream processing the given input. */
     Tokenizer(CL_NS(util)::Reader* _input);
 
-    // ** By default, closes the input Reader. */
+    /** By default, closes the input Reader. */
 	virtual void close();
+
+	/** Expert: Reset the tokenizer to a new reader.  Typically, an
+	*  analyzer (in its reusableTokenStream method) will use
+	*  this to re-use a previously created tokenizer. */
+	void reset(CL_NS(util)::Reader* _input);
+
 	virtual ~Tokenizer();
 };
 
