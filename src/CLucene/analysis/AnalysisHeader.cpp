@@ -14,9 +14,6 @@ CL_NS_DEF(analysis)
 
 const TCHAR* Token::defaultType=_T("word");
 
-Analyzer::~Analyzer(){
-	delete internal;
-}
 struct Analyzer::Internal{
 	CL_NS(util)::ThreadLocal<TokenStream*,
 		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
@@ -25,6 +22,9 @@ Analyzer::Analyzer(){
 	internal = new Internal;
 	internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
 		CL_NS(util)::Deletor::Object<TokenStream> >;
+}
+Analyzer::~Analyzer(){
+	delete internal;
 }
 TokenStream* Analyzer::getPreviousTokenStream() {
 	return internal->tokenStreams->get();
