@@ -77,7 +77,8 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 	_startOffset (start),
 	_endOffset (end),
 	_type ( typ ),
-	positionIncrement (1)
+	positionIncrement (1),
+	payload(NULL)
 {
     _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
