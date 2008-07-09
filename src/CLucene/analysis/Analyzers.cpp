@@ -65,6 +65,13 @@ bool CharTokenizer::next(Token* token){
 	token->set( buffer, start, start+length);
 	return true;
 }
+void CharTokenizer::reset(CL_NS(util)::Reader* input)
+{
+	Tokenizer::reset(input);
+	bufferIndex = 0;
+	offset = 0;
+	dataLen = 0;
+}
 
 
 LetterTokenizer::LetterTokenizer(CL_NS(util)::Reader* in):
@@ -104,6 +111,16 @@ WhitespaceAnalyzer::~WhitespaceAnalyzer(){
 
 TokenStream* WhitespaceAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) {
 	return _CLNEW WhitespaceTokenizer(reader);
+}
+TokenStream* WhitespaceAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+{
+	Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
+	if (tokenizer == NULL) {
+		tokenizer = _CLNEW WhitespaceTokenizer(reader);
+		setPreviousTokenStream(tokenizer);
+	} else
+		tokenizer->reset(reader);
+	return tokenizer;
 }
 
 SimpleAnalyzer::SimpleAnalyzer(){
@@ -269,6 +286,21 @@ TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader
     }
     
     return analyzer->tokenStream(fieldName, reader);
+}
+
+TokenStream* PerFieldAnalyzerWrapper::reusableTokenStream(TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+	Analyzer* analyzer = analyzerMap->get(fieldName);
+	if (analyzer == NULL)
+		analyzer = defaultAnalyzer;
+
+	return analyzer->reusableTokenStream(fieldName, reader);
+}
+
+int32_t PerFieldAnalyzerWrapper::getPositionIncrementGap(TCHAR* fieldName) {
+	Analyzer* analyzer = analyzerMap->get(fieldName);
+	if (analyzer == NULL)
+		analyzer = defaultAnalyzer;
+	return analyzer->getPositionIncrementGap(fieldName);
 }
 
 
@@ -443,6 +475,16 @@ KeywordAnalyzer::~KeywordAnalyzer(){}
 TokenStream* KeywordAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
     return _CLNEW KeywordTokenizer(reader);
 }
+TokenStream* KeywordAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+{
+	Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
+	if (tokenizer == NULL) {
+		tokenizer = _CLNEW KeywordTokenizer(reader);
+		setPreviousTokenStream(tokenizer);
+	} else
+		tokenizer->reset(reader);
+	return tokenizer;
+}
 
 KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 	Tokenizer(input)
@@ -476,6 +518,11 @@ bool KeywordTokenizer::next(Token* token){
 	  return true;
     }
     return false;
+}
+void KeywordTokenizer::reset(CL_NS(util)::Reader* input)
+{
+	Tokenizer::reset(input);
+	this->done = false;
 }
 
 

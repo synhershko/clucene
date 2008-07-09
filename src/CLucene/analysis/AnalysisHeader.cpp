@@ -53,7 +53,8 @@ Token::Token():
 	_startOffset (0),
 	_endOffset (0),
 	_type ( defaultType ),
-	positionIncrement (1)
+	positionIncrement (1),
+	payload(NULL)
 {
     _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
@@ -69,6 +70,7 @@ Token::~Token(){
 #ifndef LUCENE_TOKEN_WORD_LENGTH
     free(_termText);
 #endif
+	_CLLDELETE(payload);
 }
 
 Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ):
@@ -140,6 +142,9 @@ int32_t Token::getPositionIncrement() const { return positionIncrement; }
 const TCHAR* Token::termText() const{
 	return (const TCHAR*) _termText; 
 }
+const TCHAR* Token::termBuffer() const{
+	return (const TCHAR*) _termText; 
+}
 size_t Token::termTextLength() { 
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
 		_termTextLen = _tcslen(_termText);
@@ -151,7 +156,10 @@ void Token::resetTermTextLen(){
 TCHAR* Token::toString() const{
 	StringBuffer sb;
     sb.append(_T("("));
-    sb.append( _termText );
+	if (_termText)
+		sb.append( _termText );
+	else
+		sb.append( _T("null") );
     sb.append(_T(","));
     sb.appendInt( _startOffset );
     sb.append(_T(","));
@@ -168,6 +176,20 @@ TCHAR* Token::toString() const{
     sb.append(_T(")"));
 
     return sb.toString();
+}
+
+CL_NS(index)::Payload* Token::getPayload() { return this->payload; }
+void Token::setPayload(CL_NS(index)::Payload* payload) {
+	_CLLDELETE(this->payload);
+	this->payload = payload;
+}
+void Token::clear() {
+	_CLDELETE(payload);
+	// Leave _termText to allow re-use
+	_termTextLen = 0;
+	positionIncrement = 1;
+	// startOffset = endOffset = 0;
+	// type = DEFAULT_TYPE;
 }
 
 

@@ -7,24 +7,65 @@
 #ifndef _lucene_analysis_AnalysisHeader_
 #define _lucene_analysis_AnalysisHeader_
 
+#include "CLucene/index/Payload.h"
+
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
 
 typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
 
 /** A Token is an occurence of a term from the text of a field.  It consists of
-* a term's text, the start and end offset of the term in the text of the field,
-* and a type string.
-* 
-* The start and end offsets permit applications to re-associate a token with
-* its source text, e.g., to display highlighted query terms in a document
-* browser, or to show matching text fragments in a KWIC (KeyWord In Context)
-* display, etc.
-* 
-* The type is an interned string, assigned by a lexical analyzer
-* (a.k.a. tokenizer), naming the lexical or syntactic class that the token
-* belongs to.  For example an end of sentence marker token might be implemented
-* with type "eos".  The default token type is "word".  
+  a term's text, the start and end offset of the term in the text of the field,
+  and a type string.
+  <p>
+  The start and end offsets permit applications to re-associate a token with
+  its source text, e.g., to display highlighted query terms in a document
+  browser, or to show matching text fragments in a KWIC (KeyWord In Context)
+  display, etc.
+  <p>
+  The type is an interned string, assigned by a lexical analyzer
+  (a.k.a. tokenizer), naming the lexical or syntactic class that the token
+  belongs to.  For example an end of sentence marker token might be implemented
+  with type "eos".  The default token type is "word".  
+  <p>
+  A Token can optionally have metadata (a.k.a. Payload) in the form of a variable
+  length byte array. Use {@link TermPositions#getPayloadLength()} and 
+  {@link TermPositions#getPayload(byte[], int)} to retrieve the payloads from the index.
+  
+  <br><br>
+  <p><font color="#FF0000">
+  WARNING: The status of the <b>Payloads</b> feature is experimental. 
+  The APIs introduced here might change in the future and will not be 
+  supported anymore in such a case.</font>
+
+  <br><br>
+
+  <p><b>NOTE:</b> As of 2.3, Token stores the term text
+  internally as a malleable char[] termBuffer instead of
+  String termText.  The indexing code and core tokenizers
+  have been changed re-use a single Token instance, changing
+  its buffer and other fields in-place as the Token is
+  processed.  This provides substantially better indexing
+  performance as it saves the GC cost of new'ing a Token and
+  String for every term.  The APIs that accept String
+  termText are still available but a warning about the
+  associated performance cost has been added (below).  The
+  {@link #termText()} method has been deprecated.</p>
+  
+  <p>Tokenizers and filters should try to re-use a Token
+  instance when possible for best performance, by
+  implementing the {@link TokenStream#next(Token)} API.
+  Failing that, to create a new Token you should first use
+  one of the constructors that starts with null text.  Then
+  you should call either {@link #termBuffer()} or {@link
+  #resizeTermBuffer(int)} to retrieve the Token's
+  termBuffer.  Fill in the characters of your term into this
+  buffer, and finally call {@link #setTermLength(int)} to
+  set the length of the term text.  See <a target="_top"
+  href="https://issues.apache.org/jira/browse/LUCENE-969">LUCENE-969</a>
+  for details.</p>
+
+  @see Payload
 */
 class CLUCENE_EXPORT Token:LUCENE_BASE{
 private:
@@ -38,10 +79,12 @@ public:
 	#ifndef LUCENE_TOKEN_WORD_LENGTH
 	TCHAR* _termText;				  ///< the text of the term
 	#else
-	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term. Internal use only
+	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
 	#endif
 	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
 	static const TCHAR* defaultType;
+
+	CL_NS(index)::Payload* payload;
 
 	Token();
 	~Token();
@@ -76,10 +119,19 @@ public:
 	*/
 	void setPositionIncrement(int32_t posIncr);
 	int32_t getPositionIncrement() const;
-	const TCHAR* termText() const;
+	_CL_DEPRECATED( termBuffer ) const TCHAR* termText() const;
 	size_t termTextLength();
 	void resetTermTextLen();
 	void setText(const TCHAR* txt);
+
+	/** Returns the internal termBuffer character array which
+	*  you can then directly alter.  If the array is too
+	*  small for your token, use {@link
+	*  #resizeTermBuffer(int)} to increase it.  After
+	*  altering the buffer be sure to call {@link
+	*  #setTermLength} to record the number of valid
+	*  characters that were placed into the termBuffer. */
+	const TCHAR* termBuffer() const;
 
 	/**
 	* Returns this Token's starting offset, the position of the first character
@@ -90,50 +142,81 @@ public:
 	* stemmer or some other filter.
 	*/
 	int32_t startOffset() const { return _startOffset; }
-	void setStartOffset(int32_t val){ _startOffset =val; }
+
+	/** Set the starting offset.
+	@see #startOffset() */
+	void setStartOffset(const int32_t val){ _startOffset = val; }
 
 	/**
 	* Returns this Token's ending offset, one greater than the position of the
 	* last character corresponding to this token in the source text.
 	*/
 	int32_t endOffset() const { return _endOffset; }
-	void setEndOffset(int32_t val){ _endOffset =val; }
+
+	/** Set the ending offset.
+	@see #endOffset() */
+	void setEndOffset(const int32_t val){ _endOffset = val; }
 
 	/// Returns this Token's lexical type.  Defaults to "word". 
 	const TCHAR* type() const { return _type; } ///<returns reference
 	void setType(const TCHAR* val) { _type = val; } ///<returns reference
 
+	/**
+	* Returns this Token's payload.
+	*/ 
+	CL_NS(index)::Payload* getPayload();
+
+	/** 
+	* Sets this Token's payload.
+	*/
+	void setPayload(CL_NS(index)::Payload* payload);
+
+	/** Resets the term text, payload, and positionIncrement to default.
+	* Other fields such as startOffset, endOffset and the token type are
+	* not reset since they are normally overwritten by the tokenizer. */
+	void clear();
+
 	TCHAR* toString() const;
 };
 
-/** 
-* A TokenStream enumerates the sequence of tokens, either from
-* fields of a document or from query text.
-* <p>
-* This is an abstract class.  Concrete subclasses are:
-* <ul>
-* <li>{@link Tokenizer}, a TokenStream
-* whose input is a Reader; and
-* <li>{@link TokenFilter}, a TokenStream
-* whose input is another TokenStream.
-* </ul>
+/** A TokenStream enumerates the sequence of tokens, either from
+fields of a document or from query text.
+<p>
+This is an abstract class.  Concrete subclasses are:
+<ul>
+<li>{@link Tokenizer}, a TokenStream
+whose input is a Reader; and
+<li>{@link TokenFilter}, a TokenStream
+whose input is another TokenStream.
+</ul>
+NOTE: subclasses must override at least one of {@link
+#next()} or {@link #next(Token)}.
 */
 class CLUCENE_EXPORT TokenStream:LUCENE_BASE {
 public:
 	/** Sets token to the next token in the stream, returns false at the EOS. */
 	virtual bool next(Token* token) = 0;
 
-    /** Releases resources associated with this stream. */
-	virtual void close() = 0;
-
-	virtual ~TokenStream(){
-	}
-
 	/** This is for backwards compatibility only. You should pass the token you want to fill
 	 * to next(), this will save a lot of object construction and destructions.
 	 *  @deprecated. use next(token). Kept only to avoid breaking existing code.
 	 */
 	_CL_DEPRECATED(next(Token)) Token* next();
+
+    /** Releases resources associated with this stream. */
+	virtual void close() = 0;
+
+	/** Resets this stream to the beginning. This is an
+	*  optional operation, so subclasses may or may not
+	*  implement this method. Reset() is not needed for
+	*  the standard indexing process. However, if the Tokens 
+	*  of a TokenStream are intended to be consumed more than 
+	*  once, it is necessary to implement reset(). 
+	*/
+	//virtual void reset(CL_NS(util)::Reader* _input=NULL) = 0;
+
+	virtual ~TokenStream(){
+	}
 };
 
 
@@ -204,6 +287,12 @@ public:
 /** A Tokenizer is a TokenStream whose input is a Reader.
 <p>
 This is an abstract class.
+<p>
+NOTE: subclasses must override at least one of {@link
+#next()} or {@link #next(Token)}.
+<p>
+NOTE: subclasses overriding {@link #next(Token)} must  
+call {@link Token#clear()}.
 */
 class CLUCENE_EXPORT Tokenizer:public TokenStream {
 protected:
@@ -222,7 +311,7 @@ public:
 	/** Expert: Reset the tokenizer to a new reader.  Typically, an
 	*  analyzer (in its reusableTokenStream method) will use
 	*  this to re-use a previously created tokenizer. */
-	void reset(CL_NS(util)::Reader* _input);
+	virtual void reset(CL_NS(util)::Reader* _input);
 
 	virtual ~Tokenizer();
 };

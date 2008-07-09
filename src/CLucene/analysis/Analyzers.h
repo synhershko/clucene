@@ -38,8 +38,10 @@ protected:
 
 public:
 	CharTokenizer(CL_NS(util)::Reader* in);
-	virtual ~CharTokenizer();
 	bool next(Token* token);
+	void reset(CL_NS(util)::Reader* input);
+
+	virtual ~CharTokenizer();
 };
 
 
@@ -101,6 +103,7 @@ class CLUCENE_EXPORT WhitespaceAnalyzer: public Analyzer {
 public:
     WhitespaceAnalyzer();
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+	TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
     virtual ~WhitespaceAnalyzer();
 };
 
@@ -274,7 +277,7 @@ public:
  * <p>Example usage:
  * 
  * <pre>
- *   PerFieldAnalyzerWrapper aWrapper =
+ *   PerFieldAnalyzerWrapper* aWrapper =
  *      new PerFieldAnalyzerWrapper(new StandardAnalyzer());
  *   aWrapper.addAnalyzer("firstname", new KeywordAnalyzer());
  *   aWrapper.addAnalyzer("lastname", new KeywordAnalyzer());
@@ -311,6 +314,11 @@ public:
     */
     void addAnalyzer(const TCHAR* fieldName, Analyzer* analyzer);
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+
+	TokenStream* reusableTokenStream(TCHAR* fieldName, CL_NS(util)::Reader* reader);
+
+	/** Return the positionIncrementGap from the analyzer assigned to fieldName */
+	int32_t getPositionIncrementGap(TCHAR* fieldName);
 };
 
 
@@ -344,8 +352,10 @@ private:
     int bufferSize;
 public:
     KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize=-1);
-    virtual ~KeywordTokenizer();
     bool next(Token* token);
+	void reset(CL_NS(util)::Reader* input);
+
+	virtual ~KeywordTokenizer();
 };
 
 /**
@@ -355,6 +365,7 @@ public:
 class CLUCENE_EXPORT KeywordAnalyzer: public Analyzer {
 public:
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+	TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
     virtual ~KeywordAnalyzer();
 };
 
