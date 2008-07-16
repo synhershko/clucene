@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "AnalysisHeader.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_USE(util)
