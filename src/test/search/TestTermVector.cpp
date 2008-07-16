@@ -117,9 +117,8 @@ void testKnownSetOfDocuments(CuTest *tc) {
     const TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
     const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
     
-    typedef CL_NS(util)::CLHashMap<const TCHAR*,int32_t,CL_NS(util)::Compare::TChar,
-        CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::Dummy,CL_NS(util)::Deletor::DummyInt32> test4MapType;
-    test4MapType test4Map;
+    typedef StringMap<const TCHAR*, int32_t> test4MapType;
+    test4MapType test4Map(false);
     test4Map.put(_T("chocolate"), 3);
     test4Map.put(_T("lab"), 2);
     test4Map.put(_T("eating"), 1);
@@ -220,7 +219,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
 
       TermFreqVector* vector = knownSearcher.getReader()->getTermFreqVector(hits->id(1), _T("field"));
       CLUCENE_ASSERT(vector != NULL);
-      //System.out.println("Vector: " + vector);
+      //_tprintf(_T("Vector: %s\n"),vector);
       const TCHAR** terms = vector->getTerms();
       const Array<int32_t>* freqs = vector->getTermFrequencies();
       CLUCENE_ASSERT(terms != NULL);
@@ -232,7 +231,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
 
       for (int32_t i = 0; i < termsLength; i++) {
         const TCHAR* term = terms[i];
-        //System.out.println("Term: " + term);
+        //_tprintf(_T("Term: %s, test4map.size()=%d\n"),term, test4Map.size());
         int32_t freq = (*freqs)[i];
         CLUCENE_ASSERT( _tcsstr(test4,term) != NULL );
         test4MapType::iterator itr = test4Map.find(term);

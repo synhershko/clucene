@@ -1,6 +1,5 @@
 PROJECT(clucene-test)
 
-INCLUDE (CheckCXXCompilerFlag)
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS})
@@ -46,7 +45,12 @@ ${test_HEADERS}
 
 ADD_EXECUTABLE(cl_test ${test_files} )
 SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
-TARGET_LINK_LIBRARIES(cl_test clucene-core-static)
+
+IF (TESTS_USE_SHARED_LIBRARY)
+    TARGET_LINK_LIBRARIES(cl_test clucene-core)
+ELSE (TESTS_USE_SHARED_LIBRARY)
+    TARGET_LINK_LIBRARIES(cl_test clucene-core-static clucene-shared-static)
+ENDIF (TESTS_USE_SHARED_LIBRARY)
 
 ############################
 #special tests:
@@ -54,21 +58,20 @@ TARGET_LINK_LIBRARIES(cl_test clucene-core-static)
 
 IF ( ENABLE_COMPILE_TESTS )
    
-SET(test_monolithic_Files ./CLMonolithic_Test.cpp ../src/CLucene/CLMonolithic.cpp)
+SET(test_monolithic_Files ./CLMonolithic_Test.cpp ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp)
 
 SET(CMAKE_CXX_FLAGS_DEBUG)
-check_cxx_compiler_flag(-g GccFlagG)
-check_cxx_compiler_flag(-Wall GccFlagWall)
-check_cxx_compiler_flag(-pedantic GccFlagPedantic)
+CHECK_CXX_ACCEPTS_FLAG(-Wall GccFlagWall)
+CHECK_CXX_ACCEPTS_FLAG(-pedantic GccFlagPedantic)
 
 IF ( GccFlagG )
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 ENDIF ( GccFlagG )
 IF ( GccFlagWall )
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 ENDIF ( GccFlagWall )
 IF ( GccFlagPedantic )
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pedantic")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 ENDIF ( GccFlagPedantic )
 
 ADD_EXECUTABLE(cl_test-pedantic ${test_monolithic_Files})
@@ -112,6 +115,15 @@ ADD_CUSTOM_TARGET(test-refcnt
     COMMENT "Running cl_test-refcnt"
     COMMAND cl_test-refcnt
     DEPENDS cl_test-refcnt)
+    
+ADD_EXECUTABLE(cl_test-platform-charfuncs EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+SET_TARGET_PROPERTIES(cl_test-platform-charfuncs PROPERTIES COMPILE_DEFINITIONS "LUCENE_USE_INTERNAL_CHAR_FUNCTIONS=0")
+#this one just tests that the compile works... tests will (mostly) fail, since the
+#internal functions do not produce the exact results expected.
+ADD_CUSTOM_TARGET(test-platform-charfuncs
+    COMMENT "Running cl_test-platform-charfuncs"
+    COMMAND cl_test-platform-charfuncs
+    DEPENDS cl_test-platform-charfuncs)
 
 SET(CMAKE_CXX_FLAGS_DEBUG)
 

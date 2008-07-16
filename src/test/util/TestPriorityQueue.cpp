@@ -36,7 +36,7 @@
 		CuMessageA(tc,"%d puts\n",count);
 		start = CL_NS(util)::Misc::currentTimeMillis();
 
-		int32_t last = -LUCENE_INT32_MAX_SHOULDBE;
+		int32_t last = -0x7FFFFFFF;
 		for (int32_t j = 0; j < count; j++) {
 			int32_t next = pq.pop();
 			

@@ -20,7 +20,8 @@ Query* sort_queryF;
 Sort* _sort;
 SimpleAnalyzer sort_analyser;
 
-#define sortScores CLHashMap<TCHAR*,float_t,Compare::TChar,Equals::TChar,Deletor::tcArray, Deletor::DummyFloat>
+typedef StringMap<TCHAR*, float_t> sortScores;
+typedef std::pair<TCHAR*,float_t> scorePair;
 
 // document data:
 // the tracer field is used to determine which document was hit
@@ -133,7 +134,7 @@ void sortSameValues (CuTest* tc, sortScores* m1, sortScores* m2, bool deleteM1=f
 		sortScores::iterator i2 = m2->find(key);
 
 		float_t f1 = i1->second;
-		float_t f2 = i1->second;
+		float_t f2 = i2->second;
 
 		float_t diff = f1-f2;
 		if ( diff < 0 )
@@ -172,20 +173,20 @@ void sortMatchesPattern (CuTest* tc, Searcher* searcher, Query* query, Sort* sor
 
 // runs a variety of sorts useful for multisearchers
 void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
-	_sort->setSort (SortField::FIELD_DOC);
+	_sort->setSort (SortField::FIELD_DOC());
 	sortMatchesPattern (tc, multi, sort_queryA, _sort, _T("[AB]{2}[CD]{2}[EF]{2}[GH]{2}[IJ]{2}"));
 
 	_sort->setSort (_CLNEW SortField (_T("int"), SortField::INT, false));
 	sortMatchesPattern (tc, multi, sort_queryA, _sort, _T("IDHFGJ[ABE]{3}C"));
 
-	SortField* sorts1[3]= {_CLNEW SortField (_T("int"), SortField::INT, false), SortField::FIELD_DOC, NULL};
+	SortField* sorts1[3]= {_CLNEW SortField (_T("int"), SortField::INT, false), SortField::FIELD_DOC(), NULL};
 	_sort->setSort ( sorts1 );
 	sortMatchesPattern (tc, multi, sort_queryA, _sort, _T("IDHFGJ[AB]{2}EC"));
 
 	_sort->setSort (_T("int"));
 	sortMatchesPattern (tc, multi, sort_queryA, _sort, _T("IDHFGJ[AB]{2}EC"));
 
-	SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT, false), SortField::FIELD_DOC, NULL};
+	SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT, false), SortField::FIELD_DOC(), NULL};
 	_sort->setSort (sorts2);
 	sortMatchesPattern (tc, multi, sort_queryA, _sort, _T("GDHJ[CI]{2}EFAB"));
 
@@ -235,7 +236,7 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 }
 
  sortScores* sort_getScores (CuTest* tc, Hits* hits, bool deleteHits=true){
-	sortScores* scoreMap = _CLNEW sortScores(true,false);
+	sortScores* scoreMap = _CLNEW sortScores(true);
 	int n = hits->length();
 	for (int i=0; i<n; ++i) {
 		Document& doc = hits->doc(i);
@@ -247,7 +248,7 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 
 		CuAssertIntEquals (tc, _T("tracer values"), vLength, 1);
 
-		scoreMap->put (v[0], hits->score(i) );
+		scoreMap->insert ( scorePair(v[0], hits->score(i)) );
 		_CLDELETE_ARRAY(v);
 	}
 	if ( deleteHits )
@@ -266,24 +267,24 @@ void testBuiltInSorts(CuTest *tc) {
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("ACEGI"));
 	sortMatches (tc, sort_full, sort_queryY, _sort, _T("BDFHJ"));
 
-    _sort->setSort(SortField::FIELD_DOC);
+    _sort->setSort(SortField::FIELD_DOC());
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("ACEGI"));
 	sortMatches (tc, sort_full, sort_queryY, _sort, _T("BDFHJ"));
 }
 
 // test sorts where the type of field is specified
 void testTypedSort(CuTest *tc){
-    SortField* sorts1[3] = { _CLNEW SortField (_T("int"), SortField::INT,false), SortField::FIELD_DOC, NULL };
+    SortField* sorts1[3] = { _CLNEW SortField (_T("int"), SortField::INT,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts1);
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("IGAEC"));
 	sortMatches (tc, sort_full, sort_queryY, _sort, _T("DHFJB"));
 
-    SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT,false), SortField::FIELD_DOC, NULL };
+    SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts2);
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("GCIEA"));
 	sortMatches (tc, sort_full, sort_queryY, _sort, _T("DHJFB"));
 
-	SortField* sorts3[3] = { _CLNEW SortField (_T("string"), SortField::STRING,false), SortField::FIELD_DOC, NULL };
+	SortField* sorts3[3] = { _CLNEW SortField (_T("string"), SortField::STRING,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts3);
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("AIGEC"));
 	sortMatches (tc, sort_full, sort_queryY, _sort, _T("DJHFB"));
@@ -297,18 +298,18 @@ void testEmptyIndex(CuTest *tc) {
 	_sort = _CLNEW Sort();
 	sortMatches (tc, empty, sort_queryX, _sort, _T(""));
 
-    _sort->setSort(SortField::FIELD_DOC);
+    _sort->setSort(SortField::FIELD_DOC());
 	sortMatches (tc, empty, sort_queryX, _sort, _T(""));
 
-	SortField* sorts1[3] = { _CLNEW SortField (_T("int"), SortField::INT,false), SortField::FIELD_DOC, NULL };
+	SortField* sorts1[3] = { _CLNEW SortField (_T("int"), SortField::INT,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts1);
 	sortMatches (tc, empty, sort_queryX, _sort, _T(""));
 
-	SortField* sorts3[3] = { _CLNEW SortField (_T("string"), SortField::STRING,false), SortField::FIELD_DOC, NULL };
+	SortField* sorts3[3] = { _CLNEW SortField (_T("string"), SortField::STRING,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts3);
 	sortMatches (tc, empty, sort_queryX, _sort, _T(""));
 
-	SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT,false), SortField::FIELD_DOC, NULL };
+	SortField* sorts2[3] = { _CLNEW SortField (_T("float"), SortField::FLOAT,false), SortField::FIELD_DOC(), NULL };
 	_sort->setSort (sorts2);
 	sortMatches (tc, empty, sort_queryX, _sort, _T(""));
 
@@ -446,7 +447,7 @@ void testNormalizedScores(CuTest *tc) {
 	sortSameValues (tc, scoresA, sort_getScores(tc, sort_full->search(sort_queryA,_sort)));
 	sortSameValues (tc, scoresA, sort_getScores(tc, multi.search(sort_queryA,_sort)));
 
-	_sort->setSort(SortField::FIELD_DOC);
+	_sort->setSort(SortField::FIELD_DOC());
 	sortSameValues (tc, scoresX, sort_getScores(tc, sort_full->search(sort_queryX,_sort)));
 	sortSameValues (tc, scoresX, sort_getScores(tc, multi.search(sort_queryX,_sort)));
 	sortSameValues (tc, scoresY, sort_getScores(tc, sort_full->search(sort_queryY,_sort)));

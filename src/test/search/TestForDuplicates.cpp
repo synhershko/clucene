@@ -65,15 +65,15 @@
 		CLUCENE_ASSERT(result->length()==((int)MAX_DOCS/10));
 
 		//printf("Building result map...\n");
-		CLSet<int32_t, int32_t,Compare::Int32,Deletor::DummyInt32,Deletor::DummyInt32> resMap;
+		std::map<int32_t, int32_t> resMap;
 		int32_t id;
 		for (int32_t j = 0; j < result->length(); j++) {
 			doc = &result->doc(j);
 			
 			TCHAR* end;
 			id = (int32_t)_tcstoi64(doc->get(_T("id")), &end, 10);
-			if ( !resMap.exists(id) ) {
-				resMap.put(id, 1);
+			if ( resMap.find(id) ==resMap.end() ) {
+				resMap.insert( std::pair<int32_t,int32_t>(id, 1));
 				//printf("Inserted $d\n",id);
 			} else {
 				TCHAR tmp[2048];

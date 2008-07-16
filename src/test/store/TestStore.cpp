@@ -12,6 +12,7 @@
  #include <windows.h>
 #endif
 
+//todo: this is testing internal stuff
 void hashTest(CuTest *tc){
 	CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
 	map.put(STRDUP_AtoA("a1"),1);

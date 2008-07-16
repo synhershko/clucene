@@ -69,7 +69,7 @@ CL_NS_USE(util)
 		struct fileStat buf;
 		char tmppath[CL_MAX_DIR];
 		strncpy(tmppath,reuters_srcdirectory,CL_MAX_DIR);
-		strcat(tmppath,PATH_DELIMITERA);
+		strcat(tmppath,"/");
 		char* tmppathP = tmppath + strlen(tmppath);
 		TCHAR tpath[CL_MAX_PATH];
 

@@ -6,14 +6,17 @@
 ------------------------------------------------------------------------------*/
 #ifndef TEST_H
 #define TEST_H
-#include "CLucene/_ApiHeader.h"
 #include "CLucene.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/_clucene-config.h"
+#include "CLucene/config/repl_tchar.h"
+#include "CLucene/config/repl_wchar.h"
+#include "CLucene/debug/_condition.h"
+#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/Misc.h"
+
 #include "CLucene/store/RAMDirectory.h"
 #include "CLucene/store/Lock.h"
-#include "CLucene/config/repl_wchar.h"
 #include "CLucene/index/TermVector.h"
-#include "CLucene/util/_Misc.h"
 
 
 CL_NS_USE(index)
@@ -54,11 +57,44 @@ public:
     static void IntToEnglish(int32_t i, TCHAR* buf, int32_t buflen);
 };
 
+
+class TCharCompare{
+public:
+	bool operator()( const TCHAR* val1, const TCHAR* val2 ) const{
+		if ( val1==val2)
+			return false;
+		bool ret = (_tcscmp( val1,val2 ) < 0);
+		return ret;
+	}
+};
+
+template<typename _K, typename _T>
+class StringMap : public std::map<_K,_T,TCharCompare>{
+    bool delKey;
+public:
+    StringMap(bool delKey){
+        this->delKey = delKey;
+    }
+    virtual ~StringMap(){
+        while ( this->begin() != this->end() ){
+            _K v = this->begin()->first;
+            this->erase(this->begin());
+            if ( delKey ){
+                _CLDELETE_CARRAY(v);
+            }
+        }
+    }
+    
+    void put(_K k, _T v){
+        this->insert ( std::pair<_K,_T>(k,v) );
+    }
+};
+
 extern unittest tests[];
 
-#define CLUCENE_DATA_LOCATION1 "../test/data/"
-#define CLUCENE_DATA_LOCATION2 "./test/data/"
-#define CLUCENE_DATA_LOCATION3 "../../test/data/"
+#define CLUCENE_DATA_LOCATION1 "../src/test/data/"
+#define CLUCENE_DATA_LOCATION2 "./src/test/data/"
+#define CLUCENE_DATA_LOCATION3 "../../src/test/data/"
 #define CLUCENE_DATA_LOCATIONENV "srcdir"
 
 extern const char* cl_tempDir;
