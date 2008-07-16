@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "stdafx.h"
 #include "CLucene.h"
+#include "CLucene/util/Misc.h"
 
 //test for memory leaks:
 #ifdef _MSC_VER
@@ -19,6 +20,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace lucene::util;
 
 void DeleteFiles(const char* dir);
 void IndexFiles(char* path, char* target, const bool clearIndex);
@@ -35,7 +37,7 @@ int main( int32_t argc, char** argv ){
 	#endif
 	#endif
 
-	uint64_t str = currentTimeMillis();
+	uint64_t str = Misc::currentTimeMillis();
 	try{
 
 		printf("Location of text files to be indexed: ");
@@ -77,6 +79,6 @@ int main( int32_t argc, char** argv ){
 	//if LUCENE_ENABLE_CONSTRUCTOR_LOG is on, dont do log if this is true:
 	//	_lucene_disable_debuglogging
 
-	printf ("\n\nTime taken: %d\n\n",currentTimeMillis() - str);
+	printf ("\n\nTime taken: %d\n\n",Misc::currentTimeMillis() - str);
 	return 0;
 }

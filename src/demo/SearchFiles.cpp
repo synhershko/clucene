@@ -7,6 +7,9 @@
 #include "stdafx.h"
 
 #include "CLucene.h"
+#include "CLucene/config/repl_tchar.h"
+#include "CLucene/config/repl_wchar.h"
+#include "CLucene/util/Misc.h"
 #include <iostream>
 
 using namespace std;
@@ -33,17 +36,17 @@ void SearchFiles(const char* index){
 
 		if ( strlen(line) == 0 )
 			break;
-	   STRCPY_AtoT(tline,line,80);
+	    STRCPY_AtoT(tline,line,80);
 		Query* q = QueryParser::parse(tline,_T("contents"),&analyzer);
 
 		buf = q->toString(_T("contents"));
 		_tprintf(_T("Searching for: %s\n\n"), buf);
 		_CLDELETE_CARRAY(buf);
 
-		uint64_t str = currentTimeMillis();
+		uint64_t str = Misc::currentTimeMillis();
 		Hits* h = s.search(q);
-		uint64_t srch = currentTimeMillis() - str;
-		str = currentTimeMillis();
+		uint64_t srch = Misc::currentTimeMillis() - str;
+		str = Misc::currentTimeMillis();
 
 		for ( int32_t i=0;i<h->length();i++ ){
 			Document* doc = &h->doc(i);
@@ -53,7 +56,7 @@ void SearchFiles(const char* index){
 		}
 
 		printf("\n\nSearch took: %d ms.\n", srch);
-		printf("Screen dump took: %d ms.\n\n", currentTimeMillis() - str);
+		printf("Screen dump took: %d ms.\n\n", Misc::currentTimeMillis() - str);
 
 		_CLDELETE(h);
 		_CLDELETE(q);

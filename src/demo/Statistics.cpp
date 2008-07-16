@@ -8,6 +8,9 @@
 
 #include "CLucene.h"
 #include <iostream>
+#include "CLucene/config/repl_tchar.h"
+#include "CLucene/config/repl_wchar.h"
+#include "CLucene/util/Misc.h"
 
 using namespace std;
 using namespace lucene::analysis;

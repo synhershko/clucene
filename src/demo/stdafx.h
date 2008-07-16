@@ -13,16 +13,9 @@
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <stdio.h>
-#include "demo/config.h"
 //#include <tchar.h>
 
-#define CL_MAX_DIR 1024
-
 #include "CLucene/StdHeader.h"
-
-void strcpy_a2t(TCHAR* to, const char* from, size_t len);
-#define STRCPY_AtoT strcpy_a2t
-
-uint64_t currentTimeMillis();
+#include "CLucene/_clucene-config.h"
 
 #endif
