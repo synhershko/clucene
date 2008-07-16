@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
-#include "CLucene/_ApiHeader.h"
+#include "CLucene/_SharedHeader.h"
 
 int64_t lucene_tcstoi64(const TCHAR* str, TCHAR**end, int radix){
 	#define LUCENE_TCSTOI64_RADIX(x,r) ((x>=_T('0') && x<=_T('9'))?x-_T('0'):((x>=_T('a') && x<=_T('z'))?x-_T('a')+10:((x>=_T('A') && x<=_T('Z'))?x-_T('A')+10:1000)))

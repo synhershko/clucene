@@ -9,6 +9,17 @@
 
 #include <cstdarg>
 
+
+int cl_tcscasefoldcmp(const TCHAR * dst, const TCHAR * src);
+TCHAR* cl_tcscasefold( TCHAR * str, int len=-1 );
+
+//we provide utf8 conversion functions
+size_t lucene_utf8towc  (wchar_t *ret, const char *s, size_t n);
+size_t lucene_utf8towcs(wchar_t *,    const char *,  size_t maxslen);
+size_t lucene_wctoutf8  (char * ret,   const wchar_t  str);
+size_t lucene_wcstoutf8 (char *,       const wchar_t *, size_t maxslen);
+size_t lucene_utf8charlen(const char *p);
+
 //string function replacements
 #if defined(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS) || (defined(_UCS2) && !defined(_CL_HAVE_WCSCASECMP)) || (defined(_ASCII) && !defined(_CL_HAVE_STRCASECMP))
     int lucene_tcscasecmp(const TCHAR *, const TCHAR *);

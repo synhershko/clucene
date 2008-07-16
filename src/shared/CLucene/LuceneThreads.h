@@ -22,44 +22,48 @@ class CLuceneThreadIdCompare;
 #else
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
-	#elif defined(_CL_HAVE_PTHREAD)
-	    class CLUCENE_EXPORT mutex_pthread: LUCENE_BASE
-        {
-        private:
-            struct Internal;
-            Internal* internal;
-        public:
-        	mutex_pthread(const mutex_pthread& clone);
-        	mutex_pthread();
-        	~mutex_pthread();
-        	void lock();
-        	void unlock();
-        };
-        #define _LUCENE_THREADMUTEX CL_NS(util)::mutex_pthread
-        #define _LUCENE_CURRTHREADID pthread_self()
-        #define _LUCENE_THREADID_TYPE pthread_t
-
-	#elif defined(_CL_HAVE_WIN32_THREADS)
-	    class CLUCENE_EXPORT mutex_win32: LUCENE_BASE
-    	{
-    	private:
-    		struct Internal;
-    		Internal* internal;
-    	public:
-    		mutex_win32(const mutex_win32& clone);
-    		mutex_win32();
-    		~mutex_win32();
-    		void lock();
-    		void unlock();
-    		static uint64_t _GetCurrentThreadId();
-    	};
+    #else
+    	#if defined(_CL_HAVE_PTHREAD)
+            #define _LUCENE_THREADID_TYPE pthread_t
+    	    class CLUCENE_EXPORT mutex_thread
+            {
+            private:
+                struct Internal;
+                Internal* internal;
+            public:
+            	mutex_thread(const mutex_thread& clone);
+            	mutex_thread();
+            	~mutex_thread();
+            	void lock();
+            	void unlock();
+            	static _LUCENE_THREADID_TYPE _GetCurrentThreadId();
+            };
+    
+    	#elif defined(_CL_HAVE_WIN32_THREADS)
+        	#define _LUCENE_THREADID_TYPE uint64_t
+    	    class CLUCENE_EXPORT mutex_thread
+        	{
+        	private:
+        		struct Internal;
+        		Internal* internal;
+        	public:
+        		mutex_thread(const mutex_thread& clone);
+        		mutex_thread();
+        		~mutex_thread();
+        		void lock();
+        		void unlock();
+        		static _LUCENE_THREADID_TYPE _GetCurrentThreadId();
+        	};
+        	
+        	
+    	#else
+    		#error A valid thread library was not found
+    	#endif //mutex types
     	
-    	#define _LUCENE_THREADMUTEX CL_NS(util)::mutex_win32
-    	#define _LUCENE_CURRTHREADID mutex_win32::_GetCurrentThreadId()
-    	#define _LUCENE_THREADID_TYPE uint64_t
-	#else
-		#error A valid thread library was not found
-	#endif //mutex types
+    	
+        #define _LUCENE_CURRTHREADID mutex_thread::_GetCurrentThreadId()
+        #define _LUCENE_THREADMUTEX CL_NS(util)::mutex_thread
+    #endif //don't implement
 	
 	/** @internal */
 	class CLUCENE_EXPORT mutexGuard

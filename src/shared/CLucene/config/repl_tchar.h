@@ -9,7 +9,6 @@
 
 #ifndef _CL_HAVE_TCHAR_H
     #if defined(_UCS2)
-        #define TCHAR wchar_t
         
         //note: descriptions with * in front have replacement functions
         
@@ -55,7 +54,6 @@
         #define _tcstoi64 wcstoll //* convers a string to an 64bit bit integer
         #define _i64tot lltow //* converts a 64 bit integer to a string (with base)
     #else //if defined(_ASCII)
-        #define TCHAR char
         
         //formatting functions
         #define _sntprintf snprintf    
@@ -115,11 +113,45 @@ char* lucenestrdup(const char* v);
     #define stringDuplicate(x) lucenestrdup(x)
 #endif
 
-#undef _T //remove any previously defined _T - required for ppc os
+
+#define STRCPY_AtoA(target,src,len) strncpy(target,src,len)
+#define STRDUP_AtoA(x) lucenestrdup(x)
+
 #if defined(_UCS2)
-  #define _T(x)       L ## x
+	#define STRDUP_WtoW(x) lucenewcsdup(x)
+    #define STRDUP_TtoT STRDUP_WtoW
+    #define STRDUP_WtoT STRDUP_WtoW
+    #define STRDUP_TtoW STRDUP_WtoW
+
+    #define STRDUP_AtoW(x) CL_NS(util)::Misc::_charToWide(x)
+	#define STRDUP_AtoT STRDUP_AtoW
+
+    #define STRDUP_WtoA(x) CL_NS(util)::Misc::_wideToChar(x)
+	#define STRDUP_TtoA STRDUP_WtoA
+    
+    #define STRCPY_WtoW(target,src,len) _tcsncpy(target,src,len)
+	#define STRCPY_TtoW STRCPY_WtoW
+	#define STRCPY_WtoT STRCPY_WtoW
+	//#define _tcscpy STRCPY_WtoW
+
+    #define STRCPY_AtoW(target,src,len) CL_NS(util)::Misc::_cpycharToWide(src,target,len)
+    #define STRCPY_AtoT STRCPY_AtoW
+
+    #define STRCPY_WtoA(target,src,len) CL_NS(util)::Misc::_cpywideToChar(src,target,len)
+    #define STRCPY_TtoA STRCPY_WtoA
 #else
-  #define _T(x)       x
+    #define STRDUP_AtoT STRDUP_AtoA
+    #define STRDUP_TtoA STRDUP_AtoA
+    #define STRDUP_TtoT STRDUP_AtoA
+
+    #define STRDUP_WtoT(x) xxxxxxxxxxxxxxx //not possible
+    #define STRCPY_WtoT(target,src,len) xxxxxxxxxxxxxxx //not possible
+
+    #define STRCPY_AtoT STRCPY_AtoA
+    #define STRCPY_TtoA STRCPY_AtoA
+    //#define _tcscpy STRCPY_AtoA
 #endif
+
+
 
 #endif //_REPL_TCHAR_H

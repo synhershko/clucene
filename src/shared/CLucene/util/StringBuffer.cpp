@@ -5,8 +5,8 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "_StringBuffer.h"
-#include "_Misc.h"
+#include "StringBuffer.h"
+#include "Misc.h"
 
 CL_NS_DEF(util)
 

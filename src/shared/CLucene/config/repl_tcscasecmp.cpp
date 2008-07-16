@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
  
-#include "CLucene/_ApiHeader.h"
+#include "CLucene/_SharedHeader.h"
 
 int lucene_tcscasecmp(const TCHAR * sa, const TCHAR * sb){
     TCHAR ca,cb;

@@ -4,20 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "CLucene/_ApiHeader.h"
+#include "CLucene/_SharedHeader.h"
 #include "CLucene/LuceneThreads.h"
 #include "_threads.h"
-
-//this is global...
-void lucene_sleep(const int ms){
-    #if defined(_CL_HAVE_USLEEP)
-        usleep(ms*1000);//expects microseconds
-    #elif defined(SLEEPFUNCTION)
-	    SLEEPFUNCTION(ms);
-	#else
-	    #error no sleep function???
-	#endif
-}
 
 CL_NS_DEF(util)
 
@@ -34,38 +23,38 @@ CL_NS_DEF(util)
 
 
 #elif defined(_CL_HAVE_WIN32_THREADS)
-	struct mutex_win32::Internal{
+	struct mutex_thread::Internal{
 	    CRITICAL_SECTION mtx;
 	};
 
-	mutex_win32::mutex_win32(const mutex_win32& clone):
+	mutex_thread::mutex_thread(const mutex_thread& clone):
 		internal(new Internal)
 	{
 		InitializeCriticalSection(&internal->mtx); 
 	}
-	mutex_win32::mutex_win32():
+	mutex_thread::mutex_thread():
 		internal(new Internal)
 	{ 
 		InitializeCriticalSection(&internal->mtx); 
 	}
 	
-	mutex_win32::~mutex_win32()
+	mutex_thread::~mutex_thread()
 	{ 
 		DeleteCriticalSection(&internal->mtx); 
 		delete internal;
 	}
 	
-	void mutex_win32::lock()
+	void mutex_thread::lock()
 	{ 
 		EnterCriticalSection(&internal->mtx); 
 	}
 	
-	void mutex_win32::unlock()
+	void mutex_thread::unlock()
 	{ 
 		LeaveCriticalSection(&internal->mtx); 
 	}
 
-    uint64_t mutex_win32::_GetCurrentThreadId(){
+    _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
         return GetCurrentThreadId();
     }
 
@@ -73,7 +62,7 @@ CL_NS_DEF(util)
 #elif defined(_CL_HAVE_PTHREAD)
 	#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		bool mutex_pthread_attr_initd=false;
-		pthread_mutexattr_t mutex_pthread_attr;
+		pthread_mutexattr_t mutex_thread_attr;
 	#endif
 
 	#ifdef _CL__CND_DEBUG
@@ -82,7 +71,7 @@ CL_NS_DEF(util)
 		#define _CLPTHREAD_CHECK(c,m) c;
 	#endif
 	
-	struct mutex_pthread::Internal{
+	struct mutex_thread::Internal{
     	pthread_mutex_t mtx;
     	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
     	pthread_t lockOwner;
@@ -90,77 +79,81 @@ CL_NS_DEF(util)
     	#endif
     };
 
-	mutex_pthread::mutex_pthread(const mutex_pthread& clone):
+	mutex_thread::mutex_thread(const mutex_thread& clone):
 		internal(new Internal)
 	{
 		
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
-			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, &mutex_pthread_attr), "mutex_pthread(clone) constructor failed")
+			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, &mutex_thread_attr), "mutex_thread(clone) constructor failed")
 		#else
 		  	#if defined(__hpux) && defined(_DECTHREADS_)
-				_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, pthread_mutexattr_default), "mutex_pthread(clone) constructor failed")
+				_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, pthread_mutexattr_default), "mutex_thread(clone) constructor failed")
 			#else
-				_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, 0), "mutex_pthread(clone) constructor failed")
+				_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, 0), "mutex_thread(clone) constructor failed")
 			#endif
 			internal->lockCount=0;
 			internal->lockOwner=0;
 		#endif
 	}
-	mutex_pthread::mutex_pthread():
+	mutex_thread::mutex_thread():
 		internal(new Internal)
 	{ 
 
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 	  	if ( mutex_pthread_attr_initd == false ){
-	  		pthread_mutexattr_init(&mutex_pthread_attr);
-		  	pthread_mutexattr_settype(&mutex_pthread_attr, PTHREAD_MUTEX_RECURSIVE);
+	  		pthread_mutexattr_init(&mutex_thread_attr);
+		  	pthread_mutexattr_settype(&mutex_thread_attr, PTHREAD_MUTEX_RECURSIVE);
 		  	mutex_pthread_attr_initd = true;
 		}
-		_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, &mutex_pthread_attr), "mutex_pthread(clone) constructor failed")
+		_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, &mutex_thread_attr), "mutex_thread(clone) constructor failed")
 		#else
 	  	#if defined(__hpux) && defined(_DECTHREADS_)
-			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, pthread_mutexattr_default), "mutex_pthread(clone) constructor failed")
+			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, pthread_mutexattr_default), "mutex_thread(clone) constructor failed")
 		#else
-			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, 0), "mutex_pthread(clone) constructor failed")
+			_CLPTHREAD_CHECK(pthread_mutex_init(&internal->mtx, 0), "mutex_thread(clone) constructor failed")
 		#endif
 		internal->lockCount=0;
 		internal->lockOwner=0;
 		#endif
 	}
 	
-	mutex_pthread::~mutex_pthread()
+	mutex_thread::~mutex_thread()
 	{ 
-		_CLPTHREAD_CHECK(pthread_mutex_destroy(&internal->mtx), "~mutex_pthread destructor failed") 
+		_CLPTHREAD_CHECK(pthread_mutex_destroy(&internal->mtx), "~mutex_thread destructor failed") 
 		delete internal;
 	}
 	
-	void mutex_pthread::lock()
+    _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
+        return pthread_self();
+    }
+
+	void mutex_thread::lock()
 	{ 
 		#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		pthread_t currentThread = pthread_self();
 		if( pthread_equal( internal->lockOwner, currentThread ) ) {
 			++internal->lockCount;
 		} else {
-			_CLPTHREAD_CHECK(pthread_mutex_lock(&internal->mtx), "mutex_pthread::lock")
+			_CLPTHREAD_CHECK(pthread_mutex_lock(&internal->mtx), "mutex_thread::lock")
 			internal->lockOwner = currentThread;
 			internal->lockCount = 1;
 		}
 		#else
-		_CLPTHREAD_CHECK(pthread_mutex_lock(&internal->mtx), "mutex_pthread::lock")
+		_CLPTHREAD_CHECK(pthread_mutex_lock(&internal->mtx), "mutex_thread::lock")
 		#endif
 	}
 	
-	void mutex_pthread::unlock()
+	void mutex_thread::unlock()
 	{ 
 		#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		--internal->lockCount;
 		if( internal->lockCount == 0 )
 		{
 			internal->lockOwner = 0;
-			_CLPTHREAD_CHECK(pthread_mutex_unlock(&internal->mtx), "mutex_pthread::unlock")
+			_CLPTHREAD_CHECK(pthread_mutex_unlock(&internal->mtx), "mutex_thread::unlock")
 		}
 		#else
-		_CLPTHREAD_CHECK(pthread_mutex_unlock(&internal->mtx), "mutex_pthread::unlock")
+		_CLPTHREAD_CHECK(pthread_mutex_unlock(&internal->mtx), "mutex_thread::unlock")
 		#endif
 	}
 

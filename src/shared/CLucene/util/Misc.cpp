@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "_Misc.h"
+#include "Misc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +45,29 @@ size_t Misc::ahashCode(const char* str, size_t len){
 		hashCode = hashCode * 31 + *str++;
 	return hashCode;
 }
+
+//ok, these are the exceptions, but these never
+//exist on non-msvc platform, so lets put it here
+int64_t Misc::filelength(int filehandle)
+{
+    struct fileStat info;
+    if (fileHandleStat(filehandle, &info) == -1)
+ 	 _CLTHROWA( CL_ERR_IO,"fileStat error" );
+    return info.st_size;
+}
+
+//this is global...
+void Misc::sleep(const int ms){
+    #if defined(_CL_HAVE_USLEEP)
+        usleep(ms*1000);//expects microseconds
+    #elif defined(SLEEPFUNCTION)
+	    SLEEPFUNCTION(ms);
+	#else
+	    #error no sleep function???
+	#endif
+}
+
+
 #ifdef _UCS2
 size_t Misc::whashCode(const wchar_t* str){
 	// Compute the hash code using a local variable to be reentrant.
