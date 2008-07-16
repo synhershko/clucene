@@ -1,7 +1,7 @@
 #ifndef _SRC_CLUCENE_CLUCENE_CONFIG_H
 #define _SRC_CLUCENE_CLUCENE_CONFIG_H 1
  
-/* src/CLucene/clucene-config.h. 
+/* src/shared/CLucene/clucene-config.h. 
 *  Generated automatically at end of cmake.
 */
 
@@ -45,6 +45,9 @@ ${TYPE_UINT64_T}
 
 ${TYPE_FLOAT_T}
 ${TYPE_SIZE_T}
+
+${SYMBOL_TCHAR}
+${SYMBOL__T}
 
 /* CMake will determine these specifics. Things like bugs, etc */
 

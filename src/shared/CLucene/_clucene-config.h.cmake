@@ -1,7 +1,7 @@
 #ifndef _SRC_CLUCENE_INTERNAL_CLUCENE_CONFIG_H
 #define _SRC_CLUCENE_INTERNAL_CLUCENE_CONFIG_H 1
  
-/* src/CLucene/_clucene-config.h. 
+/* src/shared/CLucene/_clucene-config.h. 
 *  Generated automatically at end of cmake.
 *  These are internal definitions, and this file does not need to be distributed
 */
@@ -38,6 +38,13 @@
 #cmakedefine _CL_HAVE_USLEEP
 
 ${SYMBOL_CL_MAX_PATH}
+//this is the max filename... for now its just the same,
+//but this could change, so we use a different name
+#define CL_MAX_NAME CL_MAX_PATH
+//this used to be CL_MAX_NAME * 32, but as Alex Hudson points out, this could come to be 128kb.
+//the above logic for CL_MAX_NAME should be correct enough to handle all file names
+#define CL_MAX_DIR CL_MAX_PATH
+
 ${SYMBOL__O_RANDOM}
 ${SYMBOL__O_BINARY}
 ${SYMBOL__S_IREAD}
@@ -79,7 +86,6 @@ ${FUNCTION_SLEEPFUNCTION}
 #cmakedefine _CL_HAVE_NO_FUNCTION_TRY_BLOCKS
 
 /* Define if recursive pthread mutexes are available */
-//todo: not being checked for...
 #cmakedefine _CL_HAVE_PTHREAD_MUTEX_RECURSIVE  1 
 
 /* Number of bits in a file offset, on hosts where this is settable. */
@@ -90,6 +96,11 @@ ${FUNCTION_SLEEPFUNCTION}
 //todo: should we only define for hosts where this is applicable?
 #define _LARGE_FILES
 
+/** define if you would like to force clucene to use the internal
+* character functions.
+* Tests may display unpredictable behaviour if this is not defined.
+*/
+#cmakedefine LUCENE_USE_INTERNAL_CHAR_FUNCTIONS 1
 
 /* Compiler oddities */
 
