@@ -11,7 +11,7 @@
 #include "_Lexer.h"
 
 #include "CLucene/util/Reader.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_FastCharStream.h"
 
 CL_NS_USE(util)

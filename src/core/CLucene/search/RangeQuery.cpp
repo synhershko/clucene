@@ -16,7 +16,7 @@
 #include "CLucene/index/Term.h"
 #include "CLucene/index/Terms.h"
 #include "CLucene/index/IndexReader.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 
 
 CL_NS_USE(index)

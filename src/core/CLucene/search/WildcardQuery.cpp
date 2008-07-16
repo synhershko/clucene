@@ -11,7 +11,7 @@
 #include "Similarity.h"
 #include "CLucene/index/Term.h"
 #include "CLucene/util/BitSet.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/index/IndexReader.h"
 
 CL_NS_USE(index)

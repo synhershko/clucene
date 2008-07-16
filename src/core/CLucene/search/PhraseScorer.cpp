@@ -9,7 +9,7 @@
 #include "Explanation.h"
 #include "Similarity.h"
 #include "SearchHeader.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/index/Terms.h"
 #include "_PhraseScorer.h"
 

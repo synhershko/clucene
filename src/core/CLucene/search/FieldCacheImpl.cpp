@@ -10,7 +10,7 @@
 #include "CLucene/index/Term.h"
 #include "CLucene/index/Terms.h"
 #include "CLucene/util/_StringIntern.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "Sort.h"
 
 CL_NS_USE(util)

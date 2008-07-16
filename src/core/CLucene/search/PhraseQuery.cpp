@@ -19,7 +19,7 @@
 #include "CLucene/index/Terms.h"
 #include "CLucene/index/IndexReader.h"
 
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/VoidList.h"
 #include "CLucene/util/_Arrays.h"
 

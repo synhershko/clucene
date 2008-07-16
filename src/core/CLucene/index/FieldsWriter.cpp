@@ -9,7 +9,7 @@
 
 //#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Reader.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/_RAMDirectory.h"
 #include "CLucene/store/IndexOutput.h"

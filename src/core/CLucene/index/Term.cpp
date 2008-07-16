@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Term.h"
 #include "CLucene/util/_StringIntern.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(index)

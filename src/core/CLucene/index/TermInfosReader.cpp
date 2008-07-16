@@ -8,7 +8,7 @@
 
 #include "Term.h"
 #include "Terms.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 

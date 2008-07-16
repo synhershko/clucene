@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Lock.h"
 #include "_Lock.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 
 #ifdef _CL_HAVE_WINDEF_H
 	#include <windef.h> //try to include windef.h as early as possible

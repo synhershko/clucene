@@ -10,7 +10,7 @@
 #include "FilteredTermEnum.h"
 #include "TermQuery.h"
 #include "CLucene/index/Term.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)

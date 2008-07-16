@@ -9,7 +9,7 @@
 
 #include "BooleanClause.h"
 #include "CLucene/index/IndexReader.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_Arrays.h"
 #include "SearchHeader.h"
 #include "_BooleanScorer.h"

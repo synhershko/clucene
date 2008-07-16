@@ -13,7 +13,7 @@
 #include "FSDirectory.h"
 #include "CLucene/index/IndexReader.h"
 //#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 
 #ifdef _CL_HAVE_WINDEF_H
 	#include <windef.h>
