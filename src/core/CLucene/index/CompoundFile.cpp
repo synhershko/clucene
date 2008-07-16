@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "_CompoundFile.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/store/IndexOutput.h"
 

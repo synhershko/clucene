@@ -16,6 +16,8 @@ CL_NS_DEF(util)
     static const TCHAR* replace_all( const TCHAR* val, const TCHAR* srch, const TCHAR* repl );
     static bool dir_Exists(const char* path);
 	static int64_t file_Size(const char* path);
+    static int64_t filelength(int handle);
+    static void sleep(const int ms);
 
     static size_t ahashCode(const char* str);
 	static size_t ahashCode(const char* str, size_t len);

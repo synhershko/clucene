@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "StandardTokenizer.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_FastCharStream.h"
 
 CL_NS_USE(analysis)

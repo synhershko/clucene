@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Field.h"
 #include "CLucene/util/_StringIntern.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/Reader.h"
 
 CL_NS_USE(util)

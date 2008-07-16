@@ -9,7 +9,7 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexOutput.h"
 #include "CLucene/util/Array.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "CLucene/util/Reader.h"
 #include "CLucene/document/Field.h"
 #include "CLucene/document/Document.h"

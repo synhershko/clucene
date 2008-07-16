@@ -11,7 +11,7 @@
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
 ////#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "CLucene/util/_StringIntern.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/store/IndexOutput.h"
