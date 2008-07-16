@@ -12,7 +12,8 @@ CL_NS_DEF(util)
 /** A PriorityQueue maintains a partial ordering of its elements such that the
   least element can always be found in constant time.  Put()'s and pop()'s
   require log(size) time. */
-template <class _type,typename _valueDeletor> class PriorityQueue:LUCENE_BASE {
+template <class _type,typename _valueDeletor> 
+class CLUCENE_EXPORT PriorityQueue:LUCENE_BASE {
 	private:
 		size_t _size;
 		bool dk;
