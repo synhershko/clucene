@@ -1,7 +1,48 @@
 
 Headers:
 * _headername.h headers are private, and will not be distributed. Don't include these files from public headers.
+* The shared library is not distributed, except for: SharedHeader.h and clucene-config.h
 * Keep _ifdef's in public headers to an absolute minimum.
 * Public headers should contain only classes that are exported (class CLUCENE_EXPORT classname).
 * All classes should have a destructor, 
   the destructor should be virtual if there is any chance of the class being overridden
+
+
+Cross platform specifics:
+* Use macros provided in shared project. This applies to data types and functions
+* static const int32_t x=1; Should be coded as: Use LUCENE_STATIC_CONSTANT (int32_t, x=1). Else it is not portable.
+* Static objects should not be initialised in the class header. ( class x{ static object a; }; ). This will not work
+  everywhere. Instead use a getter.
+  
+  class x{ 
+    static object* a; 
+  public:
+    static Object* getA(); 
+    static void CLUCENE_LOCAL _shutdown();
+  }; 
+  
+  Then in the implementation code
+  
+  Object* x::a = NULL;
+  Object* x::getA(){
+    if ( a == NULL )
+        x::a = _CLNEW Object;
+    return a;
+  }
+  void x::_shutdown(){
+    _CLDELETE(a);
+  }
+  
+  In CLucene/StdHeader.cpp, add x::_shutdown() to the list _lucene_shutdown function.
+  
+* This is bad:
+
+    class x{
+        LUCENE_STATIC_CONSTANT(int32_t, x=1)
+        void func( int32_t value=x);
+    };
+  
+  This will fail on some platforms. It is better to do:
+  int32_t value=-1 (-1 should be some logical value, not necessarily -1).
+  then in the implementation, check if -1 and default to the x static constant.
+* Try and use the functions in util/Array.h instead of Void Map/List functions. Void Map/List will be deprecated for public access

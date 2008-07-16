@@ -103,9 +103,21 @@ Questions:
 1. What should be the convention for an object taking ownership of memory? 
    Some documenting is available on this, but not much
 
+Working with valgrind
+----------------------
+Valgrind reports memory leaks and memory problems. Tests should always pass
+valgrind before being passed.
 
-Performance
------------
+#valgrind <program>
+
+Performance with gprof
+----------------------
+Compile with gprof turned on (ENABLE_GPROF in cmake gui or using ccmake).
+Run the program you want using gprof <program>. Various analysis can be
+created - see man gprof for these options.
+
+Benchmarks
+----------
 Very little benchmarking has been done on clucene. Andi Vajda posted some 
 limited statistics on the clucene list a while ago with the following results.
 
