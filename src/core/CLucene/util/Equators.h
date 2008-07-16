@@ -178,7 +178,7 @@ public:
     };
 
 	template<typename _kt>
-	class Array: public AbstractDeletor{
+	class vArray: public AbstractDeletor{
 	public:
 		void Delete(void* arr){
 			doDelete((_kt*)arr);

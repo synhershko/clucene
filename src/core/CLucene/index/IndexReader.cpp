@@ -13,7 +13,7 @@
 #include "CLucene/store/_Lock.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/search/Similarity.h"
-#include "CLucene/util/_Misc.h"
+#include "CLucene/util/Misc.h"
 #include "_SegmentInfos.h"
 #include "_SegmentHeader.h"
 #include "MultiReader.h"

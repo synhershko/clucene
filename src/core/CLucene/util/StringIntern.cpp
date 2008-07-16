@@ -20,7 +20,7 @@ __wcsintrntype::iterator StringIntern_wblank;
 DEFINE_MUTEX(StringIntern_THIS_LOCK)
 	  
 
-    void CLStringIntern::shutdown(){
+    void CLStringIntern::_shutdown(){
     #ifdef _DEBUG
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
         if ( StringIntern_stringaPool.size() > 0 ){

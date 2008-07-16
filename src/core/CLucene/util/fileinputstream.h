@@ -21,13 +21,13 @@
 
 namespace jstreams {
 
-class FileInputStream : public BufferedInputStream<char> {
+class CLUCENE_EXPORT FileInputStream : public BufferedInputStream<char> {
 private:
     FILE *file;
     std::string filepath;
 
 public:
-    static const int32_t defaultBufferSize;
+    LUCENE_STATIC_CONSTANT(int32_t, defaultBufferSize=1048576);
     FileInputStream(const char *filepath, int32_t buffersize=defaultBufferSize);
     ~FileInputStream();
     int32_t fillBuffer(char* start, int32_t space);

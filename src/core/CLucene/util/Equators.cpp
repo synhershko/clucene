@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "Equators.h"
-#include "_Misc.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_DEF(util)
 

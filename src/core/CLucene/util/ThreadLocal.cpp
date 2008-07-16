@@ -125,7 +125,7 @@ void _ThreadLocal::UnregisterCurrentThread(){
 		++itr;
 	}
 }
-void _ThreadLocal::shutdown(){
+void _ThreadLocal::_shutdown(){
 	SCOPED_LOCK_MUTEX(*ThreadLocalBase_LOCK)
 	
 	ThreadLocalsType::iterator itr = ThreadLocalBase_threadLocals->begin();
