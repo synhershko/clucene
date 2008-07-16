@@ -60,6 +60,10 @@ INCLUDE(CPack)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2 FATAL_ERROR)
 
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 if(WIN32)
  set(CMAKE_DEBUG_POSTFIX "d")
 endif(WIN32)
@@ -91,6 +95,12 @@ OPTION(DISABLE_MULTITHREADING
 OPTION(ENABLE_ASCII_MODE
   "enable ascii support"
   OFF)
+OPTION(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS
+  "use internal character functions. required to run tests correctly"
+  ON)
+OPTION(ENABLE_GPROF
+  "turn on gprof profiling support"
+  OFF)
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )
 IF ( MSVC )
@@ -101,6 +111,28 @@ ENDIF(MSVC)
 OPTION(ENABLE_COMPILE_TESTS
   "enable various projects that test alternative build switches"
   ${ENABLE_COMPILE_TESTS_VALUE})
+
+OPTION(TESTS_USE_SHARED_LIBRARY
+  "Link tests against the shared library"
+  ON)
+
+#check flags...
+INCLUDE (TestCXXAcceptsFlag)
+#todo: fail if a warning occurs...(visual studio just warns, kind of annoying!)
+CHECK_CXX_ACCEPTS_FLAG(-g GccFlagG)
+IF ( GccFlagG )
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+ENDIF ( GccFlagG )
+
+IF(ENABLE_GPROF)
+    CHECK_CXX_ACCEPTS_FLAG(-pg GccFlagPg)
+        
+    IF ( GccFlagPg )
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+        #todo: add flag to linker also...
+    ENDIF ( GccFlagPg )
+ENDIF(ENABLE_GPROF)
+
 
 #Single output directory for building all executables and libraries.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output Directory" FORCE)
@@ -140,10 +172,12 @@ ENDIF(BUILD_DOCUMENTATION)
 
 
 #use single output directory
-INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src )
-INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src )
+INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/shared )
+INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/shared )
+INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 
 #include the projects
-ADD_SUBDIRECTORY (src/CLucene)
-ADD_SUBDIRECTORY (test)
+ADD_SUBDIRECTORY (src/shared)
+ADD_SUBDIRECTORY (src/core)
+ADD_SUBDIRECTORY (src/test)
 ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)

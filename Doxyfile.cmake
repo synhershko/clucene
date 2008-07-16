@@ -62,7 +62,7 @@ WARN_LOGFILE           = doxygen.warnings.log
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = @PROJECT_SOURCE_DIR@/src/CLucene
+INPUT                  = @PROJECT_SOURCE_DIR@/src/core/CLucene
 FILE_PATTERNS          = *.h
 RECURSIVE              = YES
 EXCLUDE                = mem.h bufferedstream.h fileinputstream.h stringreader.h Misc.h LuceneThreads.h jstreamconfig.h

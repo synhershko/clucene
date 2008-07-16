@@ -19,6 +19,7 @@ MACRO (DEFINE_OPTIONS extraOptions)
     	SET (${extraOptions} "${${extraOptions}} -D_UNICODE")
     ENDIF(ENABLE_ASCII_MODE)
 
-
-
+	IF ( MSVC80 )
+		SET (${extraOptions} "${${extraOptions}} -D_CRT_SECURE_NO_DEPRECATE")
+	ENDIF ( MSVC80 )
 ENDMACRO (DEFINE_OPTIONS)
