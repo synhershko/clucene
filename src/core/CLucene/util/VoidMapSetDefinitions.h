@@ -7,10 +7,18 @@
 #if !defined(_lucene_util_MapSets_) && !defined(_lucene_util_VoidMap_)
 #define _lucene_util_MapSets_
 
+#include "VoidMap.h"
+#include "VoidList.h"
+
+//todo: only make these public...
+//this is the interfaces for lists and maps. 
+//we want to deprecate all public use of this, but can't do that until
+//StringArray is deprecated for a while...
+
+/*
 #include "Equators.h"
 
 CL_NS_DEF(util)
-
 
 ///////////////
 //LISTS
@@ -76,5 +84,5 @@ template<typename _kt, typename _vt,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLMultiMap;
 
-CL_NS_END
+CL_NS_END*/
 #endif

@@ -51,11 +51,6 @@
 //cannot fit, this character is used instead. Required.
 #define LUCENE_OOR_CHAR(c) ((char)(((unsigned short)c)&0xFF))
 //
-//define if you would like to force clucene to use the internal
-//character functions.
-//Tests may display unpredictable behaviour if this is not defined.
-#define LUCENE_USE_INTERNAL_CHAR_FUNCTIONS
-//
 //define this to enable mmap support in the fsdirectory IndexInput
 //todo: only available for windows so far...need to add MMapInput.cpp to project
 //EXPERIMENTAL
