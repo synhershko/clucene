@@ -33,7 +33,7 @@
 #include "CLucene/index/IndexWriter.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/_MD5Digester.h"
-#include "CLucene/util/_dirent.h" //if we have dirent, then the native one will be used
+#include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
 
 CL_NS_DEF(store)

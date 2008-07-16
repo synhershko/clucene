@@ -7,7 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 
 #if !defined(_CL_HAVE_DIRENT_H) && !defined(_CL_HAVE_SYS_NDIR_H) && !defined(_CL_HAVE_SYS_DIR_H) && !defined(_CL_HAVE_NDIR_H)
-#include "_dirent.h"
+#include "dirent.h"
 #include <sys/stat.h>
 #include <errno.h>
 

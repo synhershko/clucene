@@ -1,5 +1,5 @@
 #include "test.h"
-#include "CLucene/util/_dirent.h"
+#include "CLucene/util/dirent.h"
 #include "CLucene/util/Reader.h"
 
 CL_NS_USE(util)
