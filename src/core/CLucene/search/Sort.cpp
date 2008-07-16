@@ -9,17 +9,62 @@
 #include "Compare.h"
 #include "SearchHeader.h"
 #include "CLucene/util/_StringIntern.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-  SortField* SortField::FIELD_SCORE = _CLNEW SortField (NULL, DOCSCORE,false);
-  SortField* SortField::FIELD_DOC = _CLNEW SortField (NULL, DOC,false);
-  Sort* Sort::RELEVANCE = _CLNEW Sort();
-  Sort* Sort::INDEXORDER = _CLNEW Sort (SortField::FIELD_DOC);
+  SortField* SortField_FIELD_SCORE = NULL;
+  SortField* SortField_FIELD_DOC = NULL;
+  SortField* SortField::FIELD_SCORE(){
+    if ( SortField_FIELD_SCORE == NULL )
+        SortField_FIELD_SCORE = _CLNEW SortField (NULL, DOCSCORE,false);
+    return SortField_FIELD_SCORE;
+  }
+  SortField* SortField::FIELD_DOC(){
+    if ( SortField_FIELD_DOC == NULL )
+        SortField_FIELD_DOC = _CLNEW SortField (NULL, DOC,false);
+    return SortField_FIELD_DOC;
+  }
+  void SortField::_shutdown(){
+    _CLDELETE(SortField_FIELD_SCORE);
+    _CLDELETE(SortField_FIELD_DOC);
+  }
+  
+  Sort* Sort_RELEVANCE = NULL;
+  Sort* Sort_INDEXORDER = NULL;
+  Sort* Sort::RELEVANCE(){
+    if ( Sort_RELEVANCE == NULL )
+        Sort_RELEVANCE = _CLNEW Sort();
+    return Sort_RELEVANCE;
+  }
+  Sort* Sort::INDEXORDER(){
+    if ( Sort_INDEXORDER == NULL )
+        Sort_INDEXORDER = _CLNEW Sort (SortField::FIELD_DOC());
+    return Sort_INDEXORDER;
+  }
+  void Sort::_shutdown(){
+    _CLDELETE(Sort_RELEVANCE);
+    _CLDELETE(Sort_INDEXORDER);
+  }
 
+  ScoreDocComparator* ScoreDocComparator_INDEXORDER = NULL;
+  ScoreDocComparator* ScoreDocComparator_RELEVANCE = NULL;
+  ScoreDocComparator* ScoreDocComparator::INDEXORDER(){
+    if ( ScoreDocComparator_INDEXORDER == NULL )
+        ScoreDocComparator_INDEXORDER = _CLNEW ScoreDocComparators::IndexOrder;
+    return ScoreDocComparator_INDEXORDER;
+  }
+  ScoreDocComparator* ScoreDocComparator::RELEVANCE(){
+    if ( ScoreDocComparator_RELEVANCE == NULL )
+        ScoreDocComparator_RELEVANCE = _CLNEW ScoreDocComparators::Relevance;
+    return ScoreDocComparator_RELEVANCE;
+  }
+  void ScoreDocComparator::_shutdown(){
+    _CLDELETE(ScoreDocComparator_INDEXORDER);
+    _CLDELETE(ScoreDocComparator_RELEVANCE);
+  }
 
 
 
@@ -124,8 +169,8 @@ CL_NS_DEF(search)
 	Sort::Sort() {
 		fields=NULL;
 		SortField** fields=_CL_NEWARRAY(SortField*,3);
-		fields[0]=SortField::FIELD_SCORE;
-		fields[1]=SortField::FIELD_DOC;
+		fields[0]=SortField::FIELD_SCORE();
+		fields[1]=SortField::FIELD_DOC();
 		fields[2]=NULL;
 		setSort (fields);
         _CLDELETE_ARRAY(fields);
@@ -138,8 +183,8 @@ CL_NS_DEF(search)
 		if ( fields != NULL ){
 			int32_t i=0;
 			while ( fields[i] != NULL ){
-				if ( fields[i] != SortField::FIELD_SCORE &&
-					 fields[i] != SortField::FIELD_DOC ){
+				if ( fields[i] != SortField::FIELD_SCORE() &&
+					 fields[i] != SortField::FIELD_DOC() ){
 					_CLDELETE(fields[i]);
 				}
 				i++;
@@ -171,7 +216,7 @@ CL_NS_DEF(search)
 		clear();
 		fields = _CL_NEWARRAY(SortField*,3);
 		fields[0] = _CLNEW SortField (field, SortField::AUTO, reverse);
-		fields[1] = SortField::FIELD_DOC;
+		fields[1] = SortField::FIELD_DOC();
 		fields[2] = NULL;
 	}
 
@@ -231,8 +276,6 @@ CL_NS_DEF(search)
 
 
 
-  ScoreDocComparator* ScoreDocComparator::INDEXORDER = _CLNEW ScoreDocComparators::IndexOrder;
-  ScoreDocComparator* ScoreDocComparator::RELEVANCE = _CLNEW ScoreDocComparators::Relevance;
 
   ScoreDocComparator::~ScoreDocComparator(){
   }
@@ -269,7 +312,7 @@ public:
 };
     
 ScoreDocComparator* SortComparator::newComparator (CL_NS(index)::IndexReader* reader, const TCHAR* fieldname){
-	return _CLNEW ScoreDocComparatorImpl(FieldCache::DEFAULT->getCustom (reader, fieldname, this));
+	return _CLNEW ScoreDocComparatorImpl(FieldCache::DEFAULT()->getCustom (reader, fieldname, this));
 }
 SortComparator::SortComparator(){
 }

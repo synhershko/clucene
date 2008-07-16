@@ -63,10 +63,13 @@ CL_NS_DEF(search)
     virtual int32_t sortType() = 0;
 
 	/** Special comparator for sorting hits according to computed relevance (document score). */
-	static ScoreDocComparator* RELEVANCE;
+	static ScoreDocComparator* RELEVANCE();
 
 	/** Special comparator for sorting hits according to index order (document number). */
-	static ScoreDocComparator* INDEXORDER;
+	static ScoreDocComparator* INDEXORDER();
+	
+	/** Cleanup static data */
+	static CLUCENE_LOCAL void _shutdown();
  };
 
 /**
@@ -192,10 +195,13 @@ public:
   // as FieldCache.STRING_INDEX.
 
   /** Represents sorting by document score (relevancy). */
-  static SortField* FIELD_SCORE;
+  static SortField* FIELD_SCORE();
 
   /** Represents sorting by document number (index order). */
-  static SortField* FIELD_DOC;
+  static CLUCENE_LOCAL SortField* FIELD_DOC();
+  
+  /** Cleanup static data */
+  static CLUCENE_LOCAL void _shutdown();
 
   /** Creates a sort by terms in the given field where the type of term value
   * is determined dynamically ({@link #AUTO AUTO}).
@@ -342,10 +348,13 @@ public:
 	/** Represents sorting by computed relevance. Using this sort criteria
 	 * returns the same results as calling {@link Searcher#search(Query) Searcher#search()}
 	 * without a sort criteria, only with slightly more overhead. */
-	static Sort* RELEVANCE;
+	static Sort* RELEVANCE();
 
 	/** Represents sorting by index order. */
-	static Sort* INDEXORDER;
+	static Sort* INDEXORDER();
+
+	/** Cleanup static data */
+	static CLUCENE_LOCAL void _shutdown();
 
 
     /** Sorts by computed relevance.  This is the same sort criteria as

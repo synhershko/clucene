@@ -8,7 +8,7 @@
 #include "CLucene/index/Term.h"
 #include "CLucene/index/IndexReader.h"
 #include "Similarity.h"
-#include "CLucene/util/_StringBuffer.h"
+#include "CLucene/util/StringBuffer.h"
 #include "FuzzyQuery.h"
 
 CL_NS_USE(index)
@@ -240,8 +240,10 @@ CL_NS_DEF(search)
   //Func - Constructor
   //Pre  - term != NULL
   //Post - The instance has been created
+        if ( minimumSimilarity < 0 )
+            minimumSimilarity = defaultMinSimilarity;
 
-	  CND_PRECONDITION(term != NULL,"term is NULL");
+	    CND_PRECONDITION(term != NULL,"term is NULL");
 
 	    if (minimumSimilarity > 1.0f)
 		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity > 1");

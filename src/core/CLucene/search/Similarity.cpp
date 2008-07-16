@@ -131,17 +131,21 @@ CL_NS_DEF(search)
 #endif
 
    /** The Similarity implementation used by default. */
-   Similarity* _defaultImpl=NULL;
+   Similarity* Similarity_defaultImpl=NULL;
 
    void Similarity::setDefault(Similarity* similarity) {
-      _defaultImpl = similarity;
+    _CLDELETE(Similarity_defaultImpl);
+    Similarity_defaultImpl = similarity;
    }
 
    Similarity* Similarity::getDefault() {
-	   if ( _defaultImpl == NULL ){
-			_defaultImpl = _CLNEW DefaultSimilarity();
+	   if ( Similarity_defaultImpl == NULL ){
+			Similarity_defaultImpl = _CLNEW DefaultSimilarity();
 	   }
-      return _defaultImpl;
+      return Similarity_defaultImpl;
+   }
+   void Similarity::_shutdown(){
+    _CLDELETE(Similarity_defaultImpl);
    }
 
    float_t Similarity::decodeNorm(uint8_t b) {

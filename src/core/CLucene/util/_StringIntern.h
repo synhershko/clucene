@@ -47,7 +47,8 @@ CL_NS_DEF(util)
 	*/
 	static bool unintern(const TCHAR* str);
 
-    static void shutdown();
+	/** Cleanup static data */
+	static CLUCENE_LOCAL void _shutdown();
   };
 
 CL_NS_END

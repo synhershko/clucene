@@ -56,7 +56,7 @@ public:
 	void clearLock( const char* lockName );
 	
 	/** called when lucene_shutdown is called */
-	static void shutdown();
+	static CLUCENE_LOCAL void _shutdown();
 };
 
 class CLUCENE_EXPORT FSLockFactory: public LockFactory {

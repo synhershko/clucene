@@ -44,7 +44,7 @@ CL_NS_DEF(search)
 	* @throws IllegalArgumentException if minimumSimilarity is &gt; 1 or &lt; 0
 	* or if prefixLength &lt; 0 or &gt; <code>term.text().length()</code>.
 	*/
-     FuzzyQuery(CL_NS(index)::Term* term, float_t minimumSimilarity=defaultMinSimilarity, size_t prefixLength=0);
+     FuzzyQuery(CL_NS(index)::Term* term, float_t minimumSimilarity=-1, size_t prefixLength=0);
 	 //Destructor
      ~FuzzyQuery();
 

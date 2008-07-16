@@ -70,6 +70,9 @@ public:
    */
    static Similarity* getDefault();
    
+	/** Cleanup static data */
+	static CLUCENE_LOCAL void _shutdown();
+   
    /** Encodes a normalization factor for storage in an index.
    *
    * <p>The encoding uses a five-bit exponent and three-bit mantissa, thus

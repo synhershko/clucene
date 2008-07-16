@@ -55,7 +55,7 @@ public:
 
 hitqueueCacheType* FieldSortedHitQueue::Comparators = _CLNEW hitqueueCacheType(false,true);
 
-void FieldSortedHitQueue::shutdown(){
+void FieldSortedHitQueue::_shutdown(){
 	Comparators->clear();
 }
 
@@ -104,7 +104,7 @@ bool FieldSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 //static
 ScoreDocComparator* FieldSortedHitQueue::comparatorString (IndexReader* reader, const TCHAR* field) {
 	//const TCHAR* field = CLStringIntern::intern(fieldname);
-	FieldCacheAuto* fa = FieldCache::DEFAULT->getStringIndex (reader, field);
+	FieldCacheAuto* fa = FieldCache::DEFAULT()->getStringIndex (reader, field);
 	//CLStringIntern::unintern(field);
 
 	CND_PRECONDITION(fa->contentType==FieldCacheAuto::STRING_INDEX,"Content type is incorrect");
@@ -115,7 +115,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorString (IndexReader* reader, 
 //static 
 ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, const TCHAR* field){
     //const TCHAR* field = CLStringIntern::intern(fieldname);
-    FieldCacheAuto* fa =  FieldCache::DEFAULT->getInts (reader, field);
+    FieldCacheAuto* fa =  FieldCache::DEFAULT()->getInts (reader, field);
 	//CLStringIntern::unintern(field);
 
 	CND_PRECONDITION(fa->contentType==FieldCacheAuto::INT_ARRAY,"Content type is incorrect");
@@ -125,7 +125,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
 //static
  ScoreDocComparator* FieldSortedHitQueue::comparatorFloat (IndexReader* reader, const TCHAR* field) {
 	//const TCHAR* field = CLStringIntern::intern(fieldname);
-    FieldCacheAuto* fa = FieldCache::DEFAULT->getFloats (reader, field);
+    FieldCacheAuto* fa = FieldCache::DEFAULT()->getFloats (reader, field);
 	//CLStringIntern::unintern(field);
 
 	CND_PRECONDITION(fa->contentType==FieldCacheAuto::FLOAT_ARRAY,"Content type is incorrect");
@@ -134,7 +134,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
 //static
   ScoreDocComparator* FieldSortedHitQueue::comparatorAuto (IndexReader* reader, const TCHAR* field){
 	//const TCHAR* field = CLStringIntern::intern(fieldname);
-    FieldCacheAuto* fa =  FieldCache::DEFAULT->getAuto (reader, field);
+    FieldCacheAuto* fa =  FieldCache::DEFAULT()->getAuto (reader, field);
 	//CLStringIntern::unintern(field);
 
     if (fa->contentType == FieldCacheAuto::STRING_INDEX ) {
@@ -154,9 +154,9 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
   //todo: Locale locale, not implemented yet
   ScoreDocComparator* FieldSortedHitQueue::getCachedComparator (IndexReader* reader, const TCHAR* fieldname, int32_t type, SortComparatorSource* factory){ 
 	if (type == SortField::DOC) 
-		return ScoreDocComparator::INDEXORDER;
+		return ScoreDocComparator::INDEXORDER();
 	if (type == SortField::DOCSCORE) 
-		return ScoreDocComparator::RELEVANCE;
+		return ScoreDocComparator::RELEVANCE();
     ScoreDocComparator* comparator = lookup (reader, fieldname, type, factory);
     if (comparator == NULL) {
       switch (type) {

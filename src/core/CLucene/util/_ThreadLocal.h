@@ -43,7 +43,7 @@ public:
 	/**
 	* Call this function to shutdown CLucene
 	*/
-	static void shutdown();
+	static CLUCENE_LOCAL void _shutdown();
 
 	/** 
 	* A hook called when CLucene is starting or shutting down, 

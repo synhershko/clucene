@@ -11,8 +11,17 @@
 
 CL_NS_DEF(search)
 
-FieldCache* FieldCache::DEFAULT = _CLNEW FieldCacheImpl();
+FieldCache* FieldCache_DEFAULT = NULL;
 int32_t FieldCache::STRING_INDEX = -1;
+    
+FieldCache* FieldCache::DEFAULT(){
+    if ( FieldCache_DEFAULT == NULL )
+        FieldCache_DEFAULT = _CLNEW FieldCacheImpl();
+    return FieldCache_DEFAULT;
+}
+void FieldCache::_shutdown(){
+    _CLDELETE(FieldCache_DEFAULT);
+}
 
 FieldCacheAuto::FieldCacheAuto(int32_t len, int32_t type){
 	contentType = type;

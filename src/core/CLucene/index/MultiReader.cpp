@@ -153,7 +153,7 @@ public:
 		CL_NS(util)::Compare::TChar,
 			CL_NS(util)::Equals::TChar,
 		CL_NS(util)::Deletor::tcArray,
-		CL_NS(util)::Deletor::Array<uint8_t> > normsCache;
+		CL_NS(util)::Deletor::vArray<uint8_t> > normsCache;
 	int32_t _maxDoc;
 	int32_t _numDocs;
 	

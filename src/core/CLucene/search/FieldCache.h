@@ -65,7 +65,7 @@ public:
   static int32_t STRING_INDEX;
 
   /** Expert: The cache used internally by sorting and range query classes. */
-  static FieldCache* DEFAULT;
+  static FieldCache* DEFAULT();
 
   /** Checks the internal cache for an appropriate entry, and if none is
    * found, reads the terms in <code>field</code> as integers and returns an array
@@ -136,6 +136,9 @@ public:
    * @throws IOException  If any error occurs.
    */
    virtual FieldCacheAuto* getCustom (CL_NS(index)::IndexReader* reader, const TCHAR* field, SortComparator* comparator) = 0;
+    
+	/** Cleanup static data */
+	static CLUCENE_LOCAL void _shutdown();
 };
 
 /** A class holding an AUTO field. In java lucene an Object
