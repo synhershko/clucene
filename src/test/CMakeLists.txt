@@ -43,6 +43,7 @@ SET(test_files ./tests.cpp
 ${test_HEADERS}
 )
 
+#todo: do glob header and include header files for IDE.
 ADD_EXECUTABLE(cl_test ${test_files} )
 SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
 

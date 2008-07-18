@@ -12,8 +12,6 @@
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
 
-const TCHAR* Token::defaultType=_T("word");
-
 struct Analyzer::Internal{
 	CL_NS(util)::ThreadLocal<TokenStream*,
 		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
@@ -52,7 +50,7 @@ public:
 Token::Token():
 	_startOffset (0),
 	_endOffset (0),
-	_type ( defaultType ),
+	_type ( getDefaultType() ),
 	positionIncrement (1),
 	payload(NULL)
 {
@@ -76,7 +74,7 @@ Token::~Token(){
 Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ):
 	_startOffset (start),
 	_endOffset (end),
-	_type ( typ ),
+	_type ( (typ==NULL?getDefaultType():typ) ),
 	positionIncrement (1),
 	payload(NULL)
 {
@@ -91,10 +89,14 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 	setText(text);
 }
 
+const TCHAR* Token::getDefaultType(){
+    return _T("word");
+}
+
 void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ){
 	_startOffset = start;
 	_endOffset   = end;
-	_type        = typ;
+	_type        = (typ==NULL?getDefaultType():typ);
 	positionIncrement = 1;
 	setText(text);
 }

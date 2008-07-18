@@ -67,14 +67,35 @@ public:
 		return ret;
 	}
 };
+class CharCompare{
+public:
+	bool operator()( const char* val1, const char* val2 ) const{
+		if ( val1==val2)
+			return false;
+		bool ret = (strcmp( val1,val2 ) < 0);
+		return ret;
+	}
+};
 
-template<typename _K, typename _T>
-class StringMap : public std::map<_K,_T,TCharCompare>{
+template<typename _K, typename _T, typename _Comparator=TCharCompare>
+class StringMap : public std::map<_K,_T,_Comparator>{
     bool delKey;
 public:
     StringMap(bool delKey){
         this->delKey = delKey;
     }
+    void remove(_K val){
+        std::iterator<_K,_T,_Comparator> itr;
+        itr = this->find(val);
+        if ( itr == this->end() )
+            return;
+        _K v = itr->first;
+        this->erase(itr);
+        if ( delKey ){
+             _CLDELETE_CARRAY(v);
+        }
+    }
+    
     virtual ~StringMap(){
         while ( this->begin() != this->end() ){
             _K v = this->begin()->first;

@@ -17,6 +17,17 @@
 
 #include "CLucene/clucene-config.h"
 
+//some early definitions
+#if defined(_MSC_VER)
+    //this has to be included very early, or visual studio will ignore it
+    #pragma warning(disable : 4786) //ignore: identifier was truncated to '255' characters in the debug information
+    #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
+#endif
+#if defined(__BORLANDC__)
+    #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
+#endif
+
+
 ////////////////////////////////////////////////////////
 //Are we in unicode mode?
 ////////////////////////////////////////////////////////
@@ -143,15 +154,6 @@
     #define _CL_DEPRECATE_TEXT(_Text)
 #endif
 #define _CL_DEPRECATED(_NewItem) _CL_DEPRECATE_TEXT("This function or variable has been superceded by newer library or operating system functionality. Consider using " #_NewItem " instead. See online help for details.")
-
-#if defined(_MSC_VER)
-    //this has to be included very early, or visual studio will ignore it
-    #pragma warning(disable : 4786) //ignore: identifier was truncated to '255' characters in the debug information
-    #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
-#endif
-#if defined(__BORLANDC__)
-    #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
-#endif
 
 
 ////////////////////////////////////////////////////////

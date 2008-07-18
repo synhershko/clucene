@@ -9,9 +9,6 @@
 #include "_Lock.h"
 #include "CLucene/util/Misc.h"
 
-#ifdef _CL_HAVE_WINDEF_H
-	#include <windef.h> //try to include windef.h as early as possible
-#endif
 #ifdef _CL_HAVE_IO_H
 	#include <io.h>
 #endif
@@ -147,6 +144,7 @@ CL_NS_DEF(store)
    
    TCHAR* FSLock::toString()
    {
+        const wchar_t* xx= L"SimpleFSLock@";
 	   TCHAR* ret = _CL_NEWARRAY(TCHAR,strlen(lockFile)+14); // 14 = strlen("SimpleFSLock@")
 	   _tcscpy(ret,_T("SimpleFSLock@"));
 	   STRCPY_AtoT(ret+13,lockFile,strlen(lockFile)+1);

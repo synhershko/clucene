@@ -8,13 +8,9 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
-#endif
-
-//todo: this is testing internal stuff
 void hashTest(CuTest *tc){
-	CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
+    //todo: this is testing internal stuff, turn it on again using a shared test..
+	/*CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
 	map.put(STRDUP_AtoA("a1"),1);
 	map.put(STRDUP_AtoA("a1"),2);
 	map.put(STRDUP_AtoA("a2"),3);
@@ -27,7 +23,7 @@ void hashTest(CuTest *tc){
 	CuAssertIntEquals(tc, _T("map size!=2"), 2, map.size());
 
 	map.put(STRDUP_AtoA("a1"),5);
-	CuAssertIntEquals(tc, _T("mapsize!=3"),3, map.size());
+	CuAssertIntEquals(tc, _T("mapsize!=3"),3, map.size());*/
 }
 
 void StoreTest(CuTest *tc,int32_t count, bool ram){

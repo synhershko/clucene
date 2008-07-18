@@ -82,15 +82,15 @@ public:
 	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
 	#endif
 	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
-	static const TCHAR* defaultType;
+	static const TCHAR* getDefaultType();
 
 	CL_NS(index)::Payload* payload;
 
 	Token();
 	~Token();
 	/// Constructs a Token with the given text, start and end offsets, & type. 
-	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=defaultType);
-	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=defaultType);
+	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
+	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	
 	size_t bufferLength(){ return bufferTextLen; }
 	void growBuffer(size_t size);

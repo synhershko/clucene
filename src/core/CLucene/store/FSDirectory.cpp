@@ -6,9 +6,6 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 
-#ifdef _CL_HAVE_WINDEF_H
-	#include <windef.h> //try to include windef.h as early as possible
-#endif
 #include <fcntl.h>
 #ifdef _CL_HAVE_IO_H
 	#include <io.h>
@@ -21,9 +18,6 @@
 #endif
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
-#endif
-#ifdef _CL_HAVE_WINDEF_H
- #include <windef.h>
 #endif
 #include <errno.h>
 

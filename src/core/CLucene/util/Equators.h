@@ -11,9 +11,6 @@
 #include <list>
 #include <set>
 #include <vector>
-#ifdef HAVE_WINDOWS_H
-	#include <windef.h>
-#endif
 //#include "CLucene/LuceneThreads.h"
 
 CL_NS_DEF(util)

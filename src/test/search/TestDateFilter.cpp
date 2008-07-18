@@ -5,9 +5,6 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#ifdef _CL_HAVE_WINDOWS_H
- #include <windows.h>
-#endif
 
 	void testBefore(CuTest *tc) {
 	// create an index

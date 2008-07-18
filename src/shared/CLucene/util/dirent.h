@@ -13,10 +13,6 @@
 typedef int intptr_t;
 #include <io.h>
 
-#ifdef _CL_HAVE_WINDEF_H
- #include <windef.h>
-#endif
-
 
 /**
 \unit

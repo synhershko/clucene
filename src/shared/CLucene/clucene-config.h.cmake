@@ -46,7 +46,8 @@ ${TYPE_UINT64_T}
 ${TYPE_FLOAT_T}
 ${TYPE_SIZE_T}
 
-${SYMBOL_TCHAR}
+/* tchar & _T definitions... */
+${TYPE_TCHAR}
 ${SYMBOL__T}
 
 /* CMake will determine these specifics. Things like bugs, etc */
