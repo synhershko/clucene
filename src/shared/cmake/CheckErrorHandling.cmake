@@ -6,7 +6,7 @@ MACRO ( CHECK_HAVE_FUNCTION_TRY_BLOCKS result )
     CHECK_CXX_SOURCE_RUNS("
     	void foo() try{} catch( ... ){}
     	int main(){ foo(); }" ${result})
-    IF ( NOT _CL_HAVE_FUNCTION_TRY_BLOCKS )
+    IF ( NOT _CL_HAVE_TRY_BLOCKS )
     	SET ( ${result} 1 )
-    ENDIF ( NOT _CL_HAVE_FUNCTION_TRY_BLOCKS )
+    ENDIF ( NOT _CL_HAVE_TRY_BLOCKS )
 ENDMACRO ( CHECK_HAVE_FUNCTION_TRY_BLOCKS )

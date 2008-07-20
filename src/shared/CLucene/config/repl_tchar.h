@@ -43,7 +43,7 @@
         #define _tcsncmp wcsncmp //case sensitive compare two strings
         #define _tcscspn wcscspn //location of any of a set of character in a string
         
-        #ifdef _CL_HAVE_WCSICMP
+        #ifdef _CL_HAVE_FUNCTION_WCSICMP
             #define _tcsicmp wcsicmp //* case insensitive compare two string
         #else
             #define _tcsicmp wcscasecmp //* case insensitive compare two string

@@ -29,6 +29,11 @@
 #include <cctype>
 #include <limits.h>
 
+#ifdef _CL_HAVE_FUNCTION_SLEEP
+	//don't ignore windows.h... breaks mingw32 in some cases. Define Sleep instead
+	extern void Sleep(_cl_dword);
+#endif
+
 CL_NS_DEF(util)
 
 size_t Misc::ahashCode(const char* str){
@@ -58,7 +63,7 @@ int64_t Misc::filelength(int filehandle)
 
 //this is global...
 void Misc::sleep(const int ms){
-    #if defined(_CL_HAVE_USLEEP)
+    #if defined(_CL_HAVE_FUNCTION_USLEEP)
         usleep(ms*1000);//expects microseconds
     #elif defined(SLEEPFUNCTION)
 	    SLEEPFUNCTION(ms);
@@ -112,7 +117,7 @@ void Misc::_cpycharToWide(const char* s, wchar_t* d, size_t len){
 
 //static
 uint64_t Misc::currentTimeMillis() {
-#ifndef _CL_HAVE_GETTIMEOFDAY
+#ifndef _CL_HAVE_FUNCTION_GETTIMEOFDAY
     struct _timeb tstruct;
     _ftime(&tstruct);
 

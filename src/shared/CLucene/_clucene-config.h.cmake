@@ -7,35 +7,36 @@
 */
 
 /* CMake will look for these functions: */
-#cmakedefine _CL_HAVE__VSNWPRINTF
-#cmakedefine _CL_HAVE__SNWPRINTF
-#cmakedefine _CL_HAVE_WCSCASECMP
-#cmakedefine _CL_HAVE_WCSCAT  1 
-#cmakedefine _CL_HAVE_WCSCHR  1 
-#cmakedefine _CL_HAVE_WCSCMP  1 
-#cmakedefine _CL_HAVE_WCSCPY  1 
-#cmakedefine _CL_HAVE_WCSCSPN  1 
-#cmakedefine _CL_HAVE_WCSICMP
-#cmakedefine _CL_HAVE_WCSLEN  1 
-#cmakedefine _CL_HAVE_WCSNCMP  1 
-#cmakedefine _CL_HAVE_WCSNCPY  1 
-#cmakedefine _CL_HAVE_WCSSTR  1 
-#cmakedefine _CL_HAVE_WCSTOD
-#cmakedefine _CL_HAVE_WCSTOLL
-#cmakedefine _CL_HAVE_WCSUPR
-#cmakedefine _CL_HAVE_GETTIMEOFDAY
-#cmakedefine _CL_HAVE_MAPVIEWOFFILE
+#cmakedefine _CL_HAVE_FUNCTION__VSNWPRINTF
+#cmakedefine _CL_HAVE_FUNCTION__SNWPRINTF
+#cmakedefine _CL_HAVE_FUNCTION_WCSCASECMP
+#cmakedefine _CL_HAVE_FUNCTION_WCSCAT  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSCHR  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSCMP  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSCPY  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSCSPN  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSICMP
+#cmakedefine _CL_HAVE_FUNCTION_WCSLEN  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSNCMP  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSNCPY  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSSTR  1 
+#cmakedefine _CL_HAVE_FUNCTION_WCSTOD
+#cmakedefine _CL_HAVE_FUNCTION_WCSTOLL
+#cmakedefine _CL_HAVE_FUNCTION_WCSUPR
+#cmakedefine _CL_HAVE_FUNCTION_GETTIMEOFDAY
+#cmakedefine _CL_HAVE_FUNCTION_MAPVIEWOFFILE
 
-#cmakedefine _CL_HAVE_LLTOA
-#cmakedefine _CL_HAVE_LLTOW
-#cmakedefine _CL_HAVE_PRINTF  1 
-#cmakedefine _CL_HAVE_SNPRINTF  1 
-#cmakedefine _CL_HAVE_MMAP  1 
-#cmakedefine _CL_HAVE_STRLWR
-#cmakedefine _CL_HAVE_STRTOLL
-#cmakedefine _CL_HAVE_STRUPR
-#cmakedefine _CL_HAVE_GETPAGESIZE
-#cmakedefine _CL_HAVE_USLEEP
+#cmakedefine _CL_HAVE_FUNCTION_LLTOA
+#cmakedefine _CL_HAVE_FUNCTION_LLTOW
+#cmakedefine _CL_HAVE_FUNCTION_PRINTF  1 
+#cmakedefine _CL_HAVE_FUNCTION_SNPRINTF  1 
+#cmakedefine _CL_HAVE_FUNCTION_MMAP  1 
+#cmakedefine _CL_HAVE_FUNCTION_STRLWR
+#cmakedefine _CL_HAVE_FUNCTION_STRTOLL
+#cmakedefine _CL_HAVE_FUNCTION_STRUPR
+#cmakedefine _CL_HAVE_FUNCTION_GETPAGESIZE
+#cmakedefine _CL_HAVE_FUNCTION_USLEEP
+#cmakedefine _CL_HAVE_FUNCTION_SLEEP
 
 ${SYMBOL_CL_MAX_PATH}
 //this is the max filename... for now its just the same,
@@ -82,8 +83,8 @@ ${FUNCTION_SLEEPFUNCTION}
 #cmakedefine _CL_HAVE_NO_FLOAT_BYTE
 
 /* Does not support try/catch blocks */
-//todo: not checked properly
-#cmakedefine _CL_HAVE_NO_FUNCTION_TRY_BLOCKS
+//todo: this is not checked properly
+//#cmakedefine _CL_HAVE_NO_FUNCTION_TRY_BLOCKS
 
 /* Define if recursive pthread mutexes are available */
 #cmakedefine _CL_HAVE_PTHREAD_MUTEX_RECURSIVE  1 

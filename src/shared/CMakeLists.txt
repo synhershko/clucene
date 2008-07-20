@@ -22,6 +22,7 @@ INCLUDE (MacroChooseSymbol)
 INCLUDE (MacroCheckGccVisibility)
 
 INCLUDE (DefineFloat)
+INCLUDE (DefineDword)
 INCLUDE (DefineLongLongSyntax)
 INCLUDE (DefineStaticSyntax)
 INCLUDE (DefineMAXPATHValue)
@@ -31,6 +32,7 @@ INCLUDE (CheckHashmaps)
 INCLUDE (CheckNamespace)
 INCLUDE (CheckSnprintf)
 INCLUDE (CheckPthread)
+INCLUDE (CheckStdCallFunctionExists)
 
 ########################################################################
 # test for headers
@@ -66,19 +68,21 @@ CHOOSE_TYPE(_timeb      -1 "" "timeb;_timeb" )
 
 #run macro for checking float. (and _FLT_EVAL_METHOD)
 DEFINE_FLOAT()
+DEFINE_DWORD()
 
 ########################################################################
 # Test for functions
 ########################################################################
 
 
-CHECK_REQUIRED_FUNCTIONS( printf strftime wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
+CHECK_REQUIRED_FUNCTIONS(  printf strftime wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
                            wcscmp wcsncmp wcscspn )
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
-CHECK_OPTIONAL_FUNCTIONS( mmap wcsupr wcscasecmp wcsicmp wcstoll wprintf MapViewOfFile 
-                         lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf )
-
+CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf 
+    "CreateFileMappingA(0,0,0,0,0,0)" 
+    mmap
+)
 
 #make decisions about which functions to use...
 CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat;_stat")
@@ -102,8 +106,8 @@ CHOOSE_FUNCTION(_open "_open;open")
 CHOOSE_FUNCTION(_write "_write;write")
 CHOOSE_FUNCTION(_unlink "_unlink;unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
-CHOOSE_FUNCTION (_mkdir _mkdir)
-CHOOSE_FUNCTION (SLEEPFUNCTION "usleep;Sleep;_sleep")
+CHOOSE_FUNCTION(_mkdir _mkdir)
+CHOOSE_FUNCTION(SLEEPFUNCTION "usleep;Sleep(0);_sleep")
 
 
 CHOOSE_FUNCTION(_snprintf "snprintf;_snprintf")
@@ -208,7 +212,7 @@ CHECK_PTHREAD_RECURSIVE(_CL_HAVE_PTHREAD _CL_HAVE_PTHREAD_MUTEX_RECURSIVE)
 MACRO_CHECK_GCC_VISIBILITY(_CL_HAVE_GCCVISIBILITYPATCH)
 
 #Check that we can handle try/catch
-CHECK_HAVE_FUNCTION_TRY_BLOCKS (_CL_HAVE_FUNCTION_TRY_BLOCKS)
+CHECK_HAVE_FUNCTION_TRY_BLOCKS (_CL_HAVE_TRY_BLOCKS)
 
 #check how to use hashmaps
 CHECK_HASH_MAPS (CL_NS_HASHING_VALUE LUCENE_DISABLE_HASHING)
@@ -228,6 +232,7 @@ DEFINE_STATIC_SYNTAX()
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
 MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;")
+MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS")
 
 
 #now write out our configuration....
