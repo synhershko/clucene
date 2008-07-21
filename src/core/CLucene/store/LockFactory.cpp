@@ -13,6 +13,9 @@
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
 #endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
