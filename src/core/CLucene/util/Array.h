@@ -101,9 +101,9 @@ public:
 template<typename T>
 class CLUCENE_EXPORT Array: public ArrayBase<T>{
 public:
-    _CL_DEPRECATED(ObjectArray) Array():ArrayBase<T>(){}
-	_CL_DEPRECATED(ObjectArray) Array(T* values, size_t length):ArrayBase<T>(values,length){}
-	_CL_DEPRECATED(ObjectArray) Array(size_t length):ArrayBase<T>(length){}
+    /*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array():ArrayBase<T>(){}
+	/*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array(T* values, size_t length):ArrayBase<T>(values,length){}
+	/*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array(size_t length):ArrayBase<T>(length){}
     void deleteValues(){
         if ( this->values == NULL )
             return;

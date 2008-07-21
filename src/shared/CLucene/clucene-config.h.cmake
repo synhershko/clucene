@@ -32,6 +32,7 @@
 #cmakedefine _CL_HAVE_SYS_TIME_H 1
 #cmakedefine _CL_HAVE_TCHAR_H 1
 #cmakedefine _CL_HAVE_SYS_MMAN_H 1
+#cmakedefine _CL_HAVE_WINERROR_H 1
 
 // our needed types
 ${TYPE_INT8_T}
@@ -44,7 +45,7 @@ ${TYPE_INT64_T}
 ${TYPE_UINT64_T}
 
 ${TYPE_FLOAT_T}
-${TYPE__CL_DWORD}
+${TYPE__CL_DWORD_T}
 ${TYPE_SIZE_T}
 
 /* tchar & _T definitions... */

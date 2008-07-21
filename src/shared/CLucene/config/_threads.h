@@ -11,7 +11,25 @@
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
 	#elif defined(_CL_HAVE_WIN32_THREADS)
-	    #include <windows.h>
+      //we have not explicity included windows.h and windows.h has
+      //not been included (check _WINDOWS_), then we must define
+      //our own definitions to the thread locking functions:
+      extern "C"{
+          struct CRITICAL_SECTION
+          {
+             struct critical_section_debug * DebugInfo;
+             long LockCount;
+             long RecursionCount;
+             void * OwningThread;
+             void * LockSemaphore;
+             _cl_dword_t SpinCount;
+          };
+          __declspec(dllimport) void __stdcall InitializeCriticalSection(CRITICAL_SECTION *);
+          __declspec(dllimport) void __stdcall EnterCriticalSection(CRITICAL_SECTION *);
+          __declspec(dllimport) void __stdcall LeaveCriticalSection(CRITICAL_SECTION *);
+          __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
+    	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+      }
 	#elif defined(_CL_HAVE_PTHREAD)
 	    #include <pthread.h>
 	#endif

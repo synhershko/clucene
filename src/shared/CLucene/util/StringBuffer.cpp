@@ -10,7 +10,7 @@
 
 CL_NS_DEF(util)
 
-	StringBuffer::StringBuffer(TCHAR* buf,int32_t maxlen, const bool consumeBuffer){
+	StringBuffer::StringBuffer(TCHAR* buf,size_t maxlen, const bool consumeBuffer){
 		buffer = buf;
 		bufferLength = maxlen;
 		bufferOwner = !consumeBuffer;
@@ -29,7 +29,7 @@ CL_NS_DEF(util)
 	  bufferOwner  = true;
   }
 
-  StringBuffer::StringBuffer(const int32_t initSize){
+  StringBuffer::StringBuffer(const size_t initSize){
   //Func - Constructor. Allocates a buffer of length initSize + 1
   //Pre  - initSize > 0
   //Post - A buffer has been allocated of length initSize + 1
@@ -49,10 +49,10 @@ CL_NS_DEF(util)
   //Post - An instance of StringBuffer has been created containing the copy of the string value
   
       //Initialize the length of the string to be stored in buffer
-	  len = (int32_t) _tcslen(value);
+	  len = (size_t) _tcslen(value);
 
 	  //Calculate the space occupied in buffer by a copy of value
-      const int32_t occupiedLength = len + 1;
+      const size_t occupiedLength = len + 1;
       
 	  // Minimum allocated buffer length is LUCENE_DEFAULT_TOKEN_BUFFER_SIZE.
       bufferLength = (occupiedLength >= LUCENE_DEFAULT_TOKEN_BUFFER_SIZE 
@@ -137,7 +137,7 @@ CL_NS_DEF(util)
       len += appendedLength;
   }
 
-  void StringBuffer::appendInt(const int32_t value) {
+  void StringBuffer::appendInt(const size_t value) {
   //Func - Appends an integer (after conversion to a character string)
   //Pre  - true 
   //Post - The converted integer value has been appended to the string in buffer
@@ -150,7 +150,7 @@ CL_NS_DEF(util)
       append(buf);
   }
 
-  void StringBuffer::appendFloat(const float_t value, const int32_t digits){
+  void StringBuffer::appendFloat(const float_t value, const size_t digits){
   //Func - Appends a float_t (after conversion to a character string)
   //Pre  - digits > 0. Indicates the minimum number of characters printed
   //Post - The converted float_t value has been appended to the string in buffer
@@ -180,7 +180,7 @@ CL_NS_DEF(util)
 		// significant part of the number. Fixes a bug when trying to print
 		// numbers that have zeros right after the decimal point
 		if (remadj) {
-			int32_t numZeros = dig - (int32_t)log10((float_t)remadj) - 1;
+			size_t numZeros = dig - (size_t)log10((float_t)remadj) - 1;
 		    while(numZeros-- > 0)
 				_tcscat(buf,_T("0")); //add a zero before the decimal point
 		}
@@ -222,7 +222,7 @@ CL_NS_DEF(util)
       len += prependedLength;
   }
 
-  int32_t StringBuffer::length() const{
+  size_t StringBuffer::length() const{
   //Func - Returns the length of the string in the StringBuffer
   //Pre  - true
   //Post - The length len of the string in the buffer has been returned
@@ -262,7 +262,7 @@ CL_NS_DEF(util)
      return buffer;
   }
   
-  void StringBuffer::reserve(const int32_t size){
+  void StringBuffer::reserve(const size_t size){
   	if ( bufferLength >= size )
   		return;
 	bufferLength = size;
@@ -280,14 +280,14 @@ CL_NS_DEF(util)
     buffer = tmp;
   }
 
-  void StringBuffer::growBuffer(const int32_t minLength) {
+  void StringBuffer::growBuffer(const size_t minLength) {
   //Func - Has the buffer grown to a minimum length of minLength or bigger
   //Pre  - minLength >= len + 1
   //Post - The buffer has been grown to a minimum length of minLength or bigger
 
       growBuffer(minLength, 0);
   }
-  void StringBuffer::growBuffer(const int32_t minLength, const int32_t skippingNInitialChars) {
+  void StringBuffer::growBuffer(const size_t minLength, const size_t skippingNInitialChars) {
   //Func - Has the buffer grown to a minimum length of minLength or bigger and shifts the
   //       current string in buffer by skippingNInitialChars forward
   //Pre  - After growth, must have at least enough room for contents + terminator so

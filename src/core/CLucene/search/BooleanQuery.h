@@ -32,13 +32,12 @@ CL_NS_DEF(search)
 	private:
 		ClausesType* clauses;
 		static size_t maxClauseCount;
-
 		static bool useScorer14;
 	
 		LUCENE_STATIC_CONSTANT(bool, allowDocsOutOfOrder=false);
 		
 		bool disableCoord;
-    	protected:
+    protected:
 		int32_t minNrShouldMatch;
 		Weight* _createWeight(Searcher* searcher);
 		BooleanQuery(const BooleanQuery& clone);

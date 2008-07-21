@@ -52,7 +52,6 @@ QueryParserBase::~QueryParserBase(){
 
 void QueryParserBase::discardEscapeChar(TCHAR* source) const{
 	int len = _tcslen(source);
-	int j = 0;
 	for (int i = 0; i < len; i++) {
 		if (source[i] == '\\' && source[i+1] != '\0' ) {
 			_tcscpy(source+i,source+i+1);

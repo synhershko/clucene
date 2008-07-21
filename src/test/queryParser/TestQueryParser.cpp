@@ -107,9 +107,9 @@ void testSimple(CuTest *tc) {
 	KeywordAnalyzer b;
 	assertQueryEquals(tc,_T("term term term"), NULL, _T("term term term"));
 	
+#ifdef _UCS2
 	TCHAR tmp1[100];
 
-#ifdef _UCS2
 	lucene_utf8towcs(tmp1,"t\xc3\xbcrm term term",100);
 	assertQueryEquals(tc,tmp1, NULL, tmp1);	
 	assertQueryEquals(tc,tmp1, &a, tmp1);	

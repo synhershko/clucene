@@ -114,6 +114,7 @@ void lucene_vfnwprintf(StringBuffer* buffer, size_t count, const wchar_t * forma
 	}
 }
 
+#ifdef _UCS2
 //print a list of arguments to a string
 int lucene_snwprintf(wchar_t* strbuf, size_t count, const wchar_t * format, ...){
 	va_list ap;
@@ -143,3 +144,4 @@ int lucene_vsnwprintf(wchar_t * strbuf, size_t count, const wchar_t * format, va
 	wcsncpy(strbuf,buffer.getBuffer(),ret);
     return ret;
 }
+#endif

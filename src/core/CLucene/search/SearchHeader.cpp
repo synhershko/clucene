@@ -129,8 +129,8 @@ TopFieldDocs::~TopFieldDocs(){
 
 TopDocs::TopDocs(const int32_t th, ScoreDoc*sds, int32_t scoreDocsLen):
     totalHits(th),
-	scoreDocsLength(scoreDocsLen),
-	scoreDocs(sds)
+	scoreDocs(sds),
+	scoreDocsLength(scoreDocsLen)
 {
 //Func - Constructor
 //Pre  - sds may or may not be NULL

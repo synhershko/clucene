@@ -144,7 +144,6 @@ CL_NS_DEF(store)
    
    TCHAR* FSLock::toString()
    {
-        const wchar_t* xx= L"SimpleFSLock@";
 	   TCHAR* ret = _CL_NEWARRAY(TCHAR,strlen(lockFile)+14); // 14 = strlen("SimpleFSLock@")
 	   _tcscpy(ret,_T("SimpleFSLock@"));
 	   STRCPY_AtoT(ret+13,lockFile,strlen(lockFile)+1);

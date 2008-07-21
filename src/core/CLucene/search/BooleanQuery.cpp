@@ -79,8 +79,8 @@ CL_NS_DEF(search)
 		
 	BooleanQuery::BooleanQuery(const BooleanQuery& clone):
 		Query(clone),
-		disableCoord(clone.disableCoord),
-		clauses(_CLNEW ClausesType(true))
+		clauses(_CLNEW ClausesType(true)),
+		disableCoord(clone.disableCoord)
 	{
 		minNrShouldMatch = clone.minNrShouldMatch;
 		for ( uint32_t i=0;i<clone.clauses->size();i++ ){
@@ -477,10 +477,10 @@ CL_NS_DEF(search)
 	
 	BooleanClause::BooleanClause(Query* q, const bool DeleteQuery,const bool req, const bool p):
 	    query(q),
-		required(req),
-		prohibited(p),
 		occur(SHOULD),
-		deleteQuery(DeleteQuery)
+		deleteQuery(DeleteQuery),
+		required(req),
+		prohibited(p)
 	{
 		if (required) {
 			if (prohibited) {
@@ -500,10 +500,10 @@ CL_NS_DEF(search)
 
 	BooleanClause::BooleanClause(const BooleanClause& clone):
 		query(clone.query->clone()),
-		required(clone.required),
-		prohibited(clone.prohibited),
 		occur(clone.occur),
-		deleteQuery(true)
+		deleteQuery(true),
+		required(clone.required),
+		prohibited(clone.prohibited)
 	{
 	}
 
@@ -540,13 +540,13 @@ CL_NS_DEF(search)
 		return query->hashCode() ^ ( (occur == MUST) ?1:0) ^ ( (occur == MUST_NOT)?2:0);
 	}
 
-	BooleanClause::Occur BooleanClause::getOccur() const { return occur; };
+	BooleanClause::Occur BooleanClause::getOccur() const { return occur; }
 	void BooleanClause::setOccur(Occur o) {
 		occur = o;
 		setFields(o);
-	};
+	}
 
-	Query* BooleanClause::getQuery() const { return query; };
+	Query* BooleanClause::getQuery() const { return query; }
 	void BooleanClause::setQuery(Query* q) {
 		if ( deleteQuery )
 			_CLDELETE( query );

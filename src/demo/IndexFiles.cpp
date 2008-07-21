@@ -17,10 +17,6 @@
 #include <cctype>
 #include <string>
 
-#ifndef _CL_HAVE__SNPRINTF
- #define _snprintf snprintf
-#endif
-
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -41,7 +37,7 @@ Document* FileDocument(const char* f){
 	// Add the last modified date of the file a field named "modified".  Use a
 	// Keyword field, so that it's searchable, but so that no attempt is made
 	// to tokenize the field into words.
-	//doc->add( *Field.Keyword("modified", DateField.timeToString(f->lastModified())));
+	//doc->add( *Field.Keyword("modified", DateTools::timeToString(f->lastModified())));
 
 	// Add the contents of the file a field named "contents".  Use a Text
 	// field, specifying a Reader, so that the text of the file is tokenized.

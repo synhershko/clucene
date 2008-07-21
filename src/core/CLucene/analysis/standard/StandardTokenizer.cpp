@@ -93,11 +93,11 @@ CL_NS_DEF2(analysis,standard)
 
 
   StandardTokenizer::StandardTokenizer(Reader* reader):
-    rd(_CLNEW FastCharStream(reader)),
     /* rdPos is zero-based.  It starts at -1, and will advance to the first
     ** position when readChar() is first called. */
     rdPos(-1),
-    tokenStart(-1)
+    tokenStart(-1),
+    rd(_CLNEW FastCharStream(reader))
   {
   }
 

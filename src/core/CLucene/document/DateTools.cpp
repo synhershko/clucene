@@ -28,6 +28,7 @@
 
 #include "DateTools.h"
 #include "CLucene/util/Misc.h"
+
 CL_NS_USE(util)
 CL_NS_DEF(document)
 
@@ -180,6 +181,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 	return ret;
 } 
 
-DateTools::~DateTools() {};
+DateTools::~DateTools(){
+}
 
 CL_NS_END

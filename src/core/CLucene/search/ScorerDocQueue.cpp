@@ -33,7 +33,7 @@ void ScorerDocQueue::HeapedScorerDoc::adjust()
 	this->_doc = _scorer->doc();
 }
 
-ScorerDocQueue::ScorerDocQueue( int32_t maxSize ) : _size(0), maxSize(maxSize)
+ScorerDocQueue::ScorerDocQueue( int32_t maxSize ) : maxSize(maxSize), _size(0)
 {
 	int heapSize = maxSize + 1;
 	heap = _CL_NEWARRAY( HeapedScorerDoc*, heapSize );

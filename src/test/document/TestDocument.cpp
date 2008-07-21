@@ -26,7 +26,7 @@
 	  
 	  TCHAR buf[30];
 	  const TCHAR* xpt = _T("19700112102054321");
-	  int64_t vv = _ILONGLONG(987654321);
+	  int64_t vv = (int64_t)987654321;
 	  CL_NS(document)::DateTools::timeToString( vv , CL_NS(document)::DateTools::MILLISECOND_FORMAT, buf, 30);
 
 	  if ( _tcscmp(buf,xpt) != 0 ) {

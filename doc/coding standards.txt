@@ -46,3 +46,14 @@ Cross platform specifics:
   int32_t value=-1 (-1 should be some logical value, not necessarily -1).
   then in the implementation, check if -1 and default to the x static constant.
 * Try and use the functions in util/Array.h instead of Void Map/List functions. Void Map/List will be deprecated for public access
+* Most compilers don't complain about this (in normal mode), but we require pedantic mode behaviour. Some important things for this are:
+  1. Initialise variables in correct order as in the class
+     class x{
+        int a;
+        int b;
+        x():
+            b(12),
+            a(11)   //THIS IS WRONG! a is initialised after b.
+        {
+        }
+     };

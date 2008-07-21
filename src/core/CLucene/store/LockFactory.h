@@ -19,15 +19,15 @@ class LocksType;
 class CLUCENE_EXPORT LockFactory: LUCENE_BASE {
 protected:
 	
-	TCHAR* lockPrefix;
+	char* lockPrefix;
 	
 public:
 	
 	LockFactory();
 	virtual ~LockFactory();
 	
-	void setLockPrefix( TCHAR* lockPrefix );
-	TCHAR* getLockPrefix();
+	void setLockPrefix( char* lockPrefix );
+	char* getLockPrefix();
 	
 	virtual LuceneLock* makeLock( const char* lockName )=0;
 	virtual void clearLock( const char* lockName )=0;

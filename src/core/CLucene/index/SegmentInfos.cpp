@@ -22,13 +22,26 @@ CL_NS_DEF(index)
 
 
    SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir):
-   docCount(DocCount),dir(Dir),delGen(0),normGen(NULL),isCompoundFile(0),hasSingleNorm(false),preLockless(true){
+       dir(Dir),
+       docCount(DocCount),
+       preLockless(true),
+       normGen(NULL),
+       delGen(0),
+       hasSingleNorm(false),
+       isCompoundFile(0)
+   {
 		name = STRDUP_AtoA(Name);
-	   
    }
 
    SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen, int64_t* NormGen, const uint8_t IsCompoundFile, const bool HasSingleNorm, const bool PreLockless ):
-	docCount(DocCount),dir(Dir),delGen(DelGen),normGen(NormGen),isCompoundFile(IsCompoundFile),hasSingleNorm(HasSingleNorm),preLockless(PreLockless){
+    	dir(Dir),
+    	docCount(DocCount),
+    	preLockless(PreLockless),
+    	normGen(NormGen),
+    	delGen(DelGen),
+    	hasSingleNorm(HasSingleNorm),
+    	isCompoundFile(IsCompoundFile)
+	{
 	//Func - Constructor. Initialises SegmentInfo.
 	//Pre  - Name holds the unique name in the directory Dir
 	//       DocCount holds the number of documents in the segment

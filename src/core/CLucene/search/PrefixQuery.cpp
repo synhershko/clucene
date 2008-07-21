@@ -275,6 +275,6 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
 	return bts;
 }
 
-CL_NS(index)::Term* PrefixFilter::getPrefix() const { return prefix; };
+CL_NS(index)::Term* PrefixFilter::getPrefix() const { return prefix; }
 
 CL_NS_END

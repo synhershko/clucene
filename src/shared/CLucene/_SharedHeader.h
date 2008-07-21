@@ -45,6 +45,10 @@ extern const char* _LUCENE_BLANK_ASTRING;
 
 #define _LUCENE_SLEEP(ms) CL_NS(util)::Misc::sleep(ms)
 
+//if a wide character is being converted to a ascii character and it
+//cannot fit, this character is used instead.
+#define LUCENE_OOR_CHAR(c) ((char)(((unsigned short)c)&0xFF))
+
 
 #include "CLucene/config/repl_tchar.h"  //replacements for functions
 #include "CLucene/config/repl_wctype.h" //replacements for functions

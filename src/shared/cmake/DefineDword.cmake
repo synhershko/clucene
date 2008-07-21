@@ -9,7 +9,7 @@ MACRO ( DEFINE_DWORD )
     CHECK_TYPE_SIZE ( DWORD _CL_HAVE_TYPE_DWORD )
 
     IF ( _CL_HAVE_TYPE_DWORD )
-        CHOOSE_TYPE(_cl_dword ${_CL_HAVE_TYPE_DWORD} unsigned "int;long;short" )
+        CHOOSE_TYPE(_cl_dword_t ${_CL_HAVE_TYPE_DWORD} unsigned "long;long long;__int64;short;int" )
     ENDIF ( _CL_HAVE_TYPE_DWORD )
     
     SET ( CMAKE_EXTRA_INCLUDE_FILES )

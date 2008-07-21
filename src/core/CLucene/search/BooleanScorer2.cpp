@@ -383,8 +383,8 @@ bool BooleanScorer2::ReqExclScorer::toNonExcluded()
 BooleanScorer2::BSConjunctionScorer::BSConjunctionScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, int32_t requiredNrMatchers ):
 	ConjunctionScorer( Similarity::getDefault() ),
 	coordinator(coordinator),
-	requiredNrMatchers(requiredNrMatchers),
-	lastScoredDoc(-1)
+	lastScoredDoc(-1),
+	requiredNrMatchers(requiredNrMatchers)
 {
 }
 BooleanScorer2::BSConjunctionScorer::~BSConjunctionScorer(){
@@ -418,13 +418,13 @@ float_t BooleanScorer2::BSDisjunctionSumScorer::score() {
 }
 
 BooleanScorer2::Internal::Internal( BooleanScorer2* parent, int32_t minNrShouldMatch, bool allowDocsOutOfOrder ):
-	minNrShouldMatch(minNrShouldMatch),
-	allowDocsOutOfOrder(allowDocsOutOfOrder),
-	countingSumScorer(NULL),
 	requiredScorers(false),
 	optionalScorers(false),
-	prohibitedScorers(false)
-	{
+	prohibitedScorers(false),
+    countingSumScorer(NULL),
+	minNrShouldMatch(minNrShouldMatch),
+	allowDocsOutOfOrder(allowDocsOutOfOrder)
+{
 	if ( minNrShouldMatch < 0 ) {
 		// todO: throw some sort of exception
 	}

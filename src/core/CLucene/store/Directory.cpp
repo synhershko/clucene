@@ -8,11 +8,12 @@
 
 #include "Directory.h"
 #include "LockFactory.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_DEF(store)
 
 Directory::~Directory(){ 
-};
+}
 
 LuceneLock* Directory::makeLock(const char* name) {
 	return lockFactory->makeLock( name );
@@ -20,7 +21,12 @@ LuceneLock* Directory::makeLock(const char* name) {
 
 void Directory::setLockFactory( LockFactory* lockFactory ) {
 	this->lockFactory = lockFactory;
-	lockFactory->setLockPrefix( getLockID() );
+	
+	TCHAR* lockId = getLockID();
+	char* alockId = STRDUP_TtoA(lockId);
+	lockFactory->setLockPrefix( alockId );
+	_CLDELETE_CARRAY(lockId);
+	_CLDELETE_CaARRAY(alockId);
 }
 
 LockFactory* Directory::getLockFactory() {

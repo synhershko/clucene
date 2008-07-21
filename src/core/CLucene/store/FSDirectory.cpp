@@ -29,6 +29,9 @@
 #include "CLucene/util/_MD5Digester.h"
 #include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
+#ifdef LUCENE_FS_MMAP
+    #include "_MMap.h"
+#endif
 
 CL_NS_DEF(store)
 CL_NS_USE(util)
@@ -301,10 +304,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   FSDirectory::FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory):
    Directory(),
-   refCount(0),
-   useMMap(false),
    directory(_CL_NEWARRAY(char,CL_MAX_PATH)),
-   lockDir(_CL_NEWARRAY(char,CL_MAX_PATH))
+   lockDir(_CL_NEWARRAY(char,CL_MAX_PATH)),
+   refCount(0),
+   useMMap(false)
   {
   	_realpath(path,directory);//set a realpath so that if we change directory, we can still function
   	if ( !directory || !*directory ){

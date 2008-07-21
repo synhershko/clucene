@@ -110,7 +110,7 @@ bool	Field::isStorePositionWithTermVector() const{ return (internal->config & TE
 bool Field::getOmitNorms() const { return (internal->config & INDEX_NONORMS) != 0; }
 void Field::setOmitNorms(const bool omitNorms) { internal->config |= INDEX_NONORMS; }
     
-bool Field::isLazy() const { return (internal->config & LAZY_YES) != 0; };
+bool Field::isLazy() const { return (internal->config & LAZY_YES) != 0; }
 
 void Field::setValue(const TCHAR* value) {
 	_resetValue();

@@ -47,7 +47,7 @@ CHECK_OPTIONAL_HEADERS ( string.h sys/time.h memory.h sys/types.h
                         stdint.h unistd.h io.h direct.h sys/dir.h sys/ndir.h dirent.h 
                         stat.h sys/stat.h stdexcept errno.h fcntl.h windef.h windows.h wchar.h 
                         wctype.h fcntl.h hash_map hash_set ext/hash_map ext/hash_set 
-                        sys/timeb.h tchar.h strings.h stdexcept sys/mman.h )
+                        sys/timeb.h tchar.h strings.h stdexcept sys/mman.h winerror.h )
 
 
 ########################################################################
@@ -80,7 +80,7 @@ CHECK_REQUIRED_FUNCTIONS(  printf strftime wcscpy wcsncpy wcscat wcschr wcsstr w
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
 CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf 
-    "CreateFileMappingA(0,0,0,0,0,0)" 
+    "MapViewOfFile(0,0,0,0,0)" 
     mmap
 )
 

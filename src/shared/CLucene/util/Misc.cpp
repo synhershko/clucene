@@ -31,7 +31,7 @@
 
 #ifdef _CL_HAVE_FUNCTION_SLEEP
 	//don't ignore windows.h... breaks mingw32 in some cases. Define Sleep instead
-	extern void Sleep(_cl_dword);
+	extern "C" __declspec(dllimport) void __stdcall Sleep(_cl_dword_t);
 #endif
 
 CL_NS_DEF(util)

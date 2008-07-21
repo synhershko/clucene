@@ -47,10 +47,6 @@
 //define this to force the build into ucs2 mode
 //#define _UCS2
 //
-//if a wide character is being converted to a ascii character and it
-//cannot fit, this character is used instead. Required.
-#define LUCENE_OOR_CHAR(c) ((char)(((unsigned short)c)&0xFF))
-//
 //define this to enable mmap support in the fsdirectory IndexInput
 //todo: only available for windows so far...need to add MMapInput.cpp to project
 //EXPERIMENTAL

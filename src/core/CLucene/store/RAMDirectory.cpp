@@ -121,12 +121,24 @@ CL_NS_DEF(store)
      	file = NULL;
   }
   RAMIndexOutput::RAMIndexOutput(RAMFile* f):
-	file(f),currentBuffer(NULL),currentBufferIndex(-1),bufferPosition(0),bufferStart(0),bufferLength(0),deleteFile(false)
+	file(f),
+	deleteFile(false),
+	currentBuffer(NULL),
+	currentBufferIndex(-1),
+	bufferPosition(0),
+	bufferStart(0),
+	bufferLength(0)
   {
   }
   
   RAMIndexOutput::RAMIndexOutput():
-    file(_CLNEW RAMFile),currentBuffer(NULL),currentBufferIndex(-1),bufferPosition(0),bufferStart(0),bufferLength(0),deleteFile(true)
+    file(_CLNEW RAMFile),
+    deleteFile(true),
+    currentBuffer(NULL),
+    currentBufferIndex(-1),
+    bufferPosition(0),
+    bufferStart(0),
+    bufferLength(0)
   {
   }
 
@@ -147,8 +159,8 @@ CL_NS_DEF(store)
   }
 
   void RAMIndexOutput::reset(){
-	seek(_ILONGLONG(0));
-    file->setLength(_ILONGLONG(0));
+	seek((int64_t)0);
+    file->setLength((int64_t)0);
   }
 
   void RAMIndexOutput::close() {
@@ -234,7 +246,13 @@ CL_NS_DEF(store)
   
   
   RAMIndexInput::RAMIndexInput(RAMFile* f):
-  	file(f), currentBufferIndex(-1), currentBuffer(NULL), bufferPosition(0), bufferStart(0), bufferLength(0) {
+  	file(f), 
+  	currentBuffer(NULL), 
+  	currentBufferIndex(-1), 
+  	bufferPosition(0), 
+  	bufferStart(0), 
+  	bufferLength(0) 
+  {
     _length = f->getLength();
     
     if ( _length/BUFFER_SIZE >= 0x7FFFFFFFL ) {

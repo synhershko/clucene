@@ -28,10 +28,10 @@ CL_NS_DEF(search)
     nextMask(1),
 	end(0),
 	current(NULL),
+	minNrShouldMatch(minNrShouldMatch),
     requiredMask(0),
     prohibitedMask(0),
-	coordFactors(NULL),
-	minNrShouldMatch(minNrShouldMatch)
+	coordFactors(NULL)
   {
     bucketTable = _CLNEW BucketTable(this);
   }

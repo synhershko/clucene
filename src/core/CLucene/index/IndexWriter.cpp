@@ -66,10 +66,10 @@ public:
 
 
   IndexWriter::IndexWriter(const char* path, Analyzer* a, const bool create, const bool _closeDir):
-		directory( FSDirectory::getDirectory(path, create) ),
 		analyzer(a),
-		segmentInfos (_CLNEW SegmentInfos),
-		closeDir(_closeDir){
+		closeDir(_closeDir),
+		directory( FSDirectory::getDirectory(path, create) ),
+		segmentInfos (_CLNEW SegmentInfos){
   //Func - Constructor
   //       Constructs an IndexWriter for the index in path.
   //Pre  - path != NULL and contains a named directory path
@@ -85,10 +85,10 @@ public:
   }
 
   IndexWriter::IndexWriter(Directory* d, Analyzer* a, const bool create, const bool _closeDir):
-	  directory(_CL_POINTER(d)),
 	  analyzer(a),
-	  segmentInfos (_CLNEW SegmentInfos),
-      closeDir(_closeDir)
+      closeDir(_closeDir),
+	  directory(_CL_POINTER(d)),
+	  segmentInfos (_CLNEW SegmentInfos)
   {
   //Func - Constructor
   //       Constructs an IndexWriter for the index in path.
@@ -578,7 +578,7 @@ public:
 	  // start with zero or 1 seg so optimize the current	  
 	  optimize();
 	  
-	  int32_t start = segmentInfos->size();
+	  //int32_t start = segmentInfos->size();
 
 	  //Iterate through the directories
       int32_t i = 0;

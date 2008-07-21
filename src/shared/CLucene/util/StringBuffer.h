@@ -13,13 +13,13 @@ CL_NS_DEF(util)
    ///Constructor. Allocates a buffer with the default length.
    StringBuffer();
    ///Constructor. Allocates a buffer of length initSize + 1
-   StringBuffer(const int32_t initSize);
+   StringBuffer(const size_t initSize);
    ///Constructor. Creates an instance of Stringbuffer containing a copy of 
    ///the string value
    StringBuffer(const TCHAR* value);
    ///Constructs a StringBuffer using another buffer. The StringBuffer can
    ///the be used to easily manipulate the buffer.
-   StringBuffer(TCHAR* buf,int32_t maxlen, const bool consumeBuffer);
+   StringBuffer(TCHAR* buf,size_t maxlen, const bool consumeBuffer);
    ///Destructor
    ~StringBuffer();
    ///Clears the Stringbuffer and resets it to it default empty state
@@ -32,9 +32,9 @@ CL_NS_DEF(util)
    ///Appends a copy of the string value
    void append(const TCHAR* value, size_t appendedLength);
    ///Appends an integer (after conversion to a character string)
-   void appendInt(const int32_t value);
+   void appendInt(const size_t value);
    ///Appends a float_t (after conversion to a character string)
-   void appendFloat(const float_t value, const int32_t digits);
+   void appendFloat(const float_t value, const size_t digits);
    ///Puts a copy of the string value in front of the current string in the StringBuffer
    void prepend(const TCHAR* value);
    ///Puts a copy of the string value in front of the current string in the StringBuffer
@@ -42,9 +42,9 @@ CL_NS_DEF(util)
    
    ///Contains the length of string in the StringBuffer
    ///Public so that analyzers can edit the length directly
-   int32_t len;
+   size_t len;
    ///Returns the length of the string in the StringBuffer
-   int32_t length() const;
+   size_t length() const;
    ///Returns a copy of the current string in the StringBuffer
    TCHAR* toString(); 
    ///Returns a null terminated reference to the StringBuffer's text
@@ -53,7 +53,7 @@ CL_NS_DEF(util)
 
    ///reserve a minimum amount of data for the buffer. 
    ///no change made if the buffer is already longer than length
-   void reserve(const int32_t length);
+   void reserve(const size_t length);
   private:
    ///A buffer that contains strings
    TCHAR* buffer;
@@ -62,10 +62,10 @@ CL_NS_DEF(util)
    bool bufferOwner;
    
    ///Has the buffer grown to a minimum length of minLength or bigger
-   void growBuffer(const int32_t minLength);
+   void growBuffer(const size_t minLength);
    ///Has the buffer grown to a minimum length of minLength or bigger and shifts the
    ///current string in buffer by skippingNInitialChars forward
-   void growBuffer(const int32_t minLength, const int32_t skippingNInitialChars);
+   void growBuffer(const size_t minLength, const size_t skippingNInitialChars);
 
   };
 CL_NS_END

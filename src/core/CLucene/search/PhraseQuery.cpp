@@ -57,8 +57,8 @@ CL_NS_DEF(search)
 	};
 
   PhraseQuery::PhraseQuery():
-	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
-	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>)
+    positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>),
+	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) )
   {
   //Func - Constructor
   //Pre  - true
@@ -69,9 +69,9 @@ CL_NS_DEF(search)
 	  field = NULL;
   }
   PhraseQuery::PhraseQuery(const PhraseQuery& clone):
-	Query(clone), 
-	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
-	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>)
+	Query(clone),
+	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>),
+	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) )
   {
       slop  = clone.slop;
 	  field = clone.field;

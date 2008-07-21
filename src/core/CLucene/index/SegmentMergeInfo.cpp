@@ -12,7 +12,11 @@
 CL_NS_DEF(index)
 
 SegmentMergeInfo::SegmentMergeInfo(const int32_t b, TermEnum* te, IndexReader* r):
-    reader(r),termEnum(te),base(b), docMap(NULL) {
+    docMap(NULL),
+    termEnum(te),
+    base(b),
+    reader(r)
+{
 //Func - Constructor
 //Pre  - b >= 0
 //       te contains a valid reference to a SegmentTermEnum instance

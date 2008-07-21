@@ -146,6 +146,7 @@ SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
     SOVERSION ${CPACK_PACKAGE_SOVERSION}
     DEFINE_SYMBOL ""
     COMPILE_DEFINITIONS_DEBUG _DEBUG
+    OUTPUT_NAME "clucene-core"
 )
 
 #install public headers.

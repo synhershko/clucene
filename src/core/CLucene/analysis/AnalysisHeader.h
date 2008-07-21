@@ -40,18 +40,6 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
 
   <br><br>
 
-  <p><b>NOTE:</b> As of 2.3, Token stores the term text
-  internally as a malleable char[] termBuffer instead of
-  String termText.  The indexing code and core tokenizers
-  have been changed re-use a single Token instance, changing
-  its buffer and other fields in-place as the Token is
-  processed.  This provides substantially better indexing
-  performance as it saves the GC cost of new'ing a Token and
-  String for every term.  The APIs that accept String
-  termText are still available but a warning about the
-  associated performance cost has been added (below).  The
-  {@link #termText()} method has been deprecated.</p>
-  
   <p>Tokenizers and filters should try to re-use a Token
   instance when possible for best performance, by
   implementing the {@link TokenStream#next(Token)} API.
@@ -119,10 +107,11 @@ public:
 	*/
 	void setPositionIncrement(int32_t posIncr);
 	int32_t getPositionIncrement() const;
-	_CL_DEPRECATED( termBuffer ) const TCHAR* termText() const;
-	size_t termTextLength();
-	void resetTermTextLen();
-	void setText(const TCHAR* txt);
+
+	const TCHAR* termText() const; //< See #termBuffer()
+	size_t termTextLength(); //< Length of the the termBuffer. See #termBuffer
+	void resetTermTextLen(); //< Empties the termBuffer. See #termBuffer
+	void setText(const TCHAR* txt); //< Sets the termBuffer. See #termBuffer
 
 	/** Returns the internal termBuffer character array which
 	*  you can then directly alter.  If the array is too

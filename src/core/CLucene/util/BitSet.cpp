@@ -31,7 +31,8 @@ BitSet::BitSet ( int32_t size ):
 	memset(bits,0,len);
 }
 
-BitSet::BitSet(CL_NS(store)::Directory* d, const char* name) {
+BitSet::BitSet(CL_NS(store)::Directory* d, const char* name)
+{
 	_count=-1;
 	CL_NS(store)::IndexInput* input = d->openInput( name );
 	try {

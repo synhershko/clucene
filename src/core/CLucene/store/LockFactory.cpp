@@ -25,16 +25,17 @@ LockFactory::LockFactory()
 
 LockFactory::~LockFactory()
 {
-	_CLDELETE_CARRAY( lockPrefix );
+	_CLDELETE_CaARRAY( lockPrefix );
 }
 
-void LockFactory::setLockPrefix( TCHAR* lockPrefix )
+void LockFactory::setLockPrefix( char* lockPrefix )
 {
-        _CLDELETE_CARRAY( lockPrefix );
-	this->lockPrefix = lockPrefix;
+    _CLDELETE_CaARRAY( this->lockPrefix );
+	if ( lockPrefix != NULL )
+		this->lockPrefix = STRDUP_AtoA(lockPrefix);
 }
 
-TCHAR* LockFactory::getLockPrefix()
+char* LockFactory::getLockPrefix()
 {
 	return lockPrefix;	
 }
@@ -112,10 +113,7 @@ LuceneLock* FSLockFactory::makeLock( const char* lockName )
 	char name[CL_MAX_DIR];
 	
 	if ( lockPrefix != NULL ) {
-		cl_sprintf(name, CL_MAX_DIR, "%S-%s", lockPrefix, lockName);
-		//STRCPY_TtoA(name,lockPrefix,_tcslen(lockPrefix)+1);
-		//strcat(name,"-");
-		//strcat(name,lockName);
+		cl_sprintf(name, CL_MAX_DIR, "%s-%s", lockPrefix, lockName);
 	} else {
 		cl_strcpy(name,lockName,CL_MAX_DIR);
 	}
@@ -131,7 +129,7 @@ void FSLockFactory::clearLock( const char* lockName )
 		struct fileStat buf;
 		
 		if ( lockPrefix != NULL ) {
-			STRCPY_TtoA(name,lockPrefix,_tcslen(lockPrefix)+1);
+			STRCPY_AtoA(name,lockPrefix,strlen(lockPrefix)+1);
 			strcat(name,"-");
 			strcat(name,lockName);
 		} else {

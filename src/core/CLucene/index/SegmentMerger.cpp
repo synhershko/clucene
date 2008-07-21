@@ -264,7 +264,7 @@ int32_t SegmentMerger::mergeFields() {
             CND_CONDITION(reader != NULL, "No IndexReader found");
 
 			//Get the total number documents including the documents that have been marked deleted
-            int32_t maxDoc = reader->maxDoc();
+            maxDoc = reader->maxDoc();
 			
 			//document buffer
 			Document doc;

@@ -167,9 +167,9 @@ StopFilter::~StopFilter(){
 StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* stopTable, bool _deleteStopTable):
 	TokenFilter(in, deleteTokenStream),
 	stopWords (stopTable),
+	deleteStopTable(_deleteStopTable),
 	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
-	ignoreCase(false),
-	deleteStopTable(_deleteStopTable)
+	ignoreCase(false)
 {
 }
 //static

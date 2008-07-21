@@ -72,10 +72,6 @@ ${FUNCTION__UNLINK}
 ${FUNCTION__FTIME}
 ${FUNCTION_SLEEPFUNCTION}
 
-//todo: this is not checked, i think
-#define _LUCENE_PRAGMA_WARNINGS
-
-
 /* CMake will determine these specifics. Things like bugs, etc */
 
 /* Does not support new float byte<->float conversions */
