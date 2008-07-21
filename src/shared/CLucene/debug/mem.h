@@ -29,10 +29,10 @@
 
 #if (_MSC_VER < 1300)
 //6.0
-	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete[] __CONST_CAST(TCHAR*,x); x=NULL;}
-	#define _CLDELETE_CaARRAY(x) if (x!=NULL){delete[] __CONST_CAST(char*,x); x=NULL;}
-	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete[] __CONST_CAST(TCHAR*,x);}
-	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){delete[] __CONST_CAST(char*,x);}
+	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(TCHAR*,x); x=NULL;}
+	#define _CLDELETE_CaARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(char*,x); x=NULL;}
+	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(TCHAR*,x);}
+	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(char*,x);}
 #endif
 
 //Macro for creating new arrays

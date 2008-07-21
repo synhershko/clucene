@@ -138,8 +138,8 @@
 ////////////////////////////////////////////////////////
 
 
-#define __CONST_CAST(typ,var) const_cast<typ>(var)
-#define __REINTERPRET_CAST(typ,var) reinterpret_cast<typ>(var)
+#define _CL_CONST_CAST(typ,var) const_cast<typ>(var)
+#define _CL_REINTERPRET_CAST(typ,var) reinterpret_cast<typ>(var)
 
 //todo: put this logic in cmake
 #if _MSC_FULL_VER >= 140050320

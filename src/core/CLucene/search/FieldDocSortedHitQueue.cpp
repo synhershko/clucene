@@ -55,21 +55,21 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 		if (fields[i]->getReverse()) {
 			switch (type) {
 				case SortField::DOCSCORE:
-					r1 = __REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
-					r2 = __REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
+					r1 = _CL_REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
+					r2 = _CL_REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
 					if (r1 < r2) c = -1;
 					if (r1 > r2) c = 1;
 					break;
 				case SortField::DOC:
 				case SortField::INT:
-					i1 = __REINTERPRET_CAST(Compare::Int32*, docA->fields[i])->getValue();
-					i2 = __REINTERPRET_CAST(Compare::Int32*, docB->fields[i])->getValue();
+					i1 = _CL_REINTERPRET_CAST(Compare::Int32*, docA->fields[i])->getValue();
+					i2 = _CL_REINTERPRET_CAST(Compare::Int32*, docB->fields[i])->getValue();
 					if (i1 > i2) c = -1;
 					if (i1 < i2) c = 1;
 					break;
 				case SortField::STRING:
-					s1 = __REINTERPRET_CAST(Compare::TChar*, docA->fields[i])->getValue();
-					s2 = __REINTERPRET_CAST(Compare::TChar*, docB->fields[i])->getValue();
+					s1 = _CL_REINTERPRET_CAST(Compare::TChar*, docA->fields[i])->getValue();
+					s2 = _CL_REINTERPRET_CAST(Compare::TChar*, docB->fields[i])->getValue();
 					if (s2 == NULL) c = -1;      // could be NULL if there are
 					else if (s1 == NULL) c = 1;  // no terms in the given field
 					else c = _tcscmp(s2,s1); //else if (fields[i].getLocale() == NULL) {
@@ -80,8 +80,8 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 					}*/
 					break;
 				case SortField::FLOAT:
-					f1 = __REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
-					f2 = __REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
+					f1 = _CL_REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
+					f2 = _CL_REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
 					if (f1 > f2) c = -1;
 					if (f1 < f2) c = 1;
 					break;
@@ -100,21 +100,21 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 		} else {
 			switch (type) {
 				case SortField::DOCSCORE:
-					r1 = __REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
-					r2 = __REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
+					r1 = _CL_REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
+					r2 = _CL_REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
 					if (r1 > r2) c = -1;
 					if (r1 < r2) c = 1;
 					break;
 				case SortField::DOC:
 				case SortField::INT:
-					i1 = __REINTERPRET_CAST(Compare::Int32*, docA->fields[i])->getValue();
-					i2 = __REINTERPRET_CAST(Compare::Int32*, docB->fields[i])->getValue();
+					i1 = _CL_REINTERPRET_CAST(Compare::Int32*, docA->fields[i])->getValue();
+					i2 = _CL_REINTERPRET_CAST(Compare::Int32*, docB->fields[i])->getValue();
 					if (i1 < i2) c = -1;
 					if (i1 > i2) c = 1;
 					break;
 				case SortField::STRING:
-					s1 = __REINTERPRET_CAST(Compare::TChar*, docA->fields[i])->getValue();
-					s2 = __REINTERPRET_CAST(Compare::TChar*, docB->fields[i])->getValue();
+					s1 = _CL_REINTERPRET_CAST(Compare::TChar*, docA->fields[i])->getValue();
+					s2 = _CL_REINTERPRET_CAST(Compare::TChar*, docB->fields[i])->getValue();
 					// NULL values need to be sorted first, because of how FieldCache.getStringIndex()
 					// works - in that routine, any documents without a value in the given field are
 					// put first.
@@ -127,8 +127,8 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 					}*/
 					break;
 				case SortField::FLOAT:
-					f1 = __REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
-					f2 = __REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
+					f1 = _CL_REINTERPRET_CAST(Compare::Float*, docA->fields[i])->getValue();
+					f2 = _CL_REINTERPRET_CAST(Compare::Float*, docB->fields[i])->getValue();
 					if (f1 < f2) c = -1;
 					if (f1 > f2) c = 1;
 					break;

@@ -165,8 +165,8 @@ CL_NS_DEF(util)
 	 int64_t v = (int64_t)value; //the integer value of the float
 	 _i64tot(v,buf,10); //add the whole number
 
-	 size_t len = 99-_tcslen(buf); //how many digits we have to work with?
-	 size_t dig = len< (size_t)digits ? len : digits;
+	 size_t l = 99-_tcslen(buf); //how many digits we have to work with?
+	 size_t dig = l< (size_t)digits ? l : digits;
 	 if ( dig > 0 ){
 		_tcscat(buf,_T(".")); //add a decimal point
 

@@ -25,6 +25,9 @@
 #ifdef _CL_HAVE_STRINGS_H
 	#include <strings.h>
 #endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
 
 #include <cctype>
 #include <limits.h>
