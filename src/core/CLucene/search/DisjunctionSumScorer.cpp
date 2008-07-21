@@ -112,7 +112,7 @@ void DisjunctionSumScorer::explain( int32_t doc, Explanation* ret )
 	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: DisjunctionSumScorer::explain");								
 }
 
-bool DisjunctionSumScorer::score( HitCollector* hc, int32_t max )
+bool DisjunctionSumScorer::score( HitCollector* hc, const int32_t max )
 {
 	while ( currentDoc < max ) {
 		hc->collect( currentDoc, currentScore );

@@ -26,6 +26,8 @@
 #ifndef INPUTSTREAMBUFFER_H
 #define INPUTSTREAMBUFFER_H
 
+#include <stdlib.h>
+
 namespace jstreams {
 
 template <class T>

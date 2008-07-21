@@ -27,6 +27,11 @@
 #include "fileinputstream.h"
 #include <cerrno>
 #include <cstring>
+
+#ifdef _CL_HAVE_STRING_H
+    #include <string.h>
+#endif
+
 namespace jstreams {
 
 FileInputStream::FileInputStream(const char *filepath, int32_t buffersize) {

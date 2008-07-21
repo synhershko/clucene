@@ -19,6 +19,9 @@
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
 #endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
 
 const char* cl_tempDir;
 bool cl_quiet;
