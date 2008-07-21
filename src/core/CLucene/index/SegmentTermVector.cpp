@@ -167,7 +167,7 @@ TermPositionVector* SegmentTermPositionVector::__asTermPositionVector(){
 * @return An array of TermVectorOffsetInfo objects or the empty list
 * @see org.apache.lucene.analysis.Token
 */
-Array<TermVectorOffsetInfo>* SegmentTermPositionVector::getOffsets(int32_t index) {
+Array<TermVectorOffsetInfo>* SegmentTermPositionVector::getOffsets(const size_t index) {
 	if(offsets == NULL)
 		return NULL;
 	if (index >=0 && index < offsets->length)
@@ -181,7 +181,7 @@ Array<TermVectorOffsetInfo>* SegmentTermPositionVector::getOffsets(int32_t index
 * Terms are identified by the index at which its number appears in the
 * term String array obtained from the <code>indexOf</code> method.
 */
-Array<int32_t>* SegmentTermPositionVector::getTermPositions(int32_t index) {
+Array<int32_t>* SegmentTermPositionVector::getTermPositions(const size_t index) {
 	if(positions == NULL)
 		return NULL;
 

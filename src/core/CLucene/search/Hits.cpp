@@ -149,7 +149,7 @@ CL_NS_DEF(search)
 				// either we cannot count deletions, or some "previously valid hits" might have been deleted, so find exact start point
 				nDeletedHits = 0;
 				debugCheckedForDeletions = true;
-				int32_t i2 = 0;
+				size_t i2 = 0;
 				for (size_t i1=0; i1<hitDocs->size() && i2 < scoreDocsLength; i1++) {
 					int32_t id1 = ((*hitDocs)[i1])->id;
 					int32_t id2 = scoreDocs[i2].doc;

@@ -259,14 +259,14 @@ public:
 	* @return An array of TermVectorOffsetInfo objects or the empty list
 	* @see org.apache.lucene.analysis.Token
 	*/
-	CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(int32_t index);
+	CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(const size_t index);
 
 	/**
 	* Returns an array of positions in which the term is found.
 	* Terms are identified by the index at which its number appears in the
 	* term String array obtained from the <code>indexOf</code> method.
 	*/
-	CL_NS(util)::Array<int32_t>* getTermPositions(int32_t index);
+	CL_NS(util)::Array<int32_t>* getTermPositions(const size_t index);
 
 	const TCHAR* getField(){ return SegmentTermVector::getField(); }
 	TCHAR* toString() const{ return SegmentTermVector::toString(); }

@@ -112,7 +112,7 @@ public:
      *  term String array obtained from the <code>indexOf</code> method.
      *  May return null if positions have not been stored.
      */
-    virtual CL_NS(util)::Array<int32_t>* getTermPositions(int32_t index) = 0;
+    virtual CL_NS(util)::Array<int32_t>* getTermPositions(const size_t index) = 0;
   
     /**
      * Returns an array of TermVectorOffsetInfo in which the term is found.
@@ -123,7 +123,7 @@ public:
      * @param index The position in the array to get the offsets from
      * @return An array of TermVectorOffsetInfo objects or the empty list
      */ 
-     virtual CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(int32_t index) = 0;
+     virtual CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(const size_t index) = 0;
      
      virtual ~TermPositionVector(){
 	 }
