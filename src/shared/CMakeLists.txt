@@ -92,11 +92,11 @@ CHOOSE_FUNCTION(fileTell "telli64;_telli64;tell64;tell;_tell")
 CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat64;fstat;_fstat")
 
 #if fileHandleStat doesn't take a fileStat struct, we should change fileStat.
-IF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
+#IF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
     #Borland compiler doesn't have a fstati64, so fileStat must be non-i64 as well...
-    SET( FUNCTION_FILESTAT 0 )
-    CHOOSE_FUNCTION(fileStat "stat;_stat")
-ENDIF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
+#    SET( FUNCTION_FILESTAT 0 )
+#    CHOOSE_FUNCTION(fileStat "stat;_stat")
+#ENDIF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
 
 CHOOSE_FUNCTION(_realpath "realpath")
 CHOOSE_FUNCTION(_rename "rename")
