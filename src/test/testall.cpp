@@ -19,8 +19,8 @@
 #ifdef _CL_HAVE_DIRECT_H
 	#include <direct.h>
 #endif
-#ifdef _CL_HAVE_UNISTD_H
-	#include <unistd.h>
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
 #endif
 
 const char* cl_tempDir;
