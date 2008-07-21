@@ -16,7 +16,6 @@
 #ifndef FILEINPUTSTREAM_H
 #define FILEINPUTSTREAM_H
 
-#include <stdio.h>
 #include "bufferedstream.h"
 
 namespace jstreams {

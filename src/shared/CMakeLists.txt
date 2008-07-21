@@ -40,7 +40,7 @@ INCLUDE (CheckStdCallFunctionExists)
 
 CHECK_INCLUDE_FILES ("sys/time.h;time.h" _CL_TIME_WITH_SYS_TIME)
 
-CHECK_REQUIRED_HEADERS ( stdlib.h stdarg.h stddef.h ctype.h algorithm  
+CHECK_REQUIRED_HEADERS ( stdlib.h stdarg.h stdio.h stddef.h ctype.h algorithm  
 						 functional map vector list set math.h fcntl.h limits.h)
 						 
 CHECK_OPTIONAL_HEADERS ( string.h sys/time.h memory.h sys/types.h 
@@ -100,13 +100,13 @@ CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat64;fstat;_fstat")
 
 CHOOSE_FUNCTION(_realpath "realpath")
 CHOOSE_FUNCTION(_rename "rename")
-CHOOSE_FUNCTION(_close "_close;close")
-CHOOSE_FUNCTION(_read "_read;read")
-CHOOSE_FUNCTION(_open "_open;open")
-CHOOSE_FUNCTION(_write "_write;write")
-CHOOSE_FUNCTION(_unlink "_unlink;unlink")
+CHOOSE_FUNCTION(_close "_close(int);close")
+CHOOSE_FUNCTION(_read "_read(int, void*, unsigned int);read")
+CHOOSE_FUNCTION(_open "_open(const char*, int, ...);open")
+CHOOSE_FUNCTION(_write "_write(int, const void*, unsigned int);write")
+CHOOSE_FUNCTION(_unlink "_unlink(const char*);unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
-CHOOSE_FUNCTION(_mkdir _mkdir)
+CHOOSE_FUNCTION(_mkdir "_mkdir(const char*)")
 CHOOSE_FUNCTION(SLEEPFUNCTION "usleep;Sleep(0);_sleep")
 
 

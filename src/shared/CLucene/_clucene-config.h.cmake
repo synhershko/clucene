@@ -93,17 +93,11 @@ ${FUNCTION_SLEEPFUNCTION}
 
 /* Compiler oddities */
 
-//not sure why, but cygwin reports _mkdir, but doesn't actually work...
+//not sure why, but cygwin reports _S_IREAD, but doesn't actually work...
 //TODO: make this work properly (this bit shouldn't be necessary)
 #ifdef __CYGWIN__
-    #define _mkdir(x) mkdir(x,0777)
-    #define _open open
-    #define _read read
-    #define _write write
-    #define _close close
-    #define _unlink unlink
     #define _ftime ftime
-    
+
     #define _S_IREAD 0333
     #define _S_IWRITE 0333
 #endif

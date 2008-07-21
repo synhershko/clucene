@@ -7,9 +7,6 @@
 #include "CLucene/_ApiHeader.h"
 #include "Misc.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
 #elif defined(_CL_HAVE_TIME_H)

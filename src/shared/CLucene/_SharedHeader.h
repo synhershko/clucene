@@ -12,12 +12,15 @@
 #include "CLucene/_clucene-config.h"
 #include "CLucene/SharedHeader.h"
 
+//required globally (internally only)
+#include <stdio.h>
+#include <stdlib.h>
+
 //we always need this stuff....
 #include "CLucene/debug/_condition.h"
 #include "CLucene/LuceneThreads.h"
 #include "CLucene/config/repl_tchar.h"
 #include "CLucene/config/repl_wchar.h"
-
 
 #define cl_min(a,b) (a>b?b:a)
 #define cl_max(a,b) (a>b?a:b)

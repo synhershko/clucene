@@ -16,7 +16,6 @@
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 	#define CRTDBG_MAP_ALLOC
-	#include <stdlib.h>
 	#include <crtdbg.h>
 #endif
 

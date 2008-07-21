@@ -42,19 +42,8 @@ public:
 		/** Creates one of these objects 
             Consumes all memory given.
         */
-		StringIndex (int32_t* values, TCHAR** lookup, int count) {
-            this->count = count;
-			this->order = values;
-			this->lookup = lookup;
-		}
-
-        ~StringIndex(){
-            _CLDELETE_ARRAY(order);
-            
-            for ( int i=0;i<count;i++ )
-                _CLDELETE_CARRAY(lookup[i]);
-            _CLDELETE_ARRAY(lookup);
-        }
+		StringIndex (int32_t* values, TCHAR** lookup, int count);
+        ~StringIndex();
 	};
 
 

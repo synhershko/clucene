@@ -7,7 +7,13 @@
 #ifndef _lucene_repl_wchar_h
 #define _lucene_repl_wchar_h
 
-#include <cstdarg>
+#include <stdarg.h>
+#ifdef _CL_HAVE_STRING_H
+    #include <string.h>
+#endif
+#ifdef _CL_HAVE_WCHAR_H
+    #include <wchar.h>
+#endif
 
 
 int cl_tcscasefoldcmp(const TCHAR * dst, const TCHAR * src);

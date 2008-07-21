@@ -141,7 +141,7 @@ CL_NS_USE(util)
 		char* lpMsgBuf=0;
 		_cl_dword_t dw = GetLastError(); 
 
-		/*FormatMessageA(
+		FormatMessageA(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 			FORMAT_MESSAGE_FROM_SYSTEM,
 			NULL,
@@ -154,7 +154,7 @@ CL_NS_USE(util)
 		sprintf(errstr, "MMapIndexInput::MMapIndexInput failed with error %d: %s", dw, lpMsgBuf); 
 		LocalFree(lpMsgBuf);
 	    
-		_CLTHROWA_DEL(CL_ERR_IO,errstr);*/
+		_CLTHROWA_DEL(CL_ERR_IO,errstr);
 	  }
 
 #else //_CL_HAVE_FUNCTION_MAPVIEWOFFILE
