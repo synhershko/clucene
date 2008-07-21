@@ -85,11 +85,11 @@ CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod
 )
 
 #make decisions about which functions to use...
-CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat;_stat")
+CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat64;stat;_stat")
 CHOOSE_FUNCTION(fileSize "filelengthi64;_filelengthi64;filelength;_filelength")
-CHOOSE_FUNCTION(fileSeek "lseeki64;_lseeki64;lseek;_lseek")
-CHOOSE_FUNCTION(fileTell "telli64;_telli64;tell;_tell")
-CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat;_fstat")
+CHOOSE_FUNCTION(fileSeek "lseeki64;_lseeki64;lseek64;lseek;_lseek")
+CHOOSE_FUNCTION(fileTell "telli64;_telli64;tell64;tell;_tell")
+CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat64;fstat;_fstat")
 
 #if fileHandleStat doesn't take a fileStat struct, we should change fileStat.
 IF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
@@ -128,9 +128,9 @@ IF ( NOT HAVE__TELL )
 ENDIF ( NOT HAVE__TELL )
 
 #now that int64_t is defined, we can define this...
-IF ( NOT HAVE__FILELENGTH )
+IF ( NOT HAVE_FUNCTION_FILESIZE )
     SET ( FUNCTION_FILESIZE "#define fileSize CL_NS(util)::Misc::filelength" )
-ENDIF ( NOT HAVE__FILELENGTH )
+ENDIF ( NOT HAVE_FUNCTION_FILESIZE )
 
 
 ########################################################################

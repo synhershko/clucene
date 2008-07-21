@@ -85,14 +85,6 @@ ${FUNCTION_SLEEPFUNCTION}
 /* Define if recursive pthread mutexes are available */
 #cmakedefine _CL_HAVE_PTHREAD_MUTEX_RECURSIVE  1 
 
-/* Number of bits in a file offset, on hosts where this is settable. */
-//todo: should we only define for hosts where this is applicable?
-#define _FILE_OFFSET_BITS 64
-
-/* Define for large files, on AIX-style hosts. */
-//todo: should we only define for hosts where this is applicable?
-#define _LARGE_FILES
-
 /** define if you would like to force clucene to use the internal
 * character functions.
 * Tests may display unpredictable behaviour if this is not defined.
