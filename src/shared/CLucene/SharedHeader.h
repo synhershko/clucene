@@ -121,7 +121,7 @@
 			#define CLUCENE_EXPORT __declspec(dllexport)
 		#elif defined(_CL_HAVE_GCCVISIBILITYPATCH)
 			#define CLUCENE_EXPORT __attribute__ ((visibility("default")))
-			#define CLUCENE_LOCAL __attribute__ ((visibility("hidden"))
+			#define CLUCENE_LOCAL __attribute__ ((visibility("hidden")))
 		#endif
     #endif
 #else
