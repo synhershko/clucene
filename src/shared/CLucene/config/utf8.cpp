@@ -206,7 +206,7 @@ size_t lucene_wcstoutf8(char * result, const wchar_t * str, size_t result_length
 }
 //this function was not taken from gnome
 size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length){
-  char *sp = (char*)str;
+  char *sp = const_cast<char*>(str);
   wchar_t *rp = result;
 
   while (rp < result + result_length && *sp!=0){
@@ -217,7 +217,7 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
 	rp++;
   }
 
-  if ( sp-str < result_length )
+  if ( static_cast<size_t>(sp-str) < result_length )
 	*rp = '\0';
 
   size_t ret = sp-str;
