@@ -14,7 +14,7 @@ CL_CLASS_DEF(document,Document)
 CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(index, FieldInfos)
 CL_CLASS_DEF(store,IndexInput)
-CL_CLASS_DEF_JSTREAM(subinputstream)
+//CL_CLASS_DEF_JSTREAM(subinputstream)
 
 CL_NS_DEF(index)
 

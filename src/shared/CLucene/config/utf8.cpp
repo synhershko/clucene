@@ -217,10 +217,10 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
 	rp++;
   }
 
-  if ( static_cast<size_t>(sp-str) < result_length )
+  size_t ret = sp-str;
+  if ( ret < result_length )
 	*rp = '\0';
 
-  size_t ret = sp-str;
   return ret;
 }
 //get the number of bytes that make up the utf8 character.
