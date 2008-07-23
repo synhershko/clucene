@@ -1,5 +1,6 @@
 
 INCLUDE (CheckFunctionExists)
+INCLUDE (Macro_ChooseStatus)
 
 #macro that sets OUTPUT as the value of oneof options (if _CL_HAVE_OPTION exists)
 MACRO(CHOOSE_FUNCTION name options)
@@ -8,18 +9,20 @@ MACRO(CHOOSE_FUNCTION name options)
         IF ( NOT FUNCTION_${NAME} )
             STRING(TOUPPER ${option} OPTION)
             SET( option1 ${option} )
-            
+                    
             STRING(REGEX MATCH "[(|)]+" MACRO_CHOOSE_FUNCTION_MATCH ${option} )
             IF ( MACRO_CHOOSE_FUNCTION_MATCH STREQUAL "" )
+                _CHOOSE_STATUS(PROGRESS ${name} "function" )
                 CHECK_FUNCTION_EXISTS (${option} _CL_HAVE_FUNCTION_${OPTION})
             ELSE ( MACRO_CHOOSE_FUNCTION_MATCH STREQUAL "" )
                 STRING(REGEX REPLACE "(\\(.*\\))" "" option ${option} )
                 STRING(TOUPPER ${option} OPTION)
-
+                _CHOOSE_STATUS(PROGRESS ${name} "function" )
                 CHECK_STDCALL_FUNCTION_EXISTS (${option1} _CL_HAVE_FUNCTION_${OPTION})
             ENDIF ( MACRO_CHOOSE_FUNCTION_MATCH STREQUAL "" )
 
     	    IF ( _CL_HAVE_FUNCTION_${OPTION} )
+    	        _CHOOSE_STATUS(END ${name} function ${option})
 				IF ( option STREQUAL ${name} )
 					#already have it, ignore this...
 					SET (FUNCTION_${NAME} "/* undef ${name} ${option} */" )
@@ -31,8 +34,16 @@ MACRO(CHOOSE_FUNCTION name options)
     ENDFOREACH(option ${options})
     
     IF ( NOT FUNCTION_${NAME} )
-        SET (FUNCTION_${NAME} "/* undef ${name} */" )
-    ELSE ( NOT FUNCTION_${NAME} )
-        SET (HAVE_FUNCTION_${NAME} 1)
+        IF ( NOT ${ARGV2} STREQUAL "" )
+            _CHOOSE_STATUS(END ${name} function "using default")
+            SET (FUNCTION_${NAME} ${ARGV2} )
+        ELSE ( NOT ${ARGV2} STREQUAL "" )
+            _CHOOSE_STATUS(END ${name} function "not found")
+            SET (FUNCTION_${NAME} "/* undef ${name} */" )
+        ENDIF ( NOT ${ARGV2} STREQUAL "" )
     ENDIF ( NOT FUNCTION_${NAME} )
+    
+    IF ( FUNCTION_${NAME} )
+        SET (HAVE_FUNCTION_${NAME} 1)
+    ENDIF ( FUNCTION_${NAME} )
 ENDMACRO(CHOOSE_FUNCTION)

@@ -32,21 +32,24 @@ int main() {
         ENDIF ( _CL_HAVE_${NAMESPACE}_HASHMAP )
     
     ENDIF ( NOT ${HashingValue} )
+    
 ENDMACRO(HASHMAP_TEST)
 
 
 MACRO ( CHECK_HASH_MAPS HashingValue DisableHashing)
     IF ( _CL_HAVE_EXT_HASH_MAP OR _CL_HAVE_HASH_MAP )
+        _CHOOSE_STATUS(PROGRESS "hashmaps" "namespace")
         HASHMAP_TEST (${HashingValue} std)
         HASHMAP_TEST (${HashingValue} stdext)
         HASHMAP_TEST (${HashingValue} __gnu_cxx)
     
         IF ( NOT ${HashingValue} )
-            MESSAGE ( STATUS "Namespace for hash maps/sets not determined, disabling hashing")
+            _CHOOSE_STATUS(END "hashmaps" "namespace" "failed")
             SET(${DisableHashing} 1)
+        ELSE ( NOT ${HashingValue} )
+            _CHOOSE_STATUS(END "hashmaps" "namespace" ${${HashingValue}})
         ENDIF ( NOT ${HashingValue} )
     
     ENDIF ( _CL_HAVE_EXT_HASH_MAP OR _CL_HAVE_HASH_MAP )
-    
     SET(CMAKE_REQUIRED_DEFINITIONS)
 ENDMACRO ( CHECK_HASH_MAPS )
