@@ -245,33 +245,22 @@ SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
 
 SET(clucene_shared_Files
-	./CLucene/SharedHeader.cpp
-	./CLucene/config/gunichartables.cpp
-	./CLucene/config/repl_tcslwr.cpp
-	./CLucene/config/repl_tcstoll.cpp
-	./CLucene/config/repl_tcscasecmp.cpp
-	./CLucene/config/repl_tprintf.cpp
-	./CLucene/config/repl_lltot.cpp
-	./CLucene/config/repl_tcstod.cpp
-	./CLucene/config/utf8.cpp
-	./CLucene/config/threads.cpp
-	./CLucene/debug/condition.cpp
-	./CLucene/debug/error.cpp
-	./CLucene/util/StringBuffer.cpp
-	./CLucene/util/Misc.cpp
-	./CLucene/util/dirent.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/gunichartables.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcslwr.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstoll.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcscasecmp.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tprintf.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_lltot.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstod.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/utf8.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/config/threads.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/debug/condition.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/debug/error.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/util/StringBuffer.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/util/Misc.cpp
+	${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
+	
+	PARENT_SCOPE
 )
 file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
-
-add_library(clucene-shared-static STATIC
-	${clucene_shared_Files} ${HEADERS}
-	#${clucene-shared_BINARY_DIR}/clucene-config.h ${clucene-shared_BINARY_DIR}/_clucene-config.h
-)
-
-SET_TARGET_PROPERTIES(clucene-shared-static PROPERTIES
-    LINKER_LANGUAGE CXX
-    VERSION ${CPACK_PACKAGE_VERSION}
-    SOVERSION ${CPACK_PACKAGE_SOVERSION}
-    DEFINE_SYMBOL ""
-    COMPILE_DEFINITIONS_DEBUG _DEBUG
-)

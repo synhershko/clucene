@@ -125,12 +125,11 @@ file(GLOB_RECURSE HEADERS ${clucene-core_SOURCE_DIR}/*.h)
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 
 add_library(clucene-core SHARED
-	${clucene_core_Files} ${HEADERS}
+	${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
 )
-TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static)
 
 add_library(clucene-core-static STATIC
-	${clucene_core_Files} ${HEADERS}
+	${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
 )
 
 #set properties on the libraries
