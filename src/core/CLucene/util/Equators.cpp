@@ -28,6 +28,8 @@ bool Equals::WChar::operator()( const wchar_t* val1, const wchar_t* val2 ) const
 }
 #endif
 
+AbstractDeletor::~AbstractDeletor(){
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparors

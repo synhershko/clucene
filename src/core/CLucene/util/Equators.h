@@ -161,6 +161,7 @@ public:
 class AbstractDeletor{
 public:
 	virtual void Delete(void*) = 0;
+    virtual ~AbstractDeletor();
 };
 class Deletor{
 public:
