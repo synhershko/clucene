@@ -1,5 +1,6 @@
 
 INCLUDE (CheckTypeSize)
+INCLUDE (Macro_ChooseStatus)
 
 #macro that sets OUTPUT as the value of oneof options (if _CL_HAVE_OPTION exists)
 MACRO(CHOOSE_TYPE name size sign options)

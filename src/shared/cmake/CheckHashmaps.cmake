@@ -2,6 +2,8 @@
 #HashingValue is filled with namespace definition
 #DisableHashing is set if we can't support hashing
 
+INCLUDE (Macro_ChooseStatus)
+
 #find hashing namespace (internal, use CHECK_HASH_MAPS) ...
 MACRO(HASHMAP_TEST HashingValue namespace)
 	IF ( NOT ${HashingValue} )

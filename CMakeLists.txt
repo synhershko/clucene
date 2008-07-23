@@ -118,11 +118,12 @@ OPTION(TESTS_USE_SHARED_LIBRARY
 
 #check flags...
 INCLUDE (TestCXXAcceptsFlag)
-#todo: fail if a warning occurs...(visual studio just warns, kind of annoying!)
-CHECK_CXX_ACCEPTS_FLAG(-g GccFlagG)
-IF ( GccFlagG )
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-ENDIF ( GccFlagG )
+IF ( CMAKE_COMPILER_IS_GNUCC )
+    CHECK_CXX_ACCEPTS_FLAG(-g GccFlagG)
+    IF ( GccFlagG )
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+    ENDIF ( GccFlagG )
+ENDIF ( CMAKE_COMPILER_IS_GNUCC  )
 
 IF(ENABLE_GPROF)
     CHECK_CXX_ACCEPTS_FLAG(-pg GccFlagPg)

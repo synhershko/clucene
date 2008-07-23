@@ -1,5 +1,6 @@
 
 INCLUDE (CheckSymbolExists)
+INCLUDE (Macro_ChooseStatus)
 
 MACRO(CHOOSE_SYMBOL name options)
     IF ( HAVE_WINDOWS_H )
