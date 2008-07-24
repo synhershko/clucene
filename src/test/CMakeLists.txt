@@ -44,7 +44,7 @@ ${test_HEADERS}
 )
 
 #todo: do glob header and include header files for IDE.
-ADD_EXECUTABLE(cl_test ${test_files} )
+ADD_EXECUTABLE(cl_test ${clucene_shared_Files} ${test_files} )
 SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
 
 IF (TESTS_USE_SHARED_LIBRARY)
@@ -62,8 +62,10 @@ IF ( ENABLE_COMPILE_TESTS )
 SET(test_monolithic_Files ./CLMonolithic_Test.cpp ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp)
 
 SET(CMAKE_CXX_FLAGS_DEBUG)
-CHECK_CXX_ACCEPTS_FLAG(-Wall GccFlagWall)
-CHECK_CXX_ACCEPTS_FLAG(-pedantic GccFlagPedantic)
+IF ( CMAKE_COMPILER_IS_GNUCC )
+    CHECK_CXX_ACCEPTS_FLAG(-Wall GccFlagWall)
+    CHECK_CXX_ACCEPTS_FLAG(-pedantic GccFlagPedantic)
+ENDIF ( CMAKE_COMPILER_IS_GNUCC )
 
 IF ( GccFlagG )
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -136,6 +138,7 @@ ADD_CUSTOM_TARGET(test-all
     COMMAND ${CMAKE_COMMAND} test-mmap
     COMMAND ${CMAKE_COMMAND} test-singlethreading
     COMMAND ${CMAKE_COMMAND} test-refcnt
+    DEPENDS cl_test-pedantic cl_test-ascii cl_test-namespace cl_test-mmap cl_test-singlethreading cl_test-refcnt cl_test-platform-charfuncs
 )
 
 ENDIF ( ENABLE_COMPILE_TESTS )
