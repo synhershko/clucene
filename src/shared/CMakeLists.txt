@@ -236,8 +236,7 @@ MACRO (GET_SHARED_FILES result)
     	${clucene-shared_SOURCE_DIR}/CLucene/util/StringBuffer.cpp
     	${clucene-shared_SOURCE_DIR}/CLucene/util/Misc.cpp
     	${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
-)
-
+	)	
 ENDMACRO (GET_SHARED_FILES)
 
 file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
