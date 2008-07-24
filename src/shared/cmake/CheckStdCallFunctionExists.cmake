@@ -50,14 +50,14 @@ MACRO(CHECK_STDCALL_FUNCTION_EXISTS FUNCTION_DECLARATION VARIABLE)
     ENDIF(CMAKE_REQUIRED_INCLUDES)
     
     SET(CHECK_STDCALL_FUNCTION_DECLARATION ${FUNCTION_DECLARATION})
-    CONFIGURE_FILE("${clucene-shared_SOURCE_DIR}/cmake/CheckStdCallFunctionExists.c.in"
-      "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.c" IMMEDIATE @ONLY)
-    FILE(READ "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.c"
+    CONFIGURE_FILE("${clucene-shared_SOURCE_DIR}/cmake/CheckStdCallFunctionExists.cpp.in"
+      "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.cpp" IMMEDIATE @ONLY)
+    FILE(READ "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.cpp"
       CHECK_STDCALL_FUNCTION_CONTENT)
 
     TRY_COMPILE(${VARIABLE}
       ${CMAKE_BINARY_DIR}
-      "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.c"
+      "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckStdCallFunctionExists.cpp"
       COMPILE_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
       CMAKE_FLAGS -DCOMPILE_DEFINITIONS:STRING=${MACRO_CHECK_STDCALL_FUNCTION_DEFINITIONS}
       "${CHECK_STDCALL_FUNCTION_EXISTS_ADD_LIBRARIES}"
@@ -68,13 +68,13 @@ MACRO(CHECK_STDCALL_FUNCTION_EXISTS FUNCTION_DECLARATION VARIABLE)
       MESSAGE(STATUS "Looking for ${FUNCTION_DECLARATION} - found")
       FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log 
         "Determining if the stdcall function ${FUNCTION_DECLARATION} exists passed with the following output:\n"
-        "${OUTPUT}\nCheckStdCallFunctionExists.c:\n${CHECK_STDCALL_FUNCTION_CONTENT}\n\n")
+        "${OUTPUT}\nCheckStdCallFunctionExists.cpp:\n${CHECK_STDCALL_FUNCTION_CONTENT}\n\n")
     ELSE(${VARIABLE})
       MESSAGE(STATUS "Looking for ${FUNCTION_DECLARATION} - not found")
       SET(${VARIABLE} "" CACHE INTERNAL "Have function ${FUNCTION_DECLARATION}")
       FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log 
         "Determining if the stdcall function ${FUNCTION_DECLARATION} exists failed with the following output:\n"
-        "${OUTPUT}\nCheckStdCallFunctionExists.c:\n${CHECK_STDCALL_FUNCTION_CONTENT}\n\n")
+        "${OUTPUT}\nCheckStdCallFunctionExists.cpp:\n${CHECK_STDCALL_FUNCTION_CONTENT}\n\n")
     ENDIF(${VARIABLE})
   ENDIF("${VARIABLE}" MATCHES "^${VARIABLE}$")
 ENDMACRO(CHECK_STDCALL_FUNCTION_EXISTS)

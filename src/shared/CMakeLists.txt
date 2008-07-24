@@ -86,17 +86,13 @@ CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod
 
 #make decisions about which functions to use...
 CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat64;stat;_stat")
-CHOOSE_FUNCTION(fileSize "filelengthi64;_filelengthi64;filelength;_filelength")
+CHOOSE_FUNCTION(fileSize "filelengthi64;_filelengthi64;filelength;_filelength" "#define fileSize CL_NS(util)::Misc::filelength")
 CHOOSE_FUNCTION(fileSeek "lseeki64;_lseeki64;lseek64;lseek;_lseek")
-CHOOSE_FUNCTION(fileTell "telli64;_telli64;tell64;tell;_tell")
 CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat64;fstat;_fstat")
 
-#if fileHandleStat doesn't take a fileStat struct, we should change fileStat.
-#IF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
-    #Borland compiler doesn't have a fstati64, so fileStat must be non-i64 as well...
-#    SET( FUNCTION_FILESTAT 0 )
-#    CHOOSE_FUNCTION(fileStat "stat;_stat")
-#ENDIF ( NOT _CL_HAVE_FUNCTION_FSTATI64 AND NOT _CL_HAVE_FUNCTION__FSTATI64 )
+#ftell (and probably soon ftell64) are POSIX standard functions, but tell and
+#tell64 are not, so we define fileTell in terms of fileSeek.
+CHOOSE_FUNCTION(fileTell "telli64;_telli64;tell64;tell;_tell" "#define fileTell(fhandle) fileSeek(fhandle, 0, SEEK_CUR)")
 
 CHOOSE_FUNCTION(_realpath "realpath" "#define _realpath(rel,abs) ::_fullpath(abs,rel,CL_MAX_PATH)")
 CHOOSE_FUNCTION(_rename "rename")
@@ -106,32 +102,11 @@ CHOOSE_FUNCTION(_open "_open((const char*)0, (int)0);open")
 CHOOSE_FUNCTION(_write "_write((int)0, (const void*)0, (unsigned int)0);write")
 CHOOSE_FUNCTION(_unlink "_unlink((const char*)0);unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
-CHOOSE_FUNCTION(_mkdir "_mkdir((const char*)0)")
+CHOOSE_FUNCTION(_mkdir "_mkdir((const char*)0)" "#define _mkdir(x) mkdir(x,0777)")
 CHOOSE_FUNCTION(SLEEPFUNCTION "usleep;Sleep(0);_sleep")
-
 
 CHOOSE_FUNCTION(_snprintf "snprintf;_snprintf")
 CHOOSE_FUNCTION(_snwprintf "snwprintf;_snwprintf")
-
-IF ( NOT HAVE_FUNCTION__REALPATH )
-    SET (FUNCTION__REALPATH "#define _realpath(rel,abs) ::_fullpath(abs,rel,CL_MAX_PATH)")
-ENDIF ( NOT HAVE_FUNCTION__REALPATH )
-
-IF ( NOT _CL_HAVE_FUNCTION__MKDIR )
-    SET (FUNCTION__MKDIR "#define _mkdir(x) mkdir(x,0777)")
-ENDIF ( NOT _CL_HAVE_FUNCTION__MKDIR )
-
-IF ( NOT HAVE__TELL )
-    #ftell (and probably soon ftell64) are POSIX standard functions, but tell and
-    #tell64 are not, so we define fileTell in terms of fileSeek.
-    SET ( FUNCTION_TELL "#define fileTell(fhandle) fileSeek(fhandle, 0, SEEK_CUR)" )
-ENDIF ( NOT HAVE__TELL )
-
-#now that int64_t is defined, we can define this...
-IF ( NOT HAVE_FUNCTION_FILESIZE )
-    SET ( FUNCTION_FILESIZE "#define fileSize CL_NS(util)::Misc::filelength" )
-ENDIF ( NOT HAVE_FUNCTION_FILESIZE )
-
 
 ########################################################################
 # test for symbols
