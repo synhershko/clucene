@@ -7,6 +7,8 @@
 #ifndef __CONDITION_H
 #define __CONDITION_H
 
+//todo: this is a hack
+#undef CND_PRECONDITION
 
 /*
 To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
@@ -51,7 +53,7 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
 	#define CND__CONDITION(cond,file,line,title,mes2)			{if(!(cond)){__cnd_FormatDebug(file,line,title,mes2,0);}}
 	#define CND__MESSAGE(file,line,title,mes2)					{__cnd_FormatDebug(file,line,title,mes2,0);}
 #else
-	#define CND_PRECONDITION(cond, usermessage)
+    #define CND_PRECONDITION(cond, usermessage)
     #define CND_CONDITION(cond, usermessage)
     #define CND_WARNING(cond,usermessage)
     #define CND_MESSAGE(cond,usermessage)

@@ -154,11 +154,12 @@ FOREACH(file ${HEADERS})
 	get_filename_component(apath ${file} PATH)
 	get_filename_component(aname ${file} NAME)
 	file(RELATIVE_PATH relpath ${CMAKE_SOURCE_DIR}/src/core ${apath})
+	IF ( NOT aname MATCHES "^_.*" )
+		install(FILES ${file} DESTINATION include/${relpath})
+	ENDIF ( NOT aname MATCHES "^_.*" )
 ENDFOREACH(file)
 #also install CLucene.h
-install(FILES ${clucene-shared_BINARY_DIR}/clucene-config.h DESTINATION lib/CLucene )
-
-install(FILES ${HEADERS} DESTINATION include/)
+install(FILES ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h DESTINATION lib/CLucene )
 
 #and install libraries
 install(TARGETS clucene-core DESTINATION lib)

@@ -141,12 +141,14 @@
 #define _CL_REINTERPRET_CAST(typ,var) reinterpret_cast<typ>(var)
 
 //todo: put this logic in cmake
-#if _MSC_FULL_VER >= 140050320
-    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated(_Text))
-#elif _MSC_VER >= 1300
-    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated)
-#elif defined(_MSC_VER)
-    #define _CL_DEPRECATE_TEXT(_Text)
+#if defined(_MSC_VER)
+	#if _MSC_FULL_VER >= 140050320
+	    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated(_Text))
+	#elif _MSC_VER >= 1300
+	    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated)
+	#else
+	    #define _CL_DEPRECATE_TEXT(_Text)
+	#endif
 #elif (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 	#define _CL_DEPRECATE_TEXT(_Text)  __attribute__((__deprecated__))
 #else

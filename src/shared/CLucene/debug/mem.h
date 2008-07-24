@@ -7,6 +7,10 @@
 #ifndef _lucene_debug_mem_h
 #define _lucene_debug_mem_h
 
+//todo: this is a hack...
+#ifndef CND_PRECONDITION
+	#define CND_PRECONDITION(x,y)
+#endif
 
 //Macro for creating new objects
 #if defined(LUCENE_ENABLE_REFCOUNT)
@@ -27,7 +31,7 @@
 	#define LUCENE_BASE_CHECK(x)
 #endif
 
-#if (_MSC_VER < 1300)
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
 //6.0
 	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(TCHAR*,x); x=NULL;}
 	#define _CLDELETE_CaARRAY(x) if (x!=NULL){delete[] _CL_CONST_CAST(char*,x); x=NULL;}

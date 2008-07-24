@@ -239,4 +239,10 @@ MACRO (GET_SHARED_FILES result)
 	)	
 ENDMACRO (GET_SHARED_FILES)
 
-file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
+#install public headers.
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.h DESTINATION include/CLucene )
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/LuceneThreads.h DESTINATION include/CLucene )
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/lucenebase.h DESTINATION include/CLucene/debug )
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/mem.h DESTINATION include/CLucene/debug )
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/error.h DESTINATION include/CLucene/debug )
+

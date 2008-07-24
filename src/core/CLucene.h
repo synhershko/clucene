@@ -23,6 +23,7 @@
 #include "CLucene/search/RangeQuery.h"
 #include "CLucene/search/BooleanQuery.h"
 #include "CLucene/search/TermQuery.h"
+#include "CLucene/search/SearchHeader.h"
 #include "CLucene/search/Similarity.h"
 #include "CLucene/search/Sort.h"
 #include "CLucene/search/Hits.h"

@@ -45,7 +45,7 @@ ${test_HEADERS}
 GET_SHARED_FILES(clucene_shared_Files)
 
 #todo: do glob header and include header files for IDE.
-ADD_EXECUTABLE(cl_test ${clucene_shared_Files} ${test_files} )
+ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} )
 SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
 
 IF (TESTS_USE_SHARED_LIBRARY)
@@ -78,7 +78,7 @@ IF ( GccFlagPedantic )
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 ENDIF ( GccFlagPedantic )
 
-ADD_EXECUTABLE(cl_test-pedantic ${test_monolithic_Files})
+ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
 SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES COMPILE_DEFINITIONS "")
 ADD_CUSTOM_TARGET(test-pedantic
     COMMENT "Running cl_test-pedantic"
