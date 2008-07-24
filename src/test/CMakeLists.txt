@@ -42,6 +42,7 @@ SET(test_files ./tests.cpp
 ./util/English.cpp
 ${test_HEADERS}
 )
+GET_SHARED_FILES(clucene_core_Files)
 
 #todo: do glob header and include header files for IDE.
 ADD_EXECUTABLE(cl_test ${clucene_shared_Files} ${test_files} )

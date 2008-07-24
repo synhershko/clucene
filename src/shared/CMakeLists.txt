@@ -219,23 +219,25 @@ SOURCE_GROUP("config" ./CLucene/config/*)
 SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
 
-SET(clucene_shared_Files
-	${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/gunichartables.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcslwr.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstoll.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcscasecmp.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tprintf.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_lltot.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstod.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/utf8.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/config/threads.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/debug/condition.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/debug/error.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/util/StringBuffer.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/util/Misc.cpp
-	${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
-	
-	PARENT_SCOPE
+MACRO (GET_SHARED_FILES result)
+    SET(${result}
+    	${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/gunichartables.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcslwr.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstoll.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcscasecmp.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tprintf.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_lltot.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstod.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/utf8.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/config/threads.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/debug/condition.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/debug/error.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/util/StringBuffer.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/util/Misc.cpp
+    	${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
 )
+
+ENDMACRO (GET_SHARED_FILES)
+
 file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)

@@ -117,6 +117,8 @@ SET(clucene_core_Files
 	./CLucene/search/DateFilter.cpp
 )
 
+GET_SHARED_FILES(clucene_core_Files)
+
 #find our headers
 file(GLOB_RECURSE HEADERS ${clucene-core_SOURCE_DIR}/*.h)
 
