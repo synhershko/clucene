@@ -198,7 +198,7 @@ public:
   static SortField* FIELD_SCORE();
 
   /** Represents sorting by document number (index order). */
-  static CLUCENE_LOCAL SortField* FIELD_DOC();
+  static SortField* FIELD_DOC();
   
   /** Cleanup static data */
   static CLUCENE_LOCAL void _shutdown();
