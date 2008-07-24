@@ -22,6 +22,9 @@
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
 #endif
+#ifdef _CL_HAVE_IO_H
+	#include <io.h>
+#endif
 
 const char* cl_tempDir;
 bool cl_quiet;
