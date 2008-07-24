@@ -103,10 +103,10 @@ OPTION(ENABLE_GPROF
   OFF)
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )
-IF ( MSVC )
+IF ( MSVC_IDE )
 	#this is annoying...
 	SET ( ENABLE_COMPILE_TESTS_VALUE OFF )
-ENDIF(MSVC)
+ENDIF( MSVC_IDE )
 
 OPTION(ENABLE_COMPILE_TESTS
   "enable various projects that test alternative build switches"
