@@ -29,7 +29,7 @@ CL_NS_DEF2(analysis,standard)
       return false;
 
     TCHAR* text = t->_termText;
-    const int32_t textLength = t->termTextLength();
+    const int32_t textLength = t->termLength();
     const TCHAR* type = t->type();
 
     if ( type == tokenImage[APOSTROPHE] && //we can compare the type directy since the type should always come from the tokenImage

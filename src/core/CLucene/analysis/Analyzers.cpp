@@ -313,8 +313,8 @@ ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
 bool ISOLatin1AccentFilter::next(Token* token){
 	if ( input->next(token) ){
-		int32_t l = token->termTextLength();
-		const TCHAR* chars = token->termText();
+		int32_t l = token->termLength();
+		const TCHAR* chars = token->termBuffer();
 		bool doProcess = false;
 		for (int32_t i = 0; i < l; ++i) {
 			#ifdef _UCS2
@@ -538,7 +538,7 @@ bool LengthFilter::next(Token* token)
     // return the first non-stop word found
     while ( input->next(token) )
     {
-        size_t len = token->termTextLength();
+        size_t len = token->termLength();
         if (len >= _min && len <= _max)
             return true;
         // note: else we ignore it but should we index each part of it?

@@ -155,7 +155,7 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 	//Get the tokens from the source
 	try{
 		while (source->next(&t)){
-			v.push_back(STRDUP_TtoT(t.termText()));
+			v.push_back(STRDUP_TtoT(t.termBuffer()));
 
 			if (t.getPositionIncrement() != 0)
 				positionCount += t.getPositionIncrement();
@@ -251,11 +251,11 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
 	}
 	if (tret)
 	{
-		if ( !from && _tcscmp(t.termText(),_T("TO"))==0 )
+		if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
 			continue;
 
 		
-		TCHAR* tmp = STRDUP_TtoT(t.termText());
+		TCHAR* tmp = STRDUP_TtoT(t.termBuffer());
 		discardEscapeChar(tmp);
 		terms[from? 0 : 1] = tmp;
 

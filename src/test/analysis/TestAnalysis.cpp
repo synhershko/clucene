@@ -16,7 +16,7 @@
 	Token t;
     for (; stream->next(&t);) {
       if (verbose) {
-				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t.termText(), t.startOffset(), t.endOffset() );
+				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t.termBuffer(), t.startOffset(), t.endOffset() );
       }
 	  // _CLDELETE(t);
       count++;

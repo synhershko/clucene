@@ -300,9 +300,9 @@ void DocumentWriter::invertDocument(const Document* doc) {
 			                	TermVectorOffsetInfo tio;
 			                	tio.setStartOffset(offset + t.startOffset());
 			                	tio.setEndOffset(offset + t.endOffset());
-								addPosition(fieldName, t.termText(), position++, &tio);
+								addPosition(fieldName, t.termBuffer(), position++, &tio);
 							}else
-								addPosition(fieldName, t.termText(), position++, NULL);
+								addPosition(fieldName, t.termBuffer(), position++, NULL);
 							
 							lastTokenEndOffset = t.endOffset();
 			                length++;

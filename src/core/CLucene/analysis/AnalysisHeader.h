@@ -108,11 +108,6 @@ public:
 	void setPositionIncrement(int32_t posIncr);
 	int32_t getPositionIncrement() const;
 
-	const TCHAR* termText() const; //< See #termBuffer()
-	size_t termTextLength(); //< Length of the the termBuffer. See #termBuffer
-	void resetTermTextLen(); //< Empties the termBuffer. See #termBuffer
-	void setText(const TCHAR* txt); //< Sets the termBuffer. See #termBuffer
-
 	/** Returns the internal termBuffer character array which
 	*  you can then directly alter.  If the array is too
 	*  small for your token, use {@link
@@ -121,6 +116,13 @@ public:
 	*  #setTermLength} to record the number of valid
 	*  characters that were placed into the termBuffer. */
 	const TCHAR* termBuffer() const;
+	size_t termLength(); //< Length of the the termBuffer. See #termBuffer
+
+	_CL_DEPRECATED( termBuffer ) const TCHAR* termText() const; //< See #termBuffer()
+	_CL_DEPRECATED( termLength ) size_t termTextLength(); //< See #termLength
+
+	void resetTermTextLen(); //< Empties the termBuffer. See #termBuffer
+	void setText(const TCHAR* txt); //< Sets the termBuffer. See #termBuffer
 
 	/**
 	* Returns this Token's starting offset, the position of the first character

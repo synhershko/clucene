@@ -31,13 +31,13 @@ public:
 			return true;
 		}else{
 			while( input->next(token) ){
-				if ( _tcscmp(token->termText(), _T("phrase")) == 0 ) {
+				if ( _tcscmp(token->termBuffer(), _T("phrase")) == 0 ) {
 					inPhrase = true;
 					savedStart = token->startOffset();
 					savedEnd = token->endOffset();
 					token->set( _T("phrase1"), savedStart, savedEnd);
 					return true;
-				}else if ( _tcscmp(token->termText(), _T("stop") ) !=0 ){
+				}else if ( _tcscmp(token->termBuffer(), _T("stop") ) !=0 ){
 					return true;
 				}
 			}

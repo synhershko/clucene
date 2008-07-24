@@ -48,7 +48,7 @@ void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* b
 
 	if (resolution == MILLISECOND_FORMAT) {
 		size_t len = strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H%M%S", ptm);
-		uint32_t ms = time % 1000;
+		uint32_t ms = static_cast<uint32_t>(time % 1000);
 		_snprintf(abuf + len, 4, "%03u", ms);
 	} else if (resolution == SECOND_FORMAT) {
 		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H%M%S", ptm);

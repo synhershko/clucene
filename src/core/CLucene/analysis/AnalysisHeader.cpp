@@ -153,6 +153,11 @@ size_t Token::termTextLength() {
 		_termTextLen = _tcslen(_termText);
 	return _termTextLen; 
 }
+size_t Token::termLength() { 
+	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
+		_termTextLen = _tcslen(_termText);
+	return _termTextLen; 
+}
 void Token::resetTermTextLen(){
 	_termTextLen=-1;
 }
