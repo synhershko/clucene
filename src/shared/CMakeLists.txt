@@ -98,7 +98,7 @@ CHOOSE_FUNCTION(_realpath "realpath" "#define _realpath(rel,abs) ::_fullpath(abs
 CHOOSE_FUNCTION(_rename "rename")
 CHOOSE_FUNCTION(_close "_close((int)0);close")
 CHOOSE_FUNCTION(_read "_read((int)0, (void*)0, (unsigned int)0);read")
-CHOOSE_FUNCTION(_open "_open((const char*)0, (int)0);open")
+CHOOSE_FUNCTION(_open "_open(0,0,0);open")
 CHOOSE_FUNCTION(_write "_write((int)0, (const void*)0, (unsigned int)0);write")
 CHOOSE_FUNCTION(_unlink "_unlink((const char*)0);unlink")
 CHOOSE_FUNCTION(_ftime "_ftime;ftime")
