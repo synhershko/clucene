@@ -36,10 +36,10 @@ IF(WIN32 AND NOT UNIX)
   SET(CPACK_GENERATOR "${CPACK_GENERATOR};NSIS")
   #SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
   #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-  #SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} My Famous Project")
-  #SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.my-project-home-page.org")
-  #SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.my-personal-home-page.com")
-  #SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} CLucene Core Library")
+  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\clucene.sourceforge.net")
+  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\clucene.sourceforge.net")
+  SET(CPACK_NSIS_CONTACT "clucene-developers@lists.sourceforge.net")
   #SET(CPACK_NSIS_MODIFY_PATH ON)
 ELSE(WIN32 AND NOT UNIX)
 #  SET(CPACK_STRIP_FILES "bin/xxx")
@@ -51,11 +51,11 @@ INCLUDE(CPack)
 
 
 ADD_CUSTOM_TARGET(dist-package
-    COMMAND rsync -avP -e ssh ${CPACK_PACKAGE_FILE_NAME}.* frs.sourceforge.net:uploads/
+    COMMAND rsync -avP -e ssh ${CPACK_PACKAGE_FILE_NAME}.* ustramooner@frs.sourceforge.net:uploads/
 #    DEPENDS package
 )
 ADD_CUSTOM_TARGET(dist-package_source
-    COMMAND rsync -avP -e ssh ${CPACK_SOURCE_PACKAGE_FILE_NAME}.* frs.sourceforge.net:uploads/
+    COMMAND rsync -avP -e ssh ${CPACK_SOURCE_PACKAGE_FILE_NAME}.* ustramooner@frs.sourceforge.net:uploads/
 #    DEPENDS package_source
 )
 ENDMACRO( CREATE_CLUCENE_PACKAGES )
