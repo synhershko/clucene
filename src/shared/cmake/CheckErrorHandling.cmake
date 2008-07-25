@@ -4,8 +4,8 @@
 MACRO ( CHECK_HAVE_FUNCTION_TRY_BLOCKS result )
     #check for try/catch blocks
     CHECK_CXX_SOURCE_RUNS("
-    	void foo() try{} catch( ... ){}
-    	int main(){ foo(); }" ${result})
+    	void foo() { try{ return; } catch( ... ){} }
+    	int main(){ foo(); return 0; }" ${result})
     IF ( NOT _CL_HAVE_TRY_BLOCKS )
     	SET ( ${result} 1 )
     ENDIF ( NOT _CL_HAVE_TRY_BLOCKS )
