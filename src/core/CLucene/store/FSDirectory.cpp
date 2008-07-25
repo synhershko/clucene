@@ -60,7 +60,7 @@ CL_NS_USE(util)
 			DEFINE_MUTEX(THIS_LOCK)
 			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
 			SharedHandle();
-			~SharedHandle() throw(CLuceneError&);
+			~SharedHandle();
 		};
 		SharedHandle* handle;
 		int64_t _pos;
@@ -152,7 +152,7 @@ CL_NS_USE(util)
     _fpos = 0;
     path[0]=0;
   }
-  FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() throw(CLuceneError&){
+  FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() {
     if ( fhandle >= 0 ){
       if ( ::_close(fhandle) != 0 )
         _CLTHROWA(CL_ERR_IO, "File IO Close error");

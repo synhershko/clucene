@@ -156,10 +156,6 @@ bool LowerCaseFilter::next(Token* t){
 
 bool StopFilter::ENABLE_POSITION_INCREMENTS_DEFAULT = false;
 
-StopFilter::~StopFilter(){
-	if (deleteStopTable)
-		_CLDELETE(stopWords);
-}
 
 /** Constructs a filter which removes words from the input
 *	TokenStream that are named in the CLSetList.
@@ -171,6 +167,21 @@ StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, CLTCSetList* sto
 	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
 	ignoreCase(false)
 {
+}
+
+StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase):
+	TokenFilter(in, deleteTokenStream),
+	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
+	ignoreCase(_ignoreCase)
+{
+	deleteStopTable = true;
+	stopWords = _CLNEW CLTCSetList(false);
+	fillStopTable( stopWords,_stopWords, _ignoreCase );
+}
+
+StopFilter::~StopFilter(){
+	if (deleteStopTable)
+		_CLDELETE(stopWords);
 }
 //static
 bool StopFilter::getEnablePositionIncrementsDefault() {
@@ -184,16 +195,6 @@ void StopFilter::setEnablePositionIncrementsDefault(const bool defaultValue) {
 bool StopFilter::getEnablePositionIncrements() const { return enablePositionIncrements; }
 void StopFilter::setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
 		
-StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _stopWords, const bool _ignoreCase):
-	TokenFilter(in, deleteTokenStream),
-	enablePositionIncrements(ENABLE_POSITION_INCREMENTS_DEFAULT),
-	ignoreCase(_ignoreCase)
-{
-	deleteStopTable = true;
-	stopWords = _CLNEW CLTCSetList(false);
-	fillStopTable( stopWords,_stopWords, _ignoreCase );
-}
-
 void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
 							   , const bool _ignoreCase)
 {
