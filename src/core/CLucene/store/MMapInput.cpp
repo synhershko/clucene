@@ -136,24 +136,16 @@ CL_NS_USE(util)
 				return; //SUCCESS!
 			}
 		}
+		
+		//failure:
+		int errnum = GetLastError(); 
+		
 		CloseHandle(internal->mmaphandle);
 
-		char* lpMsgBuf=0;
-		_cl_dword_t dw = GetLastError(); 
+		char* lpMsgBuf=strerror(errnum);
+		char* errstr = _CL_NEWARRAY(char, strlen(lpMsgBuf)+80); 
+		sprintf(errstr, "MMapIndexInput::MMapIndexInput failed with error %d: %s", errnum, lpMsgBuf); 
 
-		FormatMessageA(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-			FORMAT_MESSAGE_FROM_SYSTEM,
-			NULL,
-			dw,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			lpMsgBuf,
-			0, NULL );
-
-		char* errstr = _CL_NEWARRAY(char, strlen(lpMsgBuf)+40); 
-		sprintf(errstr, "MMapIndexInput::MMapIndexInput failed with error %d: %s", dw, lpMsgBuf); 
-		LocalFree(lpMsgBuf);
-	    
 		_CLTHROWA_DEL(CL_ERR_IO,errstr);
 	  }
 
