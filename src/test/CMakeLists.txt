@@ -46,12 +46,13 @@ GET_SHARED_FILES(clucene_shared_Files)
 
 #todo: do glob header and include header files for IDE.
 ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} )
-SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
 
 IF (TESTS_USE_SHARED_LIBRARY)
     TARGET_LINK_LIBRARIES(cl_test clucene-core)
+    SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "CLUCENE_IMPORT_SYMBOLS")
 ELSE (TESTS_USE_SHARED_LIBRARY)
-    TARGET_LINK_LIBRARIES(cl_test clucene-core-static clucene-shared-static)
+    TARGET_LINK_LIBRARIES(cl_test clucene-core-static)
+    SET_TARGET_PROPERTIES(cl_test PROPERTIES DEFINE_SYMBOL "")
 ENDIF (TESTS_USE_SHARED_LIBRARY)
 
 ############################
