@@ -109,10 +109,10 @@ HTML_STYLESHEET        =
 HTML_ALIGN_MEMBERS     = YES
 
 GENERATE_HTMLHELP      = @CLDOCS_HTML_HELP@
-CHM_FILE               = clucene.chm
+CHM_FILE               = ../clucene.chm
 HHC_LOCATION           = @HTML_HELP_COMPILER_EX@
 GENERATE_CHI           = YES
-BINARY_TOC             = NO
+BINARY_TOC             = YES
 TOC_EXPAND             = NO
 DISABLE_INDEX          = NO
 ENUM_VALUES_PER_LINE   = 4

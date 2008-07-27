@@ -40,7 +40,7 @@ public:
         int count;
 
 		/** Creates one of these objects 
-            Consumes all memory given.
+            @memory Consumes all memory given.
         */
 		StringIndex (int32_t* values, TCHAR** lookup, int count);
         ~StringIndex();

@@ -132,8 +132,8 @@ IF (BUILD_CLDOCS)
         FIND_PACKAGE(UnixCommands)
         IF ( TAR AND GZIP )
             ADD_CUSTOM_TARGET(doc-tarz
-                "${TAR} -cf doc/clucene-core-doc.tar ${PROJECT_BINARY_DIR}/doc/html/"
-                "${GZIP} doc/clucene-core-doc.tar"
+                COMMAND "${TAR}" "-cf" "doc/clucene-core-doc.tar" "${PROJECT_BINARY_DIR}/doc/html/"
+                COMMAND "${GZIP}" "doc/clucene-core-doc.tar"
                 #DEPENDS doc-doxygen
             )
         ENDIF ( TAR AND GZIP )

@@ -198,7 +198,7 @@ protected:
 	* @return Resulting {@link Query} object.
 	* return NULL to disallow
 	*
-	* Memory: clauses must all be cleaned up by this function.
+	* @memory clauses must all be cleaned up by this function.
 	*/
     virtual CL_NS(search)::Query* GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses);
 	virtual CL_NS(search)::Query* GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord );

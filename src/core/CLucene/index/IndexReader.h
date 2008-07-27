@@ -152,8 +152,9 @@ public:
 	* every document.  This is used by the search code to score documents.
 	*
 	* The number of bytes returned is the size of the IndexReader->maxDoc()
-	* MEMORY: The values are cached, so don't delete the returned byte array.
+	*
 	* @see Field#setBoost(float_t)
+	* @memory The values are cached, so don't delete the returned byte array.
 	*/
 	virtual uint8_t* norms(const TCHAR* field) = 0;
 	
