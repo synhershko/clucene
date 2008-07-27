@@ -35,14 +35,13 @@ for H in `find ../src/CLucene| grep "\.h$"`; do
         
         
         #check that all classes are exported
+        echo "$X:"; awk '/^[ \t]*(class|struct)/ { print $line }' $X|grep -v ";$"|grep -v CLUCENE_EXPORT; echo ""; done|nl
     fi
 done
 
-#pring out classes that are not exported:
-echo "These list of files and classes in them that weren't exported: "
-find src/CLucene -name *.h| while read X; do echo "$X:"; awk '/^[ \t]*(class|struct)/ { print $line }' $X|grep -v ";$"|grep -v CLUCENE_EXPORT; echo ""; done|nl|more
+#test that each header compiles independently...
 
-#test if headers can compile by themselves:
+#test if headers can compile together by themselves:
 echo "int main(){return 0;}"  >>$TMP/pub-headers.cpp
 g++ -Isrc pub-headers.cpp
 

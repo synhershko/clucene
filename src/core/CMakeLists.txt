@@ -136,15 +136,15 @@ add_library(clucene-core-static STATIC
 
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
-    VERSION ${CPACK_PACKAGE_VERSION}
-    SOVERSION ${CPACK_PACKAGE_SOVERSION}
+    VERSION ${CLUCENE_VERSION}
+    SOVERSION ${CLUCENE_SOVERSION}
     DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
-    VERSION ${CPACK_PACKAGE_VERSION}
-    SOVERSION ${CPACK_PACKAGE_SOVERSION}
+    VERSION ${CLUCENE_VERSION}
+    SOVERSION ${CLUCENE_SOVERSION}
     DEFINE_SYMBOL ""
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
@@ -164,3 +164,13 @@ install(FILES ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h DESTINATION 
 #and install libraries
 install(TARGETS clucene-core DESTINATION lib)
 install(TARGETS clucene-core-static DESTINATION lib)
+
+
+# code for installing an script to help cmake applications determint the Strigi
+# version number
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake" "
+set(STRIGI_VERSION_MAJOR ${STRIGI_VERSION_MAJOR})
+set(STRIGI_VERSION_MINOR ${STRIGI_VERSION_MINOR})
+set(STRIGI_VERSION_PATCH ${STRIGI_VERSION_PATCH})
+")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake DESTINATION ${LIB_DESTINATION}/strigi)

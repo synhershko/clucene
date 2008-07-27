@@ -106,10 +106,10 @@ ${SYMBOL__T}
 #define _CL_PACKAGE  "clucene-core" 
 
 /* Version number of package */
-#define _CL_VERSION  "@CPACK_PACKAGE_VERSION@" 
+#define _CL_VERSION  "@CLUCENE_VERSION@" 
 
 /* So-Version number of package */
-#define _CL_SOVERSION  "@CPACK_PACKAGE_SOVERSION@" 
+#define _CL_SOVERSION  "@CLUCENE_SOVERSION@" 
 
 
 /* Configured options (from command line) */

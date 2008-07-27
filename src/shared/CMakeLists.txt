@@ -204,11 +204,19 @@ DEFINE_LONGLONG_SYNTAX()
 #define how to define a static const (or fallback to enum)
 DEFINE_STATIC_SYNTAX()
 
+#test for ansi for scope (needed for msvc6)
+INCLUDE(TestForANSIForScope)
+IF ( CMAKE_ANSI_FOR_SCOPE )
+    SET ( CMAKE_ANSI_FOR_SCOPE 1 )
+ELSE ( CMAKE_ANSI_FOR_SCOPE )
+    SET ( CMAKE_ANSI_FOR_SCOPE 0 )
+ENDIF ( CMAKE_ANSI_FOR_SCOPE )
+
+
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
 MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;")
 MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS")
-
 
 #now write out our configuration....
 CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/clucene-config.h.cmake ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h)

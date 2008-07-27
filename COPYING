@@ -1,5 +1,11 @@
 License
 
+The CLucene code is split into two sections for licensing reasons. The 'Core'
+is strictly dual licensed Apache 2 and LGPL. The CLucene Contributions code
+could not be licensed under Apache because of the subcomponents it uses.
+
+CLUCENE CORE:
+
 The CLucene Core Library uses a dual license strategy for the source code. 
 These licenses are the GNU Lesser General Public License (LGPL) and the Apache
 License (Version 2.0). Users can choose the license they wish to distribute
@@ -7,16 +13,23 @@ their software under. This means that you do not need to abide by *both*
 licenses, but rather than you can choose the license which most suits your
 needs.
 
-To rephrase this and to make it perfectly clear:
+For details of these licenses see APACHE.license and LGPL.license in the root
+of the source distribution.
+
+Some components of CLucene Core use other licenses. See the CLUCENE CORE SUBCOMPONENTS
+section for details. We understand that these licenses are compatible with LGPL and/or
+Apache v2, but please consult with a lawyer to be certain of this.
+
+To rephrase the licensing and to make it perfectly clear:
 CLucene is distributed under the GNU Lesser General Public License (LGPL) 
 	*or*
 the Apache License, Version 2.0
 
-However, we are an open source project, and we encourage users to use the LGPL 
-license and participate fully in the free software community. Dual licensing
-of the CLucene source code provides open and free access to the technology both
-for the GPL community and for other developers or companies that cannot use the
-GPL.
+However, we are an open source project, and we encourage users to participate fully 
+in the free software community by contributing their code back to the project. 
+Dual licensing of the CLucene source code provides open and free access to the 
+technology both for the GPL community and for other developers or companies 
+that cannot use the GPL license.
 
 You can freely modify, extend, and improve the CLucene source code. The only
 question is whether or not you must provide the source code and contribute
@@ -30,7 +43,7 @@ package. You should read the COPYING file in that directory or package for
 more information.
 
 
-CLUCENE SUBCOMPONENTS: 
+CLUCENE CORE SUBCOMPONENTS: 
 
 CLucene includes a number of subcomponents with separate copyright 
 notices and license terms. Your use of the source code for the 
@@ -67,10 +80,16 @@ For the  src\CLucene\util\MD5Digester.cpp component:
    documentation and/or software.
  */
  
- For the cmake/MacroCheckGccVisibility.cmake and cmake/MacroEnsureVersion.cmake components:
+
+
+the cmake/MacroCheckGccVisibility.cmake and MacroEnsureVersion.cmake components:
 #
 # Copyright (c) 2006, Alexander Neundorf <neundorf@kde.org>
 # Copyright (c) 2006, Laurent Montel, <montel@kde.org>
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+
+CLUCENE CONTRIBUTIONS CODE:
+
+

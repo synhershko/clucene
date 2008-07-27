@@ -90,6 +90,7 @@
 	    
 	#define CL_STRUCT_DEF(sub,clazz) namespace lucene { namespace sub{ struct clazz; } }
 	#define CL_CLASS_DEF(sub,clazz) namespace lucene { namespace sub{ class clazz; } }
+	#define CL_CLASS_DEF2(sub,sub2, clazz) namespace lucene { namespace sub{ namespace sub2{ class clazz; } } }
 #else
 	#define CL_NS_DEF(sub)
 	#define CL_NS_DEF2(sub, sub2)
@@ -100,6 +101,7 @@
 	#define CL_NS(sub)
 	#define CL_NS2(sub,sub2)
 	#define CL_CLASS_DEF(sub,clazz) class clazz;
+	#define CL_CLASS_DEF2(sub,sub2, clazz) class clazz;
 #endif
 
 #if defined(LUCENE_NO_STDC_NAMESPACE)
@@ -116,7 +118,7 @@
 ////////////////////////////////////////////////////////
 #ifdef MAKE_CLUCENE_CORE_LIB
 	#ifdef CLUCENE_EXPORT_SYMBOLS
-		#if defined(_WIN32)
+		#if defined(_WIN32) || defined(_WIN64)
 			#define CLUCENE_EXPORT __declspec(dllexport)
 		#elif defined(_CL_HAVE_GCCVISIBILITYPATCH)
 			#define CLUCENE_EXPORT __attribute__ ((visibility("default")))
@@ -124,7 +126,7 @@
 		#endif
     #endif
 #else
-	#if defined(_WIN32) && defined(CLUCENE_IMPORT_SYMBOLS)
+	#if ( defined(_WIN32) || defined(_WIN64)) && defined(CLUCENE_IMPORT_SYMBOLS)
 		#define CLUCENE_EXPORT __declspec(dllimport)
 	#endif
 #endif
