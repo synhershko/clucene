@@ -29,8 +29,8 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
   with type "eos".  The default token type is "word".  
   <p>
   A Token can optionally have metadata (a.k.a. Payload) in the form of a variable
-  length byte array. Use {@link TermPositions#getPayloadLength()} and 
-  {@link TermPositions#getPayload(byte[], int)} to retrieve the payloads from the index.
+  length byte array. Use {@link lucene::index::TermPositions#getPayloadLength()} and 
+  {@link lucene::index::TermPositions#getPayload(byte[], int)} to retrieve the payloads from the index.
   
   <br><br>
   <p><font color="#FF0000">
@@ -42,7 +42,7 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
 
   <p>Tokenizers and filters should try to re-use a Token
   instance when possible for best performance, by
-  implementing the {@link TokenStream#next(Token)} API.
+  implementing the {@link lucene::index::TokenStream#next(Token)} API.
   Failing that, to create a new Token you should first use
   one of the constructors that starts with null text.  Then
   you should call either {@link #termBuffer()} or {@link

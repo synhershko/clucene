@@ -16,7 +16,7 @@ CL_CLASS_DEF(util,StringBuffer)
 
 CL_NS_DEF2(analysis,standard)
 
-	/** Normalizes tokens extracted with {@link StandardTokenizer}. */
+	/** Normalizes tokens extracted with {@link lucene::analysis::standard::StandardTokenizer}. */
 	class CLUCENE_EXPORT StandardFilter: public TokenFilter{
 	public:
 		// Construct filtering <i>in</i>. 

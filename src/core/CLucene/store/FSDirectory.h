@@ -22,7 +22,7 @@ CL_CLASS_DEF(util,StringBuffer)
    CL_NS_DEF(store)
 
    /**
-   * Straightforward implementation of {@link Directory} as a directory of files.
+   * Straightforward implementation of {@link lucene::store::Directory} as a directory of files.
    * <p>If the system property 'disableLuceneLocks' has the String value of
    * "true", lock creation will be disabled.
    *

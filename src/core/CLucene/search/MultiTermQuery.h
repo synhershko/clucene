@@ -22,8 +22,8 @@ CL_CLASS_DEF(index,IndexReader)
 
 CL_NS_DEF(search)
     /**
-     * A {@link Query} that matches documents containing a subset of terms provided
-     * by a {@link FilteredTermEnum} enumeration.
+     * A {@link lucene::search::Query} that matches documents containing a subset of terms provided
+     * by a {@link lucene::search::FilteredTermEnum} enumeration.
      * <P>
      * <code>MultiTermQuery</code> is not designed to be used by itself.
      * <BR>

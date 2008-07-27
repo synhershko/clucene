@@ -20,8 +20,8 @@ CL_CLASS_DEF(util,Reader)
 CL_NS_DEF2(analysis,standard)
 
 /**
-* Filters {@link StandardTokenizer} with {@link StandardFilter}, {@link
-* LowerCaseFilter} and {@link StopFilter}, using a list of English stop words.
+* Filters {@link lucene::analysis::standard::StandardTokenizer} with {@link lucene::analysis::standard::StandardFilter}, 
+* {@link lucene::analysis::LowerCaseFilter} and {@link lucene::analysis::StopFilter}, using a list of English stop words.
 *
 */
 	class CLUCENE_EXPORT StandardAnalyzer : public Analyzer 

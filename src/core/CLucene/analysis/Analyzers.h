@@ -183,7 +183,7 @@ public:
 	* Note: behavior of a single StopFilter instance can be modified 
 	* with {@link #setEnablePositionIncrements(boolean)}.
 	* This static method allows control over behavior of classes using StopFilters internally, 
-	* for example {@link org.apache.lucene.analysis.standard.StandardAnalyzer StandardAnalyzer}. 
+	* for example {@link lucene::analysis::standard::StandardAnalyzer StandardAnalyzer}. 
 	* <p>
 	* Default : false.
 	* @see #setEnablePositionIncrements(boolean).

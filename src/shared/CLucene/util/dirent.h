@@ -15,7 +15,6 @@ typedef int intptr_t;
 
 
 /**
-\unit
  * dirent.c
  *
  * Derived from DIRLIB.C by Matt J. Weinstein 

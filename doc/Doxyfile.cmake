@@ -7,7 +7,7 @@
 PROJECT_NAME           = CLucene-core
 PROJECT_NUMBER         = @CPACK_PACKAGE_VERSION@
 
-OUTPUT_DIRECTORY       = ./doc
+OUTPUT_DIRECTORY       = @PROJECT_BINARY_DIR@/doc
 OUTPUT_LANGUAGE        = English
 
 EXTRACT_ALL            = YES
@@ -56,16 +56,17 @@ QUIET                  = NO
 WARNINGS               = YES
 WARN_IF_UNDOCUMENTED   = YES
 WARN_FORMAT            = "$file:$line: $text"
-WARN_LOGFILE           = doxygen.warnings.log
+WARN_LOGFILE           = @PROJECT_BINARY_DIR@/doc/doxygen.warnings.log
 
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
 INPUT                  = @PROJECT_SOURCE_DIR@/src/core/CLucene
+INPUT                  += @PROJECT_SOURCE_DIR@/src/shared/CLucene
 FILE_PATTERNS          = *.h
 RECURSIVE              = YES
-EXCLUDE                = mem.h bufferedstream.h fileinputstream.h stringreader.h Misc.h LuceneThreads.h jstreamconfig.h
+#EXCLUDE                = mem.h bufferedstream.h fileinputstream.h stringreader.h Misc.h LuceneThreads.h jstreamconfig.h
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = "**/config/**" \
                          "**/.svn/**" \
@@ -99,17 +100,18 @@ IGNORE_PREFIX          =
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------
 
-GENERATE_HTML          = YES
+GENERATE_HTML          = @CLDOCS_HTML@
 HTML_OUTPUT            = html
 HTML_FILE_EXTENSION    = .html
-HTML_HEADER            = ./doc/helpheader.htm
-HTML_FOOTER            = ./doc/helpfooter.htm
+HTML_HEADER            = @PROJECT_BINARY_DIR@/doc/helpheader.htm
+HTML_FOOTER            = @PROJECT_BINARY_DIR@/doc/helpfooter.htm
 HTML_STYLESHEET        = 
 HTML_ALIGN_MEMBERS     = YES
-GENERATE_HTMLHELP      = NO
-CHM_FILE               = 
-HHC_LOCATION           = 
-GENERATE_CHI           = NO
+
+GENERATE_HTMLHELP      = @CLDOCS_HTML_HELP@
+CHM_FILE               = clucene.chm
+HHC_LOCATION           = @HTML_HELP_COMPILER_EX@
+GENERATE_CHI           = YES
 BINARY_TOC             = NO
 TOC_EXPAND             = NO
 DISABLE_INDEX          = NO
@@ -121,9 +123,9 @@ TREEVIEW_WIDTH         = 250
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
 
-GENERATE_LATEX         = NO
+GENERATE_LATEX         = @CLDOCS_LATEX@
 LATEX_OUTPUT           = latex
-LATEX_CMD_NAME         = latex
+LATEX_CMD_NAME         = @LATEX_COMPILER@
 MAKEINDEX_CMD_NAME     = makeindex
 COMPACT_LATEX          = NO
 PAPER_TYPE             = a4wide
@@ -137,7 +139,7 @@ LATEX_BATCHMODE        = NO
 # configuration options related to the RTF output
 #---------------------------------------------------------------------------
 
-GENERATE_RTF           = NO
+GENERATE_RTF           = @CLDOCS_RTF@
 RTF_OUTPUT             = rtf
 COMPACT_RTF            = NO
 RTF_HYPERLINKS         = NO
@@ -147,7 +149,7 @@ RTF_EXTENSIONS_FILE    =
 #---------------------------------------------------------------------------
 # configuration options related to the man page output
 #---------------------------------------------------------------------------
-GENERATE_MAN           = NO
+GENERATE_MAN           = @CLDOCS_MAN@
 MAN_OUTPUT             = man
 MAN_EXTENSION          = .3
 MAN_LINKS              = NO
@@ -156,7 +158,7 @@ MAN_LINKS              = NO
 # configuration options related to the XML output
 #---------------------------------------------------------------------------
 
-GENERATE_XML           = NO
+GENERATE_XML           = @CLDOCS_XML@
 XML_SCHEMA             = 
 XML_DTD                = 
 
@@ -172,13 +174,17 @@ GENERATE_AUTOGEN_DEF   = NO
 
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
-EXPAND_ONLY_PREDEF     = YES
+EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
-INCLUDE_PATH           = ./src/
+INCLUDE_PATH           = @PROJECT_SOURCE_DIR@/src/core
+INCLUDE_PATH           += @PROJECT_SOURCE_DIR@/src/shared
+INCLUDE_PATH           += @PROJECT_BINARY_DIR@/src/shared
 INCLUDE_FILE_PATTERNS  = 
+
 PREDEFINED             = "_MSC_VER=1400"
 PREDEFINED             += "WIN32"
-PREDEFINED             += "LUCENE_HIDE_INTERNAL"
+PREDEFINED             += "_CL_DISABLE_MULTITHREADING"
+PREDEFINED             += "_CL_DEPRECATED(x)="
 
 #namespaces
 PREDEFINED             += "CL_NS(sub)=lucene::sub"
@@ -192,10 +198,6 @@ PREDEFINED             += "CL_NS_USE2(sub,sub2)=using namespace lucene::sub::sub
 PREDEFINED             += "CL_NS_STD(func)=std::func"
 PREDEFINED             += "CL_NS_HASHING(func)=std::func"
 
-PREDEFINED             += "LUCENE_BASE=public CL_NS(debug)::LuceneBase"
-PREDEFINED             += "LUCENE_REFBASE=public CL_NS(debug)::LuceneBase"
-PREDEFINED             += "_CL_DEPRECATED(x)="
-
 EXPAND_AS_DEFINED      = 
 SKIP_FUNCTION_MACROS   = YES
 
@@ -204,10 +206,10 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 
 TAGFILES               = 
-GENERATE_TAGFILE       = 
+GENERATE_TAGFILE       = @CLDOCS_TAGFILE_LOCATION@
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = YES
-PERL_PATH              = /usr/bin/perl
+PERL_PATH              = @PERL_EXECUTABLE@
 
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool   
@@ -223,7 +225,7 @@ INCLUDE_GRAPH          = YES
 INCLUDED_BY_GRAPH      = YES
 GRAPHICAL_HIERARCHY    = YES
 DOT_IMAGE_FORMAT       = png
-DOT_PATH               = 
+DOT_PATH               = @DOXYGEN_DOT_EXECUTABLE@
 DOTFILE_DIRS           = 
 GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES

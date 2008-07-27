@@ -13,7 +13,7 @@
 
 CL_NS_DEF(store)
 
-   /** Abstract base class for input from a file in a {@link Directory}.  A
+   /** Abstract base class for input from a file in a {@link lucene::store::Directory}.  A
    * random-access input stream.  Used for all Lucene index input operations.
    * @see Directory
    * @see IndexOutput
@@ -91,7 +91,7 @@ CL_NS_DEF(store)
 		
 		/** Returns the current position in this file, where the next read will
 		* occur.
-		* @see #seek(long)
+		* @see #seek(int64_t)
 		*/
 		virtual int64_t getFilePointer() const =0;
 		
