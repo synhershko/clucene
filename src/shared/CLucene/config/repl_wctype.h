@@ -66,11 +66,11 @@
 
 //the methods contained in gunichartables.h
 typedef unsigned long  clunichar;
-bool cl_isletter(clunichar c);
-bool cl_isalnum(clunichar c);
-bool cl_isdigit(clunichar c);
-bool cl_isspace (clunichar c);
-TCHAR cl_tolower (TCHAR c);
-TCHAR cl_toupper (TCHAR c);
+CLUCENE_SHARED_EXPORT bool cl_isletter(clunichar c);
+CLUCENE_SHARED_EXPORT bool cl_isalnum(clunichar c);
+CLUCENE_SHARED_EXPORT bool cl_isdigit(clunichar c);
+CLUCENE_SHARED_EXPORT bool cl_isspace (clunichar c);
+CLUCENE_SHARED_EXPORT TCHAR cl_tolower (TCHAR c);
+CLUCENE_SHARED_EXPORT TCHAR cl_toupper (TCHAR c);
 
 #endif

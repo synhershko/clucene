@@ -13,11 +13,11 @@
 * which contains platform specific code configured by cmake.
 */
 
-//shared header
-#include "CLucene/SharedHeader.h"
-
 //configurations for library
 #include "CLucene/CLConfig.h"
+
+//shared header
+#include "CLucene/SharedHeader.h"
 
 //todo: would be good to deprecate this... it's ugly
 #define StringArrayWithDeletor       CL_NS(util)::CLVector<TCHAR*, CL_NS(util)::Deletor::tcArray >

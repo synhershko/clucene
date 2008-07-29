@@ -70,18 +70,18 @@ struct DIR
 * Returns a pointer to a DIR structure appropriately filled in to begin
 * searching a directory.
 */
-DIR* opendir (const char* filespec);
+CLUCENE_SHARED_EXPORT DIR* opendir (const char* filespec);
 
 /**
 * Return a pointer to a dirent structure filled with the information on the
 * next entry in the directory.
 */
-struct dirent*	readdir (DIR* dir);
+CLUCENE_SHARED_EXPORT struct dirent*	readdir (DIR* dir);
 
 /**
 * Frees up resources allocated by opendir.
 */
-int32_t	closedir (DIR* dir);
+CLUCENE_SHARED_EXPORT int32_t	closedir (DIR* dir);
 
 
 #elif defined (_CL_HAVE_DIRENT_H)

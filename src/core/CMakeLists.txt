@@ -2,13 +2,13 @@ PROJECT(clucene-core)
 
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
-ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis" ./CLucene/analysis/*)
 #seems to be a bug in cmake, can't put these in analysis\\standard folder :(
 SOURCE_GROUP("analysis-standard" ./CLucene/analysis/standard/*)
 SOURCE_GROUP("document" ./CLucene/document/*)
+SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("index" ./CLucene/index/*)
 SOURCE_GROUP("queryParser" ./CLucene/queryParser/*)
 SOURCE_GROUP("search" ./CLucene/search/*)
@@ -117,7 +117,10 @@ SET(clucene_core_Files
 	./CLucene/search/DateFilter.cpp
 )
 
-GET_SHARED_FILES(clucene_shared_Files)
+#if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)
+IF ( USE_SHARED_OBJECT_FILES )
+    GET_SHARED_FILES(clucene_shared_Files)
+ENDIF ( USE_SHARED_OBJECT_FILES )
 
 #find our headers
 file(GLOB_RECURSE HEADERS ${clucene-core_SOURCE_DIR}/*.h)
@@ -138,14 +141,23 @@ add_library(clucene-core-static STATIC
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
+    DEFINE_SYMBOL "MAKE_CLUCENE_CORE_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
+
+#link the clucene-core library against the releavent clucene-shared library (if we aren't using the object files)
+IF ( NOT USE_SHARED_OBJECT_FILES )
+    IF ( USE_STATIC_SHARED_LIBRARY )
+            TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static)
+    ELSE ( USE_STATIC_SHARED_LIBRARY )
+            TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
+    ENDIF ( USE_STATIC_SHARED_LIBRARY )
+ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL ""
+    DEFINE_SYMBOL "MAKE_CLUCENE_CORE_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
@@ -168,9 +180,9 @@ install(TARGETS clucene-core-static DESTINATION lib)
 
 # code for installing an script to help cmake applications determint the Strigi
 # version number
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake" "
-set(STRIGI_VERSION_MAJOR ${STRIGI_VERSION_MAJOR})
-set(STRIGI_VERSION_MINOR ${STRIGI_VERSION_MINOR})
-set(STRIGI_VERSION_PATCH ${STRIGI_VERSION_PATCH})
-")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake DESTINATION ${LIB_DESTINATION}/strigi)
+#file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake" "
+#set(STRIGI_VERSION_MAJOR ${STRIGI_VERSION_MAJOR})
+#set(STRIGI_VERSION_MINOR ${STRIGI_VERSION_MINOR})
+#set(STRIGI_VERSION_PATCH ${STRIGI_VERSION_PATCH})
+#")
+#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake DESTINATION ${LIB_DESTINATION}/strigi)

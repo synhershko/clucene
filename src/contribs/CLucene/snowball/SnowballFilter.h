@@ -14,7 +14,7 @@ CL_NS_DEF2(analysis,snowball)
  *
  * Note: todo: This is not thread safe...
  */
-class SnowballFilter: public TokenFilter {
+class CLUCENE_CONTRIBS_EXPORT SnowballFilter: public TokenFilter {
 	struct sb_stemmer * stemmer;
 public:
 

@@ -228,29 +228,64 @@ SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
 
 MACRO (GET_SHARED_FILES result)
+    IF ( "" STREQUAL "${ARGV2}" )
+        SET ( rel ${clucene-shared_SOURCE_DIR} )
+    ELSE ( "" STREQUAL "${ARGV2}" )
+        SET ( rel ${ARGV2} )
+    ENDIF ( "" STREQUAL "${ARGV2}" )
+
     SET(${result}
-    	${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/gunichartables.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcslwr.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstoll.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcscasecmp.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tprintf.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_lltot.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/repl_tcstod.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/utf8.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/config/threads.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/debug/condition.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/debug/error.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/util/StringBuffer.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/util/Misc.cpp
-    	${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
+    	${rel}/CLucene/SharedHeader.cpp
+        ${rel}/CLucene/debug/error.cpp
+   	    ${rel}/CLucene/config/gunichartables.cpp
+    	${rel}/CLucene/config/repl_tcslwr.cpp
+    	${rel}/CLucene/config/repl_tcstoll.cpp
+    	${rel}/CLucene/config/repl_tcscasecmp.cpp
+    	${rel}/CLucene/config/repl_tprintf.cpp
+    	${rel}/CLucene/config/repl_lltot.cpp
+    	${rel}/CLucene/config/repl_tcstod.cpp
+    	${rel}/CLucene/config/utf8.cpp
+    	${rel}/CLucene/config/threads.cpp
+    	${rel}/CLucene/debug/condition.cpp
+    	${rel}/CLucene/util/StringBuffer.cpp
+    	${rel}/CLucene/util/Misc.cpp
+    	${rel}/CLucene/util/dirent.cpp
 	)	
 ENDMACRO (GET_SHARED_FILES)
+
+GET_SHARED_FILES(clucene_shared_Files ".")
+
+#find our headers
+file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
+
+
+add_library(clucene-shared SHARED
+	${clucene_shared_Files} ${HEADERS}
+)
+add_library(clucene-shared-static STATIC
+	${clucene_shared_Files} ${HEADERS}
+)
+
+#set properties on the libraries
+SET_TARGET_PROPERTIES(clucene-shared PROPERTIES
+    VERSION ${CLUCENE_VERSION}
+    SOVERSION ${CLUCENE_SOVERSION}
+    DEFINE_SYMBOL "MAKE_CLUCENE_SHARED_LIB"
+    COMPILE_DEFINITIONS_DEBUG _DEBUG
+)
+SET_TARGET_PROPERTIES(clucene-shared-static PROPERTIES
+    VERSION ${CLUCENE_VERSION}
+    SOVERSION ${CLUCENE_SOVERSION}
+    DEFINE_SYMBOL "MAKE_CLUCENE_SHARED_LIB"
+    COMPILE_DEFINITIONS_DEBUG _DEBUG
+)
 
 #install public headers.
 install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.h DESTINATION include/CLucene )
 install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/LuceneThreads.h DESTINATION include/CLucene )
-install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/lucenebase.h DESTINATION include/CLucene/debug )
-install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/mem.h DESTINATION include/CLucene/debug )
-install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/debug/error.h DESTINATION include/CLucene/debug )
 
+IF ( NOT USE_SHARED_OBJECT_FILES )
+    IF ( NOT USE_STATIC_SHARED_LIBRARY )
+        install(TARGETS clucene-shared DESTINATION lib)
+    ENDIF ( NOT USE_STATIC_SHARED_LIBRARY )
+ENDIF ( NOT USE_SHARED_OBJECT_FILES )

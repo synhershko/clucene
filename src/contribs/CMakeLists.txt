@@ -2,8 +2,6 @@ PROJECT(clucene-contribs)
 
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
-ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CONTRIBS_LIB)
-
 
 set(CMAKE_MODULE_PATH "${clucene-contribs_SOURCE_DIR}/cmake")
 
@@ -125,8 +123,9 @@ ENDIF ( ICONV_FOUND )
 
 
     
-
-GET_SHARED_FILES(clucene_shared_Files)
+IF ( USE_SHARED_OBJECT_FILES )
+    GET_SHARED_FILES(clucene_shared_Files)
+ENDIF ( USE_SHARED_OBJECT_FILES )
 
 #create the libraries
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
@@ -136,9 +135,13 @@ INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/contribs )
 add_library(clucene-contribs SHARED
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
 )
-MESSAGE ( STATUS "${clucene-contrib-libs}" )
-
-TARGET_LINK_LIBRARIES(clucene-contribs clucene-core ${clucene-contrib-libs})
+IF ( NOT USE_SHARED_OBJECT_FILES )
+    IF ( USE_STATIC_SHARED_LIBRARY )
+        TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared-static)
+    ELSE ( USE_STATIC_SHARED_LIBRARY )
+        TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared)
+    ENDIF ( USE_STATIC_SHARED_LIBRARY )
+ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 add_library(clucene-contribs-static STATIC
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
@@ -149,13 +152,13 @@ add_library(clucene-contribs-static STATIC
 SET_TARGET_PROPERTIES(clucene-contribs PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL "CLUCENE_EXPORT_SYMBOLS"
+    DEFINE_SYMBOL "MAKE_CLUCENE_CONTRIBS_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
 SET_TARGET_PROPERTIES(clucene-contribs-static PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL ""
+    DEFINE_SYMBOL "MAKE_CLUCENE_CONTRIBS_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )

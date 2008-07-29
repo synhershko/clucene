@@ -90,6 +90,15 @@ the cmake/MacroCheckGccVisibility.cmake and MacroEnsureVersion.cmake components:
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
+
+
+
 CLUCENE CONTRIBUTIONS CODE:
 
+PorterStemmer code: couldn't find license. This component is deprecated and will be removed very soon.
 
+Snowball code: needs to be researched.
+
+Jstreams: needs to be researched
+
+All code needs to be clearly marked with license headers...

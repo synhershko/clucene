@@ -10,7 +10,7 @@
 CL_NS_DEF(util)
   /** A class containing various functions. 
   */
-  class Misc{
+  class CLUCENE_SHARED_EXPORT Misc{
   public:
     static uint64_t currentTimeMillis();
     static const TCHAR* replace_all( const TCHAR* val, const TCHAR* srch, const TCHAR* repl );

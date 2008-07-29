@@ -8,7 +8,7 @@
 #define _lucene_util_StringBuffer_
 
 CL_NS_DEF(util)
-  class StringBuffer:LUCENE_BASE{
+  class CLUCENE_SHARED_EXPORT StringBuffer:LUCENE_BASE{
   public:
    ///Constructor. Allocates a buffer with the default length.
    StringBuffer();

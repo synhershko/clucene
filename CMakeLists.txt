@@ -70,9 +70,9 @@ OPTION(ENABLE_COMPILE_TESTS
   "enable various projects that test alternative build switches"
   ${ENABLE_COMPILE_TESTS_VALUE})
 
-OPTION(TESTS_USE_SHARED_LIBRARY
-  "Link tests against the shared library"
-  ON)
+OPTION(USE_STATIC_SHARED_LIBRARY
+  "Link libraries and executables against the static linked clucene-shared library instead of shared"
+  OFF)
 
 #check flags...
 INCLUDE (TestCXXAcceptsFlag)
@@ -88,7 +88,7 @@ IF(ENABLE_GPROF)
         
     IF ( GccFlagPg )
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-        #todo: add flag to linker also...
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
     ENDIF ( GccFlagPg )
 ENDIF(ENABLE_GPROF)
 
@@ -118,3 +118,13 @@ ADD_SUBDIRECTORY (src/core)
 ADD_SUBDIRECTORY (src/test)
 ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY (src/contribs EXCLUDE_FROM_ALL)
+
+#add uninstall command
+#CONFIGURE_FILE(
+#  "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in"
+#  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+#  IMMEDIATE @ONLY)
+  
+#ADD_CUSTOM_TARGET(uninstall
+#  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+  

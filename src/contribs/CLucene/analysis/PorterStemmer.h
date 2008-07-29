@@ -9,6 +9,14 @@
 
    Modified by "Hemant Muthiyan"
    email: hemant_muthiyan@yahoo.co.in
+    
+   The Porter stemmer should be regarded as ‘frozen’, that is, strictly defined, 
+   and not amenable to further modification. As a stemmer, it is slightly inferior 
+   to the Snowball English or Porter2 stemmer, which derives from it, and which is 
+   subjected to occasional improvements. For practical work, therefore, the new 
+   Snowball stemmer is recommended. The Porter stemmer is appropriate to IR 
+   research work involving stemming where the experiments need to be exactly 
+   repeatable. 
 
 */
 #ifndef _lucene_analysis_PorterStemmer_
