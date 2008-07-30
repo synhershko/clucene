@@ -53,12 +53,14 @@ OPTION(ENABLE_ASCII_MODE
 OPTION(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS
   "use internal character functions. required to run tests correctly"
   ON)
-OPTION(ENABLE_GPROF
-  "turn on gprof profiling support"
-  OFF)
 OPTION(ENABLE_PACKAGING
   "create build scripts for creating clucene packages"
   OFF)
+
+OPTION(LUCENE_SYS_INCLUDES
+  "location for non-system independent files. defaults to CMAKE_INSTALL_PREFIX. see INSTALL documentation for further information."
+  "")
+  
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )
 IF ( MSVC_IDE )
@@ -81,16 +83,21 @@ IF ( CMAKE_COMPILER_IS_GNUCC )
     IF ( GccFlagG )
         SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
     ENDIF ( GccFlagG )
-ENDIF ( CMAKE_COMPILER_IS_GNUCC  )
 
-IF(ENABLE_GPROF)
     CHECK_CXX_ACCEPTS_FLAG(-pg GccFlagPg)
-        
     IF ( GccFlagPg )
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+        OPTION(ENABLE_GPROF
+          "turn on gprof profiling support"
+          OFF)
+
+        IF ( ENABLE_GPROF )
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+            SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+            SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+            SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pg")
+        ENDIF ( ENABLE_GPROF )
     ENDIF ( GccFlagPg )
-ENDIF(ENABLE_GPROF)
+ENDIF(CMAKE_COMPILER_IS_GNUCC) 
 
 IF (ENABLE_PACKAGING)
     INCLUDE(CreateClucenePackages)
@@ -120,11 +127,10 @@ ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY (src/contribs EXCLUDE_FROM_ALL)
 
 #add uninstall command
-#CONFIGURE_FILE(
-#  "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in"
-#  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-#  IMMEDIATE @ONLY)
+CONFIGURE_FILE(
+  "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
   
-#ADD_CUSTOM_TARGET(uninstall
-#  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
-  
+ADD_CUSTOM_TARGET(uninstall
+  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
