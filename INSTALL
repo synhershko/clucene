@@ -61,6 +61,17 @@ or
 12.)Now you can develop your own code. This is beyond the scope of this document.
     Read the README for information about documentation or to get help on the mailinglist.
 
+Installing:
+-----------
+CLucene is installed in CMAKE_INSTALL_PREFIX by default. 
+
+CLucene used to put config headers next to the library. this was done
+because these headers are generated and are relevant to the library.
+CMAKE_INSTALL_PREFIX was for system-independent files. the idea is that
+you could have several versions of the library installed (ascii version,
+ucs2 version, multithread, etc) and have only one set of headers.
+in version 0.9.24+ we allow this feature, but you have to use 
+LUCENE_SYS_INCLUDES to specify where to install these files.
 
 Troubleshooting:
 ----------------
@@ -73,8 +84,7 @@ On Solaris:
 ulimit -n 1024
 set rlim_fd_cur=1024
 
-
-Code style
+Code layout
 --------------
 File locations:
 * clucene-config.h is required and is distributed next to the library, so that multiple libraries can exist on the
@@ -85,7 +95,8 @@ File locations:
 * The exception to the internal/public conventions is if you use the static library. In this case the internal
   symbols will be available (this is the way the tests program tests internal code). However this is not recommended.
 
-Memory management:
+Memory management
+------------------
 Memory in CLucene has been a bit of a difficult thing to manage because of the
 unclear specification about who owns what memory. This was mostly a result of
 CLucene's java-esque coding style resulting from porting from java to c++ without
