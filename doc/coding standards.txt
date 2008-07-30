@@ -7,6 +7,21 @@ Headers:
 * All classes should have a destructor, 
   the destructor should be virtual if there is any chance of the class being overridden
 
+Documentation:
+Although CLucene documentation is not complete, it would be nice to see documentation created for new files.
+We used doxygen to create documentation. 2 basic formats of documentation are:
+
+/** documentation must have ** to be included */
+void function();
+void function2(); //< can also document functions retrospectively by adding <
+
+
+/** 
+* You can also document memory with the special @memory alias.
+* @memory you must delete data returned from this function using _CLDELETE 
+*/
+Object createObject();
+
 
 Cross platform specifics:
 * Use macros provided in shared project. This applies to data types and functions
