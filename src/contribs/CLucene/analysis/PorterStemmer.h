@@ -24,7 +24,7 @@
 
 CL_NS_DEF(analysis)
 
-class CLUCENE_EXPORT PorterStemmer
+class CLUCENE_CONTRIBS_EXPORT PorterStemmer
 {
 private:
 	TCHAR *b;

@@ -33,7 +33,7 @@ CL_NS_DEF2(analysis,cjk)
  *
  * @author Che, Dong
  */
-class CLUCENE_EXPORT CJKTokenizer: public CL_NS(analysis)::Tokenizer {
+class CLUCENE_CONTRIBS_EXPORT CJKTokenizer: public CL_NS(analysis)::Tokenizer {
 private:
 	/** word offset, used to imply which character(in ) is parsed */
     int32_t offset;

@@ -20,7 +20,7 @@
 
 CL_NS_DEF(analysis)
 
-class CLUCENE_EXPORT LanguageBasedAnalyzer: public CL_NS(analysis)::Analyzer{
+class CLUCENE_CONTRIBS_EXPORT LanguageBasedAnalyzer: public CL_NS(analysis)::Analyzer{
 	TCHAR lang[100];
 	bool stem;
 public:
