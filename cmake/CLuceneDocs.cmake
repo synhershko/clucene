@@ -1,8 +1,8 @@
 # - CLuceneDocs.cmake
 # This file provides support for building the CLucene Documentation.
 # To build the documention, you will have to enable it
-# and then do the equivalent of "make doc-doxygen".
-OPTION(BUILD_CLDOCS "Build the clucene documentation." OFF)
+# and then do the equivalent of "make doc".
+OPTION(ENABLE_CLDOCS "Build the clucene documentation." OFF)
 
 MACRO(SET_YESNO)
     FOREACH(param ${ARGV})
@@ -21,7 +21,7 @@ MACRO(SET_BLANK)
     ENDFOREACH(param)
 ENDMACRO(SET_BLANK)
 
-IF (BUILD_CLDOCS)
+IF (ENABLE_CLDOCS)
     OPTION(CLDOCS_HTML_HELP 
         "Doxygen should compile HTML into a Help file (CHM)." NO)
         
@@ -61,7 +61,7 @@ IF (BUILD_CLDOCS)
         # (called by FindDocumentation.cmake).
         # It runs the final generated Doxyfile against it.
         # The DOT_PATH is substituted into the Doxyfile.
-        ADD_CUSTOM_TARGET(doc-doxygen 
+        ADD_CUSTOM_TARGET(doc
             ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doc/doxyfile
         )
         
@@ -138,9 +138,14 @@ IF (BUILD_CLDOCS)
             )
         ENDIF ( TAR AND GZIP )
         
+        #install man if it was built
+        IF ( CLDOCS_MAN )
+            INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/doc/man/ DESTINATION man)
+        ENDIF ( CLDOCS_MAN )
+        
     ELSE ( DOXYGEN_FOUND )
-        MESSAGE(FATAL_ERROR "Doxygen not found, turn BUILD_CLDOCS off to proceed")
+        MESSAGE(FATAL_ERROR "Doxygen not found, turn ENABLE_CLDOCS off to proceed")
     ENDIF ( DOXYGEN_FOUND )
 
     
-ENDIF (BUILD_CLDOCS)
+ENDIF (ENABLE_CLDOCS)
