@@ -206,7 +206,7 @@ CL_NS_DEF(index)
 	  //Open the norm file. There's a norm file for each indexed field with a byte for each document. 
 	  //The .f[0-9]* file contains, for each document, a byte that encodes a value 
 	  //that is multiplied into the score for hits on that field
-      hasSingleNorm = si->hasSingleNorm;
+      hasSingleNorm = si->hasSingleNormFile;
       singleNormStream = NULL;
       openNorms(cfsDir);
 

@@ -20,27 +20,37 @@ CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-
-   SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir):
-       dir(Dir),
-       docCount(DocCount),
+/*
+   SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir):
+       dir(_dir),
+       docCount(_docCount),
        preLockless(true),
        normGen(NULL),
+	   normGenLen(0),
        delGen(0),
-       hasSingleNorm(false),
-       isCompoundFile(0)
+       hasSingleNormFile(false),
+       isCompoundFile(0),
+	   docStoreOffset(0),
+	   docStoreSegment(NULL),
+	   docStoreIsCompoundFile(false)
    {
-		name = STRDUP_AtoA(Name);
+		name = STRDUP_AtoA(_name);
    }
+*/
 
-   SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen, int64_t* NormGen, const uint8_t IsCompoundFile, const bool HasSingleNorm, const bool PreLockless ):
-    	dir(Dir),
-    	docCount(DocCount),
-    	preLockless(PreLockless),
-    	normGen(NormGen),
-    	delGen(DelGen),
-    	hasSingleNorm(HasSingleNorm),
-    	isCompoundFile(IsCompoundFile)
+   SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir, const int64_t _delGen, int64_t* _normGen, const size_t _normGenLen, const uint8_t _isCompoundFile, const bool _hasSingleNorm, const bool _preLockless ):
+    	docCount(_docCount),
+		dir(_dir),
+    	preLockless(_preLockless),
+		delGen(_delGen),
+    	normGen(_normGen),
+		normGenLen(_normGenLen),
+    	hasSingleNormFile(_hasSingleNorm),
+		sizeInBytes(-1),
+    	isCompoundFile(_isCompoundFile),
+		docStoreOffset(0),
+		docStoreSegment(NULL),
+		docStoreIsCompoundFile(false)
 	{
 	//Func - Constructor. Initialises SegmentInfo.
 	//Pre  - Name holds the unique name in the directory Dir
@@ -48,16 +58,17 @@ CL_NS_DEF(index)
 	//       Dir holds the Directory where the segment resides
 	//Post - The instance has been created. name contains the duplicated string Name.
 	//       docCount = DocCount and dir references Dir
-		name = STRDUP_AtoA(Name);
+		name = STRDUP_AtoA(_name);
    }
      
    SegmentInfo::~SegmentInfo(){
 	   	_CLDELETE_ARRAY(normGen);
 		_CLDELETE_CaARRAY(name);
+		_CLDELETE_CaARRAY(docStoreSegment);
    }
 
 
-  SegmentInfos::SegmentInfos(bool deleteMembers) :
+  SegmentInfos::SegmentInfos(bool deleteMembers, int32_t reserveCount) :
       infos(deleteMembers),generation(0),lastGeneration(0) {
   //Func - Constructor
   //Pre  - deleteMembers indicates if the instance to be created must delete
@@ -68,6 +79,8 @@ CL_NS_DEF(index)
       //initialize counter to 0
       counter = 0;
       version = Misc::currentTimeMillis();
+	  if (reserveCount > 1)
+		  infos.reserve(reserveCount);
   }
 
   SegmentInfos::~SegmentInfos(){
@@ -347,6 +360,22 @@ CL_NS_DEF(index)
   	}
   	
   	return  IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", nextGeneration );
+  }
+
+  SegmentInfo* SegmentInfos::elementAt(int32_t pos) {
+	  return infos.at(pos);
+  }
+
+  void SegmentInfos::setElementAt(SegmentInfo* si, int32_t pos) {
+	  infos.set(pos, si);
+  }
+
+  SegmentInfos* SegmentInfos::clone() {
+	  SegmentInfos* sis = _CLNEW SegmentInfos(true, infos.size());
+	  for(size_t i=0;i<infos.size();i++) {
+		  sis->setElementAt(infos[i]->clone(), i);
+	  }
+	  return sis;
   }
   
   SegmentInfos::FindSegmentsFile::FindSegmentsFile( CL_NS(store)::Directory* dir ) {
