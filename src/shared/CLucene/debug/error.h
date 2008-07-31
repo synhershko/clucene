@@ -53,7 +53,7 @@
  
  */
 #else
-  class CLUCENE_EXPORT CLuceneError
+  class CLUCENE_SHARED_EXPORT CLuceneError
   {
   	int error_number;
 	char* _awhat;

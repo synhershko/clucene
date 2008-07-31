@@ -1,7 +1,9 @@
 PROJECT(clucene-core)
 
+#define command line options
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
+ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis" ./CLucene/analysis/*)
@@ -141,7 +143,6 @@ add_library(clucene-core-static STATIC
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL "MAKE_CLUCENE_CORE_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
@@ -149,15 +150,17 @@ SET_TARGET_PROPERTIES(clucene-core PROPERTIES
 IF ( NOT USE_SHARED_OBJECT_FILES )
     IF ( USE_STATIC_SHARED_LIBRARY )
             TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static)
+            ADD_DEFINITIONS(-DLUCENE_SHARED_STATIC})
     ELSE ( USE_STATIC_SHARED_LIBRARY )
             TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
     ENDIF ( USE_STATIC_SHARED_LIBRARY )
+ELSE  ( NOT USE_SHARED_OBJECT_FILES )
+    ADD_DEFINITIONS(-DLUCENE_SHARED_STATIC})
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
-    DEFINE_SYMBOL "MAKE_CLUCENE_CORE_LIB"
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
@@ -167,22 +170,53 @@ FOREACH(file ${HEADERS})
 	get_filename_component(aname ${file} NAME)
 	file(RELATIVE_PATH relpath ${CMAKE_SOURCE_DIR}/src/core ${apath})
 	IF ( NOT aname MATCHES "^_.*" )
-		install(FILES ${file} DESTINATION include/${relpath})
+		install(FILES ${file} 
+		        DESTINATION include/${relpath}
+		        COMPONENT development)
 	ENDIF ( NOT aname MATCHES "^_.*" )
 ENDFOREACH(file)
-#also install CLucene.h
-install(FILES ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h DESTINATION lib/CLucene )
+
+#install clucene-shared headers.
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/SharedHeader.h 
+        DESTINATION include/CLucene 
+        COMPONENT development)
+install(FILES ${clucene-shared_SOURCE_DIR}/CLucene/LuceneThreads.h 
+        DESTINATION include/CLucene 
+        COMPONENT development )
+
+# code for installing an script to help cmake applications determine
+# the CLucene version number
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake" "
+    set(CLUCENE_VERSION_MAJOR ${CLUCENE_VERSION_MAJOR})
+    set(CLUCENE_VERSION_MINOR ${CLUCENE_VERSION_MINOR})
+    set(CLUCENE_VERSION_REVISION ${CLUCENE_VERSION_REVISION})
+    set(CLUCENE_VERSION_PATCH ${CLUCENE_VERSION_PATCH})
+    
+    set(CLUCENE_VERSION ${CLUCENE_VERSION})
+    set(CLUCENE_SOVERSION ${CLUCENE_SOVERSION})
+")
+
+#install non system-independent
+IF ( LUCENE_SYS_INCLUDES )
+    install(FILES ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h 
+            DESTINATION ${LUCENE_SYS_INCLUDES}/CLucene  
+            COMPONENT development)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake 
+            DESTINATION ${LUCENE_SYS_INCLUDES}/CLucene  
+            COMPONENT development)
+ELSE ( LUCENE_SYS_INCLUDES )
+    install(FILES ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h 
+            DESTINATION include/CLucene
+            COMPONENT development)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake 
+            DESTINATION include/CLucene
+            COMPONENT development)
+ENDIF ( LUCENE_SYS_INCLUDES )
 
 #and install libraries
-install(TARGETS clucene-core DESTINATION lib)
-install(TARGETS clucene-core-static DESTINATION lib)
-
-
-# code for installing an script to help cmake applications determint the Strigi
-# version number
-#file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake" "
-#set(STRIGI_VERSION_MAJOR ${STRIGI_VERSION_MAJOR})
-#set(STRIGI_VERSION_MINOR ${STRIGI_VERSION_MINOR})
-#set(STRIGI_VERSION_PATCH ${STRIGI_VERSION_PATCH})
-#")
-#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/StrigiConfig.cmake DESTINATION ${LIB_DESTINATION}/strigi)
+install(TARGETS clucene-core 
+        DESTINATION lib  
+        COMPONENT runtime )
+install(TARGETS clucene-core-static 
+        DESTINATION lib 
+        COMPONENT runtime )

@@ -119,38 +119,41 @@
 #if defined(_WIN32) || defined(_WIN64)
 	#define CLUCENE_EXPORT_DECL __declspec(dllexport)
     #define CLUCENE_IMPORT_DECL __declspec(dllimport)
+    #define CLUCENE_LOCAL_DECL
 #elif defined(_CL_HAVE_GCCVISIBILITYPATCH)
 	#define CLUCENE_EXPORT_DECL __attribute__ ((visibility("default")))
 	#define CLUCENE_LOCAL_DECL __attribute__ ((visibility("hidden")))
-#endif
-#ifndef CLUCENE_EXPORT_DECL
-	#define CLUCENE_EXPORT_DECL
-#endif
-#ifndef CLUCENE_IMPORT_DECL
 	#define CLUCENE_IMPORT_DECL
-#endif
-#ifndef CLUCENE_LOCAL_DECL
+#else
+	#define CLUCENE_EXPORT_DECL
+	#define CLUCENE_IMPORT_DECL
 	#define CLUCENE_LOCAL_DECL
 #endif
 
 //define for the libraries
-#if defined(MAKE_CLUCENE_CORE_LIB)
-	#define CLUCENE_EXPORT CLUCENE_EXPORT_DECL
-	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
-#else
-	#define CLUCENE_EXPORT CLUCENE_IMPORT_DECL
-#endif
-#if defined(MAKE_CLUCENE_CONTRIBS_LIB)
-	#define CLUCENE_CONTRIBS_EXPORT CLUCENE_EXPORT_DECL
-	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
-#else
-	#define CLUCENE_CONTRIBS_EXPORT CLUCENE_IMPORT_DECL
-#endif
-#if defined(MAKE_CLUCENE_SHARED_LIB)
+#if defined(clucene_shared_EXPORT)
 	#define CLUCENE_SHARED_EXPORT CLUCENE_EXPORT_DECL
 	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
+#elif defined(MAKE_CLUCENE_SHARED_LIB)
+	#define CLUCENE_SHARED_EXPORT //don't export if we are building a static library
 #else
-	#define CLUCENE_SHARED_EXPORT CLUCENE_IMPORT_DECL
+    #define CLUCENE_SHARED_EXPORT CLUCENE_IMPORT_DECL
+#endif
+#if defined(clucene_core_EXPORT)
+	#define CLUCENE_EXPORT CLUCENE_EXPORT_DECL
+	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
+#elif defined(MAKE_CLUCENE_CORE_LIB)
+	#define CLUCENE_EXPORT
+#else
+    #define CLUCENE_EXPORT CLUCENE_IMPORT_DECL
+#endif
+#if defined(clucene_contribs_EXPORTS)
+	#define CLUCENE_CONTRIBS_EXPORT CLUCENE_EXPORT_DECL
+	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
+#elif defined(MAKE_CLUCENE_CONTRIBS_LIB)
+	#define CLUCENE_CONTRIBS_EXPORT
+#else
+    #define CLUCENE_CONTRIBS_EXPORT CLUCENE_IMPORT_DECL
 #endif
 #ifndef CLUCENE_LOCAL
 	#define CLUCENE_LOCAL

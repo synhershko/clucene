@@ -21,8 +21,8 @@ ${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
 ${demo_HEADERS}
 )
 
-
-SET_TARGET_PROPERTIES(cl_demo PROPERTIES
-    DEFINE_SYMBOL ""
-)
-TARGET_LINK_LIBRARIES(cl_demo clucene-core)
+IF ( USE_STATIC_SHARED_LIBRARY )
+    TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared-static)
+ELSE ( USE_STATIC_SHARED_LIBRARY )
+    TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared)
+ENDIF ( USE_STATIC_SHARED_LIBRARY )
