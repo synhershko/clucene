@@ -10,7 +10,11 @@
 
 #if !defined(_CL_HAVE_DIRENT_H) && !defined(_CL_HAVE_SYS_NDIR_H) && !defined(_CL_HAVE_SYS_DIR_H) && !defined(_CL_HAVE_NDIR_H)
 
-typedef int intptr_t;
+#ifdef  _WIN64
+	typedef __int64             intptr_t;
+#else
+	typedef int intptr_t;
+#endif
 #include <io.h>
 
 
