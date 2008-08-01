@@ -12,23 +12,24 @@
 //#include "CLucene/util/VoidList.h"
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,IndexInput)
+CL_CLASS_DEF(store,IndexOutput)
 
 CL_NS_DEF(index)
 
 	class SegmentInfo :LUCENE_BASE{
 	public:
 		
-		LUCENE_STATIC_CONSTANT(int32_t, NO = -1);
-		LUCENE_STATIC_CONSTANT(int32_t, YES = 1);
-		LUCENE_STATIC_CONSTANT(int32_t, CHECK_DIR = 0);
-		LUCENE_STATIC_CONSTANT(int32_t, WITHOUT_GEN = 0);
+		LUCENE_STATIC_CONSTANT(int32_t, NO = -1);			// e.g. no norms; no deletes; 
+		LUCENE_STATIC_CONSTANT(int32_t, YES = 1);			// e.g. have norms; have deletes; 
+		LUCENE_STATIC_CONSTANT(int32_t, CHECK_DIR = 0);		// e.g. must check dir to see if there are norms/deletions 
+		LUCENE_STATIC_CONSTANT(int32_t, WITHOUT_GEN = 0);	// a file name that has no GEN in it.
 
 		char *name;									// unique name in dir
-		const int32_t docCount;						// number of docs in seg
+		int32_t docCount;							// number of docs in seg
 		CL_NS(store)::Directory* dir;				// where segment resides
 
 	private:
-		const bool preLockless;                    // true if this is a segments file written before
+		bool preLockless;						  // true if this is a segments file written before
                                                   // lock-less commits (2.1)
 
 		int64_t delGen;                            // current generation of del file; NO if there
@@ -47,12 +48,12 @@ CL_NS_DEF(index)
 		
 		size_t normGenLen;						  // To keep the length of array normGen
 
-		const uint8_t isCompoundFile;             // NO if it is not; YES if it is; CHECK_DIR if it's
+		uint8_t isCompoundFile;					  // NO if it is not; YES if it is; CHECK_DIR if it's
                                                   // pre-2.1 (ie, must check file system to see
                                                   // if <name>.cfs and <name>.nrm exist)         
 	
 	public: // todo: privatize later. needed for SegmentReader::initialize
-		const bool hasSingleNormFile;			  // true if this segment maintains norms in a single file; 
+		bool hasSingleNormFile;					  // true if this segment maintains norms in a single file; 
                                                   // false otherwise
                                                   // this is currently false for segments populated by DocumentWriter
                                                   // and true for newly created merged segments (both
@@ -69,32 +70,48 @@ CL_NS_DEF(index)
                                                   // offset is where in that file this segment's docs begin
 		char* docStoreSegment;					  // name used to derive fields/vectors file we share with
                                                   // other segments
+												  // This string is being interned. There might be a way around this,
+												  // and if found, this would greatly improve perfomance.
+
 		bool docStoreIsCompoundFile;			  // whether doc store files are stored in compound file (*.cfx)
 
+		/* Called whenever any change is made that affects which
+		* files this segment has. */
+		void clearFiles();
+
 	public:
-		//SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir);
-		SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir, const int64_t DelGen = 0, int64_t* NormGen = NULL, const size_t _normGenLen = 0, const uint8_t IsCompoundFile = 0, const bool HasSingleNormFile = false, const bool PreLockless = true );
+		SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir);
+
+		SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir,
+			bool _isCompoundFile, bool _hasSingleNormFile,
+			int32_t _docStoreOffset = -1, const char* _docStoreSegment = NULL, bool _docStoreIsCompoundFile = false);
+
+		/**
+		* Construct a new SegmentInfo instance by reading a
+		* previously saved SegmentInfo from input.
+		*
+		* @param dir directory to load from
+		* @param format format of the segments info file
+		* @param input input handle to read segment info from
+		*/
+		SegmentInfo(CL_NS(store)::Directory* dir, int32_t format, CL_NS(store)::IndexInput* input);
 
 		~SegmentInfo();
 
-		SegmentInfo* clone () {
-			SegmentInfo* si = _CLNEW SegmentInfo(name, docCount, dir, delGen, NULL, 0,
-													isCompoundFile, hasSingleNormFile, preLockless);
-			//si->isCompoundFile = isCompoundFile;
-			//si->delGen = delGen;
-			//si->preLockless = preLockless;
-			//si->hasSingleNormFile = hasSingleNormFile;
-			if (normGen != NULL) {
-				memcpy(si->normGen, this->normGen, normGenLen);
-			}
-			si->docStoreOffset = docStoreOffset;
-			si->docStoreSegment = STRDUP_AtoA(docStoreSegment);
-			si->docStoreIsCompoundFile = docStoreIsCompoundFile;
-			return si;
-		}
+		SegmentInfo* clone ();
+
+		/**
+		* Copy everything from src SegmentInfo into our instance.
+		*/
+		void reset(const SegmentInfo* src);
+
+		/**
+		* Save this segment's info.
+		*/
+		void write(CL_NS(store)::IndexOutput* output);
 
 		///Gets the Directory where the segment resides
-		CL_NS(store)::Directory* getDir() const{ return dir; } 
+		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
 	};
 
 	typedef CL_NS(util)::CLVector<SegmentInfo*,CL_NS(util)::Deletor::Object<SegmentInfo> > segmentInfosType;
@@ -161,24 +178,35 @@ CL_NS_DEF(index)
 	private:
 		/* This must always point to the most recent file format. */
 		LUCENE_STATIC_CONSTANT(int32_t,CURRENT_FORMAT=FORMAT_SHARED_DOC_STORE);
-		
-		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryCount=10);
-		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryPauseMsec=50);
-		LUCENE_STATIC_CONSTANT(int32_t,defaultGenLookaheadCount=10);
-		
+
+	public:
+		int32_t counter;  // used to name new segments
+
 		/**
 		* counts how often the index has been changed by adding or deleting docs.
 		* starting with the current time in milliseconds forces to create unique version numbers.
 		*/
 		int64_t version;
 
+	private:
+		int64_t generation;					// generation of the "segments_N" for the next commit
+		int64_t lastGeneration;				// generation of the "segments_N" file we last successfully read
+											// or wrote; this is normally the same as generation except if
+											// there was an IOException that had interrupted a commit 
+
+		/**
+		* If non-null, information about loading segments_N files
+		* will be printed here.  @see #setInfoStream.
+		*/
+		//static PrintStream infoStream;
+		
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryCount=10);
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryPauseMsec=50);
+		LUCENE_STATIC_CONSTANT(int32_t,defaultGenLookaheadCount=10);
+
 		segmentInfosType infos;
 		
-        int32_t counter;  // used to name new segments
 		friend class IndexWriter; //allow IndexWriter to use counter
-		
-		int64_t generation;
-		int64_t lastGeneration;
 		
     public:
         SegmentInfos(bool deleteMembers=true, int32_t reserveCount=0);
@@ -198,12 +226,22 @@ CL_NS_DEF(index)
 		/**
 		* version number when this SegmentInfos was generated.
 		*/
-		int64_t getVersion() { return version; }
+		int64_t getVersion() const { return version; }
 		
 		static int64_t readCurrentVersion(CL_NS(store)::Directory* directory);
 
 		//Reads segments file that resides in directory
 		void read(CL_NS(store)::Directory* directory);
+
+		/**
+		* Read a particular segmentFileName.  Note that this may
+		* throw an IOException if a commit is in process.
+		*
+		* @param directory -- directory containing the segments file
+		* @param segmentFileName -- segment file to load
+		* @throws CorruptIndexException if the index is corrupt
+		* @throws IOException if there is a low-level IO error
+		*/
 		void read(CL_NS(store)::Directory* directory, const char* segmentFileName);
 
 	    //Writes a new segments file based upon the SegmentInfo instances it manages
@@ -224,14 +262,24 @@ CL_NS_DEF(index)
 		/* public vector operations */
 		SegmentInfo* elementAt(int32_t pos);
 		void setElementAt(SegmentInfo* si, int32_t pos);
+		inline void clear();
 
 		/**
 		* Returns a copy of this instance, also copying each
 		* SegmentInfo.
 		*/
 		SegmentInfos* clone();
-        
-    	class FindSegmentsFile: LUCENE_BASE {
+
+		/**
+		* Utility class for executing code that needs to do
+		* something with the current segments file.  This is
+		* necessary with lock-less commits because from the time
+		* you locate the current segments file name, until you
+		* actually open it, read its contents, or check modified
+		* time, etc., it could have been deleted due to a writer
+		* commit finishing.
+		*/
+		static class FindSegmentsFile: LUCENE_BASE {
     	protected:
     		CL_NS(store)::Directory* directory;    		    	
     		
@@ -258,7 +306,13 @@ CL_NS_DEF(index)
     		void* doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsVersion;
-    	
+
+		class FindSegmentsRead: public FindSegmentsFile {
+    	public:
+			FindSegmentsRead( CL_NS(store)::Directory* dir );
+    		void* doBody( const char* segmentFileName );
+    	};
+    	friend class SegmentInfos::FindSegmentsReader;
   };
 CL_NS_END
 #endif

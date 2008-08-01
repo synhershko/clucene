@@ -24,14 +24,15 @@ CL_NS_DEF(util)
 	* Internalise the specified string.
 	* \return Returns a pointer to the internalised string
 	*/
-	static const char* internA(const char* str);
+	static const char* internA(const char* str, const int8_t count=1, const bool use_provided=false);
+
 	/** 
 	* Uninternalise the specified string. Decreases
 	* the reference count and frees the string if 
 	* reference count is zero
 	* \returns true if string was destroyed, otherwise false
 	*/
-	static bool uninternA(const char* str);
+	static bool uninternA(const char* str, const int8_t count=1);
 
 	/** 
 	* Internalise the specified string.

@@ -70,7 +70,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 		if ( str == NULL )
 			return false;
 		if ( str[0] == 0 )
-			return false;
+			return false; // warning: a possible memory leak, since str may be never freed!
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
@@ -85,7 +85,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 		return false;
 	}
 	
-	const char* CLStringIntern::internA(const char* str){
+	const char* CLStringIntern::internA(const char* str, const int8_t count, const bool use_provided){
 		if ( str == NULL )
 			return NULL;
 		if ( str[0] == 0 )
@@ -95,30 +95,31 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		__strintrntype::iterator itr = StringIntern_stringaPool.find(str);
 		if ( itr==StringIntern_stringaPool.end() ){
-			char* ret = lucenestrdup(str);
-			StringIntern_stringaPool[ret] = 1;
+			char* ret = (use_provided) ? const_cast<char*>(str) : lucenestrdup(str);
+			StringIntern_stringaPool[ret] = count;
 			return ret;
 		}else{
-			(itr->second)++;
+			if (use_provided) delete[] str; // delete the provided string if already exists
+			(itr->second) = (itr->second) + count;
 			return itr->first;
 		}
 	}
 	
-	bool CLStringIntern::uninternA(const char* str){
+	bool CLStringIntern::uninternA(const char* str, const int8_t count){
 		if ( str == NULL )
 			return false;
 		if ( str[0] == 0 )
-			return false;
+			return false; // warning: a possible memory leak, since str may be never freed!
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
 		__strintrntype::iterator itr = StringIntern_stringaPool.find(str);
 		if ( itr!=StringIntern_stringaPool.end() ){
-			if ( (itr->second) == 1 ){
+			if ( (itr->second) == count ){
 				StringIntern_stringaPool.removeitr(itr);
 				return true;
 			}else
-				(itr->second)--;
+				(itr->second) = (itr->second) - count;
 		}
 		return false;
 	}
