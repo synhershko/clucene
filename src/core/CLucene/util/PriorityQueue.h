@@ -13,7 +13,7 @@ CL_NS_DEF(util)
   least element can always be found in constant time.  Put()'s and pop()'s
   require log(size) time. */
 template <class _type,typename _valueDeletor> 
-class CLUCENE_EXPORT PriorityQueue:LUCENE_BASE {
+class PriorityQueue:LUCENE_BASE {
 	private:
 		size_t _size;
 		bool dk;
