@@ -8,7 +8,7 @@
 #define _lucene_util_StringBuffer_
 
 CL_NS_DEF(util)
-  class CLUCENE_SHARED_EXPORT StringBuffer:LUCENE_BASE{
+  class CLUCENE_SHARED_EXPORT StringBuffer{
   public:
    ///Constructor. Allocates a buffer with the default length.
    StringBuffer();
@@ -21,7 +21,7 @@ CL_NS_DEF(util)
    ///the be used to easily manipulate the buffer.
    StringBuffer(TCHAR* buf,size_t maxlen, const bool consumeBuffer);
    ///Destructor
-   ~StringBuffer();
+   virtual ~StringBuffer();
    ///Clears the Stringbuffer and resets it to it default empty state
    void clear();
    
