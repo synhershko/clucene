@@ -56,24 +56,6 @@ private:
 			finishedWritingToBuffer = true;
 		}
 	}
-    int32_t read_(const T*& start, int32_t min, int32_t max){
-		int32_t missing = ntoread - buffer.avail;
-		int32_t nwritten = 0;
-		while (missing > 0 && nwritten >= 0) {
-			int32_t space;
-			space = buffer.makeSpace(missing);
-			T* start = buffer.readPos + buffer.avail;
-			nwritten = fillBuffer(start, space);
-			assert(StreamBase<T>::status != Eof);
-			if (nwritten > 0) {
-				buffer.avail += nwritten;
-				missing = ntoread - buffer.avail;
-			}
-		}
-		if (nwritten < 0) {
-			finishedWritingToBuffer = true;
-		}
-	}
 protected:
     /**
      * This function must be implemented by the subclasses.
