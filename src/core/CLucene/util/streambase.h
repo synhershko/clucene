@@ -29,6 +29,7 @@
 #include <string>
 
 #define INT32MAX 0x7FFFFFFFL
+#define SKIPSTEP 1024
 
 namespace jstreams {
 
@@ -96,7 +97,25 @@ public:
      * encountered, this amount of bytes is skipped.
      * This function returns new position in the stream.
      **/
-    virtual int64_t skip(int64_t ntoskip);
+	virtual int64_t skip(int64_t ntoskip){
+		const T *begin;
+		int32_t nread;
+		int64_t skipped = 0;
+		while (ntoskip) {
+			int32_t step = (int32_t)((ntoskip > SKIPSTEP) ?SKIPSTEP :ntoskip);
+			nread = read(begin, 1, step);
+			if (nread < -1 ) {
+				// an error occurred
+				return nread;
+			} else if (nread < 1) {
+				ntoskip = 0;
+			} else {
+				skipped += nread;
+				ntoskip -= nread;
+			}
+		}
+		return skipped;
+	}
       /**
        * @brief Repositions this stream to given requested position.
        * Reset is guaranteed to work after a successful call to read(),
@@ -114,28 +133,6 @@ public:
         return reset(p);
     }
 };
-#define SKIPSTEP 1024
-template <class T>
-int64_t
-StreamBase<T>::skip(int64_t ntoskip) {
-    const T *begin;
-    int32_t nread;
-    int64_t skipped = 0;
-    while (ntoskip) {
-        int32_t step = (int32_t)((ntoskip > SKIPSTEP) ?SKIPSTEP :ntoskip);
-        nread = read(begin, 1, step);
-        if (nread < -1 ) {
-            // an error occurred
-            return nread;
-        } else if (nread < 1) {
-            ntoskip = 0;
-        } else {
-            skipped += nread;
-            ntoskip -= nread;
-        }
-    }
-    return skipped;
-}
 
 } // end namespace jstreams
 

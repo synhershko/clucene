@@ -38,8 +38,42 @@ private:
     bool finishedWritingToBuffer;
     InputStreamBuffer<T> buffer;
 
-    void writeToBuffer(int32_t minsize);
-    int32_t read_(const T*& start, int32_t min, int32_t max);
+    void writeToBuffer(int32_t ntoread){
+		int32_t missing = ntoread - buffer.avail;
+		int32_t nwritten = 0;
+		while (missing > 0 && nwritten >= 0) {
+			int32_t space;
+			space = buffer.makeSpace(missing);
+			T* start = buffer.readPos + buffer.avail;
+			nwritten = fillBuffer(start, space);
+			assert(StreamBase<T>::status != Eof);
+			if (nwritten > 0) {
+				buffer.avail += nwritten;
+				missing = ntoread - buffer.avail;
+			}
+		}
+		if (nwritten < 0) {
+			finishedWritingToBuffer = true;
+		}
+	}
+    int32_t read_(const T*& start, int32_t min, int32_t max){
+		int32_t missing = ntoread - buffer.avail;
+		int32_t nwritten = 0;
+		while (missing > 0 && nwritten >= 0) {
+			int32_t space;
+			space = buffer.makeSpace(missing);
+			T* start = buffer.readPos + buffer.avail;
+			nwritten = fillBuffer(start, space);
+			assert(StreamBase<T>::status != Eof);
+			if (nwritten > 0) {
+				buffer.avail += nwritten;
+				missing = ntoread - buffer.avail;
+			}
+		}
+		if (nwritten < 0) {
+			finishedWritingToBuffer = true;
+		}
+	}
 protected:
     /**
      * This function must be implemented by the subclasses.
@@ -52,104 +86,73 @@ protected:
     virtual int32_t fillBuffer(T* start, int32_t space) = 0;
     // this function might be useful if you want to reuse a bufferedstream
     void resetBuffer() {printf("implement 'resetBuffer'\n");}
-    BufferedInputStream<T>();
+    BufferedInputStream<T>(){
+		finishedWritingToBuffer = false;
+	}
 public:
-    int32_t read(const T*& start, int32_t min, int32_t max);
-    int64_t reset(int64_t);
-    virtual int64_t skip(int64_t ntoskip);
+    int32_t read(const T*& start, int32_t min, int32_t max){
+		if (StreamBase<T>::status == Error) return -2;
+		if (StreamBase<T>::status == Eof) return -1;
+
+		// do we need to read data into the buffer?
+		if (!finishedWritingToBuffer && min > buffer.avail) {
+			// do we have enough space in the buffer?
+			writeToBuffer(min);
+			if (StreamBase<T>::status == Error) return -2;
+		}
+
+		int32_t nread = buffer.read(start, max);
+
+		BufferedInputStream<T>::position += nread;
+		if (BufferedInputStream<T>::position > BufferedInputStream<T>::size
+			&& BufferedInputStream<T>::size > 0) {
+			// error: we read more than was specified in size
+			// this is an error because all dependent code might have been labouring
+			// under a misapprehension
+			BufferedInputStream<T>::status = Error;
+			BufferedInputStream<T>::error = "Stream is longer than specified.";
+			nread = -2;
+		} else if (BufferedInputStream<T>::status == Ok && buffer.avail == 0
+				&& finishedWritingToBuffer) {
+			BufferedInputStream<T>::status = Eof;
+			if (BufferedInputStream<T>::size == -1) {
+				BufferedInputStream<T>::size = BufferedInputStream<T>::position;
+			}
+			// save one call to read() by already returning -1 if no data is there
+			if (nread == 0) nread = -1;
+		}
+		return nread;
+	}
+    int64_t reset(int64_t newpos){
+		if (StreamBase<T>::status == Error) return -2;
+		// check to see if we have this position
+		int64_t d = BufferedInputStream<T>::position - newpos;
+		if (buffer.readPos - d >= buffer.start && -d < buffer.avail) {
+			BufferedInputStream<T>::position -= d;
+			buffer.avail += (int32_t)d;
+			buffer.readPos -= d;
+			StreamBase<T>::status = Ok;
+		}
+		return StreamBase<T>::position;
+	}
+    virtual int64_t skip(int64_t ntoskip){
+		const T *begin;
+		int32_t nread;
+		int64_t skipped = 0;
+		while (ntoskip) {
+			int32_t step = (int32_t)((ntoskip > buffer.size) ?buffer.size :ntoskip);
+			nread = read(begin, 1, step);
+			if (nread <= 0) {
+				return skipped;
+			}
+			ntoskip -= nread;
+			skipped += nread;
+		}
+		return skipped;
+	}
 };
 
-template <class T>
-BufferedInputStream<T>::BufferedInputStream() {
-    finishedWritingToBuffer = false;
-}
 
-template <class T>
-void
-BufferedInputStream<T>::writeToBuffer(int32_t ntoread) {
-    int32_t missing = ntoread - buffer.avail;
-    int32_t nwritten = 0;
-    while (missing > 0 && nwritten >= 0) {
-        int32_t space;
-        space = buffer.makeSpace(missing);
-        T* start = buffer.readPos + buffer.avail;
-        nwritten = fillBuffer(start, space);
-        assert(StreamBase<T>::status != Eof);
-        if (nwritten > 0) {
-            buffer.avail += nwritten;
-            missing = ntoread - buffer.avail;
-        }
-    }
-    if (nwritten < 0) {
-        finishedWritingToBuffer = true;
-    }
-}
-template <class T>
-int32_t
-BufferedInputStream<T>::read(const T*& start, int32_t min, int32_t max) {
-    if (StreamBase<T>::status == Error) return -2;
-    if (StreamBase<T>::status == Eof) return -1;
-
-    // do we need to read data into the buffer?
-    if (!finishedWritingToBuffer && min > buffer.avail) {
-        // do we have enough space in the buffer?
-        writeToBuffer(min);
-        if (StreamBase<T>::status == Error) return -2;
-    }
-
-    int32_t nread = buffer.read(start, max);
-
-    BufferedInputStream<T>::position += nread;
-    if (BufferedInputStream<T>::position > BufferedInputStream<T>::size
-        && BufferedInputStream<T>::size > 0) {
-        // error: we read more than was specified in size
-        // this is an error because all dependent code might have been labouring
-        // under a misapprehension
-        BufferedInputStream<T>::status = Error;
-        BufferedInputStream<T>::error = "Stream is longer than specified.";
-        nread = -2;
-    } else if (BufferedInputStream<T>::status == Ok && buffer.avail == 0
-            && finishedWritingToBuffer) {
-        BufferedInputStream<T>::status = Eof;
-        if (BufferedInputStream<T>::size == -1) {
-            BufferedInputStream<T>::size = BufferedInputStream<T>::position;
-        }
-        // save one call to read() by already returning -1 if no data is there
-        if (nread == 0) nread = -1;
-    }
-    return nread;
-}
-template <class T>
-int64_t
-BufferedInputStream<T>::reset(int64_t newpos) {
-    if (StreamBase<T>::status == Error) return -2;
-    // check to see if we have this position
-    int64_t d = BufferedInputStream<T>::position - newpos;
-    if (buffer.readPos - d >= buffer.start && -d < buffer.avail) {
-        BufferedInputStream<T>::position -= d;
-        buffer.avail += (int32_t)d;
-        buffer.readPos -= d;
-        StreamBase<T>::status = Ok;
-    }
-    return StreamBase<T>::position;
-}
-template <class T>
-int64_t
-BufferedInputStream<T>::skip(int64_t ntoskip) {
-    const T *begin;
-    int32_t nread;
-    int64_t skipped = 0;
-    while (ntoskip) {
-        int32_t step = (int32_t)((ntoskip > buffer.size) ?buffer.size :ntoskip);
-        nread = read(begin, 1, step);
-        if (nread <= 0) {
-            return skipped;
-        }
-        ntoskip -= nread;
-        skipped += nread;
-    }
-    return skipped;
-}
 }
 
 #endif
