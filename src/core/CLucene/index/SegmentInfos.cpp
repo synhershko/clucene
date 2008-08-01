@@ -149,8 +149,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
    }
 
    SegmentInfo* SegmentInfo::clone () {
-	   SegmentInfo* si = _CLNEW SegmentInfo(name, docCount, dir, isCompoundFile, hasSingleNormFile,
+	   SegmentInfo* si = _CLNEW SegmentInfo(name, docCount, dir, false, hasSingleNormFile,
 		   docStoreOffset, docStoreSegment, docStoreIsCompoundFile);
+	   si->isCompoundFile = isCompoundFile;
 	   si->delGen = delGen;
 	   si->preLockless = preLockless;
 	   if (normGen != NULL) {
@@ -220,6 +221,53 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	   }
 	   output->writeByte(isCompoundFile);
    }
+
+  char* SegmentInfo::getDelFileName() {
+	  if (delGen == NO) {
+		  // In this case we know there is no deletion filename
+		  // against this segment
+		  return NULL;
+	  } else {
+		  // If delGen is CHECK_DIR, it's the pre-lockless-commit file format
+		  char fn[8];
+		  _snprintf(fn, 8,".%s", IndexFileNames::DELETES_EXTENSION);
+		  return IndexFileNames::fileNameFromGeneration(name, fn, delGen); 
+	  }
+  }
+
+  void SegmentInfo::advanceNormGen(const int32_t fieldIndex) {
+	  if (normGen[fieldIndex] == NO) {
+		  normGen[fieldIndex] = YES;
+	  } else {
+		  normGen[fieldIndex]++;
+	  }
+	  clearFiles();
+  }
+
+  void SegmentInfo::setUseCompoundFile(const bool isCompoundFile) {
+	  if (isCompoundFile) {
+		  this->isCompoundFile = YES;
+	  } else {
+		  this->isCompoundFile = NO;
+	  }
+	  clearFiles();
+  }
+
+  int32_t SegmentInfo::getDocStoreOffset() const { return docStoreOffset; }
+
+  bool SegmentInfo::getDocStoreIsCompoundFile() const { return docStoreIsCompoundFile; }
+
+  void SegmentInfo::setDocStoreIsCompoundFile(const bool v) {
+	  docStoreIsCompoundFile = v;
+	  clearFiles();
+  }
+
+  char* SegmentInfo::getDocStoreSegment() const { return docStoreSegment; }
+
+  void SegmentInfo::setDocStoreOffset(const int32_t offset) {
+	  docStoreOffset = offset;
+	  clearFiles();
+  }
 
 
   SegmentInfos::SegmentInfos(bool deleteMembers, int32_t reserveCount) :
@@ -458,6 +506,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 
   //}
 
+
   void SegmentInfos::write(Directory* directory){
   //Func - Writes a new segments file based upon the SegmentInfo instances it manages
   //Pre  - directory is a valid reference to a Directory
@@ -542,7 +591,11 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
   int64_t SegmentInfos::getCurrentSegmentGeneration( CL_NS(store)::Directory* directory ) {
   	char** files = directory->list();
 	if ( files == NULL ){
-  		;//todo: throw new exception
+		TCHAR* strdir = directory->toString();
+		TCHAR err[CL_MAX_PATH + 65];
+		_sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir);
+		_CLDELETE_ARRAY(strdir);
+		_CLTHROWT(CL_ERR_IO, err);
 	}
   	int64_t gen = getCurrentSegmentGeneration( files );
   	_CLDELETE_ARRAY( files );
@@ -601,7 +654,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  }
 	  return sis;
   }
-  
+
   SegmentInfos::FindSegmentsFile::FindSegmentsFile( CL_NS(store)::Directory* dir ) {
 	  this->directory = dir;
   }
@@ -609,9 +662,11 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
   SegmentInfos::FindSegmentsFile::~FindSegmentsFile() {	 
   }
   
+
   void* SegmentInfos::FindSegmentsFile::run() {
 
 	  // todo: this function is obsolete by 2.3.2, and needs to be re-written
+	  // ish: already started work on this
 
 	  char* segmentFileName = NULL;
 	  int64_t lastGen = -1;
@@ -622,24 +677,22 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  int32_t method = 0;
 	  void* value = NULL;
 
-      // Loop until we succeed in calling doBody() without
-      // hitting an IOException.  An IOException most likely
-      // means a commit was in process and has finished, in
-      // the time it took us to load the now-old infos files
-      // (and segments files).  It's also possible it's a
-      // true error (corrupt index).  To distinguish these,
-      // on each retry we must see "forward progress" on
-      // which generation we are trying to load.  If we
-      // don't, then the original error is real and we throw
-      // it.
-      
-      // We have three methods for determining the current
-      // generation.  We try the first two in parallel, and
-      // fall back to the third when necessary. 
+	  // Loop until we succeed in calling doBody() without
+	  // hitting an IOException.  An IOException most likely
+	  // means a commit was in process and has finished, in
+	  // the time it took us to load the now-old infos files
+	  // (and segments files).  It's also possible it's a
+	  // true error (corrupt index).  To distinguish these,
+	  // on each retry we must see "forward progress" on
+	  // which generation we are trying to load.  If we
+	  // don't, then the original error is real and we throw
+	  // it.
+
+	  // We have three methods for determining the current
+	  // generation.  We try the first two in parallel, and
+	  // fall back to the third when necessary. 
 
 	  while( true ) {
-
-		  char** files = NULL;
 
 		  if ( 0 == method ) {
 			  // Method 1: list the directory and use the highest
@@ -647,18 +700,94 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 			  // as there is no stale caching on the directory
 			  // contents (NOTE: NFS clients often have such stale
 			  // caching):
-			  files = directory->list();
+			  char** files = NULL;
 
-			  gen = getCurrentSegmentGeneration( files );
+			  int64_t genA = -1;
 
-			  _CLDELETE_CaARRAY_ALL( files );
+			  if (directory != NULL)
+				  files = directory->list();
+			  //else
+			  //todo: files = fileDirectory.list();
 
-			  if ( gen == -1 ) {
-				  _CLTHROWA(CL_ERR_IO, "No segments* file found");
+			  if (files != NULL) {
+				  genA = getCurrentSegmentGeneration( files );
+				  _CLDELETE_CaARRAY_ALL( files );
 			  }
 
+			  //CL_TRACE("directory listing genA=%d\n", genA);
+
+
+			  // Method 2: open segments.gen and read its
+			  // contents.  Then we take the larger of the two
+			  // gen's.  This way, if either approach is hitting
+			  // a stale cache (NFS) we have a better chance of
+			  // getting the right generation.
+			  int64_t genB = -1;
+			  if (directory != NULL) {
+				  for(int32_t i=0;i<defaultGenFileRetryCount;i++) {
+					  IndexInput* genInput = NULL;
+					  try {
+						  genInput = directory->openInput(IndexFileNames::SEGMENTS_GEN);
+					  } catch (CLuceneError &e) {
+						  //if (e.number == CL_ERR_FileNotFound) { // FileNotFound not yet exists...
+						  //	CL_TRACE("segments.gen open: FileNotFoundException %s", e);
+						  //	break;
+						  //} else
+					      if (e.number() == CL_ERR_IO) {
+							//CL_TRACE("segments.gen open: IOException %s", e);
+						  } else
+							  throw e;
+					  }
+
+					  if (genInput != NULL) {
+						  try {
+							  int32_t version = genInput->readInt();
+							  if (version == FORMAT_LOCKLESS) {
+								  int64_t gen0 = genInput->readLong();
+								  int64_t gen1 = genInput->readLong();
+								  //CL_TRACE("fallback check: %d; %d", gen0, gen1);
+								  if (gen0 == gen1) {
+									  // The file is consistent.
+									  genB = gen0;
+									  break;
+								  }
+							  }
+						  } catch (CLuceneError &err2) {
+							  if (err2.number() != CL_ERR_IO) throw err2; // retry only for IOException
+						  } _CLFINALLY({
+							  genInput->close();
+							  _CLDELETE(genInput);
+						  });
+					  }
+					  /*
+					  try {
+						  //todo: Thread.sleep(defaultGenFileRetryPauseMsec);
+					  } catch (CLuceneError &e) {
+						  //if (err2.number != CL_ERR_Interrupted) // retry only for InterruptedException
+						  // todo: see if CL_ERR_Interrupted needs to be added...
+						  throw e;
+					  }*/
+				  }
+			  }
+
+			  //CL_TRACE("%s check: genB=%d", IndexFileNames::SEGMENTS_GEN, genB);
+
+			  // Pick the larger of the two gen's:
+			  if (genA > genB)
+				  gen = genA;
+			  else
+				  gen = genB;
+
+			  if (gen == -1) {
+				  // Neither approach found a generation
+				  _CLTHROWA(CL_ERR_IO, "No segments* file found"); //todo: add folder name (directory->toString())
+			  } 
 		  }
 
+		  // Third method (fallback if first & second methods
+		  // are not reliable): since both directory cache and
+		  // file contents cache seem to be stale, just
+		  // advance the generation.
 		  if ( 1 == method || ( 0 == method && lastGen == gen && retry )) {
 
 			  method = 1;

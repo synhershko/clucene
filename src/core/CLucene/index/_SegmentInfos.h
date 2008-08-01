@@ -110,6 +110,37 @@ CL_NS_DEF(index)
 		*/
 		void write(CL_NS(store)::IndexOutput* output);
 
+		char* getDelFileName();
+
+		/**
+		* Increment the generation count for the norms file for
+		* this field.
+		*
+		* @param fieldIndex field whose norm file will be rewritten
+		*/
+		void advanceNormGen(const int32_t fieldIndex);
+
+		/**
+		* Mark whether this segment is stored as a compound file.
+		*
+		* @param isCompoundFile true if this is a compound file;
+		* else, false
+		*/
+		void setUseCompoundFile(const bool isCompoundFile);
+
+		int32_t getDocStoreOffset() const;
+
+		bool getDocStoreIsCompoundFile() const;
+
+		void setDocStoreIsCompoundFile(const bool v);
+
+		/**
+		* Returns a reference to docStoreSegment
+		*/
+		char* getDocStoreSegment() const;
+
+		void setDocStoreOffset(const int32_t offset);
+
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
 	};
@@ -269,6 +300,7 @@ CL_NS_DEF(index)
 		* SegmentInfo.
 		*/
 		SegmentInfos* clone();
+
 
 		/**
 		* Utility class for executing code that needs to do
