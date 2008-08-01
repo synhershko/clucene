@@ -131,7 +131,7 @@
 #endif
 
 //define for the libraries
-#if defined(clucene_shared_EXPORT)
+#if defined(clucene_shared_EXPORTS)
 	#define CLUCENE_SHARED_EXPORT CLUCENE_EXPORT_DECL
 	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
 #elif defined(MAKE_CLUCENE_SHARED_LIB)
@@ -139,7 +139,7 @@
 #else
     #define CLUCENE_SHARED_EXPORT CLUCENE_IMPORT_DECL
 #endif
-#if defined(clucene_core_EXPORT)
+#if defined(clucene_core_EXPORTS)
 	#define CLUCENE_EXPORT CLUCENE_EXPORT_DECL
 	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
 #elif defined(MAKE_CLUCENE_CORE_LIB)
