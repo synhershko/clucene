@@ -9,11 +9,61 @@
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/store/IndexOutput.h"
+#include "_IndexFileNames.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fieldInfos){
+TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fieldInfos,
+									 int32_t readBufferSize, int32_t docStoreOffset, int32_t size):
+	fieldInfos(NULL), tvx(NULL), tvd(NULL), tvf(NULL), _size(0), docStoreOffset(0)
+	{
+
+	bool success = false;
+
+	char fbuf[CL_MAX_NAME];
+	strcpy(fbuf,segment);
+	strcat(fbuf,".");
+	char* fpbuf=fbuf+strlen(fbuf);
+
+	strcpy(fpbuf,IndexFileNames::VECTORS_INDEX_EXTENSION);
+	try {
+		if (d->fileExists(fbuf)) {
+			tvx = d->openInput(fbuf, readBufferSize);
+			checkValidFormat(tvx);
+
+			strcpy(fpbuf,IndexFileNames::VECTORS_DOCUMENTS_EXTENSION);
+			tvd = d->openInput(fbuf, readBufferSize);
+			tvdFormat = checkValidFormat(tvd);
+
+			strcpy(fpbuf,IndexFileNames::VECTORS_FIELDS_EXTENSION);
+			tvf = d->openInput(fbuf, readBufferSize);
+			tvfFormat = checkValidFormat(tvf);
+			if (-1 == docStoreOffset) {
+				//this->docStoreOffset = 0;
+				this->_size = static_cast<int32_t>(tvx->length() >> 3);
+			} else {
+				this->docStoreOffset = docStoreOffset;
+				this->_size = size;
+				// Verify the file is long enough to hold all of our
+				// docs
+				CND_CONDITION( ((int32_t) (tvx->length() / 8)) >= size + docStoreOffset , "file is not ling enought to hold all our docs");
+			}
+		}
+
+		this->fieldInfos = fieldInfos;
+		success = true;
+	} _CLFINALLY ({
+		// With lock-less commits, it's entirely possible (and
+		// fine) to hit a FileNotFound exception above. In
+		// this case, we want to explicitly close any subset
+		// of things that were opened so that we don't have to
+		// wait for a GC to do so.
+		if (!success) {
+			close();
+		}
+	});
+/*
 	char fbuf[CL_MAX_NAME];
 	strcpy(fbuf,segment);
 	char* fpbuf=fbuf+strlen(fbuf);
@@ -40,6 +90,7 @@ TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* seg
 	}
 
     this->fieldInfos = fieldInfos;
+*/
 }
 
 TermVectorsReader::TermVectorsReader(const TermVectorsReader& copy)
@@ -119,7 +170,7 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
 		//We don't need to do this in other seeks because we already have the
 		// file pointer
 		//that was written in another file
-        tvx->seek((docNum * 8L) + TermVectorsWriter::FORMAT_SIZE);
+        tvx->seek(((docNum + docStoreOffset) * 8L) + TermVectorsWriter::FORMAT_SIZE);
         int64_t position = tvx->readLong();
 
         tvd->seek(position);
@@ -208,7 +259,7 @@ int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
 		err.append(_T(" expected "));
 		err.appendInt(TermVectorsWriter::FORMAT_VERSION);
 		err.append(_T(" or less"));
-		_CLTHROWT(CL_ERR_Runtime,err.getBuffer());
+		_CLTHROWT(CL_ERR_CorruptIndex,err.getBuffer());
 	}
 	return format;
 }
