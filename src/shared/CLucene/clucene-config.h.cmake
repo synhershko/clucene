@@ -33,6 +33,7 @@
 #cmakedefine _CL_HAVE_TCHAR_H 1
 #cmakedefine _CL_HAVE_SYS_MMAN_H 1
 #cmakedefine _CL_HAVE_WINERROR_H 1
+#cmakedefine _CL_HAVE_STDINT_H 1
 
 // our needed types
 ${TYPE_INT8_T}
