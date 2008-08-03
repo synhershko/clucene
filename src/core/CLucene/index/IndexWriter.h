@@ -112,8 +112,8 @@ public:
 	*/
 	LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_MAX_FIELD_LENGTH = 10000);
 	LUCENE_STATIC_CONSTANT(int32_t, FIELD_TRUNC_POLICY__WARN = -1);
-	int32_t getMaxFieldLength() const{ return maxFieldLength; }
-	void setMaxFieldLength(int32_t val){ maxFieldLength = val; }
+	int32_t getMaxFieldLength() const;
+	void setMaxFieldLength(int32_t val);
 
 	/**
 	* Default value is 10. Change using {@link #setMaxBufferedDocs(int)}.
@@ -126,11 +126,11 @@ public:
 	* the number of files open in a FSDirectory.
 	*
 	* <p> The default value is DEFAULT_MAX_BUFFERED_DOCS.*/
-	void setMaxBufferedDocs(int32_t val){ minMergeDocs = val; }
+	void setMaxBufferedDocs(int32_t val);
 	/**
 	* @see #setMaxBufferedDocs
 	*/
-	int32_t getMaxBufferedDocs(){ return minMergeDocs; }
+	int32_t getMaxBufferedDocs();
 	
 	/**
 	* Default value for the write lock timeout (1,000).
@@ -139,11 +139,11 @@ public:
 	/**
 	* Sets the maximum time to wait for a write lock (in milliseconds).
 	*/
-	void setWriteLockTimeout(int64_t writeLockTimeout) { this->writeLockTimeout = writeLockTimeout; }
+	void setWriteLockTimeout(int64_t writeLockTimeout);
 	/**
 	* @see #setWriteLockTimeout
 	*/
-	int64_t getWriteLockTimeout() { return writeLockTimeout; }
+	int64_t getWriteLockTimeout();
 	
 	/**
 	* Default value for the commit lock timeout (10,000).
@@ -152,11 +152,11 @@ public:
 	/**
 	* Sets the maximum time to wait for a commit lock (in milliseconds).
 	*/
-	void setCommitLockTimeout(int64_t commitLockTimeout) { this->commitLockTimeout = commitLockTimeout; }
+	void setCommitLockTimeout(int64_t commitLockTimeout);
 	/**
 	* @see #setCommitLockTimeout
 	*/
-	int64_t getCommitLockTimeout() { return commitLockTimeout; }
+	int64_t getCommitLockTimeout();
 
 	static const char* WRITE_LOCK_NAME; //"write.lock";
 	static const char* COMMIT_LOCK_NAME; //"commit.lock";
@@ -175,8 +175,8 @@ public:
 	*
 	* <p>This must never be less than 2.  The default value is 10.
 	*/
-	int32_t getMergeFactor() const{ return mergeFactor; }
-	void setMergeFactor(int32_t val){ mergeFactor = val; }
+	int32_t getMergeFactor() const;
+	void setMergeFactor(int32_t val);
 
 	
 	/** Expert: The fraction of terms in the "dictionary" which should be stored
@@ -207,12 +207,12 @@ public:
 	*
 	* @see #DEFAULT_TERM_INDEX_INTERVAL
 	*/
-	void setTermIndexInterval(int32_t interval) { termIndexInterval = interval; }
+	void setTermIndexInterval(int32_t interval);
 	/** Expert: Return the interval between indexed terms.
 	*
 	* @see #setTermIndexInterval(int)
 	*/
-	int32_t getTermIndexInterval() { return termIndexInterval; }
+	int32_t getTermIndexInterval();
   
 	/** Determines the minimal number of documents required before the buffered
 	* in-memory documents are merging and a new Segment is created.
@@ -221,8 +221,8 @@ public:
 	* the number of files open in a FSDirectory.
 	*
 	* <p> The default value is 10.*/
-	int32_t getMinMergeDocs() const{ return minMergeDocs; }
-	void setMinMergeDocs(int32_t val){ minMergeDocs = val; }
+	int32_t getMinMergeDocs() const;
+	void setMinMergeDocs(int32_t val);
 
 	/** Determines the largest number of documents ever merged by addDocument().
 	* Small values (e.g., less than 10,000) are best for interactive indexing,
@@ -239,8 +239,8 @@ public:
 	*
 	*  <p>The default value is {@link Integer#MAX_VALUE}.
 	*/
-	int32_t getMaxMergeDocs() const{ return maxMergeDocs; }
-	void setMaxMergeDocs(int32_t val){ maxMergeDocs = val; }
+	int32_t getMaxMergeDocs() const;
+	void setMaxMergeDocs(int32_t val);
 
 	/**
 	* Constructs an IndexWriter for the index in <code>path</code>.
@@ -316,36 +316,36 @@ public:
 
 
 	/** Returns the directory this index resides in. */
-	CL_NS(store)::Directory* getDirectory() { return directory; }
+	CL_NS(store)::Directory* getDirectory();
 
 	/** Get the current setting of whether to use the compound file format.
 	*  Note that this just returns the value you set with setUseCompoundFile(boolean)
 	*  or the default. You cannot use this to query the status of an existing index.
 	*  @see #setUseCompoundFile(boolean)
 	*/
-	bool getUseCompoundFile() { return useCompoundFile; }
+	bool getUseCompoundFile();
 
 	/** Setting to turn on usage of a compound file. When on, multiple files
 	*  for each segment are merged into a single file once the segment creation
 	*  is finished. This is done regardless of what directory is in use.
 	*/
-	void setUseCompoundFile(bool value) { useCompoundFile = value; }
+	void setUseCompoundFile(bool value);
 
 
 	/** Expert: Set the Similarity implementation used by this IndexWriter.
 	*
 	* @see Similarity#setDefault(Similarity)
 	*/
-	void setSimilarity(CL_NS(search)::Similarity* similarity) { this->similarity = similarity; }
+	void setSimilarity(CL_NS(search)::Similarity* similarity);
 
 	/** Expert: Return the Similarity implementation used by this IndexWriter.
 	*
 	* <p>This defaults to the current value of {@link Similarity#getDefault()}.
 	*/
-	CL_NS(search)::Similarity* getSimilarity() { return this->similarity; }
+	CL_NS(search)::Similarity* getSimilarity();
 
 	/** Returns the analyzer used by this index. */
-	CL_NS(analysis)::Analyzer* getAnalyzer() { return analyzer; }
+	CL_NS(analysis)::Analyzer* getAnalyzer();
 
 private:
 	class LockWith2;

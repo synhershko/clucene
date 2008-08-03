@@ -107,7 +107,7 @@ public:
 	StringReader ( const TCHAR* value );
     StringReader ( const TCHAR* value, const int32_t length );
     StringReader ( const TCHAR* value, const int32_t length, bool copyData );
-	~StringReader();
+	virtual ~StringReader();
 };
 
 /** A very simple inputstreamreader implementation. For a
@@ -130,7 +130,7 @@ class CLUCENE_EXPORT SimpleInputStreamReader: public jstreams::BufferedInputStre
     int32_t fillBuffer(TCHAR* start, int32_t space);
 public:
 	SimpleInputStreamReader(jstreams::StreamBase<char> *i, const char* encoding);
-	~SimpleInputStreamReader();
+	virtual ~SimpleInputStreamReader();
 };
 
 /**
@@ -143,7 +143,7 @@ public:
 	FileReader ( const char* path, const char* enc,
         const int32_t cachelen = 13,
         const int32_t cachebuff = 14 ); //todo: optimise these cache values
-	~FileReader ();
+	virtual ~FileReader ();
 
     int32_t read(const TCHAR*& start, int32_t _min, int32_t _max);
     int64_t mark(int32_t readlimit);

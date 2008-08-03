@@ -58,8 +58,8 @@ CL_NS_DEF(search)
 
         void close();
 
-		const char* getObjectName(){ return WildcardTermEnum::getClassName(); }
-		static const char* getClassName(){  return "WildcardTermEnum"; }
+		const char* getObjectName();
+		static const char* getClassName();
     };
 CL_NS_END
 #endif

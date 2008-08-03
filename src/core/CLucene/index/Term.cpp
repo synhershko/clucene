@@ -206,6 +206,7 @@ size_t Term::hashCode(){
 	return cachedHashCode;
 }
 
+size_t Term::textLength() const { return textLen; }
 
 int32_t Term::compareTo(const Term* other) const {
 //Func - Compares two terms, to see if this term belongs before,is equal to or after

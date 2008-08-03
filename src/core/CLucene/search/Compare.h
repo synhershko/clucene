@@ -21,14 +21,14 @@ protected:
 public:
     ~ScoreDocComparators();
 
-	class Relevance:public ScoreDocComparator {
+	class CLUCENE_EXPORT Relevance:public ScoreDocComparator {
 	public:
 		int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j);
 		CL_NS(util)::Comparable* sortValue (struct ScoreDoc* i);
 		int32_t sortType();
 	};
 
-	class IndexOrder:public ScoreDocComparator{
+	class CLUCENE_EXPORT IndexOrder:public ScoreDocComparator{
 	public:
 		IndexOrder();
 		int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j);
@@ -37,7 +37,7 @@ public:
 	};
 
 
-	class String: public ScoreDocComparator {
+	class CLUCENE_EXPORT String: public ScoreDocComparator {
 		FieldCache::StringIndex* index;
 		int32_t length;
 	public:
@@ -48,7 +48,7 @@ public:
 		int32_t sortType();
 	};
 
-	class Int32:public ScoreDocComparator{
+	class CLUCENE_EXPORT Int32:public ScoreDocComparator{
 		int32_t* fieldOrder;
 		int32_t length;
 	public:
@@ -58,7 +58,7 @@ public:
 		int32_t sortType();
 	};
 
-	class Float:public ScoreDocComparator {
+	class CLUCENE_EXPORT Float:public ScoreDocComparator {
 		float_t* fieldOrder;
 		int32_t length;
 	public:

@@ -7,12 +7,6 @@
 #ifndef _lucene_index_Term_
 #define _lucene_index_Term_
 
-
-//#include "CLucene/util/Misc.h"
-//#include "CLucene/util/StringIntern.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
-# include <functional>
-
 CL_NS_DEF(index)
 
 /**
@@ -103,7 +97,7 @@ class CLUCENE_EXPORT Term:LUCENE_REFBASE {
 
 	bool equals(const Term* other) const;
 
-	size_t textLength() const { return textLen; }
+	size_t textLength() const;
 
 	///Forms the contents of Field and term in some kind of tuple notation
 	///<field:text>
@@ -112,25 +106,6 @@ class CLUCENE_EXPORT Term:LUCENE_REFBASE {
 	size_t hashCode();
 };
 
-
-class Term_Equals:public CL_NS_STD(binary_function)<const Term*,const Term*,bool>
-{
-public:
-	bool operator()( const Term* val1, const Term* val2 ) const{
-		return val1->equals(val2);
-	}
-};
-
-class Term_Compare:LUCENE_BASE, public CL_NS(util)::Compare::_base //<Term*>
-{
-public:
-	bool operator()( Term* t1, Term* t2 ) const{
-		return ( t1->compareTo(t2) < 0 );
-	}
-	size_t operator()( Term* t ) const{
-		return t->hashCode();
-	}
-};
 
 CL_NS_END
 #endif

@@ -31,7 +31,7 @@
 namespace jstreams {
 
 template<class T>
-class SubInputStream : public StreamBase<T> {
+class CLUCENE_INLINE_EXPORT SubInputStream : public StreamBase<T> {
 private:
     const int64_t offset;
     StreamBase<T> *input;

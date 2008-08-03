@@ -123,29 +123,29 @@ CL_CLASS_DEF(util,StringBuffer)
 	  * If MMap is available, this can disable use of
 	  * mmap reading.
 	  */
-	  void setUseMMap(bool value){ useMMap = value; }
+	  void setUseMMap(bool value);
 	  /** 
 	  * Gets whether the directory is using MMap for inputstreams.
 	  */
-	  bool getUseMMap() const{ return useMMap; }
+	  bool getUseMMap() const;
 
 	  TCHAR* toString() const;
 
-	  static const char* DirectoryType(){ return "FS"; }
-	  const char* getDirectoryType() const{ return "FS"; }
+	  static const char* DirectoryType();
+	  const char* getDirectoryType() const;
 	
 	/**
 	* Set whether Lucene's use of lock files is disabled. By default, 
 	* lock files are enabled. They should only be disabled if the index
 	* is on a read-only medium like a CD-ROM.
 	*/
-	static void setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
+	static void setDisableLocks(bool doDisableLocks);
 	
 	/**
 	* Returns whether Lucene's use of lock files is disabled.
 	* @return true if locks are disabled, false if locks are enabled.
 	*/
-	static bool getDisableLocks() { return disableLocks; }
+	static bool getDisableLocks();
 
   };
 

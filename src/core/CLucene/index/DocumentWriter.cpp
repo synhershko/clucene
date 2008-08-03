@@ -17,6 +17,7 @@
 #include "IndexWriter.h"
 #include "_FieldsWriter.h"
 #include "Term.h"
+#include "_Term.h"
 #include "_TermInfo.h"
 #include "_TermVector.h"
 #include "_TermInfosWriter.h"

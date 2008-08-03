@@ -89,10 +89,34 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 	setText(text);
 }
 
+size_t Token::bufferLength(){ 
+    return bufferTextLen;
+}
+
+
+int32_t Token::startOffset() const { 
+    return _startOffset; 
+}
+
+void Token::setStartOffset(const int32_t val){ 
+    _startOffset = val; 
+}
+int32_t Token::endOffset() const { 
+    return _endOffset; 
+}
 const TCHAR* Token::getDefaultType(){
     return _T("word");
 }
 
+void Token::setEndOffset(const int32_t val){ 
+    _endOffset = val; 
+}
+const TCHAR* Token::type() const { return _type; }
+
+void Token::setType(const TCHAR* val) { 
+    _type = val; 
+}
+	
 void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ){
 	_startOffset = start;
 	_endOffset   = end;
@@ -206,6 +230,9 @@ Token* TokenStream::next(){
 	if ( !next(t) )
 		_CLDELETE(t);
 	return t;
+}
+
+TokenStream::~TokenStream(){
 }
 
 

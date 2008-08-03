@@ -8,6 +8,7 @@
 #define _lucene_analysis_AnalysisHeader_
 
 #include "CLucene/index/Payload.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
@@ -80,7 +81,7 @@ public:
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	
-	size_t bufferLength(){ return bufferTextLen; }
+	size_t bufferLength();
 	void growBuffer(size_t size);
 	
 	/** Set the position increment.  This determines the position of this
@@ -132,25 +133,25 @@ public:
 	* equal to termText.length(), as the term text may have been altered by a
 	* stemmer or some other filter.
 	*/
-	int32_t startOffset() const { return _startOffset; }
+	int32_t startOffset() const;
 
 	/** Set the starting offset.
 	@see #startOffset() */
-	void setStartOffset(const int32_t val){ _startOffset = val; }
+	void setStartOffset(const int32_t val);
 
 	/**
 	* Returns this Token's ending offset, one greater than the position of the
 	* last character corresponding to this token in the source text.
 	*/
-	int32_t endOffset() const { return _endOffset; }
+	int32_t endOffset() const;
 
 	/** Set the ending offset.
 	@see #endOffset() */
-	void setEndOffset(const int32_t val){ _endOffset = val; }
+	void setEndOffset(const int32_t val);
 
 	/// Returns this Token's lexical type.  Defaults to "word". 
-	const TCHAR* type() const { return _type; } ///<returns reference
-	void setType(const TCHAR* val) { _type = val; } ///<returns reference
+	const TCHAR* type() const; ///<returns reference
+	void setType(const TCHAR* val); ///<returns reference
 
 	/**
 	* Returns this Token's payload.
@@ -206,8 +207,7 @@ public:
 	*/
 	//virtual void reset(CL_NS(util)::Reader* _input=NULL) = 0;
 
-	virtual ~TokenStream(){
-	}
+	virtual ~TokenStream();
 };
 
 

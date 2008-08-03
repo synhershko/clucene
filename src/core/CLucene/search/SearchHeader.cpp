@@ -188,6 +188,10 @@ const TCHAR* Searcher::getClassName(){
 	return _T("Searcher");
 }
 
+
+Weight::~Weight(){
+}
+
 TCHAR* Weight::toString(){
      return STRDUP_TtoT(_T("Weight"));
 }

@@ -36,8 +36,7 @@ CL_NS_DEF(store)
 	protected:
 		LockFactory* lockFactory;
 		
-		Directory(){
-		}
+		Directory();
 		// Removes an existing file in the directory. 
 		virtual bool doDeleteFile(const char* name) = 0;
 	public:

@@ -403,6 +403,15 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	  _CLDELETE_CaARRAY(directory);
 	  _CLDELETE_CaARRAY(lockDir);
   }
+  
+
+    void FSDirectory::setUseMMap(bool value){ useMMap = value; }
+    bool FSDirectory::getUseMMap() const{ return useMMap; }
+    const char* FSDirectory::DirectoryType(){ return "FS"; }
+    const char* FSDirectory::getDirectoryType() const{ return "FS"; }
+    void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
+    bool FSDirectory::getDisableLocks() { return disableLocks; }
+
 
   void FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
     CND_PRECONDITION(directory[0]!=0,"directory is not open");

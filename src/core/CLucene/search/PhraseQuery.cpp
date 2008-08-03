@@ -15,6 +15,7 @@
 #include "Searchable.h"
 #include "Explanation.h"
 
+#include "CLucene/index/_Term.h"
 #include "CLucene/index/Term.h"
 #include "CLucene/index/Terms.h"
 #include "CLucene/index/IndexReader.h"

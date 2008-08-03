@@ -729,5 +729,29 @@ public:
 		// delete now unused files of segment 
 		writer->deleteFiles(*filesToDelete);   
   }
+  
+  
+	int32_t IndexWriter::getMaxFieldLength() const{ return maxFieldLength; }
+	void IndexWriter::setMaxFieldLength(int32_t val){ maxFieldLength = val; }
+	void IndexWriter::setMaxBufferedDocs(int32_t val){ minMergeDocs = val; }
+	int32_t IndexWriter::getMaxBufferedDocs(){ return minMergeDocs; }
+	void IndexWriter::setWriteLockTimeout(int64_t writeLockTimeout) { this->writeLockTimeout = writeLockTimeout; }
+	int64_t IndexWriter::getWriteLockTimeout() { return writeLockTimeout; }
+	void IndexWriter::setCommitLockTimeout(int64_t commitLockTimeout) { this->commitLockTimeout = commitLockTimeout; }
+	int64_t IndexWriter::getCommitLockTimeout() { return commitLockTimeout; }
+	int32_t IndexWriter::getMergeFactor() const{ return mergeFactor; }
+	void IndexWriter::setMergeFactor(int32_t val){ mergeFactor = val; }
+	void IndexWriter::setTermIndexInterval(int32_t interval) { termIndexInterval = interval; }
+	int32_t IndexWriter::getTermIndexInterval() { return termIndexInterval; }
+	int32_t IndexWriter::getMinMergeDocs() const{ return minMergeDocs; }
+	void IndexWriter::setMinMergeDocs(int32_t val){ minMergeDocs = val; }
+	int32_t IndexWriter::getMaxMergeDocs() const{ return maxMergeDocs; }
+	void IndexWriter::setMaxMergeDocs(int32_t val){ maxMergeDocs = val; }
+	CL_NS(store)::Directory* IndexWriter::getDirectory() { return directory; }
+	bool IndexWriter::getUseCompoundFile() { return useCompoundFile; }
+	void IndexWriter::setUseCompoundFile(bool value) { useCompoundFile = value; }
+	void IndexWriter::setSimilarity(CL_NS(search)::Similarity* similarity) { this->similarity = similarity; }
+	CL_NS(search)::Similarity* IndexWriter::getSimilarity() { return this->similarity; }
+	CL_NS(analysis)::Analyzer* IndexWriter::getAnalyzer() { return analyzer; }
 
 CL_NS_END

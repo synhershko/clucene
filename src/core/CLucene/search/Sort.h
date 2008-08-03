@@ -236,14 +236,14 @@ public:
    * if the sort is by SCORE or DOC.
    * @return Name of field, possibly <code>null</code>.
    */
-  const TCHAR* getField() const { return field; }
+  const TCHAR* getField() const;
   
   SortField* clone() const;
 
   /** Returns the type of contents in the field.
    * @return One of the constants SCORE, DOC, AUTO, STRING, INT or FLOAT.
    */
-  int32_t getType() const { return type; }
+  int32_t getType() const;
 
   /** Returns the Locale by which term values are interpreted.
    * May return <code>null</code> if no Locale was specified.
@@ -256,9 +256,9 @@ public:
   /** Returns whether the sort should be reversed.
    * @return  True if natural order should be reversed.
    */
-  bool getReverse() const { return reverse; }
+  bool getReverse() const;
 
-  SortComparatorSource* getFactory() const { return factory; }
+  SortComparatorSource* getFactory() const;
 
   TCHAR* toString() const;
 };

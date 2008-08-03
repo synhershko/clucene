@@ -19,35 +19,35 @@ CL_NS_DEF(util)
 // Equators
 ////////////////////////////////////////////////////////////////////////////////
 /** @internal */
-class Equals{
+class CLUCENE_INLINE_EXPORT Equals{
 public:
-	class Int32:public CL_NS_STD(binary_function)<const int32_t*,const int32_t*,bool>
+	class CLUCENE_INLINE_EXPORT Int32:public CL_NS_STD(binary_function)<const int32_t*,const int32_t*,bool>
 	{
 	public:
 		bool operator()( const int32_t val1, const int32_t val2 ) const;
 	};
 	
-	class Char:public CL_NS_STD(binary_function)<const char*,const char*,bool>
+	class CLUCENE_INLINE_EXPORT Char:public CL_NS_STD(binary_function)<const char*,const char*,bool>
 	{
 	public:
 		bool operator()( const char* val1, const char* val2 ) const;
 	};
 #ifdef _UCS2
-	class WChar: public CL_NS_STD(binary_function)<const wchar_t*,const wchar_t*,bool>
+	class CLUCENE_INLINE_EXPORT WChar: public CL_NS_STD(binary_function)<const wchar_t*,const wchar_t*,bool>
 	{
 	public:
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
 	};
-	class TChar: public WChar{
+	class CLUCENE_INLINE_EXPORT TChar: public WChar{
 	};
 #else
-	class TChar: public Char{
+	class CLUCENE_INLINE_EXPORT TChar: public Char{
 	};
 #endif
 
 
     template<typename _cl>
-	class Void:public CL_NS_STD(binary_function)<const void*,const void*,bool>
+	class CLUCENE_INLINE_EXPORT Void:public CL_NS_STD(binary_function)<const void*,const void*,bool>
 	{
 	public:
 		bool operator()( _cl* val1, _cl* val2 ) const{
@@ -61,7 +61,7 @@ public:
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
 /** @internal */
-class Comparable:LUCENE_BASE{
+class CLUCENE_INLINE_EXPORT Comparable:LUCENE_BASE{
 public:
    virtual ~Comparable(){
    }
@@ -70,9 +70,9 @@ public:
 };
 
 /** @internal */
-class Compare{
+class CLUCENE_INLINE_EXPORT Compare{
 public:
-	class _base
+	class CLUCENE_INLINE_EXPORT _base
 	{	// traits class for hash containers
 	public:
 		enum
@@ -86,7 +86,7 @@ public:
 		}
 	};
 
-	class Int32:public _base, public Comparable{
+	class CLUCENE_INLINE_EXPORT Int32:public _base, public Comparable{
 		int32_t value;
 	public:
 		int32_t getValue() const;
@@ -98,7 +98,7 @@ public:
 	};
 
 	
-	class Float:public Comparable{
+	class CLUCENE_INLINE_EXPORT Float:public Comparable{
 		float_t value;
 	public:
 		float_t getValue() const;
@@ -107,7 +107,7 @@ public:
 	};
 
 
-	class Char: public _base //<char*>
+	class CLUCENE_INLINE_EXPORT Char: public _base //<char*>
 	{
 	public:
 		bool operator()( const char* val1, const char* val2 ) const;
@@ -115,7 +115,7 @@ public:
 	};
 
 #ifdef _UCS2
-	class WChar: public _base //<wchar_t*>
+	class CLUCENE_INLINE_EXPORT WChar: public _base //<wchar_t*>
 	{
 	public:
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
@@ -123,7 +123,7 @@ public:
 	};
 #endif
 
-	class TChar: public _base, public Comparable{
+	class CLUCENE_INLINE_EXPORT TChar: public _base, public Comparable{
 	    const TCHAR* s;
     public:
     	const TCHAR* getValue() const;
@@ -136,7 +136,7 @@ public:
 
 
 	template<typename _cl>
-	class Void:public _base //<const void*,const void*,bool>
+	class CLUCENE_INLINE_EXPORT Void:public _base //<const void*,const void*,bool>
 	{
 	public:
 		int32_t compareTo(_cl* o){
@@ -158,14 +158,14 @@ public:
 // allocators
 ////////////////////////////////////////////////////////////////////////////////
 /** @internal */
-class AbstractDeletor{
+class CLUCENE_INLINE_EXPORT AbstractDeletor{
 public:
 	virtual void Delete(void*) = 0;
     virtual ~AbstractDeletor();
 };
-class Deletor{
+class CLUCENE_INLINE_EXPORT Deletor{
 public:
-    class tcArray: public AbstractDeletor{
+    class CLUCENE_INLINE_EXPORT tcArray: public AbstractDeletor{
     public:
     	void Delete(void* _arr){
     		doDelete((const TCHAR*)_arr);
@@ -176,7 +176,7 @@ public:
     };
 
 	template<typename _kt>
-	class vArray: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT vArray: public AbstractDeletor{
 	public:
 		void Delete(void* arr){
 			doDelete((_kt*)arr);
@@ -185,7 +185,7 @@ public:
 			_CLDELETE_LARRAY(arr);
 		}
 	};
-	class acArray: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT acArray: public AbstractDeletor{
 	public:
 		void Delete(void* arr){
 			doDelete((const char*)arr);
@@ -196,7 +196,7 @@ public:
 	};
 	
 	template<typename _kt>
-	class Object: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT Object: public AbstractDeletor{
 	public:
 		void Delete(void* obj){
 			doDelete((_kt*)obj);
@@ -206,7 +206,7 @@ public:
 		}
 	};
 	template<typename _kt>
-	class Void: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT Void: public AbstractDeletor{
 	public:
 		void Delete(void* obj){
 			doDelete((_kt*)obj);
@@ -215,7 +215,7 @@ public:
 			_CLVDELETE(obj);
 		}
 	};
-	class Dummy: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT Dummy: public AbstractDeletor{
 	public:
 		void Delete(void* nothing){}
 		static void doDelete(const void* nothing){
@@ -223,20 +223,20 @@ public:
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
 	};
-	class DummyInt32: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT DummyInt32: public AbstractDeletor{
 	public:
 		void Delete(void* nothing){}
 		static void doDelete(const int32_t nothing){
 		}
 	};
-	class DummyFloat: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT DummyFloat: public AbstractDeletor{
 	public:
 		void Delete(void* nothing){}
 		static void doDelete(const float_t nothing){
 		}
 	};
 	template <typename _type>
-	class ConstNullVal: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT ConstNullVal: public AbstractDeletor{
 	public:
 		void Delete(void* nothing){}
 		static void doDelete(const _type nothing){
@@ -246,7 +246,7 @@ public:
 	};
 	
 	template <typename _type>
-	class NullVal: public AbstractDeletor{
+	class CLUCENE_INLINE_EXPORT NullVal: public AbstractDeletor{
 	public:
 		void Delete(void* nothing){}
 		static void doDelete(_type nothing){

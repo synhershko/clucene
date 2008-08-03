@@ -92,6 +92,19 @@ CL_NS_DEF(search)
    return _CLNEW SortField(*this); 
   }
 
+  const TCHAR* SortField::getField() const { 
+    return field; 
+  }
+  int32_t SortField::getType() const { 
+        return type; 
+  }
+  bool SortField::getReverse() const { 
+        return reverse; 
+  }
+  SortComparatorSource* SortField::getFactory() const { 
+        return factory; 
+  }
+  
   /** Creates a sort by terms in the given field sorted
    * according to the given locale.
    * @param field  Name of field to sort by, cannot be <code>null</code>.

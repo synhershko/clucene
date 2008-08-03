@@ -367,6 +367,13 @@ CL_NS_DEF(index)
       return _termPositions;
   }
 
+  void IndexReader::deleteDoc(const int32_t docNum){ 
+    deleteDocument(docNum); 
+  }
+  int32_t IndexReader::deleteTerm(Term* term){ 
+    return deleteDocuments(term); 
+  }
+  
   void IndexReader::deleteDocument(const int32_t docNum) {
   //Func - Deletes the document numbered docNum.  Once a document is deleted it will not appear 
   //       in TermDocs or TermPostitions enumerations. Attempts to read its field with the document 

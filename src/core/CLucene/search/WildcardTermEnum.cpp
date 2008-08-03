@@ -74,6 +74,8 @@ CL_NS_DEF(search)
     bool WildcardTermEnum::endEnum() {
         return _endEnum;
     }
+	const char* WildcardTermEnum::getObjectName(){ return WildcardTermEnum::getClassName(); }
+	const char* WildcardTermEnum::getClassName(){  return "WildcardTermEnum"; }
 
     bool WildcardTermEnum::wildcardEquals(const TCHAR* pattern, int32_t patternLen, int32_t patternIdx, const TCHAR* str, int32_t strLen, int32_t stringIdx)
     {
@@ -148,5 +150,6 @@ CL_NS_DEF(search)
         return false;
       }
     }
+
 
 CL_NS_END

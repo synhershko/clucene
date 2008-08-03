@@ -8,6 +8,7 @@
 #define _lucene_util_VoidMap_
 
 #include "Equators.h"
+#include "CLucene/LuceneThreads.h"
 
 #if defined(_CL_HAVE_HASH_MAP) && defined(_CL_HAVE_HASH_SET)
 	//hashing is all or nothing!
@@ -30,7 +31,7 @@ template<typename _kt, typename _vt,
 	typename _base,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class __CLMap:public _base,LUCENE_BASE {
+class CLUCENE_INLINE_EXPORT __CLMap:public _base,LUCENE_BASE {
 private:
 	bool dk;
 	bool dv;
@@ -164,7 +165,7 @@ template<typename _kt, typename _vt,
 	typename _EqualDummy,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class CLHashMap:public __CLMap<_kt,_vt,
+class CLUCENE_INLINE_EXPORT CLHashMap:public __CLMap<_kt,_vt,
 	CL_NS_STD(map)<_kt,_vt, _Compare>,
 	_KeyDeletor,_ValueDeletor>
 {
@@ -186,7 +187,7 @@ template<typename _kt, typename _vt,
 	typename _Equals,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class CLHashMap:public __CLMap<_kt,_vt,
+class CLUCENE_INLINE_EXPORT CLHashMap:public __CLMap<_kt,_vt,
 	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher,_Equals>,
 	_KeyDeletor,_ValueDeletor>
 {
@@ -208,7 +209,7 @@ template<typename _kt, typename _vt,
 	typename _Equals,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class CLHashMap:public __CLMap<_kt,_vt,
+class CLUCENE_INLINE_EXPORT CLHashMap:public __CLMap<_kt,_vt,
 	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher>,
 	_KeyDeletor,_ValueDeletor>
 {
@@ -229,7 +230,7 @@ template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class CLSet:public __CLMap<_kt,_vt,
+class CLUCENE_INLINE_EXPORT CLSet:public __CLMap<_kt,_vt,
 	CL_NS_STD(map)<_kt,_vt, _Compare>,
 	_KeyDeletor,_ValueDeletor>
 {
@@ -250,7 +251,7 @@ template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
-class CLMultiMap:public __CLMap<_kt,_vt,
+class CLUCENE_INLINE_EXPORT CLMultiMap:public __CLMap<_kt,_vt,
 	CL_NS_STD(multimap)<_kt,_vt>,
 	_KeyDeletor,_ValueDeletor>
 {

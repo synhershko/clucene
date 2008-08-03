@@ -13,7 +13,7 @@ CL_CLASS_DEF(index,Term)
 //#include "Filter.h"
 CL_CLASS_DEF(document,Document)
 //#include "Sort.h"
-//#include "CLucene/util/VoidList.h"
+#include "CLucene/util/VoidMapSetDefinitions.h"
 //#include "Explanation.h"
 //#include "Similarity.h"
 

@@ -106,8 +106,7 @@ CL_NS_DEF(search)
    */
 	class CLUCENE_EXPORT Weight: LUCENE_BASE {
     public:
-		virtual ~Weight(){
-		};
+		virtual ~Weight();
 
       /** The query that this concerns. */
       virtual Query* getQuery() = 0;

@@ -7,11 +7,8 @@
 #ifndef _lucene_util_VoidList_
 #define _lucene_util_VoidList_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
 #include "Equators.h"
+#include "CLucene/LuceneThreads.h"
 
 CL_NS_DEF(util)
 
@@ -20,7 +17,7 @@ CL_NS_DEF(util)
 * @internal
 */
 template<typename _kt,typename _base,typename _valueDeletor> 
-class __CLList:public _base,LUCENE_BASE {
+class CLUCENE_INLINE_EXPORT __CLList:public _base,LUCENE_BASE {
 private:
 	bool dv;
 	typedef _base base;
@@ -113,7 +110,7 @@ public:
 //a list, so can contain duplicates
 //it grows in chunks... todo: check jlucene for initial size of array, and growfactors
 template<typename _kt, typename _valueDeletor=CL_NS(util)::Deletor::Dummy> 
-class CLVector:public __CLList<_kt, CL_NS_STD(vector)<_kt> , _valueDeletor>
+class CLUCENE_INLINE_EXPORT CLVector:public __CLList<_kt, CL_NS_STD(vector)<_kt> , _valueDeletor>
 {
 public:
 	CLVector ( const bool deleteValue=true ):
@@ -140,7 +137,7 @@ public:
 template<typename _kt,
 	typename _Comparator=CL_NS(util)::Compare::TChar,
 	typename _valueDeletor=CL_NS(util)::Deletor::Dummy> 
-class CLHashList:public __CLList<_kt, CL_NS_HASHING(hash_set)<_kt,_Comparator> , _valueDeletor>
+class CLUCENE_INLINE_EXPORT CLHashList:public __CLList<_kt, CL_NS_HASHING(hash_set)<_kt,_Comparator> , _valueDeletor>
 {
 public:
 	CLHashList ( const bool deleteValue=true ):
@@ -151,7 +148,7 @@ public:
 #endif
 
 template<typename _kt, typename _valueDeletor=CL_NS(util)::Deletor::Dummy> 
-class CLLinkedList:public __CLList<_kt, CL_NS_STD(list)<_kt> , _valueDeletor>
+class CLUCENE_INLINE_EXPORT CLLinkedList:public __CLList<_kt, CL_NS_STD(list)<_kt> , _valueDeletor>
 {
 public:
 	CLLinkedList ( const bool deleteValue=true ):
@@ -162,7 +159,7 @@ public:
 template<typename _kt,
 	typename _Comparator=CL_NS(util)::Compare::TChar,
 	typename _valueDeletor=CL_NS(util)::Deletor::Dummy> 
-class CLSetList:public __CLList<_kt, CL_NS_STD(set)<_kt,_Comparator> , _valueDeletor>
+class CLUCENE_INLINE_EXPORT CLSetList:public __CLList<_kt, CL_NS_STD(set)<_kt,_Comparator> , _valueDeletor>
 {
 public:
 	CLSetList ( const bool deleteValue=true ):

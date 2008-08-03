@@ -14,6 +14,9 @@ CL_NS_DEF(store)
 	IndexInput::IndexInput()
 	{
 	}
+	IndexInput::~IndexInput()
+	{
+	}
 	IndexInput::IndexInput(const IndexInput& other)
 	{
 	}

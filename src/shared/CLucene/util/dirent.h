@@ -33,14 +33,14 @@
  */
  
 /** dirent structure - used by the dirent.h directory iteration functions */
-struct dirent
+struct CLUCENE_SHARED_INLINE_EXPORT dirent
 {
 	unsigned short	d_namlen;	/* Length of name in d_name. */
 	char *d_name;		/* File name. */
 };
 
 /** DIR structure - used by the dirent.h directory iteration functions*/
-struct DIR
+struct CLUCENE_SHARED_INLINE_EXPORT DIR
 {
 	/** disk transfer area for this dir */
 	struct _finddata_t dd_dta;

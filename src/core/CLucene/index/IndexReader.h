@@ -389,7 +389,7 @@ public:
 	void deleteDocument(const int32_t docNum);
 
 	///@deprecated. Use deleteDocument instead.
-	_CL_DEPRECATED( deleteDocument ) void deleteDoc(const int32_t docNum){ deleteDocument(docNum); }
+	_CL_DEPRECATED( deleteDocument ) void deleteDoc(const int32_t docNum);
 
 	/** Deletes all documents containing <code>term</code>.
 	* This is useful if one uses a document field to hold a unique ID string for
@@ -403,7 +403,7 @@ public:
 	int32_t deleteDocuments(Term* term);
 
 	///@deprecated. Use deleteDocuments instead.
-	_CL_DEPRECATED( deleteDocuments ) int32_t deleteTerm(Term* term){ return deleteDocuments(term); }
+	_CL_DEPRECATED( deleteDocuments ) int32_t deleteTerm(Term* term);
 
 	/** 
 	* Closes files associated with this index and also saves any new deletions to disk.

@@ -158,6 +158,17 @@
 #ifndef CLUCENE_LOCAL
 	#define CLUCENE_LOCAL
 #endif
+
+//inline definitions
+#ifdef __MINGW32__
+ #define CLUCENE_SHARED_INLINE_EXPORT
+ #define CLUCENE_INLINE_EXPORT
+ #define CLUCENE_CONTRIBS_INLINE_EXPORT
+#else
+ #define CLUCENE_SHARED_INLINE_EXPORT CLUCENE_SHARED_EXPORT
+ #define CLUCENE_INLINE_EXPORT CLUCENE_EXPORT
+ #define CLUCENE_CONTRIBS_INLINE_EXPORT CLUCENE_CONTRIBS_EXPORT
+#endif
 ////////////////////////////////////////////////////////
 
 

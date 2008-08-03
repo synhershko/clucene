@@ -37,7 +37,7 @@
 namespace jstreams {
 
 template <class T>
-class StringReader : public StreamBase<T> {
+class CLUCENE_INLINE_EXPORT StringReader : public StreamBase<T> {
 private:
     int64_t markpt;
     T* data;
