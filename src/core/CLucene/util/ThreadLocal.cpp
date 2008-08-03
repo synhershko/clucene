@@ -22,8 +22,12 @@ typedef CL_NS(util)::CLMultiMap<_LUCENE_THREADID_TYPE, _ThreadLocal*,
 		CL_NS(util)::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>, 
 		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal*> > ThreadLocalsType;
 		
+#ifdef _LUCENE_THREADMUTEX
+    //the lock for locking ThreadLocalBase_threadLocals
+    //we don't use STATIC_DEFINE_MUTEX, because then the initialisation order will be undefined.
+    static _LUCENE_THREADMUTEX *ThreadLocalBase_LOCK = NULL; 
+#endif
 
-static _LUCENE_THREADMUTEX *ThreadLocalBase_LOCK = NULL;
 static ThreadLocalsType*  ThreadLocalBase_threadLocals; //list of thread locals
 //todo: make shutdown hooks generic
 static ShutdownHooksType* ThreadLocalBase_shutdownHooks; //list of shutdown hooks.
@@ -64,9 +68,14 @@ _ThreadLocal::_ThreadLocal(CL_NS(util)::AbstractDeletor* _deletor):
 	//add this object to the base's list of ThreadLocalBase_threadLocals to be
 	//notified in case of UnregisterThread()
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
-	if ( ThreadLocalBase_LOCK == NULL ){
-		ThreadLocalBase_LOCK = _CLNEW _LUCENE_THREADMUTEX;
-	}
+	
+	#ifdef _LUCENE_THREADMUTEX
+	    //slightly un-usual way of initialising mutex, because otherwise our initialisation order would be undefined
+    	if ( ThreadLocalBase_LOCK == NULL ){
+    		ThreadLocalBase_LOCK = _CLNEW _LUCENE_THREADMUTEX;
+    	}
+	#endif
+	
 	if ( ThreadLocalBase_threadLocals == NULL ){
 		ThreadLocalBase_threadLocals = _CLNEW ThreadLocalsType(false,false);
 	}
