@@ -160,12 +160,12 @@ ADD_CUSTOM_TARGET(test-platform-charfuncs
 
 #target for running all tests
 ADD_CUSTOM_TARGET(test-all 
-    COMMAND ${CMAKE_COMMAND} test-pedantic
-    COMMAND ${CMAKE_COMMAND} test-ascii
-    COMMAND ${CMAKE_COMMAND} test-namespace
-    COMMAND ${CMAKE_COMMAND} test-mmap
-    COMMAND ${CMAKE_COMMAND} test-singlethreading
-    COMMAND ${CMAKE_COMMAND} test-refcnt
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-pedantic
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-ascii
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-namespace
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-mmap
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-singlethreading
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-refcnt
     DEPENDS cl_test-pedantic cl_test-ascii cl_test-namespace cl_test-mmap cl_test-singlethreading cl_test-refcnt cl_test-platform-charfuncs
 )
 
