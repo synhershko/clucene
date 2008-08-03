@@ -71,17 +71,17 @@ public:
 	* Returns a reference to the underlying byte array
 	* that holds this payloads data.
 	*/
-    uint8_t* getData(int32_t &_dataLen) { _dataLen = dataLen; return data; }
+    uint8_t* getData(int32_t &_dataLen);
 
     /**
      * Returns the offset in the underlying byte array 
      */
-	int getOffset() const { return offset; };
+	int32_t getOffset() const;
 
     /**
      * Returns the length of the payload data. 
      */
-    int getLength() const { return length; }
+    int32_t getLength() const;
 
     /**
      * Returns the byte at the given index.
@@ -91,6 +91,7 @@ public:
 	/**
 	* Allocates a new byte array, copies the payload data into it and returns it. Caller is responsible
 	* for deleting it later.
+	* @memory caller is responsible for deleting the returned array
 	*/
 	uint8_t* toByteArray(int32_t &_dataLen);
 

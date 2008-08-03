@@ -42,6 +42,15 @@ void Payload::setData(uint8_t* _data, const int32_t _dataLen, const int32_t _off
 	this->length = _length;
 }
 
+uint8_t* Payload::getData(int32_t &_dataLen) {
+	_dataLen = dataLen;
+	return data;
+}
+
+int32_t Payload::getOffset() const { return offset; }
+
+int32_t Payload::getLength() const { return length; }
+
 uint8_t Payload::byteAt(int index) const {
 	if (0 <= index && index < this->length) {
 		return this->data[this->offset + index];    
