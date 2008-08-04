@@ -160,7 +160,7 @@
 #endif
 
 //inline definitions
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
  #define CLUCENE_SHARED_INLINE_EXPORT
  #define CLUCENE_INLINE_EXPORT
  #define CLUCENE_CONTRIBS_INLINE_EXPORT

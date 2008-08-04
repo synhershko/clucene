@@ -103,6 +103,7 @@ TermVectorsReader::TermVectorsReader(const TermVectorsReader& copy)
     tvfFormat = copy.tvfFormat;
     _size = copy._size;
     fieldInfos = copy.fieldInfos;
+	docStoreOffset = copy.docStoreOffset;
 }
 TermVectorsReader* TermVectorsReader::clone() const{
 	if (tvx == NULL || tvd == NULL || tvf == NULL)
