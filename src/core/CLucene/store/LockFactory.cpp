@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
@@ -40,7 +40,7 @@ void LockFactory::setLockPrefix( char* lockPrefix )
 
 char* LockFactory::getLockPrefix()
 {
-	return lockPrefix;	
+	return lockPrefix;
 }
 
 SingleInstanceLockFactory::SingleInstanceLockFactory()
@@ -93,34 +93,36 @@ LuceneLock* NoLockFactory::makeLock( const char* lockName )
 }
 
 void NoLockFactory::clearLock( const char* lockName )
-{	
+{
 }
 
 
 FSLockFactory::FSLockFactory( const char* lockDir )
 {
 	setLockDir( lockDir );
+	// TODO: Ensure that lockDir exists and is a directory
 }
 
 FSLockFactory::~FSLockFactory()
 {
+	_CLDELETE( lockDir );
 }
 
 void FSLockFactory::setLockDir( const char* lockDir )
 {
-	this->lockDir = lockDir;
+	this->lockDir = STRDUP_AtoA( lockDir );
 }
 
 LuceneLock* FSLockFactory::makeLock( const char* lockName )
 {
 	char name[CL_MAX_DIR];
-	
+
 	if ( lockPrefix != NULL ) {
 		cl_sprintf(name, CL_MAX_DIR, "%s-%s", lockPrefix, lockName);
 	} else {
 		cl_strcpy(name,lockName,CL_MAX_DIR);
 	}
-	
+
 	return _CLNEW FSLock( lockDir, name );
 }
 
@@ -130,7 +132,7 @@ void FSLockFactory::clearLock( const char* lockName )
 		char name[CL_MAX_DIR];
 		char path[CL_MAX_DIR];
 		struct fileStat buf;
-		
+
 		if ( lockPrefix != NULL ) {
 			STRCPY_AtoA(name,lockPrefix,strlen(lockPrefix)+1);
 			strcat(name,"-");
@@ -138,14 +140,14 @@ void FSLockFactory::clearLock( const char* lockName )
 		} else {
 			strcpy(name,lockName);
 		}
-		
+
 		_snprintf(path,CL_MAX_DIR,"%s/%s",lockDir,name);
-		
+
 		int32_t ret = fileStat(path,&buf);
 		if ( ret==0 && !(buf.st_mode & S_IFDIR) && _unlink( path ) == -1 ) {
 			_CLTHROWA(CL_ERR_IO, "Couldn't delete file" ); // TODO: make richer error
 		}
-	}			
+	}
 }
 
 
