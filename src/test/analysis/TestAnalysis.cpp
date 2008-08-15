@@ -34,7 +34,7 @@
 
 /*todo: move this to contribs because we have no filereader
   void _testFile(CuTest *tc,const char* fname, bool verbose) {
-    struct fileStat buf;	
+    struct cl_stat_t buf;	
 	  fileStat(fname,&buf);
 
 	  int64_t bytes = buf.st_size;

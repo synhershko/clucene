@@ -33,7 +33,7 @@ opendir (const char *szPath)
 	}
 
 	/* Attempt to determine if the given path really is a directory. */
-	struct fileStat rcs;
+	struct cl_stat_t rcs;
 	if ( fileStat(szPath,&rcs) == -1)
 	{
 		/* call GetLastError for more error info */
@@ -174,7 +174,7 @@ struct dirent * readdir (DIR * dirp)
 
 		if (!bThisFolderOrUpFolder)
 		{
-			struct fileStat buf;
+			struct cl_stat_t buf;
 			char buffer[CL_MAX_DIR];
 			size_t bl = strlen(dirp->dd_name)-strlen(DIRENT_SEARCH_SUFFIX);
 			strncpy(buffer,dirp->dd_name,bl);

@@ -55,7 +55,7 @@ size_t Misc::ahashCode(const char* str, size_t len){
 //exist on non-msvc platform, so lets put it here
 int64_t Misc::filelength(int filehandle)
 {
-    struct fileStat info;
+    struct cl_stat_t info;
     if (fileHandleStat(filehandle, &info) == -1)
  	 _CLTHROWA( CL_ERR_IO,"fileStat error" );
     return info.st_size;
@@ -174,13 +174,13 @@ return ret;
 bool Misc::dir_Exists(const char* path){
 	if ( !path || !*path )
 		return false;
-	struct fileStat buf;
+	struct cl_stat_t buf;
 	int32_t ret = fileStat(path,&buf);
 	return ( ret == 0);
 }
 
 int64_t Misc::file_Size(const char* path){
-	struct fileStat buf;
+	struct cl_stat_t buf;
 	if ( fileStat(path,&buf) == 0 )
 		return buf.st_size;
 	else

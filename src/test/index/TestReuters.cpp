@@ -66,7 +66,7 @@ CL_NS_USE(util)
 		writer.setMaxFieldLength(10000);
 		DIR* srcdir = opendir(reuters_srcdirectory);
 		struct dirent* fl = readdir(srcdir);
-		struct fileStat buf;
+		struct cl_stat_t buf;
 		char tmppath[CL_MAX_DIR];
 		strncpy(tmppath,reuters_srcdirectory,CL_MAX_DIR);
 		strcat(tmppath,"/");
