@@ -18,12 +18,7 @@
 #include "CLucene/clucene-config.h"
 
 //some early definitions
-#if defined(_MSC_VER)
-    //this has to be included very early, or visual studio will ignore it
-    #pragma warning(disable : 4786) //ignore: identifier was truncated to '255' characters in the debug information
-    #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
-#endif
-#if defined(__BORLANDC__)
+#if defined(_MSC_VER) || defined(__BORLANDC__)
     #define _LUCENE_PRAGMA_WARNINGS //tell lucene to display warnings using pragmas instead of #warning
 #endif
 

@@ -19,7 +19,22 @@ MACRO (DEFINE_OPTIONS extraOptions)
     	SET (${extraOptions} "${${extraOptions}} -D_UNICODE")
     ENDIF(ENABLE_ASCII_MODE)
 
-	IF ( MSVC80 )
-		SET (${extraOptions} "${${extraOptions}} -D_CRT_SECURE_NO_DEPRECATE")
-	ENDIF ( MSVC80 )
+	IF ( MSVC80 OR MSVC90)
+	    #todo: remove this once crt functions are fixed...
+		SET (${extraOptions} "${${extraOptions}} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE")
+	ENDIF ( MSVC80 OR MSVC90 )
+	
+	IF(CYGWIN)
+        ADD_DEFINITIONS(-D__LARGE64_FILES)
+    ENDIF(CYGWIN)
+    
+    IF(MSVC)
+        # calm mdown msvc
+        #ADD_DEFINITIONS(-wd4251) # 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
+        #ADD_DEFINITIONS(-wd4275) # non  DLL-interface classkey 'identifier' used as base for DLL-interface classkey 'identifier'
+        #ADD_DEFINITIONS(-wd4309) # 'conversion' : truncation of constant value
+        #ADD_DEFINITIONS(-wd4503) # decorated name length exceeded
+        ADD_DEFINITIONS(-wd4786) # identifier was truncated to '255' characters in the debug information
+    ENDIF(MSVC)
+
 ENDMACRO (DEFINE_OPTIONS)
