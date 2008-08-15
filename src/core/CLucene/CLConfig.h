@@ -68,26 +68,6 @@
 ////////////////////////////////////////////////////////////////////
 
 
-
-////////////////////////////////////////////////////////////////////
-//   The following are search query options
-//   THe NO_* options can make CLucene faster and/or smaller
-//   special queries sometime require longer search times or may 
-//   not be required
-////////////////////////////////////////////////////////////////////
-//
-//Define this to remove fuzzy query and sloppy scoring
-//#define NO_FUZZY_QUERY
-//
-//Define to remove wildcard t*m or te?m to match term
-//#define NO_WILDCARD_QUERY
-//
-//Define to remove prefix term query - ter* to match term or terms
-//#define NO_PREFIX_QUERY
-//
-//Define to remove range (exlusive and inclusive)
-//#define NO_RANGE_QUERY
-//
 //This must always be defined. They can be adjusted if required. But
 //general Wildcard string would be '*' and Wildcard Char would be '?'
 //Both are Required.
