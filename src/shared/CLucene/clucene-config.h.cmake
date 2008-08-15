@@ -128,4 +128,11 @@ ${SYMBOL__T}
 #cmakedefine _CL_DISABLE_MULTITHREADING
 
 
+#ifdef __BORLANDC__ //borland compiler
+    //todo: bcc incorrectly detects this... fix this in cmake
+    #undef LUCENE_STATIC_CONSTANT
+    #define LUCENE_STATIC_CONSTANT(type, assignment) enum { assignment }
+#endif
+
+
 #endif

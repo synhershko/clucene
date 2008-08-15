@@ -13,14 +13,14 @@ CL_NS_DEF(util)
 
 //todo: using http://en.wikipedia.org/wiki/Thread-local_storage#Pthreads_implementation
 //would work better... but lots of testing would be needed first...
-typedef CL_NS(util)::CLSetList<_ThreadLocal::ShutdownHook*, 
-		CL_NS(util)::Compare::Void<_ThreadLocal::ShutdownHook>, 
-		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal::ShutdownHook*> > ShutdownHooksType;
-
 typedef CL_NS(util)::CLMultiMap<_LUCENE_THREADID_TYPE, _ThreadLocal*, 
 		CL_NS(util)::CLuceneThreadIdCompare, 
 		CL_NS(util)::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>, 
 		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal*> > ThreadLocalsType;
+
+typedef CL_NS(util)::CLSetList<_ThreadLocal::ShutdownHook*, 
+		CL_NS(util)::Compare::Void<_ThreadLocal::ShutdownHook>, 
+		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal::ShutdownHook*> > ShutdownHooksType;
 		
 #ifdef _LUCENE_THREADMUTEX
     //the lock for locking ThreadLocalBase_threadLocals

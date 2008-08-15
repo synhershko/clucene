@@ -56,6 +56,7 @@ ${TYPE__TIMEB}
 #define _ILONGLONG(x) ${_CL_ILONGLONG_VALUE}
 
 ${FUNCTION_FILESTAT}
+${TYPE_CL_STAT_T}
 ${FUNCTION_FILESIZE}
 ${FUNCTION_FILESEEK}
 ${FUNCTION_FILETELL}
@@ -64,7 +65,7 @@ ${FUNCTION__REALPATH}
 ${FUNCTION__RENAME}
 ${FUNCTION__CLOSE}
 ${FUNCTION__READ}
-${FUNCTION__OPEN}
+${FUNCTION__CL_OPEN}
 ${FUNCTION__WRITE}
 ${FUNCTION__SNPRINTF}
 ${FUNCTION__MKDIR}
@@ -102,10 +103,12 @@ ${FUNCTION_SLEEPFUNCTION}
 //not sure why, but cygwin reports _S_IREAD, but doesn't actually work...
 //TODO: make this work properly (this bit shouldn't be necessary)
 #ifdef __CYGWIN__
-    #define _ftime ftime
-
     #define _S_IREAD 0333
     #define _S_IWRITE 0333
+#endif
+
+#ifdef __BORLANDC__ //borland compiler
+    #define O_RANDOM 0
 #endif
 
 #endif

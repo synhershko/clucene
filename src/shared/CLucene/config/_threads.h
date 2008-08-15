@@ -12,8 +12,9 @@
 		//do nothing
 	#elif defined(_CL_HAVE_WIN32_THREADS)
       //we have not explicity included windows.h and windows.h has
-      //not been included (check _WINDOWS_), then we must define
+      //not been included (check _WINBASE_), then we must define
       //our own definitions to the thread locking functions:
+      #ifndef _WINBASE_
       extern "C"{
           struct CRITICAL_SECTION
           {
@@ -30,6 +31,7 @@
           __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
     	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
       }
+      #endif //_WINBASE_
 	#elif defined(_CL_HAVE_PTHREAD)
 	    #include <pthread.h>
 	#endif
