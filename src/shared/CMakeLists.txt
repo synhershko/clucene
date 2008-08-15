@@ -17,6 +17,7 @@ INCLUDE (CheckFunctionExists)
 #local macros
 INCLUDE (MacroMustDefine)
 INCLUDE (MacroChooseType)
+INCLUDE (MacroChooseMisc)
 INCLUDE (MacroChooseFunction)
 INCLUDE (MacroChooseSymbol)
 INCLUDE (MacroCheckGccVisibility)
@@ -64,7 +65,11 @@ CHOOSE_TYPE(int64_t     8 signed   "int64_t;long long;__int64")
 CHOOSE_TYPE(uint64_t    8 unsigned "uint64_t;long long;__int64")
 
 CHOOSE_TYPE(size_t      -1 unsigned "size_t;int" )
-CHOOSE_TYPE(_timeb      -1 "" "timeb;_timeb" )
+CHOOSE_MISC(TYPE__TIMEB
+            HAVE_TYPE__TIMEB
+            "struct _timeb x\;" "/* #undef _timeb */" "_timeb"
+            "struct timeb x\;" "#define _timeb timeb" "timeb"
+             )
 
 #run macro for checking float. (and _FLT_EVAL_METHOD)
 DEFINE_FLOAT()
@@ -85,10 +90,34 @@ CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod
 )
 
 #make decisions about which functions to use...
-CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat64;stat;_stat")
-CHOOSE_FUNCTION(fileSize "filelengthi64;_filelengthi64;filelength;_filelength" "#define fileSize CL_NS(util)::Misc::filelength")
-CHOOSE_FUNCTION(fileSeek "lseeki64;_lseeki64;lseek64;lseek;_lseek")
 CHOOSE_FUNCTION(fileHandleStat "fstati64;_fstati64;fstat64;fstat;_fstat")
+IF ( _CL_HAVE_FUNCTION_FSTATI64 OR _CL_HAVE_FUNCTION__FSTATI64 OR _CL_HAVE_FUNCTION_FSTAT64 )
+    SET ( USE_STAT64 1 )
+ENDIF ( _CL_HAVE_FUNCTION_FSTATI64 OR _CL_HAVE_FUNCTION__FSTATI64 OR _CL_HAVE_FUNCTION_FSTAT64 )
+
+IF ( USE_STAT64 )
+    CHOOSE_FUNCTION(fileStat "stati64;_stati64;stat64;stat;_stat")
+    CHOOSE_FUNCTION(fileSize "filelengthi64;_filelengthi64;filelength;_filelength" "#define fileSize CL_NS(util)::Misc::filelength")
+    CHOOSE_FUNCTION(fileSeek "lseeki64;_lseeki64;lseek64;lseek;_lseek")
+    CHOOSE_MISC(TYPE_CL_STAT_T
+                HAVE_TYPE_CL_STAT_T
+                "struct stati64 x\;" "#define cl_stat_t stati64" "stati64"
+                "struct _stati64 x\;" "#define cl_stat_t _stati64" "_stati64"
+                "struct stat64 x\;" "#define cl_stat_t stat64" "stat64"
+                "struct stat x\;" "#define cl_stat_t stat" "stat"
+                "struct _stat x\;" "#define cl_stat_t _stat" "_stat"
+                 )
+ELSE( USE_STAT64 )
+    #borland doesn't have a fstat64, so we have to fallback to non 64 bit everything...
+    CHOOSE_FUNCTION(fileStat "stat;_stat")
+    CHOOSE_FUNCTION(fileSize "filelength;_filelength" "#define fileSize CL_NS(util)::Misc::filelength")
+    CHOOSE_FUNCTION(fileSeek "lseek;_lseek")
+    CHOOSE_MISC(TYPE_CL_STAT_T
+                HAVE_TYPE_CL_STAT_T
+                "struct stat x\;" "#define cl_stat_t stat" "stat"
+                "struct _stat x\;" "#define cl_stat_t _stat" "_stat"
+                )
+ENDIF( USE_STAT64 )
 
 #ftell (and probably soon ftell64) are POSIX standard functions, but tell and
 #tell64 are not, so we define fileTell in terms of fileSeek.
@@ -98,10 +127,10 @@ CHOOSE_FUNCTION(_realpath "realpath" "#define _realpath(rel,abs) ::_fullpath(abs
 CHOOSE_FUNCTION(_rename "rename")
 CHOOSE_FUNCTION(_close "_close((int)0);close")
 CHOOSE_FUNCTION(_read "_read((int)0, (void*)0, (unsigned int)0);read")
-CHOOSE_FUNCTION(_open "_open(0,0,0);open")
+CHOOSE_FUNCTION(_cl_open "_open(0,0,0);open")
 CHOOSE_FUNCTION(_write "_write((int)0, (const void*)0, (unsigned int)0);write")
 CHOOSE_FUNCTION(_unlink "_unlink((const char*)0);unlink")
-CHOOSE_FUNCTION(_ftime "_ftime;ftime")
+CHOOSE_FUNCTION(_ftime "_ftime(0);ftime")
 CHOOSE_FUNCTION(_mkdir "_mkdir((const char*)0)" "#define _mkdir(x) mkdir(x,0777)")
 CHOOSE_FUNCTION(SLEEPFUNCTION "usleep;Sleep(0);_sleep")
 
@@ -216,8 +245,8 @@ ENDIF ( CMAKE_ANSI_FOR_SCOPE )
 
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
-MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;")
-MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS")
+MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;HAVE_TYPE_CL_STAT_T")
+MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS;HAVE_TYPE__TIMEB")
 
 #now write out our configuration....
 CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/clucene-config.h.cmake ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h)
