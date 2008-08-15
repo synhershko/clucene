@@ -62,7 +62,7 @@ CL_NS_USE(util)
 #ifndef _ASCII
 	CLuceneError::CLuceneError(int num, const TCHAR* str, bool ownstr)
 	{
-		error_number = 0;
+		error_number = num;
 		_awhat=NULL;
 		_twhat=STRDUP_TtoT(str);
 		if ( ownstr )
