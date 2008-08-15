@@ -122,7 +122,7 @@ CL_NS_DEF(store)
 	   		  _CLTHROWA_DEL(CL_ERR_IO, err );
 	         }
 	       }
-	       int32_t r = _open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL, 
+	       int32_t r = _cl_open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL, 
 	       	_S_IREAD | _S_IWRITE); //must do this or file will be created Read only
 	   	if ( r < 0 ) {
 	   	  return false;

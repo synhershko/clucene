@@ -114,7 +114,7 @@ CL_NS_USE(util)
 	  strcpy(handle->path,path);
 
 	  //Open the file
-	  handle->fhandle  = _open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
+	  handle->fhandle  = _cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
 	  
 	  //Check if a valid handle was retrieved
 	  if (handle->fhandle < 0){
@@ -217,9 +217,9 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	//O_RANDOM - Specifies that caching is optimized for, but not restricted to, random access from disk.
 	//O_WRONLY - Opens file for writing only;
 	if ( Misc::dir_Exists(path) )
-	  fhandle = _open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
+	  fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
 	else // added by JBP
-	  fhandle = _open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
+	  fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
 
 	if ( fhandle < 0 ){
         int err = errno;
@@ -347,7 +347,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   void FSDirectory::create(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-		struct fileStat fstat;
+	struct cl_stat_t fstat;
     if ( fileStat(directory,&fstat) != 0 ) {
 	  	//todo: should construct directory using _mkdirs... have to write replacement
       if ( _mkdir(directory) == -1 ){
@@ -367,7 +367,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	  //clear old files
     DIR* dir = opendir(directory);
     struct dirent* fl = readdir(dir);
-    struct fileStat buf;
+    struct cl_stat_t buf;
 
     char path[CL_MAX_DIR];
     while ( fl != NULL ){
@@ -418,7 +418,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     DIR* dir = opendir(directory);
     
     struct dirent* fl = readdir(dir);
-    struct fileStat buf;
+    struct cl_stat_t buf;
 
     char path[CL_MAX_DIR];
 	strncpy(path,directory,CL_MAX_DIR);
@@ -478,7 +478,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   int64_t FSDirectory::fileModified(const char* name) const {
 	CND_PRECONDITION(directory[0]!=0,"directory is not open");
-    struct fileStat buf;
+    struct cl_stat_t buf;
     char buffer[CL_MAX_DIR];
     priv_getFN(buffer,name);
     if (fileStat( buffer, &buf ) == -1 )
@@ -489,7 +489,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   //static
   int64_t FSDirectory::fileModified(const char* dir, const char* name){
-    struct fileStat buf;
+    struct cl_stat_t buf;
     char buffer[CL_MAX_DIR];
 	_snprintf(buffer,CL_MAX_DIR,"%s%s%s",dir,PATH_DELIMITERA,name);
     fileStat( buffer, &buf );
@@ -501,7 +501,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     char buffer[CL_MAX_DIR];
     _snprintf(buffer,CL_MAX_DIR,"%s%s%s",directory,PATH_DELIMITERA,name);
 	
-    int32_t r = _open(buffer, O_RDWR, _S_IWRITE);
+    int32_t r = _cl_open(buffer, O_RDWR, _S_IWRITE);
 	if ( r < 0 )
 		_CLTHROWA(CL_ERR_IO,"IO Error while touching file");
 	::_close(r);
@@ -509,7 +509,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   int64_t FSDirectory::fileLength(const char* name) const {
 	  CND_PRECONDITION(directory[0]!=0,"directory is not open");
-    struct fileStat buf;
+    struct cl_stat_t buf;
     char buffer[CL_MAX_DIR];
     priv_getFN(buffer,name);
     if ( fileStat( buffer, &buf ) == -1 )

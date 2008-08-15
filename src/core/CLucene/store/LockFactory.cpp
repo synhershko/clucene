@@ -131,7 +131,7 @@ void FSLockFactory::clearLock( const char* lockName )
 	if ( Misc::dir_Exists( lockDir )) {
 		char name[CL_MAX_DIR];
 		char path[CL_MAX_DIR];
-		struct fileStat buf;
+		struct cl_stat_t buf;
 
 		if ( lockPrefix != NULL ) {
 			STRCPY_AtoA(name,lockPrefix,strlen(lockPrefix)+1);
