@@ -99,7 +99,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 			StringIntern_stringaPool[ret] = count;
 			return ret;
 		}else{
-			if (use_provided) delete[] str; // delete the provided string if already exists
+			if (use_provided) _CLDELETE_CaARRAY(str); // delete the provided string if already exists
 			(itr->second) = (itr->second) + count;
 			return itr->first;
 		}

@@ -78,7 +78,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		   STRCPY_TtoA(aname, tname, CL_MAX_PATH);
 		   name = const_cast<char*>(CLStringIntern::internA( const_cast<const char*>(aname), 1, true)); // Intern string, optimized to reuse the same buffer
 	   }
-	   _CLDELETE_CaARRAY(tname);
+	   _CLDELETE_CARRAY(tname);
 
 	   docCount = input->readInt();
 	   if (format <= SegmentInfos::FORMAT_LOCKLESS) {
@@ -89,7 +89,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 				   tname = input->readString();
 				   char* aname = new char[CL_MAX_PATH]; // don't ref-count aname since it will be handled by CLStringIntern
 				   STRCPY_TtoA(aname, tname, CL_MAX_PATH);
-				   _CLDELETE_CaARRAY(tname);
+				   _CLDELETE_CARRAY(tname);
 				   
 				   //todo: possible optimization would be to strcmp(aname, docStoreSegment) and avoid inernA if == 0
 				   
@@ -884,14 +884,14 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 					  //CL_TRACE("fallback to prior segment file '%s'", prevSegmentFileName);
 					  try {
 						  void* v = doBody(prevSegmentFileName);
-						  _CLDELETE_LARRAY( prevSegmentFileName );
-						  _CLDELETE_LARRAY(exc_txt);
+						  _CLDELETE_CaARRAY( prevSegmentFileName );
+						  _CLDELETE_CARRAY(exc_txt);
 						  //if (exc != NULL) {
 						  //CL_TRACE("success on fallback %s", prevSegmentFileName);
 						  //}
 						  return v;
 					  } catch (CLuceneError& err2) {
-						  _CLDELETE_LARRAY( prevSegmentFileName );
+						  _CLDELETE_CaARRAY( prevSegmentFileName );
 						  if (err2.number()!=CL_ERR_IO) {
 							  _CLDELETE_LARRAY(exc_txt);
 							  throw err2;

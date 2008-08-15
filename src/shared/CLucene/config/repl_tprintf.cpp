@@ -140,7 +140,7 @@ void lucene_wprintf(const wchar_t * format, ...){
 int lucene_vsnwprintf(wchar_t * strbuf, size_t count, const wchar_t * format, va_list& ap){
 	StringBuffer buffer;
     lucene_vfnwprintf(&buffer,count,format,ap);
-	int ret = cl_min((int32_t)count,buffer.length()+1);
+	int ret = cl_min((size_t)count,buffer.length()+1);
 	wcsncpy(strbuf,buffer.getBuffer(),ret);
     return ret;
 }

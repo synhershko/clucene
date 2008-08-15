@@ -61,6 +61,15 @@ or
 12.)Now you can develop your own code. This is beyond the scope of this document.
     Read the README for information about documentation or to get help on the mailinglist.
 
+Other platforms:
+----------------
+Some platforms require specific actions to get cmake working. Here are some general tips:
+
+Solaris:
+I had problems when using the standard stl library. Using the -stlport4 switch worked. Had
+to specify compiler from the command line: cmake -DCXX_COMPILER=xxx -stlport4
+
+
 Installing:
 -----------
 CLucene is installed in CMAKE_INSTALL_PREFIX by default. 
@@ -83,6 +92,16 @@ To solve this, increase the open file limit:
 On Solaris:
 ulimit -n 1024
 set rlim_fd_cur=1024
+
+GDB - GNU debugging tool (linux only)
+------------------------
+If you get an error, try doing this. More information on GDB can be found on the internet
+
+#gdb bin/cl_test
+# gdb> run
+when gdb shows a crash run
+# gdb> bt
+a backtrace will be printed. This may help to solve any problems.
 
 Code layout
 --------------
@@ -119,13 +138,17 @@ Working with valgrind
 Valgrind reports memory leaks and memory problems. Tests should always pass
 valgrind before being passed.
 
-#valgrind <program>
+#valgrind --leak-check=full <program>
 
 Performance with gprof
 ----------------------
 Compile with gprof turned on (ENABLE_GPROF in cmake gui or using ccmake).
-Run the program you want using gprof <program>. Various analysis can be
-created - see man gprof for these options.
+I've found (at least on windows cygwin) that gprof wasn't working over
+dll boundaries, running the cl_test-pedantic monolithic build worked better.
+
+This is typically what I use to produce some meaningful output after a -pg
+compiled application has exited:
+# gprof bin/cl_test-pedantic.exe gmon.out >gprof.txt
 
 Benchmarks
 ----------

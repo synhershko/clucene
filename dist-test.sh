@@ -92,12 +92,13 @@ fi
 if [ $t_env == 1 ]; then
     for H in `find ../src/shared/CLucene| grep "\.h$"` `find ../src/core/CLucene| grep "\.h$"`; do
         BH=`basename "$H"`
+        DN=`dirname "$H"`
         if [ "${BH:0:1}" != "_" ]; then
             DH=`dirname "${H:3}"`
         
             #move headers somewhere to compile
             mkdir -p "$TMP/$DH" 2>/dev/null
-            ln -s "`realpath $H`" "$TMP/${H:3}" 2>/dev/null
+            ln -s "`cd "$DN" && pwd`" "$TMP/${H:3}" 2>/dev/null
             
             #create pub-headers.cpp
             echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
@@ -105,13 +106,14 @@ if [ $t_env == 1 ]; then
     done
 fi
 
-if [ $t_env == 1 ]; then 
+if [ $t_env == 1 ]; then
     echo "int main(){return 0;}"  >>$TMP/pub-headers.cpp
 fi
 
 #find inline code:
 if [ $t_inline == 1 ]; then
     if [ $t_env == 1 ]; then
+        cmake -DENABLE_CLDOCS:BOOLEAN=TRUE .
         make doc
         if [ $? != 0 ]; then 
             exit 1
@@ -164,8 +166,10 @@ if [ $t_license == 1 ]; then
         
         if [ "${BH:BH_len-2}" == ".h" ] || [ "${BH:BH_len-2}" == ".c" ] || [ "${BH:BH_len-4}" == ".cpp" ]; then
             if [ "`awk '/\* Copyright \(C\) [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
-                echo "$H has invalid license"
-                FAIL=1
+                if [ "`awk '/\* Copyright [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
+                    echo "$H has invalid license"
+                    FAIL=1
+                fi
             fi
         fi
     done
