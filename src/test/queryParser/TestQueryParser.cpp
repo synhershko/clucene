@@ -223,12 +223,12 @@ void testWildcard(CuTest *tc) {
 	assertQueryEquals(tc,_T("term*"), NULL, _T("term*"));
 	assertQueryEquals(tc,_T("term*^2"), NULL, _T("term*^2.0"));
 
-#ifndef NO_FUZZY_QUERY
 	assertQueryEquals(tc,_T("term~"), NULL, _T("term~0.5"));
+	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~^2"), NULL, _T("term^2.0~0.5"));
 	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term^2.0~0.5"));
 	assertTrue(tc, _T("term~"), NULL,_T("FuzzyQuery"), _T("term~0.5"));
-#endif
+
 	assertQueryEquals(tc,_T("term*germ"), NULL, _T("term*germ"));
 	assertQueryEquals(tc,_T("term*germ^3"), NULL, _T("term*germ^3.0"));
 
@@ -319,15 +319,10 @@ CuSuite *testQueryParser(void)
     SUITE_ADD_TEST(suite, testNumber);
     SUITE_ADD_TEST(suite, testPunct);
 
-#ifndef NO_FUZZY_QUERY
     SUITE_ADD_TEST(suite, testSlop);
-#endif
-#ifndef NO_RANGE_QUERY
     SUITE_ADD_TEST(suite, testRange);
-#endif
-#ifndef NO_WILDCARD_QUERY
     SUITE_ADD_TEST(suite, testWildcard);
-#endif
+
     return suite; 
 }
 // EOF

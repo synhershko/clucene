@@ -289,18 +289,10 @@ protected:
 	//these functions may be defined under certain compilation conditions.
 	//note that this functionality is deprecated, you should create your own queryparser
 	//if you want to remove this functionality...it will be removed... be warned!
-#ifdef NO_PREFIX_QUERY
 	virtual CL_NS(search)::Query* GetPrefixQuery(const TCHAR* field,const TCHAR* termStr){ return NULL; }
-#endif
-#ifdef NO_FUZZY_QUERY
     virtual CL_NS(search)::Query* GetFuzzyQuery(const TCHAR* field,const TCHAR* termStr){ return NULL; }
-#endif
-#ifdef NO_RANGE_QUERY
 	virtual CL_NS(search)::Query* GetRangeQuery(const TCHAR* field, const TCHAR* part1, const TCHAR* part2, bool inclusive) { return NULL; }
-#endif
-#ifdef NO_WILDCARD_QUERY
 	virtual CL_NS(search)::Query* GetWildcardQuery(const TCHAR* field, TCHAR* termStr) { return NULL; }
-#endif
 private:
 	/**
 	* matches for CONJUNCTION
