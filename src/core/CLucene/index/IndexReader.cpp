@@ -553,13 +553,6 @@ CL_NS_DEF(index)
 
       CND_PRECONDITION(directory != NULL, "directory is NULL");
 
-	  //Create a buffer of length CL_MAXDIR
-      char f[CL_MAX_PATH]; //todo: potential buffer overflow
-	  //Copy the directory string to the buffer. leave room for /write.lock
-      strncpy(f,directory,CL_MAX_PATH-12);
-	  //Cat the name of the write.lock file to buffer
-      strcat ( f,"/write.lock" );
-
       Directory* dir = FSDirectory::getDirectory(directory,false);
       bool ret = isLocked(dir);
 	  dir->close();
