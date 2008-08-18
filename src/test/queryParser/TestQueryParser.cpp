@@ -202,6 +202,9 @@ void testSlop(CuTest *tc) {
 	assertQueryEquals(tc,_T("\"term germ\"~2"), NULL, _T("\"term germ\"~2") );
 	assertQueryEquals(tc,_T("\"term germ\"~2 flork"), NULL, _T("\"term germ\"~2 flork") );
 	assertQueryEquals(tc,_T("\"term\"~2"), NULL, _T("term"));
+	assertQueryEquals(tc,_T("term~2"), NULL, _T("term"));
+	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
+	assertQueryEquals(tc,_T("term~0.6"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("\" \"~2 germ"), NULL, _T("germ"));
 	assertQueryEquals(tc,_T("\"term germ\"~2^2"), NULL, _T("\"term germ\"~2^2.0") );
 }
