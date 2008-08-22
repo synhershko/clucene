@@ -181,7 +181,7 @@ CL_NS_DEF(util)
 		// numbers that have zeros right after the decimal point
 		if (remadj) {
 			size_t numZeros = dig - (size_t)log10((float_t)remadj) - 1;
-		    while(numZeros-- > 0)
+		    while(numZeros-- > 0 && numZeros < 10)
 				_tcscat(buf,_T("0")); //add a zero before the decimal point
 		}
 
