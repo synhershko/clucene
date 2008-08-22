@@ -3,9 +3,14 @@ INCLUDE (CheckSymbolExists)
 INCLUDE (Macro_ChooseStatus)
 
 MACRO(CHOOSE_SYMBOL name options)
-    IF ( HAVE_WINDOWS_H )
-    	SET (CHOOSE_SYMBOL_INCLUDES "${CHOOSE_SYMBOL_INCLUDES};windows.h")
-    ENDIF ( HAVE_WINDOWS_H )
+    #note: don't add windows.h to this list, since we don't want to find things 
+    #in there (bcc might make you think otherwise, but it's true!)...
+    
+    IF ( CYGWIN )
+        #cygwin requires this to determine some things...
+        SET ( CMAKE_REQUIRED_DEFINITIONS "-D_WIN32")
+    ENDIF( CYGWIN )
+    
     IF ( HAVE_LIMITS_H )
     	SET (CHOOSE_SYMBOL_INCLUDES "${CHOOSE_SYMBOL_INCLUDES};limits.h")
     ENDIF ( HAVE_LIMITS_H )
@@ -53,4 +58,5 @@ MACRO(CHOOSE_SYMBOL name options)
     ENDIF ( NOT SYMBOL_${NAME} )
     
     SET (CHOOSE_SYMBOL_INCLUDES)
+    SET (CMAKE_REQUIRED_DEFINITIONS)
 ENDMACRO(CHOOSE_SYMBOL)

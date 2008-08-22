@@ -105,7 +105,7 @@ FSLockFactory::FSLockFactory( const char* lockDir )
 
 FSLockFactory::~FSLockFactory()
 {
-	_CLDELETE( lockDir );
+	_CLDELETE_CaARRAY( lockDir );
 }
 
 void FSLockFactory::setLockDir( const char* lockDir )

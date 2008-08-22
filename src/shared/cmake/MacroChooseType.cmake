@@ -4,12 +4,11 @@ INCLUDE (Macro_ChooseStatus)
 
 #macro that sets OUTPUT as the value of oneof options (if _CL_HAVE_OPTION exists)
 MACRO(CHOOSE_TYPE name size sign options)
+    #note: don't add windows.h to this list, since we don't want to find things 
+    #in there (bcc might make you think otherwise, but it's true!)...
     IF ( HAVE_TCHAR_H )
     	SET (CMAKE_EXTRA_INCLUDE_FILES "${CMAKE_EXTRA_INCLUDE_FILES};tchar.h")
     ENDIF ( HAVE_TCHAR_H )
-    IF ( HAVE_WINDOWS_H )
-    	SET (CMAKE_EXTRA_INCLUDE_FILES "${CMAKE_EXTRA_INCLUDE_FILES};windows.h")
-    ENDIF ( HAVE_WINDOWS_H )
 
     STRING(TOUPPER ${name} NAME)
     FOREACH(option ${options})
