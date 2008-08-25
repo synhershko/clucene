@@ -64,10 +64,10 @@ CL_NS_DEF(search)
 		return _CLNEW TermQuery(*this);
 	}
 
-	const TCHAR* TermQuery::getClassName(){
-		return _T("TermQuery");
+	const char* TermQuery::getClassName(){
+		return "TermQuery";
 	}
-	const TCHAR* TermQuery::getQueryName() const{
+	const char* TermQuery::getQueryName() const{
 		return getClassName();
 	}
 	size_t TermQuery::hashCode() const {
@@ -125,9 +125,9 @@ CL_NS_DEF(search)
 
     //return a *new* string describing this object
 	TCHAR* TermWeight::toString() { 
-		int32_t size=_tcslen(_this->getQueryName()) + 10;
+		int32_t size=strlen(_this->getQueryName()) + 10;
 		TCHAR* tmp = _CL_NEWARRAY(TCHAR, size);//_tcslen(weight())
-		_sntprintf(tmp,size,_T("weight(%s)"),_this->getQueryName());
+		_sntprintf(tmp,size,_T("weight(%S)"),_this->getQueryName());
 		return tmp;
 	}
 

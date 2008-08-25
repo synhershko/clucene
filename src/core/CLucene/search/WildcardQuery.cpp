@@ -34,15 +34,15 @@ WildcardQuery::~WildcardQuery(){
 
 }
 
-const TCHAR* WildcardQuery::getQueryName() const{
+const char* WildcardQuery::getQueryName() const{
 	//Func - Returns the string "WildcardQuery"
 	//Pre  - true
 	//Post - The string "WildcardQuery" has been returned
 	return getClassName();
 }
 
-const TCHAR* WildcardQuery::getClassName(){
-	return _T("WildcardQuery");
+const char* WildcardQuery::getClassName(){
+	return "WildcardQuery";
 }
 
 

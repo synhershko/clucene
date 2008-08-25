@@ -50,9 +50,9 @@ CL_NS_DEF(search)
 
      TCHAR* toString(const TCHAR* field) const;
 
-	  //Returns the name "FuzzyQuery"
-	  static const TCHAR* getClassName();
-     const TCHAR* getQueryName() const;
+	 //Returns the name "FuzzyQuery"
+	 static const char* getClassName();
+     const char* getQueryName() const;
 
 	  Query* clone() const;
 	  bool equals(Query * other) const;

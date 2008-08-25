@@ -59,19 +59,19 @@ CL_NS_DEF(search)
 		return Similarity::floatToByte(getBoost()) ^ prefix->hashCode();
 	}
 
-  const TCHAR* PrefixQuery::getQueryName()const{
+  const char* PrefixQuery::getQueryName()const{
   //Func - Returns the name "PrefixQuery" 
   //Pre  - true
   //Post - The string "PrefixQuery" has been returned
 
       return getClassName();
   }
-  const TCHAR* PrefixQuery::getClassName(){
+  const char* PrefixQuery::getClassName(){
   //Func - Returns the name "PrefixQuery" 
   //Pre  - true
   //Post - The string "PrefixQuery" has been returned
 
-      return _T("PrefixQuery");
+      return "PrefixQuery";
   }
 
   bool PrefixQuery::equals(Query * other) const{

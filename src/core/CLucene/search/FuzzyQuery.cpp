@@ -287,19 +287,19 @@ CL_NS_DEF(search)
         return buffer.toString();
     }
 
-  const TCHAR* FuzzyQuery::getQueryName() const{
+  const char* FuzzyQuery::getQueryName() const{
   //Func - Returns the name of the query
   //Pre  - true
   //post - The string FuzzyQuery has been returned
 
      return getClassName();
   }
-  const TCHAR* FuzzyQuery::getClassName(){
+  const char* FuzzyQuery::getClassName(){
   //Func - Returns the name of the query
   //Pre  - true
   //post - The string FuzzyQuery has been returned
 
-     return _T("FuzzyQuery");
+     return "FuzzyQuery";
   }
 
 

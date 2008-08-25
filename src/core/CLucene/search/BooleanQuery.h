@@ -47,8 +47,8 @@ CL_NS_DEF(search)
 		BooleanQuery( bool disableCoord = false );
 
 		~BooleanQuery();
-		const TCHAR* getQueryName() const;
-		static const TCHAR* getClassName();
+		const char* getQueryName() const;
+		static const char* getClassName();
         
          /** Return the maximum number of clauses permitted, 1024 by default.
             * Attempts to add more than the permitted number of clauses cause {@link

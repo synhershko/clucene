@@ -50,7 +50,8 @@ public:
 		* value is stored in its original form, i.e. no analyzer is used before it is
 		* stored.
 		*/
-		STORE_YES=1, 
+		STORE_YES=1,
+
 		/** Do not store the field value in the index. */
 		STORE_NO=2,
 

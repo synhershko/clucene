@@ -81,9 +81,9 @@ Query* Query::combine(Query** queries){
 Similarity* Query::getSimilarity(Searcher* searcher) {
    return searcher->getSimilarity();
 }
-bool Query::instanceOf(const TCHAR* other) const{
-   const TCHAR* t = getQueryName();
-	if ( t==other || _tcscmp( t, other )==0 )
+bool Query::instanceOf(const char* other) const{
+   const char* t = getQueryName();
+	if ( t==other || strcmp( t, other )==0 )
 		return true;
 	else
 		return false;

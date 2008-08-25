@@ -106,11 +106,11 @@ CL_NS_DEF(search)
 		return ret;
 	}
 
-    const TCHAR* BooleanQuery::getQueryName() const{
+    const char* BooleanQuery::getQueryName() const{
       return getClassName();
     }
-	const TCHAR* BooleanQuery::getClassName(){
-      return _T("BooleanQuery");
+	const char* BooleanQuery::getClassName(){
+      return "BooleanQuery";
     }
 
    /**
@@ -356,8 +356,10 @@ CL_NS_DEF(search)
         for (uint32_t i = 0 ; i < weights.size(); i++) {
           Weight* w = weights[i];
           Scorer* subScorer = w->scorer(reader);
-          if (subScorer == NULL)
-            return NULL;
+		  if (subScorer == NULL) {
+			  _CLDELETE(result);
+			  return NULL;
+		  }
           result->add(subScorer);
         }
         return result;
@@ -373,8 +375,10 @@ CL_NS_DEF(search)
 			Scorer* subScorer = w->scorer(reader);
 			if (subScorer != NULL)
 			  result->add(subScorer, c->required, c->prohibited);
-			else if (c->required)
-			  return NULL;
+			else if (c->required) {
+				_CLDELETE(result);
+				return NULL;
+			}
 		  }
 	  }
 
@@ -404,16 +408,18 @@ CL_NS_DEF(search)
             _CLDELETE(sumExpl);
             result->setValue(0.0f);
             result->setDescription(_T("match prohibited"));
+			//todo: _CLDELETE(e); ?
             return;
           }
         } else if (c->required) {
             _CLDELETE(sumExpl);
             result->setValue(0.0f);
             result->setDescription(_T("match prohibited"));
+			//todo: _CLDELETE(e); ?
             return;
         }
         
-        _CLDELETE(e);
+        _CLDELETE(e); //todo: if above todo's are right, this is irrelevant here
       }
       sumExpl->setValue(sum);
 
@@ -464,17 +470,14 @@ CL_NS_DEF(search)
 			if ( subScorer != NULL ) {
 				result->add( subScorer, c->required, c->prohibited );
 			} else if ( c->required ) {
+				_CLDELETE(result);
 				return NULL;
 			}
 		}
 
 		return result;
-
 	}
-	
-	
-	
-	
+
 	BooleanClause::BooleanClause(Query* q, const bool DeleteQuery,const bool req, const bool p):
 	    query(q),
 		occur(SHOULD),

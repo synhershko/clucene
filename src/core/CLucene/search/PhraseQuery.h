@@ -47,8 +47,8 @@ CL_NS_DEF(search)
 		~PhraseQuery();
 
         //Returns the string "PhraseQuery"
-        const TCHAR* getQueryName() const;
-        static const TCHAR* getClassName();
+        const char* getQueryName() const;
+        static const char* getClassName();
        
         //Sets the number of other words permitted between words in query phrase.
         //If zero, then this is an exact phrase search.  For larger values this works

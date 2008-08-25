@@ -34,8 +34,8 @@ CL_NS_DEF(search)
 		TermQuery(CL_NS(index)::Term* t);
 		~TermQuery();
 
-		static const TCHAR* getClassName();
-		const TCHAR* getQueryName() const;
+		static const char* getClassName();
+		const char* getQueryName() const;
 	    
 		//added by search highlighter
 		CL_NS(index)::Term* getTerm(bool pointer=true) const;

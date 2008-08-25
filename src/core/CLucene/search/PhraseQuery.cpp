@@ -146,10 +146,10 @@ CL_NS_DEF(search)
 		return ret;
 	}
 
-  const TCHAR* PhraseQuery::getClassName(){
-    return _T("PhraseQuery");
+  const char* PhraseQuery::getClassName(){
+    return "PhraseQuery";
   }
-  const TCHAR* PhraseQuery::getQueryName() const{
+  const char* PhraseQuery::getQueryName() const{
   //Func - Returns the string "PhraseQuery"
   //Pre  - true
   //Post - The string "PhraseQuery" has been returned

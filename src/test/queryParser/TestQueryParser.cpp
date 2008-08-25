@@ -95,7 +95,7 @@ void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* 
 		
 }
 
-void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* inst, const TCHAR* msg){
+void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const char* inst, const TCHAR* msg){
 	Query* q = getQuery(tc,query,a);
 	bool success = q->instanceOf(inst);
 	_CLDELETE(q);
@@ -144,9 +144,9 @@ void testSimple(CuTest *tc) {
 					_T("+term +\"phrase phrase\"") );
 	assertQueryEquals(tc,_T("\"hello there\""), NULL, _T("\"hello there\"") );
 
-	assertTrue(tc, _T("a AND b"), NULL,_T("BooleanQuery"),_T("a AND b") );
-	assertTrue(tc, _T("hello"), NULL,_T("TermQuery"), _T("hello"));
-	assertTrue(tc, _T("\"hello there\""), NULL,_T("PhraseQuery"), _T("\"hello there\""));
+	assertTrue(tc, _T("a AND b"), NULL,"BooleanQuery",_T("a AND b") );
+	assertTrue(tc, _T("hello"), NULL,"TermQuery", _T("hello"));
+	assertTrue(tc, _T("\"hello there\""), NULL,"PhraseQuery", _T("\"hello there\""));
 
 	assertQueryEquals(tc,_T("germ term^2.0"), NULL, _T("germ term^2.0"));
 	assertQueryEquals(tc,_T("term^2.0"), NULL, _T("term^2.0"));
@@ -230,15 +230,15 @@ void testWildcard(CuTest *tc) {
 	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~^2"), NULL, _T("term^2.0~0.5"));
 	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term^2.0~0.5"));
-	assertTrue(tc, _T("term~"), NULL,_T("FuzzyQuery"), _T("term~0.5"));
+	assertTrue(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
 
 	assertQueryEquals(tc,_T("term*germ"), NULL, _T("term*germ"));
 	assertQueryEquals(tc,_T("term*germ^3"), NULL, _T("term*germ^3.0"));
 
-	assertTrue(tc, _T("term*"), NULL,_T("PrefixQuery"), _T("term*"));
-	assertTrue(tc, _T("term*^2"), NULL,_T("PrefixQuery"), _T("term*^2.0"));
-	assertTrue(tc, _T("t*"), NULL,_T("PrefixQuery"), _T("t*"));
-	assertTrue(tc, _T("term*germ"), NULL,_T("WildcardQuery"), _T("term*germ"));
+	assertTrue(tc, _T("term*"), NULL,"PrefixQuery", _T("term*"));
+	assertTrue(tc, _T("term*^2"), NULL,"PrefixQuery", _T("term*^2.0"));
+	assertTrue(tc, _T("t*"), NULL,"PrefixQuery", _T("t*"));
+	assertTrue(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
 }
 
 void testQPA(CuTest *tc) {
@@ -252,15 +252,15 @@ void testQPA(CuTest *tc) {
 	assertQueryEquals(tc,_T("term AND NOT phrase term"), &qpAnalyzer, 
 					_T("+term -\"phrase1 phrase2\" term") );
 	assertQueryEquals(tc,_T("stop"), &qpAnalyzer, _T("") );
-	assertTrue(tc, _T("term term term"), &qpAnalyzer,_T("BooleanQuery"), _T("term term term"));
-	assertTrue(tc, _T("term +stop"), &qpAnalyzer,_T("TermQuery"), _T("term +stop"));
+	assertTrue(tc, _T("term term term"), &qpAnalyzer,"BooleanQuery", _T("term term term"));
+	assertTrue(tc, _T("term +stop"), &qpAnalyzer,"TermQuery", _T("term +stop"));
 }
 
 void testRange(CuTest *tc) {
 	StandardAnalyzer a;
 
 	assertQueryEquals(tc,_T("[ a z]"), NULL, _T("[a TO z]"));
-	assertTrue(tc, _T("[ a z]"), NULL, _T("RangeQuery"), _T("[ a z]") );
+	assertTrue(tc, _T("[ a z]"), NULL, "RangeQuery", _T("[ a z]") );
 	assertQueryEquals(tc,_T("[ a z ]"), NULL, _T("[a TO z]"));
 	assertQueryEquals(tc,_T("{ a z}"), NULL, _T("{a TO z}"));
 	assertQueryEquals(tc,_T("{ a z }"), NULL, _T("{a TO z}"));

@@ -75,11 +75,11 @@ CL_NS_DEF(search)
 	            (this->inclusive ? 1 : 0);
     }
 
-    const TCHAR* RangeQuery::getQueryName() const{
+    const char* RangeQuery::getQueryName() const{
       return getClassName();
     }
-	const TCHAR* RangeQuery::getClassName(){
-		return _T("RangeQuery");
+	const char* RangeQuery::getClassName(){
+		return "RangeQuery";
 	}
 
 	Query* RangeQuery::combine(Query** queries) {

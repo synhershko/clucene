@@ -33,8 +33,8 @@ CL_NS_DEF(search)
 		~WildcardQuery();
     
 	    //Returns the string "WildcardQuery"
-    	const TCHAR* getQueryName() const;
-		static const TCHAR* getClassName();
+    	const char* getQueryName() const;
+		static const char* getClassName();
 		
 		size_t hashCode() const;
 		bool equals(Query* other) const;

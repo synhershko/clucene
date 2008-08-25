@@ -90,8 +90,8 @@ CL_NS_DEF(search)
         
         /** Returns a clone of this query. */
         virtual Query* clone() const = 0;
-        virtual const TCHAR* getQueryName() const = 0;
-        bool instanceOf(const TCHAR* other) const;
+        virtual const char* getQueryName() const = 0;
+        bool instanceOf(const char* other) const;
         
 		/** Prints a query to a string, with <code>field</code> assumed to be the 
 		* default field and omitted.
