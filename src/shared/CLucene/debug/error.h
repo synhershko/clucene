@@ -21,7 +21,7 @@
 #define CL_ERR_TooManyClauses 10
 #define CL_ERR_RAMTransaction 11
 #define CL_ERR_InvalidCast 12
-#define CL_ERR_IllegalState 13
+#define CL_ERR_IllegalState 13 // Sub-error: AlreadyClosed
 #define CL_ERR_UnknownOperator 14
 #define CL_ERR_ConcurrentModification 15
 #define CL_ERR_CorruptIndex 16

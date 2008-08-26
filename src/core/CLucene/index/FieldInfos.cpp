@@ -44,6 +44,11 @@ FieldInfo::~FieldInfo(){
 	CL_NS(util)::CLStringIntern::unintern(name);
 }
 
+FieldInfo* FieldInfo::clone() {
+	return _CLNEW FieldInfo(name, isIndexed, number, storeTermVector, storePositionWithTermVector,
+		storeOffsetWithTermVector, omitNorms, storePayloads);
+}
+
 FieldInfos::FieldInfos():
 	byName(false,false),byNumber(true) {
 }
@@ -65,18 +70,52 @@ FieldInfos::FieldInfos(Directory* d, const char* name):
 	);
 }
 
+FieldInfos* FieldInfos::clone()
+{
+	FieldInfos* fis = _CLNEW FieldInfos();
+	const size_t numField = byNumber.size();
+	for(size_t i=0;i<numField;i++) {
+		FieldInfo* fi = byNumber[i]->clone();
+		fis->byNumber.push_back(fi);
+		fis->byName.put( fi->name, fi);
+	}
+	return fis;
+}
+
 void FieldInfos::add(const Document* doc) {
 	DocumentFieldEnumeration* fields  = doc->getFields();
 	Field* field;
 	while (fields->hasMoreElements()) {
 			field = fields->nextElement();
-			add(field->name(), field->isIndexed(), field->isTermVectorStored());
+			add(field->name(), field->isIndexed(), field->isTermVectorStored(), field->isStorePositionWithTermVector(),
+              field->isStoreOffsetWithTermVector(), field->getOmitNorms());
 	}
 	_CLDELETE(fields);
 }
 
+void FieldInfos::addIndexed(const TCHAR** names, const bool storeTermVectors, const bool storePositionWithTermVector,
+							const bool storeOffsetWithTermVector) {
+	size_t i = 0;
+	while (names[i]) {
+		add(names[i], true, storeTermVectors, storePositionWithTermVector, storeOffsetWithTermVector);
+		++i;
+	}
+}
+
+void FieldInfos::add(const TCHAR** names,const bool isIndexed, const bool storeTermVectors,
+					 const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads)
+{
+	size_t i=0;      
+	while ( names[i] != NULL ){
+		add(names[i], isIndexed, storeTermVectors, storePositionWithTermVector, 
+			storeOffsetWithTermVector, omitNorms, storePayloads);
+		++i;
+	}
+}
+
 FieldInfo* FieldInfos::add( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
-		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads) {
+		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms,
+		const bool storePayloads) {
 	FieldInfo* fi = fieldInfo(name);
 	if (fi == NULL) {
 		return addInternal(name, isIndexed, storeTermVector, 
@@ -105,28 +144,28 @@ FieldInfo* FieldInfos::add( const TCHAR* name, const bool isIndexed, const bool 
 	return fi;
 }
 
-void FieldInfos::add(const TCHAR** names,const bool isIndexed, const bool storeTermVectors,
-					 const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads)
-{
-	int32_t i=0;      
-	while ( names[i] != NULL ){
-		add(names[i], isIndexed, storeTermVectors, storePositionWithTermVector, 
-			storeOffsetWithTermVector, omitNorms, storePayloads);
-		++i;
-	}
+FieldInfo* FieldInfos::addInternal( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
+		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector,
+		const bool omitNorms, const bool storePayloads) {
+
+	FieldInfo* fi = _CLNEW FieldInfo(name, isIndexed, byNumber.size(), storeTermVector, 
+		storePositionWithTermVector, storeOffsetWithTermVector, omitNorms, storePayloads);
+	byNumber.push_back(fi);
+	byName.put( fi->name, fi);
+	return fi;
 }
 
 int32_t FieldInfos::fieldNumber(const TCHAR* fieldName)const {
 	FieldInfo* fi = fieldInfo(fieldName);
-	return (fi!=NULL)?fi->number:-1;
+	return (fi!=NULL) ? fi->number : -1;
 }
-
 
 FieldInfo* FieldInfos::fieldInfo(const TCHAR* fieldName) const {
 	FieldInfo* ret = byName.get(fieldName);
 	return ret;
 }
-const TCHAR* FieldInfos::fieldName(const int32_t fieldNumber)const {
+
+const TCHAR* FieldInfos::fieldName(const int32_t fieldNumber) const {
 	FieldInfo* fi = fieldInfo(fieldNumber);
 	return (fi==NULL)?LUCENE_BLANK_STRING:fi->name;
 }
@@ -137,8 +176,16 @@ FieldInfo* FieldInfos::fieldInfo(const int32_t fieldNumber) const {
     return byNumber[fieldNumber];
 }
 
-int32_t FieldInfos::size()const {
+size_t FieldInfos::size()const {
 	return byNumber.size();
+}
+
+bool FieldInfos::hasVectors() const{
+	for (size_t i = 0; i < size(); i++) {
+	   if (fieldInfo(i)->storeTermVector)
+	      return true;
+	}
+	return false;
 }
 
 void FieldInfos::write(Directory* d, const char* name) const{
@@ -152,10 +199,10 @@ void FieldInfos::write(Directory* d, const char* name) const{
 }
 
 void FieldInfos::write(IndexOutput* output) const{
-	output->writeVInt(size());
+	output->writeVInt(static_cast<int32_t>(size()));
 	FieldInfo* fi;
 	uint8_t bits;
-	for (int32_t i = 0; i < size(); ++i) {
+	for (size_t i = 0; i < size(); ++i) {
 		fi = fieldInfo(i);
 		bits = 0x0;
  		if (fi->isIndexed) bits |= IS_INDEXED;
@@ -171,7 +218,7 @@ void FieldInfos::write(IndexOutput* output) const{
 }
 
 void FieldInfos::read(IndexInput* input) {
-	int32_t size = input->readVInt();
+	int32_t size = input->readVInt();//read in the size
     uint8_t bits;
 	bool isIndexed,storeTermVector,storePositionsWithTermVector,storeOffsetWithTermVector,omitNorms,storePayloads;
 	for (int32_t i = 0; i < size; ++i){
@@ -187,34 +234,6 @@ void FieldInfos::read(IndexInput* input) {
    		addInternal(name, isIndexed, storeTermVector, storePositionsWithTermVector, storeOffsetWithTermVector, omitNorms, storePayloads);
    		_CLDELETE_CARRAY(name);
 	}
-}
-FieldInfo* FieldInfos::addInternal( const TCHAR* name, const bool isIndexed, const bool storeTermVector,
-		const bool storePositionWithTermVector, const bool storeOffsetWithTermVector, const bool omitNorms, const bool storePayloads) {
-	FieldInfo* fi = _CLNEW FieldInfo(name, isIndexed, byNumber.size(), storeTermVector, 
-		storePositionWithTermVector, storeOffsetWithTermVector, omitNorms, storePayloads);
-	byNumber.push_back(fi);
-	byName.put( fi->name, fi);
-	return fi;
-}
-
-bool FieldInfos::hasVectors() const{
-	for (int32_t i = 0; i < size(); i++) {
-	   if (fieldInfo(i)->storeTermVector)
-	      return true;
-	}
-	return false;
-}
-
-FieldInfos* FieldInfos::clone()
-{
-	FieldInfos* fis = _CLNEW FieldInfos();
-	const size_t numField = byNumber.size();
-	for(size_t i=0;i<numField;i++) {
-		FieldInfo* fi = byNumber[i]->clone();
-		fis->byNumber.push_back(fi);
-		fis->byName.put( fi->name, fi);
-	}
-	return fis;
 }
 
 CL_NS_END

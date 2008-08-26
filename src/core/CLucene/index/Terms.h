@@ -83,25 +83,26 @@ public:
 };
 
 
-// Abstract class for enumerating terms.
-//
-//<p>Term enumerations are always ordered by Term.compareTo().  Each term in
-//the enumeration is greater than all that precede it.  
+/** Abstract class for enumerating terms.
+
+  <p>Term enumerations are always ordered by Term.compareTo().  Each term in
+  the enumeration is greater than all that precede it.
+*/
 class CLUCENE_EXPORT TermEnum: LUCENE_BASE {
 public:
-	// Increments the enumeration to the next element.  True if one exists.
+	/** Increments the enumeration to the next element.  True if one exists.*/ 
 	virtual bool next()=0;
 
 	// Returns a pointer to the current Term in the enumeration.
 	virtual Term* term()=0;
-	
-	// Returns the current Term in the enumeration.
+
+	/** Returns the current Term in the enumeration.*/
 	virtual Term* term(bool pointer);
 
-	// Returns the docFreq of the current Term in the enumeration.
+	/** Returns the docFreq of the current Term in the enumeration.*/
 	virtual int32_t docFreq() const=0;
 
-	// Closes the enumeration to further activity, freeing resources.
+	/** Closes the enumeration to further activity, freeing resources. */
 	virtual void close() =0;
 
 	virtual ~TermEnum();
