@@ -297,7 +297,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 			   cl_sprintf(pattern, 255, "%s.s", name);
 			   size_t patternLength = strlen(pattern);
 			   for(size_t i = 0; result[i] != NULL; i++){
-				   if(strcmp(result[i], pattern) == 0 && isdigit(result[i][patternLength])) {
+				   if(strncmp(result[i], pattern, strlen(pattern)) == 0 && isdigit(result[i][patternLength])) {
 					   _CLDELETE_CaARRAY_ALL(result);
 					   return true;
 				   }
@@ -484,6 +484,78 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
       return ret;
   }
 
+  int64_t SegmentInfos::getCurrentSegmentGeneration( char** files ) {
+	  if ( files == NULL ) {
+		  return -1;
+	  }
+
+	  int64_t max = -1;
+	  int32_t i = 0;
+
+	  while ( files[i] != NULL ) {
+		  char* file = files[i++];
+		  if ( strncmp( file, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
+			  int64_t gen = generationFromSegmentsFileName( file );
+			  if ( gen > max ) {
+				  max = gen;
+			  }
+		  }
+	  }
+
+	  return max;
+  }
+
+  int64_t SegmentInfos::getCurrentSegmentGeneration( CL_NS(store)::Directory* directory ) {
+	  char** files = directory->list();
+	  if ( files == NULL ){
+		  TCHAR* strdir = directory->toString();
+		  TCHAR err[CL_MAX_PATH + 65];
+		  _sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir);
+		  _CLDELETE_ARRAY(strdir);
+		  _CLTHROWT(CL_ERR_IO, err);
+	  }
+	  int64_t gen = getCurrentSegmentGeneration( files );
+	  _CLDELETE_ARRAY( files );
+	  return gen;
+  }
+
+  const char* SegmentInfos::getCurrentSegmentFileName( char** files ) {
+	  return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", getCurrentSegmentGeneration( files ));
+  }
+
+  const char* SegmentInfos::getCurrentSegmentFileName( CL_NS(store)::Directory* directory ) {
+	  return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", getCurrentSegmentGeneration( directory ));
+  }
+
+  const char* SegmentInfos::getCurrentSegmentFileName() {
+	  return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", lastGeneration );
+  }
+
+  int64_t SegmentInfos::generationFromSegmentsFileName( const char* fileName ) {
+	  if ( strcmp( fileName, IndexFileNames::SEGMENTS ) == 0 ) {
+		  return 0;
+	  } else if ( strncmp( fileName, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 ) {
+		  return CL_NS(util)::Misc::base36ToLong( fileName + strlen( IndexFileNames::SEGMENTS )+1 );
+	  } else {
+		  TCHAR err[CL_MAX_PATH + 35];
+		  _sntprintf(err,CL_MAX_PATH + 35,_T("fileName \"%s\" is not a segments file"), fileName);
+		  _CLTHROWA(CL_ERR_IllegalArgument, err);
+		  return 0;
+	  }
+  }
+
+  const char* SegmentInfos::getNextSegmentFileName() {
+	  int64_t nextGeneration;
+
+	  if ( generation == -1 ) {
+		  nextGeneration = 1;
+	  } else {
+		  nextGeneration = generation+1;
+	  }
+
+	  return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", nextGeneration );
+  }
+
   void SegmentInfos::clearto(size_t from, size_t end){
 	size_t range = end - from;
 	  if ( from >= 0 && (infos.size() - from) >= range) { // Make sure we actually need to remove
@@ -501,18 +573,13 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
   int32_t SegmentInfos::size() const{
 	  return infos.size();
   }
-
-  void SegmentInfos::read(Directory* directory) {
-	  generation = lastGeneration = -1;
-
-	  FindSegmentsRead find(directory);
-	  
-	  //todo: see if we can do better than allocating a new SegmentInfos...
-	  void* tmp = find.run();
-	  if (tmp)
-		delete tmp;
+  SegmentInfo* SegmentInfos::elementAt(int32_t pos) {
+	  return infos.at(pos);
   }
-
+  void SegmentInfos::setElementAt(SegmentInfo* si, int32_t pos) {
+	  infos.set(pos, si);
+  }
+  void SegmentInfos::clear() { infos.clear(); }
 
   void SegmentInfos::read(Directory* directory, const char* segmentFileName){
 	  bool success = false;
@@ -531,9 +598,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		  if(format < 0){     // file contains explicit format info
 			  // check that it is a format we can understand
 			  if (format < CURRENT_FORMAT){
-				  TCHAR err[30];
-				  _sntprintf(err,30,_T("Unknown format version: %d"), format);
-				  _CLTHROWT(CL_ERR_CorruptIndex, err);
+				  char err[30];
+				  cl_sprintf(err,30,"Unknown format version: %d", format);
+				  _CLTHROWA(CL_ERR_CorruptIndex, err);
 			  }
 			  version = input->readLong(); // read version
 			  counter = input->readInt(); // read counter
@@ -563,121 +630,17 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		  }
 	  });
   }
-  
-  //void SegmentInfos::read(Directory* directory, const char* segmentFileName){
-  ////Func - Reads segments file that resides in directory. 
-  ////Pre  - directory contains a valid reference
-  ////Post - The segments file has been read and for each segment found
-  ////       a SegmentsInfo intance has been created and stored.
 
-	 // bool success = false;
+  void SegmentInfos::read(Directory* directory) {
+	  generation = lastGeneration = -1;
 
-	 // // Clear any previous segments:
-	 // clear();
-	 // 
-	 // IndexInput* input = directory->openInput( segmentFileName );
-	 // CND_CONDITION(input != NULL,"input == NULL"); // todo: make sure if at all necessary
-
-	 // generation = generationFromSegmentsFileName( segmentFileName );
-	 // lastGeneration = generation;
-	 // 
-	 // try {
-		//  int32_t format = input->readInt();
-
-		//  if(format < 0){     // file contains explicit format info
-		//	  // check that it is a format we can understand
-		//	  if (format < CURRENT_FORMAT){
-		//		  TCHAR err[30];
-		//		  _sntprintf(err,30,_T("Unknown format version: %d"), format);
-		//		  _CLTHROWT(CL_ERR_CorruptIndex, err);
-		//	  }
-		//	  version = input->readLong(); // read version
-		//	  counter = input->readInt(); // read counter
-		//  }
-		//  else{     // file is in old format without explicit format info
-		//	  counter = format;
-		//  }
-
-		//  //for (int32_t i = input->readInt(); i > 0; i--) { // read segmentInfos
-		////	  addElement(_CLNEW SegmentInfo(directory, format, input));
-		//  //}
-
-		//  //Temporary variable for storing the name of the segment
-		//  TCHAR tname[CL_MAX_PATH];
-		//  char aname[CL_MAX_PATH];
-		//  SegmentInfo* si  = NULL;
-
-		//  int32_t size = 0;
-		//  int64_t delGen = 0;
-		//  int64_t *normGen = NULL;
-		//  bool hasSingleNorm = false;
-		//  uint8_t isCompoundFile = 0;
-		//  bool preLockless = true;
-
-		//  //read segmentInfos
-		//  for (int32_t i = input->readInt(); i > 0; --i){
-
-		//	  // read the name of the segment
-		//	  input->readString(tname, CL_MAX_PATH); 
-		//	  STRCPY_TtoA(aname,tname,CL_MAX_PATH);
-
-		//	  size = input->readInt();
-
-		//	  if ( format <= FORMAT_LOCKLESS ) {						
-		//		  delGen = input->readLong();
-		//		  if ( format <= FORMAT_SINGLE_NORM_FILE ) {
-		//			  hasSingleNorm = (1 == input->readByte());
-		//		  } else {
-		//			  hasSingleNorm = false;
-		//		  }
-		//		  int32_t numNormGen = input->readInt();
-		//		  if ( numNormGen == -1 ) {
-		//			  normGen = NULL;
-		//		  } else {
-		//			  normGen = _CL_NEWARRAY(int64_t, numNormGen);
-		//			  for ( int32_t j = 0; j < numNormGen; j++ ) {
-		//				  normGen[j] = input->readLong();
-		//			  }
-		//		  }
-		//		  isCompoundFile = input->readByte();
-		//		  preLockless = ( isCompoundFile == 0 );
-
-		//		  //todo: temporary patch. this whole function needs to be rewritted
-		//		  si = _CLNEW SegmentInfo(aname, size, directory); //, iscompoundfile, hassinglenormfile, docstoreoffset, docstoresegment, docstoreiscompoundfile);
-		//		  ////si = _CLNEW SegmentInfo(aname, size, directory, delGen, normGen, isCompoundFile, hasSingleNorm, preLockless );
-
-		//	  } else {	
-
-		//		  si = _CLNEW SegmentInfo(aname, size, directory); 
-
-		//	  }
-
-		//	  //Condition check to see if si points to an instance
-		//	  CND_CONDITION(si != NULL, "Memory allocation for si failed")	;
-
-		//	  //store SegmentInfo si
-		//	  infos.push_back(si);
-
-		//  } 
-
-		//  if(format >= 0){ // in old format the version number may be at the end of the file
-		//	  if (input->getFilePointer() >= input->length())
-		//		  version = Misc::currentTimeMillis(); // old file format without version number
-		//	  else
-		//		  version = input->readLong(); // read version
-		//  }
-
-		//  success = true;
-	 // } _CLFINALLY(
-		//  //destroy the inputStream input. The destructor of IndexInput will 
-		//  //also close the Inputstream input
-		//  _CLDELETE( input );
-	 // if ( !success ) {
-		//  infos.clear();
-	 // }
-	 // );
-
-  //}
+	  FindSegmentsRead find(directory);
+	  
+	  //todo: see if we can do better than allocating a new SegmentInfos...
+	  void* tmp = find.run();
+	  if (tmp)
+		delete tmp;
+  }
 
 
   void SegmentInfos::write(Directory* directory){
@@ -728,7 +691,18 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  }
   }
 
-  
+  SegmentInfos* SegmentInfos::clone() {
+	  SegmentInfos* sis = _CLNEW SegmentInfos(true, infos.size());
+	  for(size_t i=0;i<infos.size();i++) {
+		  sis->setElementAt(infos[i]->clone(), i);
+	  }
+	  return sis;
+  }
+
+  int64_t SegmentInfos::getVersion() const { return version; }
+  int64_t SegmentInfos::getGeneration() const { return generation; }
+  int64_t SegmentInfos::getLastGeneration() const { return lastGeneration; }
+
   int64_t SegmentInfos::readCurrentVersion(Directory* directory){
 
 	  FindSegmentsVersion find(directory);
@@ -740,93 +714,14 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  return version;
   }
 
-  int64_t SegmentInfos::getCurrentSegmentGeneration( char** files ) {
-  	if ( files == NULL ) {
-  		return -1;
-  	}
-  	
-  	int64_t max = -1;
-  	int32_t i = 0;
-  	
-  	while ( files[i] != NULL ) {
-  		char* file = files[i++];
-  		if ( strncmp( file, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
-  			int64_t gen = generationFromSegmentsFileName( file );
-  			if ( gen > max ) {
-  				max = gen;
-  			}
-  		}
-  	}
-  	
-  	return max;
-  }
-  
-  int64_t SegmentInfos::getCurrentSegmentGeneration( CL_NS(store)::Directory* directory ) {
-  	char** files = directory->list();
-	if ( files == NULL ){
-		TCHAR* strdir = directory->toString();
-		TCHAR err[CL_MAX_PATH + 65];
-		_sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir);
-		_CLDELETE_ARRAY(strdir);
-		_CLTHROWT(CL_ERR_IO, err);
-	}
-  	int64_t gen = getCurrentSegmentGeneration( files );
-  	_CLDELETE_ARRAY( files );
-  	return gen;
-  }
-  
-  const char* SegmentInfos::getCurrentSegmentFileName( char** files ) {
-	return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", getCurrentSegmentGeneration( files ));
-  }
-  
-  const char* SegmentInfos::getCurrentSegmentFileName( CL_NS(store)::Directory* directory ) {
-  	return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", getCurrentSegmentGeneration( directory ));
-  }
-  
-  const char* SegmentInfos::getCurrentSegmentFileName() {
-  	return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", lastGeneration );
-  }
-  
-  int64_t SegmentInfos::generationFromSegmentsFileName( const char* fileName ) {
-  	if ( strcmp( fileName, IndexFileNames::SEGMENTS ) == 0 ) {
-  		return 0;
-  	} else if ( strncmp( fileName, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 ) {
-  		return CL_NS(util)::Misc::base36ToLong( fileName + strlen( IndexFileNames::SEGMENTS )+1 );
-  	} else {
-  		//todo: throw new IllegalArgumentException("fileName \"" + fileName + "\" is not a segments file");
-  		return 0;
-  	}
-  }
-  
-  const char* SegmentInfos::getNextSegmentFileName() {
-  	int64_t nextGeneration;
-  	
-  	if ( generation == -1 ) {
-  		nextGeneration = 1;
-  	} else {
-  		nextGeneration = generation+1;
-  	}
-  	
-  	return IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", nextGeneration );
-  }
+  //void SegmentInfos::setDefaultGenFileRetryCount(const int32_t count) { defaultGenFileRetryCount = count; }
+  int32_t SegmentInfos::getDefaultGenFileRetryCount() { return defaultGenFileRetryCount; }
 
-  SegmentInfo* SegmentInfos::elementAt(int32_t pos) {
-	  return infos.at(pos);
-  }
+  //void SegmentInfos::setDefaultGenFileRetryPauseMsec(const int32_t msec) { defaultGenFileRetryPauseMsec = msec; }
+  int32_t SegmentInfos::getDefaultGenFileRetryPauseMsec() { return defaultGenFileRetryPauseMsec; }
 
-  void SegmentInfos::setElementAt(SegmentInfo* si, int32_t pos) {
-	  infos.set(pos, si);
-  }
-
-  void SegmentInfos::clear() { infos.clear(); }
-
-  SegmentInfos* SegmentInfos::clone() {
-	  SegmentInfos* sis = _CLNEW SegmentInfos(true, infos.size());
-	  for(size_t i=0;i<infos.size();i++) {
-		  sis->setElementAt(infos[i]->clone(), i);
-	  }
-	  return sis;
-  }
+  //void SegmentInfos::setDefaultGenLookaheadCount(const int32_t count) { defaultGenLookaheadCount = count;}
+  int32_t SegmentInfos::getDefaultGenLookahedCount() { return defaultGenLookaheadCount; }
 
   SegmentInfos::FindSegmentsFile::FindSegmentsFile( CL_NS(store)::Directory* dir ) {
 	  this->directory = dir;
@@ -1159,9 +1054,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		  format = input->readInt();
 		  if(format < 0){
 			  if(format < CURRENT_FORMAT){
-				  TCHAR err[30];
-				  _sntprintf(err,30,_T("Unknown format version: %d"),format);
-				  _CLTHROWT(CL_ERR_CorruptIndex,err);
+				  char err[30];
+				  cl_sprintf(err,30,"Unknown format version: %d",format);
+				  _CLTHROWA(CL_ERR_CorruptIndex,err);
 			  }
 			  *version = input->readLong(); // read version
 		  }

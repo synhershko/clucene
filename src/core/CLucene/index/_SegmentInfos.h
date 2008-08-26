@@ -278,26 +278,67 @@ CL_NS_DEF(index)
         SegmentInfos(bool deleteMembers=true, int32_t reserveCount=0);
         ~SegmentInfos();
 
-
-		//delete and clears objects 'from' from to 'to'
-		void clearto(size_t to, size_t end);
-
-		//count of segment infos
-		int32_t size() const;
-		//add a segment info
-		void add(SegmentInfo* info);
 		//Returns a reference to the i-th SegmentInfo in the list.
 		SegmentInfo* info(int32_t i);
 
 		/**
-		* version number when this SegmentInfos was generated.
+		* Get the generation (N) of the current segments_N file
+		* from a list of files.
+		*
+		* @param files -- array of file names to check
 		*/
-		int64_t getVersion() const { return version; }
+		static int64_t getCurrentSegmentGeneration( char** files );
 
-		static int64_t readCurrentVersion(CL_NS(store)::Directory* directory);
+		/**
+		* Get the generation (N) of the current segments_N file
+		* in the directory.
+		*
+		* @param directory -- directory to search for the latest segments_N file
+		*/
+		static int64_t getCurrentSegmentGeneration( CL_NS(store)::Directory* directory );
 
-		//Reads segments file that resides in directory
-		void read(CL_NS(store)::Directory* directory);
+		/**
+		* Get the filename of the current segments_N file
+		* from a list of files.
+		*
+		* @param files -- array of file names to check
+		*/
+		static const char* getCurrentSegmentFileName( char** files );
+
+		/**
+		* Get the filename of the current segments_N file
+		* in the directory.
+		*
+		* @param directory -- directory to search for the latest segments_N file
+		*/
+		static const char* getCurrentSegmentFileName( CL_NS(store)::Directory* directory );
+
+		/**
+		* Get the segments_N filename in use by this segment infos.
+		*/
+		const char* getCurrentSegmentFileName();
+
+		/**
+		* Parse the generation off the segments file name and
+		* return it.
+		*/
+		static int64_t generationFromSegmentsFileName( const char* fileName );
+
+		/**
+		* Get the next segments_N filename that will be written.
+		*/
+		const char* getNextSegmentFileName();
+
+		/* public vector-like operations */
+		//delete and clears objects 'from' from to 'to'
+		void clearto(size_t to, size_t end);
+		//count of segment infos
+		int32_t size() const;
+		//add a segment info
+		void add(SegmentInfo* info);
+		SegmentInfo* elementAt(int32_t pos);
+		void setElementAt(SegmentInfo* si, int32_t pos);
+		inline void clear();
 
 		/**
 		* Read a particular segmentFileName.  Note that this may
@@ -310,25 +351,17 @@ CL_NS_DEF(index)
 		*/
 		void read(CL_NS(store)::Directory* directory, const char* segmentFileName);
 
-	    //Writes a new segments file based upon the SegmentInfo instances it manages
+		/**
+		* This version of read uses the retry logic (for lock-less
+		* commits) to find the right segments file to load.
+		* @throws CorruptIndexException if the index is corrupt
+		* @throws IOException if there is a low-level IO error
+		*/
+		void read(CL_NS(store)::Directory* directory);
+
+		//Writes a new segments file based upon the SegmentInfo instances it manages
+		//note: still does not support lock-less writes (still pre-2.1 format)
         void write(CL_NS(store)::Directory* directory);
-
-        static int64_t getCurrentSegmentGeneration( char** files );
-        static int64_t getCurrentSegmentGeneration( CL_NS(store)::Directory* directory );
-
-        static const char* getCurrentSegmentFileName( char** files );
-        static const char* getCurrentSegmentFileName( CL_NS(store)::Directory* directory );
-
-        const char* getCurrentSegmentFileName();
-
-        static int64_t generationFromSegmentsFileName( const char* fileName );
-
-        const char* getNextSegmentFileName();
-
-		/* public vector operations */
-		SegmentInfo* elementAt(int32_t pos);
-		void setElementAt(SegmentInfo* si, int32_t pos);
-		inline void clear();
 
 		/**
 		* Returns a copy of this instance, also copying each
@@ -336,6 +369,55 @@ CL_NS_DEF(index)
 		*/
 		SegmentInfos* clone();
 
+		/**
+		* version number when this SegmentInfos was generated.
+		*/
+		int64_t getVersion() const;
+		int64_t getGeneration() const;
+		int64_t getLastGeneration() const;
+
+		/**
+		* Current version number from segments file.
+		* @throws CorruptIndexException if the index is corrupt
+		* @throws IOException if there is a low-level IO error
+		*/
+		static int64_t readCurrentVersion(CL_NS(store)::Directory* directory);
+
+
+		/**
+		* Advanced: set how many times to try loading the
+		* segments.gen file contents to determine current segment
+		* generation.  This file is only referenced when the
+		* primary method (listing the directory) fails.
+		*/
+		//static void setDefaultGenFileRetryCount(const int32_t count);
+		/**
+		* @see #setDefaultGenFileRetryCount
+		*/
+		static int32_t getDefaultGenFileRetryCount();
+
+		/**
+		* Advanced: set how many milliseconds to pause in between
+		* attempts to load the segments.gen file.
+		*/
+		//static void setDefaultGenFileRetryPauseMsec(const int32_t msec);
+		/**
+		* @see #setDefaultGenFileRetryPauseMsec
+		*/
+		static int32_t getDefaultGenFileRetryPauseMsec();
+
+		/**
+		* Advanced: set how many times to try incrementing the
+		* gen when loading the segments file.  This only runs if
+		* the primary (listing directory) and secondary (opening
+		* segments.gen file) methods fail to find the segments
+		* file.
+		*/
+		//static void setDefaultGenLookaheadCount(const int32_t count);
+		/**
+		* @see #setDefaultGenLookaheadCount
+		*/
+		static int32_t getDefaultGenLookahedCount();
 
 		/**
 		* Utility class for executing code that needs to do
