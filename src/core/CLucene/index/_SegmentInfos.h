@@ -98,19 +98,34 @@ CL_NS_DEF(index)
 
 		~SegmentInfo();
 
+		void setNumFields(const int32_t numFields);
+		bool hasDeletions() const;
+
+		void advanceDelGen();
+		void clearDelGen();
+
 		SegmentInfo* clone ();
 
-		/**
-		* Copy everything from src SegmentInfo into our instance.
-		*/
-		void reset(const SegmentInfo* src);
+		char* getDelFileName() const;
 
 		/**
-		* Save this segment's info.
+		* Returns true if this field for this segment has saved a separate norms file (_<segment>_N.sX).
+		*
+		* @param fieldNumber the field index to check
 		*/
-		void write(CL_NS(store)::IndexOutput* output);
+		bool hasSeparateNorms(const int32_t fieldNumber) const;
 
-		char* getDelFileName();
+		/**
+		* Returns true if any fields in this segment have separate norms.
+		*/
+		bool hasSeparateNorms() const;
+
+		/**
+		* Get the file name for the norms file for this field.
+		*
+		* @param number field index
+		*/
+		char* getNormFileName(const int32_t number) const;
 
 		/**
 		* Increment the generation count for the norms file for
@@ -128,6 +143,22 @@ CL_NS_DEF(index)
 		*/
 		void setUseCompoundFile(const bool isCompoundFile);
 
+		/**
+		* Returns true if this segment is stored as a compound
+		* file; else, false.
+		*/
+		bool getUseCompoundFile() const;
+
+		/**
+		* Copy everything from src SegmentInfo into our instance.
+		*/
+		void reset(const SegmentInfo* src);
+
+		/**
+		* Save this segment's info.
+		*/
+		void write(CL_NS(store)::IndexOutput* output);
+
 		int32_t getDocStoreOffset() const;
 
 		bool getDocStoreIsCompoundFile() const;
@@ -140,6 +171,10 @@ CL_NS_DEF(index)
 		char* getDocStoreSegment() const;
 
 		void setDocStoreOffset(const int32_t offset);
+
+		/** We consider another SegmentInfo instance equal if it
+		*  has the same dir and same name. */
+		bool SegmentInfo::equals(SegmentInfo* obj);
 
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function

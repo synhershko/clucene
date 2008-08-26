@@ -66,6 +66,34 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	this->dir = _dir;
 }
 
+   void SegmentInfo::reset(const SegmentInfo* src) {
+	   clearFiles();
+	   if (this->name != src->name) {
+		   CLStringIntern::uninternA( this->name );
+		   this->name = const_cast<char*>(CLStringIntern::internA( src->name ));
+	   }
+	   docCount = src->docCount;
+	   dir = src->dir;
+	   preLockless = src->preLockless;
+	   delGen = src->delGen;
+	   docStoreOffset = src->docStoreOffset;
+	   docStoreIsCompoundFile = src->docStoreIsCompoundFile;
+	   if (src->normGen == NULL) {
+		   _CLDELETE_ARRAY(normGen);
+		   normGenLen = 0;
+	   } else {
+		   // optimized case to allocate new array only if current memory buffer is too small
+		   if (this->normGenLen < src->normGenLen) {
+			   _CLDELETE_LARRAY(normGen);
+			   normGen = _CL_NEWARRAY(int64_t, src->normGenLen);
+		   }
+		   this->normGenLen = src->normGenLen;
+		   memcpy(this->normGen, src->normGen, this->normGenLen);
+	   }
+	   isCompoundFile = src->isCompoundFile;
+	   hasSingleNormFile = src->hasSingleNormFile;
+   }
+
    SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input)
 	   : name(NULL), normGen(NULL), normGenLen(0), sizeInBytes(-1), docStoreSegment(NULL)
    {
@@ -148,49 +176,229 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		}
    }
 
+   void SegmentInfo::setNumFields(const int32_t numFields) {
+	   if (normGen == NULL) {
+		   // normGen is null if we loaded a pre-2.1 segment
+		   // file, or, if this segments file hasn't had any
+		   // norms set against it yet:
+		   normGen = _CL_NEWARRAY(int64_t, numFields);
+		   // todo: make sure memory was allocated successfully?
+		   normGenLen = numFields;
+
+		   if (preLockless) {
+			   // Do nothing: thus leaving normGen[k]==CHECK_DIR (==0), so that later we know  
+			   // we have to check filesystem for norm files, because this is prelockless.
+
+		   } else {
+			   // This is a FORMAT_LOCKLESS segment, which means
+			   // there are no separate norms:
+			   for(int32_t i=0;i<numFields;i++) {
+				   normGen[i] = NO;
+			   }
+		   }
+	   }
+   }
+
+   bool SegmentInfo::hasDeletions() const {
+	   // Cases:
+	   //
+	   //   delGen == NO: this means this segment was written
+	   //     by the LOCKLESS code and for certain does not have
+	   //     deletions yet
+	   //
+	   //   delGen == CHECK_DIR: this means this segment was written by
+	   //     pre-LOCKLESS code which means we must check
+	   //     directory to see if .del file exists
+	   //
+	   //   delGen >= YES: this means this segment was written by
+	   //     the LOCKLESS code and for certain has
+	   //     deletions
+	   //
+	   if (delGen == NO) {
+		   return false;
+	   } else if (delGen >= YES) {
+		   return true;
+	   } else {
+		   return dir->fileExists(getDelFileName());
+	   }
+   }
+
+   void SegmentInfo::advanceDelGen() {
+	   // delGen 0 is reserved for pre-LOCKLESS format
+	   if (delGen == NO) {
+		   delGen = YES;
+	   } else {
+		   delGen++;
+	   }
+	   clearFiles();
+   }
+
+   void SegmentInfo::clearDelGen() {
+	   delGen = NO;
+	   clearFiles();
+   }
+
    SegmentInfo* SegmentInfo::clone () {
 	   SegmentInfo* si = _CLNEW SegmentInfo(name, docCount, dir, false, hasSingleNormFile,
 		   docStoreOffset, docStoreSegment, docStoreIsCompoundFile);
 	   si->isCompoundFile = isCompoundFile;
 	   si->delGen = delGen;
 	   si->preLockless = preLockless;
-	   if (normGen != NULL) {
-		   memcpy(si->normGen, this->normGen, normGenLen);
+	   if (this->normGen != NULL) {
+		   si->normGen = _CL_NEWARRAY(int64_t, this->normGenLen);
+		   si->normGenLen = this->normGenLen;
+		   memcpy(si->normGen, this->normGen, this->normGenLen);
 	   }
 	   return si;
    }
 
-   void SegmentInfo::clearFiles() {
-	   //files = null;
-	   sizeInBytes = -1;
+   char* SegmentInfo::getDelFileName() const {
+	   if (delGen == NO) {
+		   // In this case we know there is no deletion filename
+		   // against this segment
+		   return NULL;
+	   } else {
+		   // If delGen is CHECK_DIR, it's the pre-lockless-commit file format
+		   char fn[8];
+		   cl_sprintf(fn, 8, ".%s", IndexFileNames::DELETES_EXTENSION);
+		   return IndexFileNames::fileNameFromGeneration(name, fn, delGen); 
+	   }
    }
 
-   void SegmentInfo::reset(const SegmentInfo* src) {
-	   clearFiles();
-	   if (this->name != src->name) {
-		   CLStringIntern::uninternA( this->name );
-		   this->name = const_cast<char*>(CLStringIntern::internA( src->name ));
-	   }
-	   docCount = src->docCount;
-	   dir = src->dir;
-	   preLockless = src->preLockless;
-	   delGen = src->delGen;
-	   docStoreOffset = src->docStoreOffset;
-	   docStoreIsCompoundFile = src->docStoreIsCompoundFile;
-	   if (src->normGen == NULL) {
-		   _CLDELETE_ARRAY(normGen);
-		   normGenLen = 0;
+   bool SegmentInfo::hasSeparateNorms(const int32_t fieldNumber) const {
+	   if ((normGen == NULL && preLockless) || (normGen != NULL && normGen[fieldNumber] == CHECK_DIR)) {
+		   // Must fallback to directory file exists check:
+		   char fileName[255]; // todo: try to see if we can put less than 255
+		   cl_sprintf(fileName, 255, "%s.s%d", name, fieldNumber);
+		   return dir->fileExists(fileName);
+	   } else if (normGen == NULL || normGen[fieldNumber] == NO) {
+		   return false;
 	   } else {
-		   // optimized case to allocate new array only if current memory buffer is too small
-		   if (this->normGenLen < src->normGenLen) {
-			   _CLDELETE_LARRAY(normGen);
-			   normGen = _CL_NEWARRAY(int64_t, src->normGenLen);
-			   this->normGenLen = src->normGenLen;
-		   }
-		   memcpy(this->normGen, src->normGen, this->normGenLen);
+		   return true;
 	   }
-	   isCompoundFile = src->isCompoundFile;
-	   hasSingleNormFile = src->hasSingleNormFile;
+   }
+
+   bool SegmentInfo::hasSeparateNorms() const {  
+	   if (normGen == NULL) {
+		   if (!preLockless) {
+			   // This means we were created w/ LOCKLESS code and no
+			   // norms are written yet:
+			   return false;
+		   } else {
+			   // This means this segment was saved with pre-LOCKLESS
+			   // code.  So we must fallback to the original
+			   // directory list check:
+			   char** result = dir->list();
+			   if (result == NULL) {
+				   _CLTHROWA(CL_ERR_IO, "cannot read directory: list() returned NULL"); // todo: add dir name
+			   }
+
+			   char pattern[255]; // todo: make better size estimation for this
+			   cl_sprintf(pattern, 255, "%s.s", name);
+			   size_t patternLength = strlen(pattern);
+			   for(size_t i = 0; result[i] != NULL; i++){
+				   if(strcmp(result[i], pattern) == 0 && isdigit(result[i][patternLength])) {
+					   _CLDELETE_CaARRAY_ALL(result);
+					   return true;
+				   }
+			   }
+			   _CLDELETE_CaARRAY_ALL(result);
+			   return false;
+		   }
+	   } else {
+		   // This means this segment was saved with LOCKLESS
+		   // code so we first check whether any normGen's are >= 1
+		   // (meaning they definitely have separate norms):
+		   for(size_t i=0;i<normGenLen;i++) {
+			   if (normGen[i] >= YES) {
+				   return true;
+			   }
+		   }
+		   // Next we look for any == 0.  These cases were
+		   // pre-LOCKLESS and must be checked in directory:
+		   for(size_t i=0;i<normGenLen;i++) {
+			   if (normGen[i] == CHECK_DIR) {
+				   if (hasSeparateNorms(i)) {
+					   return true;
+				   }
+			   }
+		   }
+	   }
+
+	   return false;
+   }
+
+   void SegmentInfo::advanceNormGen(const int32_t fieldIndex) {
+	   if (normGen[fieldIndex] == NO) {
+		   normGen[fieldIndex] = YES;
+	   } else {
+		   normGen[fieldIndex]++;
+	   }
+	   clearFiles();
+   }
+
+   char* SegmentInfo::getNormFileName(const int32_t number) const {
+	   char prefix[10];
+
+	   int64_t gen;
+	   if (normGen == NULL) {
+		   gen = CHECK_DIR;
+	   } else {
+		   gen = normGen[number];
+	   }
+
+	   if (hasSeparateNorms(number)) {
+		   // case 1: separate norm
+		   cl_sprintf(prefix, 10, ".s%d", number);
+		   return IndexFileNames::fileNameFromGeneration(name, prefix, gen);
+	   }
+
+	   if (hasSingleNormFile) {
+		   // case 2: lockless (or nrm file exists) - single file for all norms 
+		   cl_sprintf(prefix, 10, ".%s", IndexFileNames::NORMS_EXTENSION);
+		   return IndexFileNames::fileNameFromGeneration(name, prefix, WITHOUT_GEN);
+	   }
+
+	   // case 3: norm file for each field
+	   cl_sprintf(prefix, 10, ".f%d", number);
+	   return IndexFileNames::fileNameFromGeneration(name, prefix, WITHOUT_GEN);
+   }
+
+   void SegmentInfo::setUseCompoundFile(const bool isCompoundFile) {
+	   if (isCompoundFile) {
+		   this->isCompoundFile = YES;
+	   } else {
+		   this->isCompoundFile = NO;
+	   }
+	   clearFiles();
+   }
+
+   bool SegmentInfo::getUseCompoundFile() const {
+	   if (isCompoundFile == NO) {
+		   return false;
+	   } else if (isCompoundFile == YES) {
+		   return true;
+	   } else {
+		   char fn[255]; // todo: make size more exact
+		   cl_sprintf(fn, 255, "%s.%s", name, IndexFileNames::COMPOUND_FILE_EXTENSION);
+		   return dir->fileExists(fn);
+	   }
+   }
+
+   int32_t SegmentInfo::getDocStoreOffset() const { return docStoreOffset; }
+
+   bool SegmentInfo::getDocStoreIsCompoundFile() const { return docStoreIsCompoundFile; }
+
+   void SegmentInfo::setDocStoreIsCompoundFile(const bool v) {
+	   docStoreIsCompoundFile = v;
+	   clearFiles();
+   }
+
+   char* SegmentInfo::getDocStoreSegment() const { return docStoreSegment; }
+
+   void SegmentInfo::setDocStoreOffset(const int32_t offset) {
+	   docStoreOffset = offset;
+	   clearFiles();
    }
 
    void SegmentInfo::write(CL_NS(store)::IndexOutput* output) {
@@ -222,52 +430,17 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	   output->writeByte(isCompoundFile);
    }
 
-  char* SegmentInfo::getDelFileName() {
-	  if (delGen == NO) {
-		  // In this case we know there is no deletion filename
-		  // against this segment
-		  return NULL;
-	  } else {
-		  // If delGen is CHECK_DIR, it's the pre-lockless-commit file format
-		  char fn[8];
-		  _snprintf(fn, 8,".%s", IndexFileNames::DELETES_EXTENSION);
-		  return IndexFileNames::fileNameFromGeneration(name, fn, delGen); 
-	  }
-  }
+   void SegmentInfo::clearFiles() {
+	   //files = null;
+	   sizeInBytes = -1;
+   }
 
-  void SegmentInfo::advanceNormGen(const int32_t fieldIndex) {
-	  if (normGen[fieldIndex] == NO) {
-		  normGen[fieldIndex] = YES;
-	  } else {
-		  normGen[fieldIndex]++;
-	  }
-	  clearFiles();
-  }
+   /** We consider another SegmentInfo instance equal if it
+   *  has the same dir and same name. */
+   bool SegmentInfo::equals(SegmentInfo* obj) {
+	   return (obj->dir == this->dir && strcmp(obj->name, this->name) == 0);
+   }
 
-  void SegmentInfo::setUseCompoundFile(const bool isCompoundFile) {
-	  if (isCompoundFile) {
-		  this->isCompoundFile = YES;
-	  } else {
-		  this->isCompoundFile = NO;
-	  }
-	  clearFiles();
-  }
-
-  int32_t SegmentInfo::getDocStoreOffset() const { return docStoreOffset; }
-
-  bool SegmentInfo::getDocStoreIsCompoundFile() const { return docStoreIsCompoundFile; }
-
-  void SegmentInfo::setDocStoreIsCompoundFile(const bool v) {
-	  docStoreIsCompoundFile = v;
-	  clearFiles();
-  }
-
-  char* SegmentInfo::getDocStoreSegment() const { return docStoreSegment; }
-
-  void SegmentInfo::setDocStoreOffset(const int32_t offset) {
-	  docStoreOffset = offset;
-	  clearFiles();
-  }
 
 
   SegmentInfos::SegmentInfos(bool deleteMembers, int32_t reserveCount) :
