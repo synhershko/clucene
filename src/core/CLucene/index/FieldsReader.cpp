@@ -36,8 +36,8 @@ public:
     int64_t reset(int64_t pos);
 };
 
-FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn):
-	fieldInfos(fn)
+FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, int32_t _readBufferSize, int32_t _docStoreOffset, int32_t size):
+	fieldInfos(fn), closed(false)
 {
 //Func - Constructor
 //Pre  - d contains a valid reference to a Directory
@@ -47,15 +47,48 @@ FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn):
 
 	CND_PRECONDITION(segment != NULL, "segment != NULL");
 
-	const char* buf = Misc::segmentname(segment,".fdt");
-	fieldsStream = d->openInput( buf );
-	_CLDELETE_CaARRAY( buf );
+	bool success = false;
 
-	buf = Misc::segmentname(segment,".fdx");
-	indexStream = d->openInput( buf );
-	_CLDELETE_CaARRAY( buf );
+	try {
+		const char* buf = Misc::segmentname(segment,".fdt");
+		cloneableFieldsStream = NULL;
+		fieldsStream = d->openInput( buf, _readBufferSize );
+		//fieldsStream = cloneableFieldsStream->clone();
+		_CLDELETE_LCaARRAY( buf );
 
-	_size = (int32_t)indexStream->length()/8;
+		buf = Misc::segmentname(segment,".fdx");
+		indexStream = d->openInput( buf, _readBufferSize );
+		_CLDELETE_CaARRAY( buf );
+
+		/*
+		if (docStoreOffset != -1) {
+			// We read only a slice out of this shared fields file
+			this->docStoreOffset = _docStoreOffset;
+			this->_size = size;
+
+			// Verify the file is long enough to hold all of our
+			// docs
+			CND_CONDITION(((int32_t) (indexStream.length() / 8)) >= size + this->docStoreOffset,
+				"the file is not long enough to hold all of our docs");
+		} else {
+			this->docStoreOffset = 0;
+			this->_size = (int32_t) (indexStream->length() >> 3);
+		}*/
+
+		_size = (int32_t)indexStream->length()/8; //todo: remove when uncommenting block above
+
+		numTotalDocs = (int32_t) (indexStream->length() >> 3);
+		success = true;
+	} _CLFINALLY ({
+		// With lock-less commits, it's entirely possible (and
+		// fine) to hit a FileNotFound exception above. In
+		// this case, we want to explicitly close any subset
+		// of things that were opened so that we don't have to
+		// wait for a GC to do so.
+		if (!success) {
+			close();
+		}
+	});
 }
 
 FieldsReader::~FieldsReader(){
@@ -66,18 +99,33 @@ FieldsReader::~FieldsReader(){
 	close();
 }
 
-void FieldsReader::close() {
-//Func - Closes the FieldsReader
-//Pre  - true
-//Post - The FieldsReader has been closed
-    
-	if (fieldsStream){
-	    fieldsStream->close();
-	    _CLDELETE(fieldsStream);
+void FieldsReader::ensureOpen() {
+	if (closed) {
+		_CLTHROWA(CL_ERR_IllegalState, "this FieldsReader is closed");
 	}
-	if(indexStream){
-	    indexStream->close();
-	    _CLDELETE(indexStream);
+}
+
+void FieldsReader::close() {
+	if (!closed) {
+		if (fieldsStream){
+			fieldsStream->close();
+			_CLDELETE(fieldsStream);
+		}
+		if (cloneableFieldsStream){
+			cloneableFieldsStream->close();
+			_CLDELETE(cloneableFieldsStream);
+		}
+		if(indexStream){
+			indexStream->close();
+			_CLDELETE(indexStream);
+		}
+		/*
+		CL_NS(store)::IndexInput* localFieldsStream = fieldsStreamTL.get();
+		if (localFieldsStream != NULL) {
+			localFieldsStream->close();
+			fieldsStreamTL->set(NULL);
+		}*/
+		closed = true;
 	}
 }
 

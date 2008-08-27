@@ -26,7 +26,7 @@ CL_NS_DEF(index)
 
 
   TermInfosReader::TermInfosReader(Directory* dir, const char* seg, FieldInfos* fis, int32_t readBufferSize):
-      directory (dir),fieldInfos (fis)
+      directory (dir),fieldInfos (fis), indexTerms(NULL), indexInfos(NULL), indexPointers(NULL), indexDivisor(1)
   {
   //Func - Constructor.
   //       Reads the TermInfos file (.tis) and eventually the Term Info Index file (.tii)
@@ -40,31 +40,38 @@ CL_NS_DEF(index)
 
 	  //Initialize the name of the segment
       segment    =  seg;
-      //There are no indexTerms yet
-      indexTerms    = NULL;
-	  //So there are no indexInfos
-	  indexInfos    = NULL;
-	  //So there are no indexPointers
-	  indexPointers = NULL; 	
+
       //Create a filname fo a Term Info File
 	  char* tisFile = Misc::segmentname(segment,".tis");
 	  char* tiiFile = Misc::segmentname(segment,".tii");
+	  bool success = false;
 
-	  indexDivisor = 1;
-	  
-      //Create an SegmentTermEnum for storing all the terms read of the segment
-      origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile, readBufferSize ), fieldInfos, false);
-      indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile, readBufferSize ), fieldInfos, true);
+	  try {
+		  //Create an SegmentTermEnum for storing all the terms read of the segment
+		  origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile, readBufferSize ), fieldInfos, false);
+		  _size =  origEnum->size;
+		  totalIndexInterval = origEnum->indexInterval;
+		  indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile, readBufferSize ), fieldInfos, true);
 
-	  //Check if enumerator points to a valid instance
-      CND_CONDITION(origEnum != NULL, "No memory could be allocated for orig enumerator");
-      CND_CONDITION(indexEnum != NULL, "No memory could be allocated for index enumerator");
+		  //Check if enumerator points to a valid instance
+		  CND_CONDITION(origEnum != NULL, "No memory could be allocated for orig enumerator");
+		  CND_CONDITION(indexEnum != NULL, "No memory could be allocated for index enumerator");
 
-      _CLDELETE_CaARRAY(tisFile);
-      _CLDELETE_CaARRAY(tiiFile);
+		  success = true;
+	  } _CLFINALLY({
+		  _CLDELETE_CaARRAY(tisFile);
+		  _CLDELETE_CaARRAY(tiiFile);
 
-      //Get the size of the enumeration and store it in size
-      _size =  origEnum->size;
+		  // With lock-less commits, it's entirely possible (and
+		  // fine) to hit a FileNotFound exception above. In
+		  // this case, we want to explicitly close any subset
+		  // of things that were opened so that we don't have to
+		  // wait for a GC to do so.
+		  if (!success) {
+			  close();
+		  }
+	  });
+
   }
 
   TermInfosReader::~TermInfosReader(){
@@ -77,11 +84,27 @@ CL_NS_DEF(index)
 	  //have been destroyed
       close();
   }
+  int32_t TermInfosReader::getSkipInterval() const {
+    return origEnum->skipInterval;
+  }
+  
+  int32_t TermInfosReader::getMaxSkipLevels() const {
+    return origEnum->maxSkipLevels;
+  }
 
+  void TermInfosReader::setIndexDivisor(const int32_t _indexDivisor) {
+	  if (indexDivisor < 1)
+		  _CLTHROWA(CL_ERR_IllegalArgument, "indexDivisor must be > 0");
+
+	  if (indexTerms != NULL)
+		  _CLTHROWA(CL_ERR_IllegalArgument, "index terms are already loaded");
+
+	  this->indexDivisor = _indexDivisor;
+	  totalIndexInterval = origEnum->indexInterval * _indexDivisor;
+  }
+
+  int32_t TermInfosReader::getIndexDivisor() const { return indexDivisor; }
   void TermInfosReader::close() {
-  //Func - Close the enumeration of TermInfos
-  //Pre  - true
-  //Post - The _enumeration has been closed and the arrays
 
 	  //Check if indexTerms and indexInfos exist
      if (indexTerms && indexInfos){
@@ -131,6 +154,7 @@ CL_NS_DEF(index)
         //Delete the IndexInput 
         _CLDELETE(is);	
       }
+	  enumerators.set(NULL);
   }
 
   int64_t TermInfosReader::size() const{
@@ -153,19 +177,18 @@ CL_NS_DEF(index)
     
 	  SegmentTermEnum* enumerator = getEnum();
 
-  //if
 	  if ( 
 	      enumerator != NULL //an enumeration exists
 	      && enumerator->term(false) != NULL // term is at or past current
 	      && position >= enumerator->position
-		  && position < (enumerator->position + enumerator->indexInterval)
+		  && position < (enumerator->position + totalIndexInterval)
 	     ) 
 	  {
 		  return scanEnum(position);			  // can avoid seek
 	  }
 
     //random-access: must seek
-    seekEnum(position / enumerator->indexInterval); 
+    seekEnum(position / totalIndexInterval); 
 
 	//Get the Term at position
     return scanEnum(position);
@@ -198,7 +221,6 @@ CL_NS_DEF(index)
     SegmentTermEnum* enumerator = getEnum();
 
     // optimize sequential access: first try scanning cached enumerator w/o seeking
-    //if
     if (
 	      //the current term of the enumeration enumerator is not at the end AND
       	enumerator->term(false) != NULL	 && 
@@ -211,7 +233,7 @@ CL_NS_DEF(index)
      {
 
 		//Calculate the offset for the position
-		int32_t _enumOffset = (int32_t)(enumerator->position/enumerator->indexInterval)+1;
+		int32_t _enumOffset = (int32_t)(enumerator->position/totalIndexInterval)+1;
 
 		// but before end of block
 		if (
@@ -320,6 +342,10 @@ CL_NS_DEF(index)
               indexTerms[i].set(indexEnum->term(false),indexEnum->term(false)->text());
               indexEnum->getTermInfo(&indexInfos[i]);
               indexPointers[i] = indexEnum->indexPointer;
+
+			  for (int32_t j = 1; j < indexDivisor; j++)
+				  if (!indexEnum->next())
+					  break;
           }
     }_CLFINALLY(
           indexEnum->close(); 
@@ -385,7 +411,7 @@ CL_NS_DEF(index)
 	  SegmentTermEnum* enumerator =  getEnum();
 	  enumerator->seek( 
           indexPointers[indexOffset],
-		  (indexOffset * enumerator->indexInterval) - 1,
+		  (indexOffset * totalIndexInterval) - 1,
           &indexTerms[indexOffset], 
 		  &indexInfos[indexOffset]
 	      );
