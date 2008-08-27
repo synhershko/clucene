@@ -51,6 +51,7 @@ SET(clucene_core_Files
 	./CLucene/document/DateField.cpp
 	./CLucene/document/DateTools.cpp
 	./CLucene/document/Field.cpp
+	./CLucene/document/FieldSelector.cpp
 	./CLucene/index/IndexFileNames.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp

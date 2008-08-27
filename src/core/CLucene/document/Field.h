@@ -15,7 +15,6 @@ http://lucene.markmail.org/message/ioi4f6z24cbd5bdm?q=Fieldable#query:Fieldable+
 TODO: - Solve some inconsistencies between CL and JL - mainly in the constructors area.
 	  - Write some more tests to make sure we conform with JL - mainly in the tokenizing and omitNorms area
 	  - Is there a bug in JL when calling setOmitNorms after a Tokenized field was created?
-	  - TokenStream* implementation - mend all 3 pointers to one void* ?
 */
 
 CL_CLASS_DEF(util,Reader)
@@ -41,8 +40,9 @@ This means that large fields are best saved in binary format (even if they are
 text), so that they can be loaded lazily.
 */
 class CLUCENE_EXPORT Field :LUCENE_BASE{
+private:
     struct Internal;
-    Internal* internal;
+    Internal* _internal;
 public:
 	enum Store{ 
 		/** Store the original field value in the index. This is useful for short texts
@@ -128,11 +128,20 @@ public:
 		TERMVECTOR_WITH_POSITIONS_OFFSETS = TERMVECTOR_WITH_OFFSETS | TERMVECTOR_WITH_POSITIONS
 	};
 
-	enum { LAZY_YES = 4096 };
+	bool lazy;
+
+	enum ValueType {
+		VALUE_NONE = 0,
+		VALUE_STRING = 1,
+		VALUE_READER = 2,
+		VALUE_STREAM = 4,
+		VALUE_TOKENSTREAM = 8
+	};
 
 	Field(const TCHAR* name, const TCHAR* value, int _config);
 	Field(const TCHAR* name, CL_NS(util)::Reader* reader, int _config);
 	Field(const TCHAR* name, jstreams::StreamBase<char>* stream, int _config);
+	Field(const TCHAR* name, int _config); ///<No value, for lazy loading support
     ~Field();
 
 	/**  The name of the field (e.g., "date", "subject", "title", "body", etc.)
@@ -159,16 +168,16 @@ public:
 	* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
 	CL_NS(analysis)::TokenStream* tokenStreamValue() const;
 
-	//  True iff the value of the field is to be stored in the index for return
+	//  True if the value of the field is to be stored in the index for return
 	//	with search hits.  It is an error for this to be true if a field is
 	//	Reader-valued. 
 	bool isStored() const;
 
-	//  True iff the value of the field is to be indexed, so that it may be
+	//  True if the value of the field is to be indexed, so that it may be
 	//	searched on. 
 	bool isIndexed() const;
 
-	// True iff the value of the field should be tokenized as text prior to
+	// True if the value of the field should be tokenized as text prior to
 	//	indexing.  Un-tokenized fields are indexed as a single word and may not be
 	//	Reader-valued.
 	bool isTokenized() const;
@@ -181,7 +190,7 @@ public:
 	*/
 	bool isCompressed() const;
 
-	/** True iff the term or terms used to index this field are stored as a term
+	/** True if the term or terms used to index this field are stored as a term
 	*  vector, available from {@link IndexReader#getTermFreqVector(int32_t,TCHAR*)}.
 	*  These methods do not provide access to the original content of the field,
 	*  only to terms used to index it. If the original content must be
@@ -290,6 +299,9 @@ protected:
 	inline void setConfig(const uint32_t termVector);
 
 	inline void _resetValue();
+
+	void* fieldsData;
+	ValueType valueType;
 };
 CL_NS_END
 #endif

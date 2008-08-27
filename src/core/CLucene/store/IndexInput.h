@@ -19,8 +19,6 @@ CL_NS_DEF(store)
    * @see IndexOutput
    */
 	class CLUCENE_EXPORT IndexInput: LUCENE_BASE {
-	private:
-		void skipChars( const int32_t count);
 	protected:
 		IndexInput();
 		IndexInput(const IndexInput& clone);
@@ -77,7 +75,6 @@ CL_NS_DEF(store)
 		*/
 		TCHAR* readString();
 		
-		
 		/** Reads UTF-8 encoded characters into an array.
 		* @param buffer the array to read characters into
 		* @param start the offset in the array to start storing characters
@@ -85,6 +82,8 @@ CL_NS_DEF(store)
 		* @see IndexOutput#writeChars(String,int32_t,int32_t)
 		*/
 		void readChars( TCHAR* buffer, const int32_t start, const int32_t len);
+
+		void skipChars( const int32_t count);
 		
 		/** Closes the stream to futher operations. */
 		virtual void close() =0;
