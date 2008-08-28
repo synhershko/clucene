@@ -44,7 +44,8 @@ CL_NS_DEF(search)
 
 
 	Hits::Hits(Searcher* s, Query* q, Filter* f, const Sort* _sort):
-		query(q), searcher(s), filter(f), sort(_sort)
+		query(q), searcher(s), filter(f), sort(_sort) , _length(0), first(NULL), last(NULL),
+			numDocs(0), maxDocs(200), nDeletedHits(0), debugCheckedForDeletions(false)
 	{
 	//Func - Constructor
 	//Pre  - s contains a valid reference to a searcher s
@@ -53,13 +54,12 @@ CL_NS_DEF(search)
 	//Post - The instance has been created
 
 		hitDocs = _CLNEW CL_NS(util)::CLVector<HitDoc*, CL_NS(util)::Deletor::Object<HitDoc> >;
-		_length  = 0;
+		//_length  = 0;
 		first   = NULL;
 		last    = NULL;
-		numDocs = 0;
-		maxDocs = 200;
-		nDeletedHits = 0;
-		debugCheckedForDeletions = false; // for test purposes.
+		//numDocs = 0;
+		//maxDocs = 200;
+		//nDeletedHits = 0;
 		nDeletions = countDeletions(s);
 
 		//retrieve 100 initially
@@ -76,8 +76,8 @@ CL_NS_DEF(search)
 	int32_t Hits::countDeletions(CL_NS(search)::Searcher* s) {
 		int32_t cnt = -1;
 		if ( s->getClassName() == _T("IndexSearcher") ) {
-			cnt = s->maxDoc() - dynamic_cast<IndexSearcher*>(s)->getReader()->numDocs(); 
-		} 
+			cnt = s->maxDoc() - static_cast<IndexSearcher*>(s)->getReader()->numDocs(); 
+		}
 		return cnt;
 	}
 
@@ -117,11 +117,8 @@ CL_NS_DEF(search)
 
 	void Hits::getMoreDocs(const size_t m){
 		size_t _min = m;
-		{
-			size_t nHits = hitDocs->size();
-			if ( nHits > _min)
-				_min = nHits;
-		}
+		if ( hitDocs->size() > _min)
+			_min = hitDocs->size();
 
 		size_t n = _min * 2;				  // double # retrieved
 		TopDocs* topDocs = NULL;
@@ -129,9 +126,11 @@ CL_NS_DEF(search)
 			topDocs = (TopDocs*)((Searchable*)searcher)->_search(query, filter, n);
 		else
 			topDocs = (TopDocs*)((Searchable*)searcher)->_search(query, filter, n, sort);
+
 		_length = topDocs->totalHits;
 		ScoreDoc* scoreDocs = topDocs->scoreDocs;
 		size_t scoreDocsLength = topDocs->scoreDocsLength;
+
 		float_t scoreNorm = 1.0f;
 
 		//Check that scoreDocs is a valid pointer before using it
@@ -164,7 +163,6 @@ CL_NS_DEF(search)
 
 			size_t end = scoreDocsLength < _length ? scoreDocsLength : _length;
 			_length += nDeletedHits;
-			//for (size_t i = hitDocs->size(); i < end; i++) {
 			for (size_t i = start; i < end; i++) {
 				hitDocs->push_back(_CLNEW HitDoc(scoreDocs[i].score * scoreNorm, scoreDocs[i].doc));
 			}

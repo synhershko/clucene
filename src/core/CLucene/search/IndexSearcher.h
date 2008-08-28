@@ -36,18 +36,29 @@ class CLUCENE_EXPORT IndexSearcher:public Searcher{
 	bool readerOwner;
 
 public:
-	/// Creates a searcher searching the index in the named directory.
+	/** Creates a searcher searching the index in the named directory.
+	* @throws CorruptIndexException if the index is corrupt
+	* @throws IOException if there is a low-level IO error
+	*/
 	IndexSearcher(const char* path);
   
-    /// Creates a searcher searching the index in the specified directory.
+	/** Creates a searcher searching the index in the provided directory.
+	* @throws CorruptIndexException if the index is corrupt
+	* @throws IOException if there is a low-level IO error
+	*/
     IndexSearcher(CL_NS(store)::Directory* directory);
 
-	/// Creates a searcher searching the provided index. 
+	/** Creates a searcher searching the provided index. */
 	IndexSearcher(CL_NS(index)::IndexReader* r);
 
 	~IndexSearcher();
 	    
-	/// Frees resources associated with this Searcher. 
+	/**
+	* Note that the underlying IndexReader is not closed, if
+	* IndexSearcher was constructed with IndexSearcher(IndexReader r).
+	* If the IndexReader was supplied implicitly by specifying a directory, then
+	* the IndexReader gets closed.
+	*/
 	void close();
 
 	int32_t docFreq(const CL_NS(index)::Term* term) const;

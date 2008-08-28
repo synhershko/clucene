@@ -58,21 +58,15 @@ CL_NS_DEF(search)
 	};
 
   PhraseQuery::PhraseQuery():
-    positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>),
-	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) )
+	field(NULL), terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
+		positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>), slop(0)
   {
-  //Func - Constructor
-  //Pre  - true
-  //Post - An empty PhraseQuery has been created
-  
-      slop   = 0;
-
-	  field = NULL;
   }
+
   PhraseQuery::PhraseQuery(const PhraseQuery& clone):
 	Query(clone),
-	positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>),
-	terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) )
+		terms(_CLNEW CL_NS(util)::CLVector<CL_NS(index)::Term*>(false) ),
+		positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>)
   {
       slop  = clone.slop;
 	  field = clone.field;
@@ -156,46 +150,38 @@ CL_NS_DEF(search)
     return getClassName();
   }
 
-  
-	/**
-	* Adds a term to the end of the query phrase.
-	* The relative position of the term is the one immediately after the last term added.
-	*/
-	void PhraseQuery::add(Term* term) {
-		CND_PRECONDITION(term != NULL,"term is NULL");
+  void PhraseQuery::add(Term* term) {
+	  CND_PRECONDITION(term != NULL,"term is NULL");
 
-		int32_t position = 0;
+	  int32_t position = 0;
 
-		if(positions->size() > 0)
-			position = ((*positions)[positions->size()-1]) + 1;
-		
-		add(term, position);
-	}
+	  if(positions->size() > 0)
+		  position = ((*positions)[positions->size()-1]) + 1;
 
-	void PhraseQuery::add(Term* term, int32_t position) {
-	//Func - Adds a term to the end of the query phrase. 
-	//Pre  - term != NULL 
-	//Post - The term has been added if its field matches the field of the PhraseQuery
-	//       and true is returned otherwise false is returned
-		CND_PRECONDITION(term != NULL,"term is NULL");
+	  add(term, position);
+  }
 
-		if (terms->size() == 0)
-			field = term->field();
-		else{
-			//Check if the field of the _CLNEW term matches the field of the PhraseQuery
-			//can use != because fields are interned
-			if ( term->field() != field){
-				//return false;
-				TCHAR buf[200];
-				_sntprintf(buf,200,_T("All phrase terms must be in the same field: %s"),term->field());
-				_CLTHROWT(CL_ERR_IllegalArgument,buf);
-			}
-		}
-		//Store the _CLNEW term
-		terms->push_back(_CL_POINTER(term));
+  void PhraseQuery::add(Term* term, int32_t position) {
 
-		positions->push_back(position);
-	}
+	  CND_PRECONDITION(term != NULL,"term is NULL");
+
+	  if (terms->size() == 0)
+		  field = term->field();
+	  else{
+		  //Check if the field of the _CLNEW term matches the field of the PhraseQuery
+		  //can use != because fields are interned
+		  if ( term->field() != field){
+			  //return false;
+			  TCHAR buf[200];
+			  _sntprintf(buf,200,_T("All phrase terms must be in the same field: %s"),term->field());
+			  _CLTHROWT(CL_ERR_IllegalArgument,buf);
+		  }
+	  }
+
+	  //Store the _CLNEW term
+	  terms->push_back(_CL_POINTER(term));
+	  positions->push_back(position);
+  }
 
 	void PhraseQuery::getPositions(Array<int32_t>& result) const{
 		result.length = positions->size();
@@ -204,25 +190,18 @@ CL_NS_DEF(search)
 			result.values[i] = (*positions)[i];
 		}
 	}
-	int32_t* PhraseQuery::getPositions() const{
-	    CND_WARNING(false,"getPositions() is deprecated")
-
-        Array<int32_t> arr;
-        getPositions(arr);
-        return arr.values;
-	}
   
-  Weight* PhraseQuery::_createWeight(Searcher* searcher) {
-    if (terms->size() == 1) {			  // optimize one-term case
-      Term* term = (*terms)[0];
-      Query* termQuery = _CLNEW TermQuery(term);
-      termQuery->setBoost(getBoost());
-      Weight* ret = termQuery->_createWeight(searcher);
-	  _CLDELETE(termQuery);
-	  return ret;
-    }
-    return _CLNEW PhraseWeight(searcher,this);
-  }
+	Weight* PhraseQuery::_createWeight(Searcher* searcher) {
+		if (terms->size() == 1) {			  // optimize one-term case
+			Term* term = (*terms)[0];
+			Query* termQuery = _CLNEW TermQuery(term);
+			termQuery->setBoost(getBoost());
+			Weight* ret = termQuery->_createWeight(searcher);
+			_CLDELETE(termQuery);
+			return ret;
+		}
+		return _CLNEW PhraseWeight(searcher,this);
+	}
 
 
   Term** PhraseQuery::getTerms() const{

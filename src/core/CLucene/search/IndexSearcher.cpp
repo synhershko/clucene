@@ -199,6 +199,7 @@ CL_NS_DEF(search)
       return reader->maxDoc();
   }
 
+  //todo: find out why we are passing Query* and not Weight*, as Weight is being extracted anyway from Query*
   TopDocs* IndexSearcher::_search(Query* query, Filter* filter, const int32_t nDocs){
   //Func -
   //Pre  - reader != NULL
