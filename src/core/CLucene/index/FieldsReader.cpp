@@ -146,7 +146,7 @@ bool FieldsReader::doc(int32_t n, Document* doc, CL_NS(document)::FieldSelector*
 		FieldInfo* fi = fieldInfos->fieldInfo(fieldNumber);
         if ( fi == NULL ) _CLTHROWA(CL_ERR_IO, "Field stream is invalid");
 
-		FieldSelector::FieldSelectorResult acceptField = (fieldSelector == NULL) ?	FieldSelector::LOAD : fieldSelector->accept(fi->name);
+		FieldSelectorResult acceptField = (fieldSelector == NULL) ?	LOAD : fieldSelector->accept(fi->name);
 
 		uint8_t bits = fieldsStream->readByte();
 		CND_CONDITION(bits <= FieldsWriter::FIELD_IS_COMPRESSED + FieldsWriter::FIELD_IS_TOKENIZED + FieldsWriter::FIELD_IS_BINARY,
@@ -158,23 +158,23 @@ bool FieldsReader::doc(int32_t n, Document* doc, CL_NS(document)::FieldSelector*
 
 		//TODO: Find an alternative approach here if this list continues to grow beyond the
 		//list of 5 or 6 currently here.  See Lucene 762 for discussion
-		if (acceptField = FieldSelector::LOAD) {
+		if (acceptField = LOAD) {
 			addField(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::LOAD_FOR_MERGE) {
+		else if (acceptField = LOAD_FOR_MERGE) {
 			addFieldForMerge(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::LOAD_AND_BREAK){
+		else if (acceptField = LOAD_AND_BREAK){
 			addField(doc, fi, binary, compressed, tokenize);
 			break;//Get out of this loop
 		}
-		else if (acceptField = FieldSelector::LAZY_LOAD) {
+		else if (acceptField = LAZY_LOAD) {
 			addFieldLazy(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::SIZE){
+		else if (acceptField = SIZE){
 			skipField(binary, compressed, addFieldSize(doc, fi, binary, compressed));
 		}
-		else if (acceptField = FieldSelector::SIZE_AND_BREAK){
+		else if (acceptField = SIZE_AND_BREAK){
 			addFieldSize(doc, fi, binary, compressed);
 			break;
 		}

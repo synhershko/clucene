@@ -151,7 +151,7 @@ CL_NS_DEF(index)
 
 		// Instances of this class hold field properties and data
 		// for merge
-		static class FieldForMerge : public CL_NS(document)::Field {
+		class FieldForMerge : public CL_NS(document)::Field {
 		public:
 			const TCHAR* stringValue() const;
 			CL_NS(util)::Reader* readerValue() const;
