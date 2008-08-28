@@ -138,9 +138,21 @@ public:
 		VALUE_TOKENSTREAM = 8
 	};
 
-	Field(const TCHAR* name, const TCHAR* value, int _config);
+	/**
+	* TCHAR value constructor of Field. Set duplicateValue to false to save on memory allocations when possible
+	*/
+	Field(const TCHAR* name, const TCHAR* value, int _config, bool duplicateValue = true);
+
+	/**
+	* Reader* constructor of Field.
+	*/
 	Field(const TCHAR* name, CL_NS(util)::Reader* reader, int _config);
+
+	/**
+	* Stream constructor of Field.
+	*/
 	Field(const TCHAR* name, jstreams::StreamBase<char>* stream, int _config);
+
 	Field(const TCHAR* name, int _config); ///<No value, for lazy loading support
     ~Field();
 
@@ -296,12 +308,16 @@ protected:
 	//Set configs using XOR. This resets all the settings
 	//For example, to use term vectors with positions and offsets do:
 	//object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
-	inline void setConfig(const uint32_t termVector);
+	inline void setConfig(const uint32_t _config);
 
 	inline void _resetValue();
 
 	void* fieldsData;
 	ValueType valueType;
+
+	const TCHAR* _name;
+	uint32_t config;
+	float_t boost;
 };
 CL_NS_END
 #endif

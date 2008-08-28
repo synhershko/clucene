@@ -88,7 +88,18 @@ CL_NS_DEF(index)
 		void skipField(const bool binary, const bool compressed);
 		void skipField(const bool binary, const bool compressed, const int32_t toRead);
 
-		void addFieldLazy(CL_NS(document)::Document* doc, FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
+		void addFieldLazy(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
+
+		/** Add the size of field as a byte[] containing the 4 bytes of the integer byte size (high order byte first; char = 2 bytes)
+		* Read just the size -- caller must skip the field content to continue reading fields
+		* Return the size in bytes or chars, depending on field type
+		*/
+		int32_t addFieldSize(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed);
+
+		// in merge mode we don't uncompress the data of a compressed field
+		void addFieldForMerge(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
+
+		void addField(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
 
 		CL_NS(document)::Field::TermVector getTermVectorType(const FieldInfo* fi);
 		CL_NS(document)::Field::Index getIndexType(const FieldInfo* fi, const bool tokenize);
@@ -114,12 +125,12 @@ CL_NS_DEF(index)
 			/** The value of the field in Binary, or null.  If null, the Reader value,
 			* String value, or TokenStream value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			uint8_t* binaryValue();
+			jstreams::StreamBase<char>* streamValue();
 
 			/** The value of the field as a Reader, or null.  If null, the String value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(util)::Reader* readerValue();
+			CL_NS(util)::Reader* readerValue() const;
 
 			/** The value of the field as a String, or null.  If null, the Reader value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
@@ -129,13 +140,25 @@ CL_NS_DEF(index)
 			/** The value of the field as a TokesStream, or null.  If null, the Reader value,
 			* String value, or binary value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(analysis)::TokenStream* tokenStreamValue();
+			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
 
 			int64_t getPointer() const;
 			void setPointer(const int64_t _pointer);
 
 			int32_t getToRead() const;
 			void setToRead(const int32_t _toRead);
+		};
+
+		// Instances of this class hold field properties and data
+		// for merge
+		static class FieldForMerge : public CL_NS(document)::Field {
+		public:
+			const TCHAR* stringValue() const;
+			CL_NS(util)::Reader* readerValue() const;
+			jstreams::StreamBase<char>* streamValue() const;
+			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
+
+			FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
 		};
 	};
 CL_NS_END

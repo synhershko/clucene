@@ -13,38 +13,39 @@
 CL_NS_USE(util)
 CL_NS_DEF(document) 
 
+/*
 struct Field::Internal{
-	const TCHAR* _name;
+	//const TCHAR* _name;
 	//TCHAR* _stringValue;
 	//CL_NS(util)::Reader* _readerValue;
     //jstreams::StreamBase<char>* _streamValue;
 	//void* fieldsData;
 
-	uint32_t config;
-	float_t boost;
-};
+	//uint32_t config;
+	//float_t boost;
+};*/
 
 Field::Field(const TCHAR* Name, Reader* reader, int config):
-	_internal(new Internal), lazy(false)
+	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(reader != NULL, "reader cannot be NULL");
 
-	_internal->_name        = CLStringIntern::intern( Name );
+	_name        = CLStringIntern::intern( Name );
 	//_internal->_stringValue = NULL;
 	//_internal->_readerValue = reader;
 	//_internal->_streamValue = NULL;
 	fieldsData = reader;
 	valueType = VALUE_READER;
 
-	_internal->boost=1.0f;
+	boost=1.0f;
 
 	setConfig(config);
 }
 
 
-Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
-	_internal(new Internal), lazy(false)
+Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, bool duplicateValue):
+	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
@@ -57,14 +58,17 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
 		_CLTHROWA(CL_ERR_IllegalArgument,"cannot store term vector information for a field that is not indexed");
 	*/
 
-	_internal->_name        = CLStringIntern::intern( Name );
+	_name        = CLStringIntern::intern( Name );
 	//_internal->_stringValue = stringDuplicate( Value );
 	//_internal->_readerValue = NULL;
 	//_internal->_streamValue = NULL;
-	fieldsData = stringDuplicate( Value );
+	if (duplicateValue)
+		fieldsData = stringDuplicate( Value );
+	else
+		fieldsData = (void*)Value;
 	valueType = VALUE_STRING;
 
-	_internal->boost=1.0f;
+	boost=1.0f;
 
 	//config = INDEX_TOKENIZED; // default Field is tokenized and indexed
 
@@ -72,35 +76,35 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config):
 }
 
 Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config):
-	_internal(new Internal), lazy(false)
+	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
 
-	_internal->_name        = CLStringIntern::intern( Name );
+	_name        = CLStringIntern::intern( Name );
 	//_internal->_stringValue = NULL;
 	//_internal->_readerValue = NULL;
 	//_internal->_streamValue = Value;
 	fieldsData = Value;
 	valueType = VALUE_STREAM;
 
-	_internal->boost=1.0f;
+	boost=1.0f;
 
 	setConfig(config);
 }
 
 Field::Field(const TCHAR* Name, int config):
-	_internal(new Internal), lazy(false)
+	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 
-	_internal->_name        = CLStringIntern::intern( Name );
+	_name        = CLStringIntern::intern( Name );
 	fieldsData = NULL;
 	valueType = VALUE_NONE;
 
-	_internal->boost=1.0f;
+	boost=1.0f;
 
-	setConfig(config);
+	if (config) setConfig(config);
 }
 
 Field::~Field(){
@@ -108,31 +112,31 @@ Field::~Field(){
 //Pre  - true
 //Post - Instance has been destroyed
 
-	CLStringIntern::unintern(_internal->_name);
+	CLStringIntern::unintern(_name);
 	_resetValue();
-	delete _internal;
+	//delete _internal;
 }
 
 
 /*===============FIELDS=======================*/
-const TCHAR* Field::name() const	{ return _internal->_name; } ///<returns reference
+const TCHAR* Field::name() const	{ return _name; } ///<returns reference
 TCHAR* Field::stringValue() const	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
 Reader* Field::readerValue() const	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
 jstreams::StreamBase<char>* Field::streamValue() const	{ return (valueType & VALUE_STREAM) ? static_cast<jstreams::StreamBase<char>*>(fieldsData) : NULL; } ///<returns reference
 CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
 	    
-bool	Field::isStored() const 	{ return (_internal->config & STORE_YES) != 0; }
-bool 	Field::isIndexed() const	{ return (_internal->config & INDEX_TOKENIZED)!=0 || (_internal->config & INDEX_UNTOKENIZED)!=0; }
-bool 	Field::isTokenized() const	{ return (_internal->config & INDEX_TOKENIZED) != 0; }
-bool 	Field::isCompressed() const	{ return (_internal->config & STORE_COMPRESS) != 0; }
+bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
+bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
+bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
+bool 	Field::isCompressed() const	{ return (config & STORE_COMPRESS) != 0; }
 bool 	Field::isBinary() const		{ return (valueType & VALUE_STREAM) && fieldsData!=NULL; }
 
-bool	Field::isTermVectorStored() const			{ return (_internal->config & TERMVECTOR_YES) != 0; }
-bool	Field::isStoreOffsetWithTermVector() const	{ return (_internal->config & TERMVECTOR_YES) != 0 && (_internal->config & TERMVECTOR_WITH_OFFSETS) != 0; }
-bool	Field::isStorePositionWithTermVector() const{ return (_internal->config & TERMVECTOR_YES) != 0 && (_internal->config & TERMVECTOR_WITH_POSITIONS) != 0; }
+bool	Field::isTermVectorStored() const			{ return (config & TERMVECTOR_YES) != 0; }
+bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
+bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
 
-bool Field::getOmitNorms() const { return (_internal->config & INDEX_NONORMS) != 0; }
-void Field::setOmitNorms(const bool omitNorms) { _internal->config |= INDEX_NONORMS; }
+bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
+void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
     
 bool Field::isLazy() const { return lazy; }
 
@@ -160,8 +164,8 @@ void Field::setValue(CL_NS(analysis)::TokenStream* value) {
 	//valueType = VALUE_TOKENSTREAM;
 }
 
-void Field::setBoost(const float_t boost)	{ this->_internal->boost = boost; }
-float_t Field::getBoost() const				{ return _internal->boost; }
+void Field::setBoost(const float_t boost)	{ this->boost = boost; }
+float_t Field::getBoost() const				{ return boost; }
 
 void Field::setConfig(const uint32_t x){
 	uint32_t newConfig=0;
@@ -228,7 +232,7 @@ void Field::setConfig(const uint32_t x){
 	}else
 		newConfig |= TERMVECTOR_NO;
 
-	_internal->config = newConfig;
+	config = newConfig;
 }
 
 TCHAR* Field::toString() {
