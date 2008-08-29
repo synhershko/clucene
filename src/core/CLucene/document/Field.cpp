@@ -170,7 +170,7 @@ void Field::setValue(CL_NS(analysis)::TokenStream* value) {
 void Field::setBoost(const float_t boost)	{ this->boost = boost; }
 float_t Field::getBoost() const				{ return boost; }
 
-void Field::setConfig(const uint32_t x){
+inline void Field::setConfig(const uint32_t x){
 	uint32_t newConfig=0;
 
 	//set storage settings
@@ -305,11 +305,14 @@ TCHAR* Field::toString() {
 
 void Field::_resetValue() {
 	if (valueType & VALUE_STRING) {
-		_CLDELETE_CARRAY(fieldsData);
+		TCHAR* t = static_cast<TCHAR*>(fieldsData);
+		_CLDELETE_CARRAY(t);
 	} else if (valueType & VALUE_READER) {
-		_CLDELETE(fieldsData);
+		Reader* r = static_cast<Reader*>(fieldsData);
+		_CLDELETE(r);
 	} else if (valueType & VALUE_STREAM) {
-		_CLVDELETE( fieldsData );
+		jstreams::StreamBase<char>* v = static_cast<jstreams::StreamBase<char>*>(fieldsData);
+		_CLVDELETE(v);
 	}
 	valueType=VALUE_NONE;
 }
