@@ -140,9 +140,12 @@ void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
     
 bool Field::isLazy() const { return lazy; }
 
-void Field::setValue(const TCHAR* value) {
+void Field::setValue(TCHAR* value, const bool duplicateValue) {
 	_resetValue();
-	fieldsData = stringDuplicate( value );
+	if (duplicateValue)
+		fieldsData = stringDuplicate( value );
+	else
+		fieldsData = value;
 	valueType = VALUE_STRING;
 }
 

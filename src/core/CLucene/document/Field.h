@@ -141,7 +141,7 @@ public:
 	/**
 	* TCHAR value constructor of Field. Set duplicateValue to false to save on memory allocations when possible
 	*/
-	Field(const TCHAR* name, const TCHAR* value, int _config, bool duplicateValue = true);
+	Field(const TCHAR* name, const TCHAR* value, int _config, const bool duplicateValue = true);
 
 	/**
 	* Reader* constructor of Field.
@@ -276,7 +276,7 @@ public:
 	*/
 	bool isLazy() const;
 
-	// Prints a Field for human consumption.
+	/** Prints a Field for human consumption. */
 	TCHAR* toString();
 
 	/** <p>Expert: change the value of this field.  This can
@@ -292,22 +292,26 @@ public:
 	*  Also, each Field instance should only be used once
 	*  within a single {@link Document} instance.  See <a
 	*  href="http://wiki.apache.org/lucene-java/ImproveIndexingSpeed">ImproveIndexingSpeed</a>
-	*  for details.</p> */
-	void setValue(const TCHAR* value);
+	*  for details.</p>
+	*
+	* @memory Caller is responsible for releasing value if duplicateValue == false */
+	void setValue(TCHAR* value, const bool duplicateValue = true);
 
-	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
 	void setValue(CL_NS(util)::Reader* value);
 
-	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
 	void setValue(jstreams::StreamBase<char>* value) ;
 
-	/** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
+	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
 	void setValue(CL_NS(analysis)::TokenStream* value);
 
 protected:
-	//Set configs using XOR. This resets all the settings
-	//For example, to use term vectors with positions and offsets do:
-	//object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
+	/**
+	* Set configs using XOR. This resets all the settings
+	* For example, to use term vectors with positions and offsets do:
+	* object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
+	*/
 	inline void setConfig(const uint32_t _config);
 
 	inline void _resetValue();
