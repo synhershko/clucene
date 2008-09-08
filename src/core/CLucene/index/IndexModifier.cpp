@@ -191,6 +191,8 @@ int32_t IndexModifier::getMergeFactor() {
 }
 
 void IndexModifier::close() {
+    if (!open)
+        return;
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	if (indexWriter != NULL) {
 		indexWriter->close();
