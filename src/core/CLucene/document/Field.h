@@ -312,9 +312,9 @@ protected:
 	* For example, to use term vectors with positions and offsets do:
 	* object->setConfig(TERMVECTOR_WITH_POSITIONS | TERMVECTOR_WITH_OFFSETS);
 	*/
-	inline void setConfig(const uint32_t _config);
+	void setConfig(const uint32_t _config);
 
-	inline void _resetValue();
+	void _resetValue();
 
 	void* fieldsData;
 	ValueType valueType;

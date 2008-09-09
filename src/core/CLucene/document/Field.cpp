@@ -170,7 +170,7 @@ void Field::setValue(CL_NS(analysis)::TokenStream* value) {
 void Field::setBoost(const float_t boost)	{ this->boost = boost; }
 float_t Field::getBoost() const				{ return boost; }
 
-inline void Field::setConfig(const uint32_t x){
+void Field::setConfig(const uint32_t x){
 	uint32_t newConfig=0;
 
 	//set storage settings
