@@ -472,6 +472,7 @@ bool ISOLatin1AccentFilter::next(Token* token){
 }
 
 
+KeywordAnalyzer::KeywordAnalyzer(){}
 KeywordAnalyzer::~KeywordAnalyzer(){}
 TokenStream* KeywordAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
     return _CLNEW KeywordTokenizer(reader);

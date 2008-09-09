@@ -364,9 +364,10 @@ public:
  */
 class CLUCENE_EXPORT KeywordAnalyzer: public Analyzer {
 public:
+	KeywordAnalyzer();
+    virtual ~KeywordAnalyzer();
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 	TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-    virtual ~KeywordAnalyzer();
 };
 
     
