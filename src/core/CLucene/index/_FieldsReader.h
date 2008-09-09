@@ -78,7 +78,7 @@ CL_NS_DEF(index)
 		*  contiguous range of length numDocs starting with
 		*  startDocID.  Returns the IndexInput (the fieldStream),
 		*  already seeked to the starting point for startDocID.*/
-		CL_NS(store)::IndexInput* FieldsReader::rawDocs(int32_t* lengths, const int32_t startDocID, const int32_t numDocs);
+		CL_NS(store)::IndexInput* rawDocs(int32_t* lengths, const int32_t startDocID, const int32_t numDocs);
 
 	private:
 		/**

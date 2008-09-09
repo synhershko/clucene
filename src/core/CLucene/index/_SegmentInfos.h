@@ -48,7 +48,7 @@ CL_NS_DEF(index)
 
 		size_t normGenLen;						  // To keep the length of array normGen
 
-		uint8_t isCompoundFile;					  // NO if it is not; YES if it is; CHECK_DIR if it's
+		int8_t isCompoundFile;					  // NO if it is not; YES if it is; CHECK_DIR if it's
                                                   // pre-2.1 (ie, must check file system to see
                                                   // if <name>.cfs and <name>.nrm exist)
 
@@ -174,7 +174,7 @@ CL_NS_DEF(index)
 
 		/** We consider another SegmentInfo instance equal if it
 		*  has the same dir and same name. */
-		bool SegmentInfo::equals(SegmentInfo* obj);
+		bool equals(SegmentInfo* obj);
 
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
