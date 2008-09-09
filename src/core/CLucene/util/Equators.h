@@ -61,7 +61,7 @@ public:
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
 /** @internal */
-class CLUCENE_EXPORT Comparable:LUCENE_BASE{
+class CLUCENE_INLINE_EXPORT Comparable:LUCENE_BASE{
 public:
    virtual ~Comparable(){
    }
@@ -72,7 +72,7 @@ public:
 /** @internal */
 class CLUCENE_INLINE_EXPORT Compare{
 public:
-	class CLUCENE_EXPORT _base
+	class CLUCENE_INLINE_EXPORT _base
 	{	// traits class for hash containers
 	public:
 		enum
@@ -86,7 +86,7 @@ public:
 		}
 	};
 
-	class CLUCENE_EXPORT Int32:public _base, public Comparable{
+	class CLUCENE_INLINE_EXPORT Int32:public _base, public Comparable{
 		int32_t value;
 	public:
 		int32_t getValue() const;
@@ -98,7 +98,7 @@ public:
 	};
 
 	
-	class CLUCENE_EXPORT Float:public Comparable{
+	class CLUCENE_INLINE_EXPORT Float:public Comparable{
 		float_t value;
 	public:
 		float_t getValue() const;
@@ -107,7 +107,7 @@ public:
 	};
 
 
-	class CLUCENE_EXPORT Char: public _base //<char*>
+	class CLUCENE_INLINE_EXPORT Char: public _base //<char*>
 	{
 	public:
 		bool operator()( const char* val1, const char* val2 ) const;
@@ -115,7 +115,7 @@ public:
 	};
 
 #ifdef _UCS2
-	class CLUCENE_EXPORT WChar: public _base //<wchar_t*>
+	class CLUCENE_INLINE_EXPORT WChar: public _base //<wchar_t*>
 	{
 	public:
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
@@ -123,7 +123,7 @@ public:
 	};
 #endif
 
-	class CLUCENE_EXPORT TChar: public _base, public Comparable{
+	class CLUCENE_INLINE_EXPORT TChar: public _base, public Comparable{
 	    const TCHAR* s;
     public:
     	const TCHAR* getValue() const;
