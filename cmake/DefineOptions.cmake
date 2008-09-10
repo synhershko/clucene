@@ -28,13 +28,15 @@ MACRO (DEFINE_OPTIONS extraOptions)
         ADD_DEFINITIONS(-D__LARGE64_FILES)
     ENDIF(CYGWIN)
     
+    # calm mdown msvc
     IF(MSVC)
-        # calm mdown msvc
-        #ADD_DEFINITIONS(-wd4251) # 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
-        #ADD_DEFINITIONS(-wd4275) # non  DLL-interface classkey 'identifier' used as base for DLL-interface classkey 'identifier'
-        #ADD_DEFINITIONS(-wd4309) # 'conversion' : truncation of constant value
-        #ADD_DEFINITIONS(-wd4503) # decorated name length exceeded
-        ADD_DEFINITIONS(-wd4786) # identifier was truncated to '255' characters in the debug information
+        IF ( NOT MSVC60 )
+            #ADD_DEFINITIONS(-wd4251) # 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
+            #ADD_DEFINITIONS(-wd4275) # non  DLL-interface classkey 'identifier' used as base for DLL-interface classkey 'identifier'
+            #ADD_DEFINITIONS(-wd4309) # 'conversion' : truncation of constant value
+            #ADD_DEFINITIONS(-wd4503) # decorated name length exceeded
+            #ADD_DEFINITIONS(-wd4786) # identifier was truncated to '255' characters in the debug information
+        ENDIF ( NOT MSVC60 )
     ENDIF(MSVC)
 
 ENDMACRO (DEFINE_OPTIONS)
