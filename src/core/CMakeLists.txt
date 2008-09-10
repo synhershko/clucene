@@ -150,9 +150,9 @@ SET_TARGET_PROPERTIES(clucene-core PROPERTIES
 #link the clucene-core library against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
     IF ( USE_STATIC_SHARED_LIBRARY )
-            TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static)
+            TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static} )
     ELSE ( USE_STATIC_SHARED_LIBRARY )
-            TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
+            TARGET_LINK_LIBRARIES(clucene-core clucene-shared ${CMAKE_THREAD_LIBS_INIT})
     ENDIF ( USE_STATIC_SHARED_LIBRARY )
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
