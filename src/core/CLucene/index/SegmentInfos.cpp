@@ -316,9 +316,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		   }
 		   // Next we look for any == 0.  These cases were
 		   // pre-LOCKLESS and must be checked in directory:
-		   for(size_t i=0;i<normGenLen;i++) {
-			   if (normGen[i] == CHECK_DIR) {
-				   if (hasSeparateNorms(i)) {
+		   for(size_t j=0;j<normGenLen;j++) {
+			   if (normGen[j] == CHECK_DIR) {
+				   if (hasSeparateNorms(j)) {
 					   return true;
 				   }
 			   }
