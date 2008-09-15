@@ -25,7 +25,7 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 
-  TermInfosReader::TermInfosReader(Directory* dir, const char* seg, FieldInfos* fis, int32_t readBufferSize):
+  TermInfosReader::TermInfosReader(Directory* dir, const char* seg, FieldInfos* fis, const int32_t readBufferSize):
       directory (dir),fieldInfos (fis), indexTerms(NULL), indexInfos(NULL), indexPointers(NULL), indexDivisor(1)
   {
   //Func - Constructor.
@@ -115,8 +115,6 @@ CL_NS_DEF(index)
 			 if ( indexTerms[i].__cl_refcount != 1 ){
 				 CND_PRECONDITION(indexTerms[i].__cl_refcount==1,"TermInfosReader term was references more than internally");
 			 }
-         //   _CLDECDELETE(indexTerms[i]);
-            //_CLDELETE(indexInfos[i]);
          }
 #endif
          //Delete the arrays

@@ -44,7 +44,7 @@ Field::Field(const TCHAR* Name, Reader* reader, int config):
 }
 
 
-Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, bool duplicateValue):
+Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool duplicateValue):
 	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");

@@ -13,7 +13,7 @@ CL_NS_DEF(util)
 
 //todo: using http://en.wikipedia.org/wiki/Thread-local_storage#Pthreads_implementation
 //would work better... but lots of testing would be needed first...
-typedef CL_NS(util)::CLMultiMap<_LUCENE_THREADID_TYPE, _ThreadLocal*, 
+typedef CL_NS(util)::CLMultiMap<const _LUCENE_THREADID_TYPE, _ThreadLocal*, 
 		CL_NS(util)::CLuceneThreadIdCompare, 
 		CL_NS(util)::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>, 
 		CL_NS(util)::Deletor::ConstNullVal<_ThreadLocal*> > ThreadLocalsType;
