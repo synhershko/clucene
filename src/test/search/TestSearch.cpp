@@ -338,7 +338,7 @@ void testSrchManyHits(CuTest *tc) {
 		Document* d = _CLNEW Document();
 		//no need to delete fields... document takes ownership
 		int x = j%7;
-		d->add(*_CLNEW Field(Field(_T("contents"),docs[x],Field::STORE_YES | Field::INDEX_TOKENIZED)));
+		d->add(*_CLNEW Field(_T("contents"),docs[x],Field::STORE_YES | Field::INDEX_TOKENIZED));
 
 		writer.addDocument(d);
 		_CLDELETE(d);
