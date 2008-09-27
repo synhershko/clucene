@@ -82,7 +82,8 @@ function checkForIfdefs {
 
 
 if [ $t_env == 1 ]; then
-    mkdir $TMP 2>/dev/null
+    rm -fdr $TMP 2>/dev/null
+    mkdir $TMP
     
     #create header file for testing of symbols in headers.
     echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-headers.cpp
@@ -98,7 +99,7 @@ if [ $t_env == 1 ]; then
         
             #move headers somewhere to compile
             mkdir -p "$TMP/$DH" 2>/dev/null
-            ln -s "`cd "$DN" && pwd`" "$TMP/${H:3}" 2>/dev/null
+            ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
             
             #create pub-headers.cpp
             echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
@@ -179,7 +180,7 @@ fi
 
 #test if headers can compile together by themselves:
 if [ $t_c_all == 1 ]; then
-    g++ -I$TMP/src -I$TMP/src/shared -I$TMP/src/core $TMP/pub-headers.cpp
+    g++ -I$TMP/src -I$TMP/src/shared -I$TMP/src/core $TMP/pub-headers.cpp -I./src/shared
 fi
 
 if [ $t_inline == 1 ]; then
