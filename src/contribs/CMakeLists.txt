@@ -137,11 +137,7 @@ add_library(clucene-contribs SHARED
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
 )
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    IF ( USE_STATIC_SHARED_LIBRARY )
-        TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared-static)
-    ELSE ( USE_STATIC_SHARED_LIBRARY )
-        TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared)
-    ENDIF ( USE_STATIC_SHARED_LIBRARY )
+    TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared)
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 add_library(clucene-contribs-static STATIC

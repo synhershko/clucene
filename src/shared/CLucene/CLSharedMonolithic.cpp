@@ -21,7 +21,6 @@
 #include "CLucene/config/threads.cpp"
 #include "CLucene/config/utf8.cpp"
 #include "CLucene/debug/condition.cpp"
-#include "CLucene/debug/error.cpp"
 #include "CLucene/util/Misc.cpp"
 #include "CLucene/util/dirent.cpp"
 #include "CLucene/util/StringBuffer.cpp"

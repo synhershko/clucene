@@ -75,10 +75,6 @@ OPTION(ENABLE_COMPILE_TESTS
   "enable various projects that test alternative build switches"
   ${ENABLE_COMPILE_TESTS_VALUE})
 
-OPTION(USE_STATIC_SHARED_LIBRARY
-  "Link libraries and executables against the static linked clucene-shared library instead of shared"
-  OFF)
-
 #check flags...
 INCLUDE (TestCXXAcceptsFlag)
 IF ( CMAKE_COMPILER_IS_GNUCC )

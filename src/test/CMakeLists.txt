@@ -51,11 +51,7 @@ ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} )
 
 #link the executable against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    IF ( USE_STATIC_SHARED_LIBRARY )
-        TARGET_LINK_LIBRARIES(cl_test clucene-core clucene-shared-static)
-    ELSE ( USE_STATIC_SHARED_LIBRARY )
-        TARGET_LINK_LIBRARIES(cl_test clucene-core clucene-shared)
-    ENDIF ( USE_STATIC_SHARED_LIBRARY )
+    TARGET_LINK_LIBRARIES(cl_test clucene-core clucene-shared)
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 ############################

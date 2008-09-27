@@ -19,6 +19,7 @@ SOURCE_GROUP("util" ./CLucene/util/*)
 
 SET(clucene_core_Files
 	./CLucene/StdHeader.cpp
+	./CLucene/debug/error.cpp
 	./CLucene/util/ThreadLocal.cpp
 	./CLucene/util/Reader.cpp
 	./CLucene/util/Equators.cpp
@@ -26,6 +27,7 @@ SET(clucene_core_Files
 	./CLucene/util/fileinputstream.cpp
 	./CLucene/util/MD5Digester.cpp
 	./CLucene/util/StringIntern.cpp
+	./CLucene/util/subinputstream.cpp
 	./CLucene/util/BitSet.cpp
 	./CLucene/queryParser/Lexer.cpp
 	./CLucene/queryParser/MultiFieldQueryParser.cpp
@@ -149,11 +151,7 @@ SET_TARGET_PROPERTIES(clucene-core PROPERTIES
 
 #link the clucene-core library against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    IF ( USE_STATIC_SHARED_LIBRARY )
-            TARGET_LINK_LIBRARIES(clucene-core clucene-shared-static} )
-    ELSE ( USE_STATIC_SHARED_LIBRARY )
-            TARGET_LINK_LIBRARIES(clucene-core clucene-shared ${CMAKE_THREAD_LIBS_INIT})
-    ENDIF ( USE_STATIC_SHARED_LIBRARY )
+    TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
