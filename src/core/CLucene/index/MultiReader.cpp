@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "MultiReader.h"
+#include "_MultiReader.h"
 
 #include "IndexReader.h"
 #include "CLucene/document/Document.h"
@@ -20,134 +21,13 @@ CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-/** An IndexReader which reads multiple indexes, appending their content.
-*/
-class MultiTermDocs:public virtual TermDocs {
-private:
-protected:
-	TermDocs** readerTermDocs;
-
-	IndexReader** subReaders;
-  int32_t subReadersLength;
-	const int32_t* starts;
-	Term* term;
-
-	int32_t base;
-	int32_t pointer;
-
-	TermDocs* current;              // == segTermDocs[pointer]
-public:
-	MultiTermDocs();
-	MultiTermDocs(IndexReader** subReaders, const int32_t* s);
-	virtual ~MultiTermDocs();
-
-	int32_t doc() const;
-	int32_t freq() const;
-
-    void seek(TermEnum* termEnum);
-	void seek(Term* tterm);
-	bool next();
-
-	/** Optimized implementation. */
-	int32_t read(int32_t* docs, int32_t* freqs, int32_t length);
-
-	/** As yet unoptimized implementation. */
-	bool skipTo(const int32_t target);
-
-	void close();
-
-	virtual TermPositions* __asTermPositions();
-protected:
-	virtual TermDocs* termDocs(const IndexReader* reader) const;
-private:
-	TermDocs* termDocs(const int32_t i) const;
-
-};
-
-
-//MultiTermEnum represents the enumeration of all terms of all readers
-class MultiTermEnum:public TermEnum {
-private:
-	SegmentMergeQueue* queue;
-
-	Term* _term;
-	int32_t _docFreq;
-public:
-	//Constructor
-	//Opens all enumerations of all readers
-	MultiTermEnum(IndexReader** subReaders, const int32_t* starts, const Term* t);
-
-	//Destructor
-	~MultiTermEnum();
-
-	//Move the current term to the next in the set of enumerations
-	bool next();
-
-	//Returns a pointer to the current term of the set of enumerations
-	Term* term();
-	Term* term(bool pointer);
-
-	//Returns the document frequency of the current term in the set
-	int32_t docFreq() const;
-
-	//Closes the set of enumerations in the queue
-	void close();
-
-		
-	const char* getObjectName(){ return MultiTermEnum::getClassName(); }
-	static const char* getClassName(){ return "MultiTermEnum"; }
-};
-
-
-#if _MSC_VER
-    #pragma warning(disable : 4250)
-#endif
-class MultiTermPositions:public MultiTermDocs,public TermPositions {
-public:
-	MultiTermPositions(IndexReader** subReaders, const int32_t* s);
-	~MultiTermPositions() {};
-	int32_t nextPosition();
-
-	/**
-	* Not implemented.
-	* @throws UnsupportedOperationException
-	*/
-	int32_t getPayloadLength() const {
-		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: MultiTermPositions::getPayloadLength");
-	}
-
-	/**
-	* Not implemented.
-	* @throws UnsupportedOperationException
-	*/
-	uint8_t* getPayload(uint8_t* data, int32_t offset) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: MultiTermPositions::getPayload");
-	}
-
-	/**
-	*
-	* @return false
-	*/
-	// TODO: Remove warning after API has been finalized
-	bool isPayloadAvailable() const {
-		return false;
-	}
-
-	virtual TermDocs* __asTermDocs();
-	virtual TermPositions* __asTermPositions();
-protected:
-	TermDocs* termDocs(const IndexReader* reader) const;
-};
-
 
 
 class MultiReader::Internal: LUCENE_BASE{
 public:
     bool _hasDeletions;
-	IndexReader** subReaders;
-	int32_t subReadersLength;
-	int32_t* starts;			  // 1st docno for each segment
 	uint8_t* ones;
+	MultiReader* _this;
 
 	CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
 		CL_NS(util)::Compare::TChar,
@@ -157,64 +37,60 @@ public:
 	int32_t _maxDoc;
 	int32_t _numDocs;
 	
-	Internal():
+	Internal(IndexReader** subReaders, MultiReader* _this):
   		normsCache(true, true)
-  	{
-  	}
-		
-	void initialize(IndexReader** subReaders){
-	  
-	  this->subReadersLength = 0;
-	  this->subReaders = subReaders;
-	
-	  //count the subReaders size
-	  if ( subReaders != NULL ){
-	     while ( subReaders[subReadersLength] != NULL ){
-	        subReadersLength++;
-	     }
-	  }
+	{
+		this->_this = _this;
+		_this->subReadersLength = 0;
+		_this->subReaders = subReaders;
+
+		//count the subReaders size
+		if ( _this->subReaders != NULL ){
+			while ( _this->subReaders[_this->subReadersLength] != NULL )
+				_this->subReadersLength++;
+		}
+
+
 	  _maxDoc        = 0;
 	  _numDocs       = -1;
 	  ones           = NULL;
 	
-	  starts = _CL_NEWARRAY(int32_t,subReadersLength + 1);    // build starts array
-	  for (int32_t i = 0; i < subReadersLength; i++) {
-	     starts[i] = _maxDoc;
+	  _this->starts = _CL_NEWARRAY(int32_t, _this->subReadersLength + 1);    // build starts array
+	  for (int32_t i = 0; i < _this->subReadersLength; i++) {
+	     _this->starts[i] = _maxDoc;
 	
 	     // compute maxDocs
-	     _maxDoc += subReaders[i]->maxDoc();      
-	     if (subReaders[i]->hasDeletions())
+	     _maxDoc += _this->subReaders[i]->maxDoc();      
+	     if (_this->subReaders[i]->hasDeletions())
 	        _hasDeletions = true;
 	  }
-	  starts[subReadersLength] = _maxDoc;
+	  _this->starts[_this->subReadersLength] = _maxDoc;
 	}
 	~Internal(){
 		_CLDELETE_ARRAY(ones);
-		_CLDELETE_ARRAY(starts);
+		_CLDELETE_ARRAY(_this->starts);
 		
 		//Iterate through the subReaders and destroy each reader
-		if (subReaders && subReadersLength > 0) {
-			for (int32_t i = 0; i < subReadersLength; i++) {
-				_CLDELETE(subReaders[i]);
+		if (_this->subReaders && _this->subReadersLength > 0) {
+			for (int32_t i = 0; i < _this->subReadersLength; i++) {
+				_CLDELETE(_this->subReaders[i]);
 			}
 		}
 		//Destroy the subReaders array
-		_CLDELETE_ARRAY(subReaders);
+		_CLDELETE_ARRAY(_this->subReaders);
 	}
 };
 
 MultiReader::MultiReader(IndexReader** subReaders):
   IndexReader(subReaders == NULL || subReaders[0] == NULL ? NULL : subReaders[0]->getDirectory())
 {
-	this->internal = _CLNEW Internal;
-	this->internal->initialize(subReaders);
+	this->internal = _CLNEW Internal(subReaders, this);
 }
 
 MultiReader::MultiReader(Directory* directory, SegmentInfos* sis, IndexReader** subReaders):
 	IndexReader(directory, sis, false)
 {
-	this->internal = _CLNEW Internal;
-	this->internal->initialize(subReaders);
+	this->internal = _CLNEW Internal(subReaders, this);
 }
 
 
@@ -229,12 +105,12 @@ MultiReader::~MultiReader() {
 
 bool MultiReader::getTermFreqVectors(int32_t n, Array<TermFreqVector*>& result){
 	int32_t i = readerIndex(n);        // find segment num
-	return internal->subReaders[i]->getTermFreqVectors(n - internal->starts[i], result); // dispatch to segment
+	return subReaders[i]->getTermFreqVectors(n - starts[i], result); // dispatch to segment
 }
 
 TermFreqVector* MultiReader::getTermFreqVector(int32_t n, const TCHAR* field){
 	int32_t i = readerIndex(n);        // find segment num
-	return internal->subReaders[i]->getTermFreqVector(n - internal->starts[i], field);
+	return subReaders[i]->getTermFreqVector(n - starts[i], field);
 }
 
 
@@ -242,8 +118,8 @@ int32_t MultiReader::numDocs() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	if (internal->_numDocs == -1) {			  // check cache
 	  int32_t n = 0;				  // cache miss--recompute
-	  for (int32_t i = 0; i < internal->subReadersLength; i++)
-	    n += internal->subReaders[i]->numDocs();		  // sum from readers
+	  for (int32_t i = 0; i < subReadersLength; i++)
+	    n += subReaders[i]->numDocs();		  // sum from readers
 	  internal->_numDocs = n;
 	}
 	return internal->_numDocs;
@@ -255,12 +131,12 @@ int32_t MultiReader::maxDoc() const {
 
 bool MultiReader::document(int32_t n, CL_NS(document)::Document* doc){
 	int32_t i = readerIndex(n);			  // find segment num
-	return internal->subReaders[i]->document(n - internal->starts[i],doc);	  // dispatch to segment reader
+	return subReaders[i]->document(n - starts[i],doc);	  // dispatch to segment reader
 }
 
 bool MultiReader::isDeleted(const int32_t n) {
 	int32_t i = readerIndex(n);			  // find segment num
-	return internal->subReaders[i]->isDeleted(n - internal->starts[i]);	  // dispatch to segment reader
+	return subReaders[i]->isDeleted(n - starts[i]);	  // dispatch to segment reader
 }
 
 bool MultiReader::hasDeletions() const{ 
@@ -279,8 +155,8 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 		return fakeNorms();
 	
 	bytes = _CL_NEWARRAY(uint8_t,maxDoc());
-	for (int32_t i = 0; i < internal->subReadersLength; i++)
-	  internal->subReaders[i]->norms(field, bytes + internal->starts[i]);
+	for (int32_t i = 0; i < subReadersLength; i++)
+	  subReaders[i]->norms(field, bytes + starts[i]);
 	
 	//Unfortunately the data in the normCache can get corrupted, since it's being loaded with string
 	//keys that may be deleted while still in use by the map. To prevent this field is duplicated
@@ -303,62 +179,62 @@ void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 	   memcpy(result,bytes,len * sizeof(int32_t));
 	}
 	
-	for (int32_t i = 0; i < internal->subReadersLength; i++)      // read from segments
-	  internal->subReaders[i]->norms(field, result + internal->starts[i]);
+	for (int32_t i = 0; i < subReadersLength; i++)      // read from segments
+	  subReaders[i]->norms(field, result + starts[i]);
 }
 
 
 void MultiReader::doSetNorm(int32_t n, const TCHAR* field, uint8_t value){
 	internal->normsCache.remove(field);                         // clear cache
 	int32_t i = readerIndex(n);                           // find segment num
-	internal->subReaders[i]->setNorm(n-internal->starts[i], field, value); // dispatch
+	subReaders[i]->setNorm(n-starts[i], field, value); // dispatch
 }
 
 TermEnum* MultiReader::terms() const {
-	return _CLNEW MultiTermEnum(internal->subReaders, internal->starts, NULL);
+	return _CLNEW MultiTermEnum(subReaders, starts, NULL);
 }
 
 TermEnum* MultiReader::terms(const Term* term) const {
-	return _CLNEW MultiTermEnum(internal->subReaders, internal->starts, term);
+	return _CLNEW MultiTermEnum(subReaders, starts, term);
 }
 
 int32_t MultiReader::docFreq(const Term* t) const {
 	int32_t total = 0;				  // sum freqs in Multi
-	for (int32_t i = 0; i < internal->subReadersLength; i++)
-	  total += internal->subReaders[i]->docFreq(t);
+	for (int32_t i = 0; i < subReadersLength; i++)
+	  total += subReaders[i]->docFreq(t);
 	return total;
 }
 
 TermDocs* MultiReader::termDocs() const {
-	TermDocs* ret =  _CLNEW MultiTermDocs(internal->subReaders, internal->starts);
+	TermDocs* ret =  _CLNEW MultiTermDocs(subReaders, starts);
 	return ret;
 }
 
 TermPositions* MultiReader::termPositions() const {
-	TermPositions* ret = (TermPositions*)_CLNEW MultiTermPositions(internal->subReaders, internal->starts);
+	TermPositions* ret = (TermPositions*)_CLNEW MultiTermPositions(subReaders, starts);
 	return ret;
 }
 
 void MultiReader::doDelete(const int32_t n) {
 	internal->_numDocs = -1;				  // invalidate cache
 	int32_t i = readerIndex(n);			  // find segment num
-	internal->subReaders[i]->deleteDocument(n - internal->starts[i]);		  // dispatch to segment reader
+	subReaders[i]->deleteDocument(n - starts[i]);		  // dispatch to segment reader
 	internal->_hasDeletions = true;
 }
 
 int32_t MultiReader::readerIndex(const int32_t n) const {	  // find reader for doc n:
 	int32_t lo = 0;					   // search starts array
-	int32_t hi = internal->subReadersLength - 1;	// for first element less
+	int32_t hi = subReadersLength - 1;	// for first element less
 	                                // than n, return its index
 	while (hi >= lo) {
 	  int32_t mid = (lo + hi) >> 1;
-	  int32_t midValue = internal->starts[mid];
+	  int32_t midValue = starts[mid];
 	  if (n < midValue)
 	    hi = mid - 1;
 	  else if (n > midValue)
 	    lo = mid + 1;
 	  else{                                      // found a match
-	    while (mid+1 < internal->subReadersLength && internal->starts[mid+1] == midValue) {
+	    while (mid+1 < subReadersLength && starts[mid+1] == midValue) {
 	      mid++;                                  // scan to last match
 	    }
 	    return mid;
@@ -368,8 +244,8 @@ int32_t MultiReader::readerIndex(const int32_t n) const {	  // find reader for d
 }
 
 bool MultiReader::hasNorms(const TCHAR* field) {
-	for (int i = 0; i < internal->subReadersLength; i++) {
-		if (internal->subReaders[i]->hasNorms(field)) 
+	for (int i = 0; i < subReadersLength; i++) {
+		if (subReaders[i]->hasNorms(field)) 
 			return true;
 	}
 	return false;
@@ -381,20 +257,20 @@ uint8_t* MultiReader::fakeNorms() {
 }
 
 void MultiReader::doUndeleteAll(){
-	for (int32_t i = 0; i < internal->subReadersLength; i++)
-		internal->subReaders[i]->undeleteAll();
+	for (int32_t i = 0; i < subReadersLength; i++)
+		subReaders[i]->undeleteAll();
 	internal->_hasDeletions = false;
 	internal->_numDocs = -1;
 }
 void MultiReader::doCommit() {
-	for (int32_t i = 0; i < internal->subReadersLength; i++)
-	  internal->subReaders[i]->commit();
+	for (int32_t i = 0; i < subReadersLength; i++)
+	  subReaders[i]->commit();
 }
 
 void MultiReader::doClose() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	for (int32_t i = 0; i < internal->subReadersLength; i++){
-	  internal->subReaders[i]->close();
+	for (int32_t i = 0; i < subReadersLength; i++){
+	  subReaders[i]->close();
 	}
 }
 
@@ -402,8 +278,8 @@ void MultiReader::doClose() {
 void MultiReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray){
     StringArrayWithDeletor temp;
     CLHashList<TCHAR*> hashList;
-    for (int32_t i = 0; i < internal->subReadersLength; i++) {
-      IndexReader* reader = internal->subReaders[i];
+    for (int32_t i = 0; i < subReadersLength; i++) {
+      IndexReader* reader = subReaders[i];
       reader->getFieldNames(fldOption, temp);
 
       //create a unique list of names.
@@ -620,8 +496,7 @@ void MultiTermDocs::close() {
 }
 
 TermDocs* MultiTermDocs::termDocs(const IndexReader* reader) const {
-	TermDocs* ret = reader->termDocs();
-	return ret;
+	return reader->termDocs();
 }
 
 TermDocs* MultiTermDocs::termDocs(const int32_t i) const {

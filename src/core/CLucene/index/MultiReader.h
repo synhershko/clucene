@@ -24,6 +24,10 @@ private:
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 protected:
+	IndexReader** subReaders;
+	int32_t subReadersLength;
+	int32_t* starts;			  // 1st docno for each segment
+
 	void doSetNorm(int32_t n, const TCHAR* field, uint8_t value);
 	void doUndeleteAll();
 	void doCommit();
