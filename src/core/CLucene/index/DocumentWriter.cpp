@@ -177,7 +177,7 @@ void DocumentWriter::addDocument(const char* segment, Document* doc) {
 	}
 
 	{ //msvc6 scope fix
-		for ( int32_t i=0;i<fieldInfos->size();i++ )
+		for ( size_t i=0;i<fieldInfos->size();i++ )
 			fieldLengths[i] = 0;
 	} //msvc6 scope fix
 	invertDocument(doc);
@@ -269,7 +269,7 @@ void DocumentWriter::invertDocument(const Document* doc) {
 					if(field->isStoreOffsetWithTermVector()){
 						TermVectorOffsetInfo tio;
 						tio.setStartOffset(offset);
-						tio.setEndOffset(offset + dataLen);
+						tio.setEndOffset( (int32_t)(offset + dataLen));
 						addPosition(fieldName, charBuf, position++, &tio );
 					}else
 						addPosition(fieldName, charBuf, position++, NULL);
@@ -536,7 +536,7 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 
 void DocumentWriter::writeNorms(const char* segment) {
   char fn[CL_MAX_PATH];
-  for(int32_t n = 0; n < fieldInfos->size(); n++){
+  for(size_t n = 0; n < fieldInfos->size(); n++){
      FieldInfo* fi = fieldInfos->fieldInfo(n);
      if(fi->isIndexed && !fi->omitNorms){
         float_t norm = fieldBoosts[n] * similarity->lengthNorm(fi->name, fieldLengths[n]);
