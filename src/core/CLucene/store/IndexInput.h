@@ -9,8 +9,6 @@
 
 #include "CLucene/LuceneThreads.h"
 
-#include "CLucene/util/bufferedstream.h"
-
 CL_NS_DEF(store)
 
    /** Abstract base class for input from a file in a {@link lucene::store::Directory}.  A
@@ -168,21 +166,6 @@ CL_NS_DEF(store)
       * @see #readInternal(byte[],int32_t,int32_t)
       */
 		virtual void seekInternal(const int64_t pos) = 0;
-	};
-	
-	/**
-	* JStream InputStream which reads from an IndexInput. This class is 
-	* used by the FieldReader to create binary fields. You can then use 
-	* a GZipInputStream to read compressed data or any of the other 
-	* JStream stream types.
-	*
-	*/
-	class CLUCENE_EXPORT IndexInputStream: public jstreams::BufferedInputStream<char>{
-		IndexInput* input;
-	public:
-		IndexInputStream(IndexInput* input);
-		~IndexInputStream();
-	    int32_t fillBuffer(char* start, int32_t space);
 	};
 CL_NS_END
 #endif

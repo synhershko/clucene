@@ -129,6 +129,8 @@ CL_NS_USE(util)
 
 	  //Store the file length
 	  handle->_length = fileSize(handle->fhandle);
+	  if ( handle->_length == -1 )
+	  	_CLTHROWA( CL_ERR_IO,"fileStat error" );
 	  handle->_fpos = 0;
 	  this->_pos = 0;
   }
