@@ -48,9 +48,15 @@
 //#define _UCS2
 //
 //define this to enable mmap support in the fsdirectory IndexInput
-//todo: only available for windows so far...need to add MMapInput.cpp to project
 //EXPERIMENTAL
 //#define LUCENE_FS_MMAP
+//
+//define to true to actually use it (not just enable it)
+#ifdef LUCENE_FS_MMAP
+	#define LUCENE_USE_MMAP true //yes, use if it's turned on.
+#else
+	#define LUCENE_USE_MMAP false
+#endif
 //
 //LOCK_DIR implementation:
 //define this to set an exact directory for the lock dir (not recommended)

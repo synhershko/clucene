@@ -116,7 +116,7 @@ CL_NS_USE(util)
 		_cl_dword_t err = GetLastError();
         if ( err == ERROR_FILE_NOT_FOUND )
 		    _CLTHROWA(CL_ERR_IO, "File does not exist");
-        else if ( err == EACCES )
+        else if ( err == ERROR_ACCESS_DENIED )
             _CLTHROWA(ERROR_ACCESS_DENIED, "File Access denied");
         else if ( err == ERROR_TOO_MANY_OPEN_FILES )
             _CLTHROWA(CL_ERR_IO, "Too many open files");

@@ -307,7 +307,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
    directory(_CL_NEWARRAY(char,CL_MAX_PATH)),
    lockDir(_CL_NEWARRAY(char,CL_MAX_PATH)),
    refCount(0),
-   useMMap(false)
+   useMMap(LUCENE_USE_MMAP)
   {
   	_realpath(path,directory);//set a realpath so that if we change directory, we can still function
   	if ( !directory || !*directory ){
