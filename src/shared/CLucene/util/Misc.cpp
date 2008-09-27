@@ -51,13 +51,11 @@ size_t Misc::ahashCode(const char* str, size_t len){
 	return hashCode;
 }
 
-//ok, these are the exceptions, but these never
-//exist on non-msvc platform, so lets put it here
 int64_t Misc::filelength(int filehandle)
 {
     struct cl_stat_t info;
     if (fileHandleStat(filehandle, &info) == -1)
- 	 _CLTHROWA( CL_ERR_IO,"fileStat error" );
+ 	 		return -1;
     return info.st_size;
 }
 
@@ -125,7 +123,7 @@ uint64_t Misc::currentTimeMillis() {
 #else
     struct timeval tstruct;
     if (gettimeofday(&tstruct, NULL) < 0) {
-		_CLTHROWA(CL_ERR_Runtime,"Error in gettimeofday call.");
+			return 0;
     }
 
     return (((uint64_t) tstruct.tv_sec) * 1000) + tstruct.tv_usec / 1000;

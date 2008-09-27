@@ -266,8 +266,7 @@ MACRO (GET_SHARED_FILES result)
 
     SET(${result}
     	${rel}/CLucene/SharedHeader.cpp
-        ${rel}/CLucene/debug/error.cpp
-   	    ${rel}/CLucene/config/gunichartables.cpp
+   	  ${rel}/CLucene/config/gunichartables.cpp
     	${rel}/CLucene/config/repl_tcslwr.cpp
     	${rel}/CLucene/config/repl_tcstoll.cpp
     	${rel}/CLucene/config/repl_tcscasecmp.cpp

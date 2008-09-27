@@ -11,6 +11,7 @@
 * note: when creating a project add either this file, or all the other .cpp files, not both!
 */
 #include "CLucene/StdHeader.cpp"
+#include "CLucene/debug/error.cpp"
 #include "CLucene/analysis/Analyzers.cpp"
 #include "CLucene/analysis/AnalysisHeader.cpp"
 #include "CLucene/analysis/standard/StandardAnalyzer.cpp"

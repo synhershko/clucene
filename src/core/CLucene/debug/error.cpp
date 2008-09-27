@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_SharedHeader.h"
+#include "error.h"
 #include "CLucene/util/Misc.h"
 CL_NS_USE(util)
 

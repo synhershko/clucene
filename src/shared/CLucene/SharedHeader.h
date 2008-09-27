@@ -86,6 +86,9 @@
 	#define CL_STRUCT_DEF(sub,clazz) namespace lucene { namespace sub{ struct clazz; } }
 	#define CL_CLASS_DEF(sub,clazz) namespace lucene { namespace sub{ class clazz; } }
 	#define CL_CLASS_DEF2(sub,sub2, clazz) namespace lucene { namespace sub{ namespace sub2{ class clazz; } } }
+
+	#define CL_TEMPATE_DEF(sub, clazz, typedefs) namespace lucene { namespace sub{ template<typedefs> class clazz; }}
+	#define CL_TYPE_DEF(sub, clazz, def) namespace lucene { namespace sub{ typedef def clazz; }}
 #else
 	#define CL_NS_DEF(sub)
 	#define CL_NS_DEF2(sub, sub2)
@@ -189,9 +192,6 @@
 ////////////////////////////////////////////////////////
 #include "CLucene/debug/lucenebase.h"
 ////////////////////////////////////////////////////////
-
-//error handling macros/functions
-#include "CLucene/debug/error.h"
 
 //memory handling macros/functions
 #include "CLucene/debug/mem.h"

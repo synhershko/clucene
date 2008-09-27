@@ -33,6 +33,7 @@
 ////////////////////////////////////////////////////////
 #ifdef _CL_DISABLE_NATIVE_EXCEPTIONS
  #include <setjmp.h>
+ 
  /*
  #define try struct pj_exception_state_t pj_x_except__; int pj_x_code__; \
                 if(1){ \
@@ -53,7 +54,7 @@
  
  */
 #else
-  class CLUCENE_SHARED_EXPORT CLuceneError
+  class CLUCENE_EXPORT CLuceneError
   {
   	int error_number;
 	char* _awhat;

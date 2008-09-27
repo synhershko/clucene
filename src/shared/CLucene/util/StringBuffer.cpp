@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "StringBuffer.h"
 #include "Misc.h"
+#include <assert.h>
 
 CL_NS_DEF(util)
 
@@ -157,8 +158,7 @@ CL_NS_DEF(util)
 
     //using sprintf("%f" was not reliable on other plaforms... we use a custom float convertor
     //bvk: also, using sprintf and %f seems excessivelly slow
-	if(digits>8)
-		_CLTHROWA(CL_ERR_IllegalArgument,"Too many digits...");
+    assert(digits <= 8);
 
 	  //the maximum number of characters that int64 will hold is 23. so we need 23*2+2
 	 TCHAR buf[48]; //the buffer to hold
@@ -304,8 +304,7 @@ CL_NS_DEF(util)
 
     //More aggressive growth strategy to offset smaller default buffer size:
 	if ( !bufferOwner ){
-		if ( bufferLength<minLength )
-			_CLTHROWA(CL_ERR_IllegalArgument,"[StringBuffer::grow] un-owned buffer could not be grown");
+		assert(bufferLength>=minLength);
 		return;
 	}
 	
