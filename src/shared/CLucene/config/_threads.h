@@ -25,11 +25,24 @@
              void * LockSemaphore;
              _cl_dword_t SpinCount;
           };
+          
+          
           __declspec(dllimport) void __stdcall InitializeCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall EnterCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall LeaveCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
     	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+    	  
+    	  typedef struct  _SECURITY_ATTRIBUTES
+          {
+            _cl_dword_t nLength;
+            void* lpSecurityDescriptor;
+            bool bInheritHandle;
+          }	SECURITY_ATTRIBUTES;
+           __declspec(dllimport) _cl_dword_t __stdcall WaitForSingleObject( void* hHandle, _cl_dword_t dwMilliseconds );
+    	  void* _beginthread( void( __stdcall *start_address )( void * ), unsigned stack_size, void *arglist );
+
+
       }
       #endif //_WINBASE_
 	#elif defined(_CL_HAVE_PTHREAD)
@@ -72,6 +85,7 @@ CL_NS_DEF(util)
     	};	// min_buckets = 2 ^^ N, 0 < N
     
     	bool operator()( pthread_t t1, pthread_t t2 ) const{
+    	    //pthread_equal should be used, but it returns only non-zero if equal, so we can't use it for order compare
     		return t1 < t2;
     	}
     };

@@ -1,6 +1,7 @@
 #include "test.h"
 #include "CLucene/util/dirent.h"
 #include "CLucene/util/Reader.h"
+#include "CLucene/LuceneThreads.h"
 
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
@@ -267,6 +268,67 @@ CL_NS_USE(util)
 		_CLDELETE(reader1);
 		_CLDELETE(reader2);
 	}
+	
+	#define threadsCount 10
+	
+	StandardAnalyzer threadAnalyzer;
+	void threadSearch(IndexSearcher* searcher, const TCHAR* qry){
+	    Query* q = NULL;
+		Hits* h = NULL;
+		try{
+			q = QueryParser::parse(qry , _T("contents"), &threadAnalyzer);
+			if ( q != NULL ){
+			    h = searcher->search( q );
+			    
+			    if ( h->length() > 0 ){
+			        //check for explanation memory leaks...
+					Explanation expl1;
+					searcher->explain(q, h->id(0), &expl1);
+					TCHAR* tmp = expl1.toString();
+					_CLDELETE_CARRAY(tmp);
+					if ( h->length() > 1 ){ //do a second one just in case
+						Explanation expl2;
+						searcher->explain(q, h->id(1), &expl2);
+						tmp = expl2.toString();
+						_CLDELETE_CARRAY(tmp);
+					}
+				}
+			}
+		}_CLFINALLY(
+    		_CLDELETE(h);
+    		_CLDELETE(q);
+		);
+	}
+	_LUCENE_THREAD_FUNC(threadedSearcherTest, arg){
+	    IndexSearcher* searcher = (IndexSearcher*)arg;
+		printf("thread started :-)...\n");
+	    
+	    for ( int i=0;i<100;i++ ){
+    	    threadSearch(searcher, _T("test") );
+    	    threadSearch(searcher, _T("reuters") );
+    	    threadSearch(searcher, _T("data") );
+    	}
+		printf ("done...\n");
+	}
+	
+	void testThreaded(CuTest* tc){
+		CLUCENE_ASSERT(reuters_ready);
+		IndexSearcher searcher(reuters_origdirectory);
+        
+        //read using multiple threads...
+        _LUCENE_THREADID_TYPE threads[threadsCount];
+        
+        int i;
+        for ( i=0;i<threadsCount;i++ )
+             threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, &searcher);
+        
+        CL_NS(util)::Misc::sleep(3000);
+
+        for ( i=0;i<threadsCount;i++ )
+            _LUCENE_THREAD_JOIN(threads[i]);
+        
+        searcher.close();
+	}
 
 CuSuite *testreuters(void)
 {
@@ -279,6 +341,10 @@ CuSuite *testreuters(void)
     SUITE_ADD_TEST(suite, testReuters);
     //SUITE_ADD_TEST(suite, testByteForByte); this test rarely works currently, use more robust by section test...
     SUITE_ADD_TEST(suite, testBySection);
+    
+    //we still do this, but it'll be slow because the 'threads' will be run serially.
+    
+    SUITE_ADD_TEST(suite, testThreaded);
     return suite; 
 }
 // EOF

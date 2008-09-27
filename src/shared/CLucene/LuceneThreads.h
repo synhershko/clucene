@@ -18,14 +18,19 @@ class CLuceneThreadIdCompare;
 	#define STATIC_DEFINE_MUTEX(x)
 	#define _LUCENE_CURRTHREADID 1
 	#define _LUCENE_THREADID_TYPE char
+	#define _LUCENE_THREAD_FUNC(name, argName) int name(void* argName)
+	#define _LUCENE_THREAD_CREATE(value, func, arg) func(arg)
+	#define _LUCENE_THREAD_JOIN(value) //nothing to do...
 
 #else
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing
     #else
-    	#if defined(_CL_HAVE_PTHREAD)
+    	 #if defined(_CL_HAVE_PTHREAD)
             #define _LUCENE_THREADID_TYPE pthread_t
-    	    class CLUCENE_SHARED_EXPORT mutex_thread
+        	#define _LUCENE_THREAD_FUNC(name, argName) void* name(void* argName) //< use this macro to correctly define the thread start routine
+            typedef void* (luceneThreadStartRoutine)(void* lpThreadParameter );
+            class CLUCENE_SHARED_EXPORT mutex_thread
             {
             private:
                 struct Internal;
@@ -37,11 +42,15 @@ class CLuceneThreadIdCompare;
             	void lock();
             	void unlock();
             	static _LUCENE_THREADID_TYPE _GetCurrentThreadId();
+        		static _LUCENE_THREADID_TYPE CreateThread(luceneThreadStartRoutine* func, void* arg);
+        		static void JoinThread(_LUCENE_THREADID_TYPE id);
             };
     
     	#elif defined(_CL_HAVE_WIN32_THREADS)
         	#define _LUCENE_THREADID_TYPE uint64_t
-    	    class CLUCENE_SHARED_EXPORT mutex_thread
+    	    #define _LUCENE_THREAD_FUNC(name, argName) void __stdcall name(void* argName) //< use this macro to correctly define the thread start routine
+            typedef void (__stdcall luceneThreadStartRoutine)(void* lpThreadParameter );
+            class CLUCENE_SHARED_EXPORT mutex_thread
         	{
         	private:
         		struct Internal;
@@ -53,14 +62,17 @@ class CLuceneThreadIdCompare;
         		void lock();
         		void unlock();
         		static _LUCENE_THREADID_TYPE _GetCurrentThreadId();
+        		static _LUCENE_THREADID_TYPE CreateThread(luceneThreadStartRoutine* func, void* arg);
+        		static void JoinThread(_LUCENE_THREADID_TYPE id);
         	};
-        	
         	
     	#else
     		#error A valid thread library was not found
     	#endif //mutex types
     	
     	
+    	#define _LUCENE_THREAD_CREATE(func, arg) mutex_thread::CreateThread(func,arg)
+    	#define _LUCENE_THREAD_JOIN(id) mutex_thread::JoinThread(id)
         #define _LUCENE_CURRTHREADID mutex_thread::_GetCurrentThreadId()
         #define _LUCENE_THREADMUTEX CL_NS(util)::mutex_thread
     #endif //don't implement

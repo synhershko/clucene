@@ -7,6 +7,7 @@
 #include "CLucene/_SharedHeader.h"
 #include "CLucene/LuceneThreads.h"
 #include "_threads.h"
+#include <assert.h>
 
 CL_NS_DEF(util)
 
@@ -57,9 +58,20 @@ CL_NS_DEF(util)
     _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
         return GetCurrentThreadId();
     }
+    
+	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
+	    return (_LUCENE_THREADID_TYPE) ::_beginthread (func, 0, arg);
+	}
+	void mutex_thread::JoinThread(_LUCENE_THREADID_TYPE id){
+	    WaitForSingleObject((void*)id, 0xFFFFFFFF);
+	}
 
 
 #elif defined(_CL_HAVE_PTHREAD)
+    #ifndef _REENTRANT
+        #error ACK! You need to compile with _REENTRANT defined since this uses threads
+    #endif
+
 	#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		bool mutex_pthread_attr_initd=false;
 		pthread_mutexattr_t mutex_thread_attr;
@@ -126,6 +138,15 @@ CL_NS_DEF(util)
     _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
         return pthread_self();
     }
+    
+	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
+	    _LUCENE_THREADID_TYPE ret;
+	    assert(pthread_create(&ret, NULL, func, arg) == 0 );
+	    return ret;
+	}
+	void mutex_thread::JoinThread(_LUCENE_THREADID_TYPE id){
+	    pthread_join(id, NULL);
+	}
 
 	void mutex_thread::lock()
 	{ 
