@@ -412,7 +412,7 @@ CL_NS_DEF(index)
 
       //iterate through the field infos
 			FieldInfo* fi;
-      for (int32_t i = 0; i < fieldInfos->size(); ++i) {
+      for (size_t i = 0; i < fieldInfos->size(); ++i) {
           //Get the field info for the i-th field   
           fi = fieldInfos->fieldInfo(i);
           //Check if the field has been indexed
@@ -454,7 +454,7 @@ CL_NS_DEF(index)
   }
 
   bool SegmentReader::document(int32_t n, Document* doc) {
-  //Func - Returns a document identified by n
+  //Func - writes the fields of document n into doc
   //Pre  - n >=0 and identifies the document n
   //Post - if the document has been deleted then an exception has been thrown
   //       otherwise a reference to the found document has been returned
@@ -727,7 +727,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 	  int32_t max = maxDoc();
 	  
       //Iterate through all the fields
-      for (int32_t i = 0; i < fieldInfos->size(); i++) {
+      for (size_t i = 0; i < fieldInfos->size(); i++) {
 		  //Get the FieldInfo for the i-th field
           FieldInfo* fi = fieldInfos->fieldInfo(i);
           //Check if the field is indexed

@@ -9,6 +9,7 @@
 
 #include "CLucene/store/IndexInput.h"
 #include "Term.h"
+#include <assert.h>
 
 CL_NS_DEF(index)
 

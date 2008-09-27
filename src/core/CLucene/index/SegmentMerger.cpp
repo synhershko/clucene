@@ -140,7 +140,7 @@ void SegmentMerger::createCompoundFile(const char* filename, AStringArrayWithDel
 
 	{ //msvc6 scope fix
 		// Field norm files
-		for (int32_t i = 0; i < fieldInfos->size(); i++) {
+		for (size_t i = 0; i < fieldInfos->size(); i++) {
 			FieldInfo* fi = fieldInfos->fieldInfo(i);
 			if (fi->isIndexed && !fi->omitNorms) {
 				TCHAR tbuf[10];
@@ -632,7 +632,7 @@ void SegmentMerger::mergeNorms() {
 	IndexOutput*  output  = NULL;
 
 	//iterate through all the Field Infos instances
-    for (int32_t i = 0; i < fieldInfos->size(); i++) {
+    for (size_t i = 0; i < fieldInfos->size(); i++) {
 		//Get the i-th FieldInfo
         FieldInfo* fi = fieldInfos->fieldInfo(i);
 		//Is this Field indexed?
