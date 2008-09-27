@@ -94,6 +94,15 @@ class CLUCENE_EXPORT Term:LUCENE_REFBASE {
 	
 	The ordering of terms is first by field, then by text.*/
 	int32_t compareTo(const Term* other) const;
+	
+	/** Compares two terms, returning a negative integer if this
+	term belongs before the argument, zero if this term is equal to the
+	argument, and a positive integer if this term belongs after the argument.
+	
+	The ordering of terms is purely on the hashCode, so is not a logical ordering, but is repeatable.
+	Note: can't be const because call the to hashCode is not const
+	*/
+	int32_t hashedCompareTo(Term* other);
 
 	bool equals(const Term* other) const;
 

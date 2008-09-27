@@ -224,6 +224,18 @@ int32_t Term::compareTo(const Term* other) const {
 		return _tcscmp(_field,other->_field);
 }
 
+int32_t Term::hashedCompareTo(Term* other) {
+    size_t hc1 = this->hashCode();
+    size_t hc2 = other->hashCode();
+    
+    if ( hc1 == hc2 )
+        return compareTo(other);
+    else if ( hc1 > hc2 )
+        return -1;
+    else
+        return 1;
+}
+
 TCHAR* Term::toString() const{
 //Func - Forms the contents of Field and term in some kind of tuple notation
 //       <field:text>

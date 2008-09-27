@@ -33,5 +33,16 @@ public:
 	}
 };
 
+class Term_UnorderedCompare:LUCENE_BASE, public CL_NS(util)::Compare::_base //<Term*>
+{
+public:
+	bool operator()( Term* t1, Term* t2 ) const{
+		return ( t1->hashedCompareTo(t2) < 0 );
+	}
+	size_t operator()( Term* t ) const{
+		return t->hashCode();
+	}
+};
+
 CL_NS_END
 #endif
