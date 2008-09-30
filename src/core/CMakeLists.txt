@@ -27,7 +27,7 @@ SET(clucene_core_Files
 	./CLucene/util/fileinputstream.cpp
 	./CLucene/util/MD5Digester.cpp
 	./CLucene/util/StringIntern.cpp
-	./CLucene/util/subinputstream.cpp
+#	./CLucene/util/subinputstream.cpp
 	./CLucene/util/BitSet.cpp
 	./CLucene/queryParser/Lexer.cpp
 	./CLucene/queryParser/MultiFieldQueryParser.cpp
@@ -138,10 +138,6 @@ add_library(clucene-core SHARED
 	${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
 )
 
-add_library(clucene-core-static STATIC
-	${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
-)
-
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CLUCENE_VERSION}
@@ -154,11 +150,23 @@ IF ( NOT USE_SHARED_OBJECT_FILES )
     TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
-SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
-    VERSION ${CLUCENE_VERSION}
-    SOVERSION ${CLUCENE_SOVERSION}
-    COMPILE_DEFINITIONS_DEBUG _DEBUG
-)
+
+IF ( BUILD_STATIC_LIBRARIES )
+	add_library(clucene-core-static STATIC
+		${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
+	)
+	
+	SET_TARGET_PROPERTIES(clucene-core-static PROPERTIES
+	    VERSION ${CLUCENE_VERSION}
+	    SOVERSION ${CLUCENE_SOVERSION}
+	    COMPILE_DEFINITIONS_DEBUG _DEBUG
+	)
+	
+	#and install library
+	install(TARGETS clucene-core-static 
+	        DESTINATION lib 
+	        COMPONENT runtime )
+ENDIF ( BUILD_STATIC_LIBRARIES )
 
 #install public headers.
 FOREACH(file ${HEADERS})
@@ -209,10 +217,8 @@ ELSE ( LUCENE_SYS_INCLUDES )
             COMPONENT development)
 ENDIF ( LUCENE_SYS_INCLUDES )
 
-#and install libraries
+
+#and install library
 install(TARGETS clucene-core 
         DESTINATION lib  
-        COMPONENT runtime )
-install(TARGETS clucene-core-static 
-        DESTINATION lib 
         COMPONENT runtime )

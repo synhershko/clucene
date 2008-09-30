@@ -37,7 +37,6 @@ SET(clucene_contribs_Files
     ./CLucene/jstreams/fileinputstream.cpp
     ./CLucene/jstreams/subinputstream.cpp
     ./CLucene/jstreams/tarinputstream.cpp
-    ./CLucene/jstreams/zipinputstream.cpp
     
     ./CLucene/highlighter/Encoder.cpp
     ./CLucene/highlighter/Formatter.cpp
@@ -104,6 +103,7 @@ IF ( ZLIB_FOUND )
     SET ( clucene_contribs_Files ${clucene_contribs_Files}
         ./CLucene/jstreams/gzipcompressstream.cpp
         ./CLucene/jstreams/gzipinputstream.cpp
+		./CLucene/jstreams/zipinputstream.cpp
     )
     INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
     SET ( clucene-contrib-libs "${clucene-contrib-libs} ${ZLIB_LIBRARIES}" )
@@ -130,8 +130,8 @@ ENDIF ( USE_SHARED_OBJECT_FILES )
 
 #create the libraries
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
-INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/contribs )
-INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/contribs )
+INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/contribs-lib )
+INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/contribs-lib )
 
 add_library(clucene-contribs SHARED
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
@@ -140,11 +140,6 @@ IF ( NOT USE_SHARED_OBJECT_FILES )
     TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared)
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
-add_library(clucene-contribs-static STATIC
-	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
-)
-
-
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-contribs PROPERTIES
     VERSION ${CLUCENE_VERSION}
@@ -152,8 +147,14 @@ SET_TARGET_PROPERTIES(clucene-contribs PROPERTIES
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
 
-SET_TARGET_PROPERTIES(clucene-contribs-static PROPERTIES
-    VERSION ${CLUCENE_VERSION}
-    SOVERSION ${CLUCENE_SOVERSION}
-    COMPILE_DEFINITIONS_DEBUG _DEBUG
-)
+IF ( BUILD_STATIC_LIBRARIES )
+	add_library(clucene-contribs-static STATIC
+		${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
+	)
+	
+	SET_TARGET_PROPERTIES(clucene-contribs-static PROPERTIES
+	    VERSION ${CLUCENE_VERSION}
+	    SOVERSION ${CLUCENE_SOVERSION}
+	    COMPILE_DEFINITIONS_DEBUG _DEBUG
+	)
+ENDIF ( BUILD_STATIC_LIBRARIES )

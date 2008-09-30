@@ -59,6 +59,9 @@ OPTION(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS
 OPTION(ENABLE_PACKAGING
   "create build scripts for creating clucene packages"
   OFF)
+OPTION(BUILD_STATIC_LIBRARIES
+  "create targets for building static libraries"
+  OFF)
 
 OPTION(LUCENE_SYS_INCLUDES
   "location for non-system independent files. defaults to CMAKE_INSTALL_PREFIX. see INSTALL documentation for further information."

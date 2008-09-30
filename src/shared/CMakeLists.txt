@@ -291,17 +291,9 @@ file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
 add_library(clucene-shared SHARED
 	${clucene_shared_Files} ${HEADERS}
 )
-add_library(clucene-shared-static STATIC
-	${clucene_shared_Files} ${HEADERS}
-)
 
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-shared PROPERTIES
-    VERSION ${CLUCENE_VERSION}
-    SOVERSION ${CLUCENE_SOVERSION}
-    COMPILE_DEFINITIONS_DEBUG _DEBUG
-)
-SET_TARGET_PROPERTIES(clucene-shared-static PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
     COMPILE_DEFINITIONS_DEBUG _DEBUG
@@ -310,6 +302,19 @@ SET_TARGET_PROPERTIES(clucene-shared-static PROPERTIES
 install(TARGETS clucene-shared 
         DESTINATION lib 
         COMPONENT development )
-install(TARGETS clucene-shared-static 
-        DESTINATION lib 
-        COMPONENT runtime )
+        
+
+IF ( BUILD_STATIC_LIBRARIES )
+	add_library(clucene-shared-static STATIC
+		${clucene_shared_Files} ${HEADERS}
+	)
+	
+	SET_TARGET_PROPERTIES(clucene-shared-static PROPERTIES
+	    VERSION ${CLUCENE_VERSION}
+	    SOVERSION ${CLUCENE_SOVERSION}
+	    COMPILE_DEFINITIONS_DEBUG _DEBUG
+	)
+	install(TARGETS clucene-shared-static 
+	        DESTINATION lib 
+	        COMPONENT runtime )
+ENDIF ( BUILD_STATIC_LIBRARIES )
