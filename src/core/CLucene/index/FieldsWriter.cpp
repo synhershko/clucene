@@ -8,7 +8,7 @@
 #include "_FieldsWriter.h"
 
 //#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/_RAMDirectory.h"
@@ -159,11 +159,17 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 		if (field->isBinary()) {
 			//todo: since we currently don't support static length vints, we have to
 			//read the entire stream into memory first.... ugly!
-			jstreams::StreamBase<char>* stream = field->streamValue();
-			const char* sd;
+			InputStream* stream = field->streamValue();
+			const signed char* sd;
+
+			int32_t sz = stream->size();
+			if ( sz < 0 )
+				sz = 10000000; //todo: we should warn the developer here....
+
 			//how do wemake sure we read the entire index in now???
-			//todo: we need to have a max amount, and guarantee its all in or throw an error...
-			int32_t rl = stream->read(sd,10000000,0);
+			//todo: we need to have a max amount, and guarantee its all in or throw an error..
+			//todo: make this value configurable....
+			int32_t rl = stream->read(sd, sz, 0);
 
 			if ( rl < 0 ){
 				fieldsStream->writeVInt(0); //todo: could we detect this earlier and not actually write the field??
@@ -181,7 +187,7 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 
 			//read the entire string
 			const TCHAR* rv;
-			int64_t rl = r->read(rv, LUCENE_INT32_MAX_SHOULDBE);
+			int64_t rl = r->read(rv, LUCENE_INT32_MAX_SHOULDBE, 0);
 			if ( rl > LUCENE_INT32_MAX_SHOULDBE )
 				_CLTHROWA(CL_ERR_Runtime,"Field length too long");
 			else if ( rl < 0 )
