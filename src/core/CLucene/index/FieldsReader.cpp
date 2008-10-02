@@ -7,10 +7,9 @@
 #include "CLucene/_ApiHeader.h"
 
 #include <assert.h>
-////#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/util/subinputstream.h"
 #include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/document/Document.h"
@@ -18,6 +17,7 @@
 #include "_FieldInfos.h"
 #include "_FieldsWriter.h"
 #include "_FieldsReader.h"
+#include "CLucene/analysis/AnalysisHeader.h"
 
 CL_NS_USE(store)
 CL_NS_USE(document)
@@ -25,18 +25,62 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 
-class FieldsReader::FieldsStreamHolder: public jstreams::StreamBase<char>{
+class FieldsReader::FieldsStreamHolder: public InputStream{
     CL_NS(store)::IndexInput* indexInput;
-    CL_NS(store)::IndexInputStream* indexInputStream;
-    jstreams::SubInputStream<char>* subStream;
+	signed char* buffer;
+	size_t bufferLen;
+	int32_t subLength;
+	int32_t pos;
+	void growBuffer(int32_t to){
+		this->bufferLen = to;
+		this->buffer = (signed char*)realloc(buffer,bufferLen);
+	}
 public:
-    FieldsStreamHolder(CL_NS(store)::IndexInput* indexInput, int32_t subLength);
-    ~FieldsStreamHolder();
-    int32_t read(const char*& start, int32_t _min, int32_t _max);
-    int64_t skip(int64_t ntoskip);
-    int64_t reset(int64_t pos);
-	jstreams::SubInputStream<char>* getStream() const;
+    FieldsStreamHolder(CL_NS(store)::IndexInput* indexInput, int32_t subLength, int32_t bufferLength=4096){
+		this->indexInput = indexInput->clone();
+		this->subLength = subLength;
+		this->bufferLen = cl_min(bufferLength,subLength);
+		this->pos = 0;
+		this->buffer = (signed char*)malloc(bufferLen);
+	}
+    ~FieldsStreamHolder(){
+		indexInput->close();
+		_CLDELETE(indexInput);
+		if ( buffer != NULL )
+			free(buffer);
+	}
+    int32_t read(const signed char*& start, int32_t min, int32_t _max){
+		int32_t max = cl_max(min,_max);
+		int32_t ret = cl_min(max, this->subLength-this->pos);
+		if ( ret > bufferLen )
+			growBuffer(ret);
+
+		start = this->buffer;
+		if ( ret == 0 )
+			return -1;
+		indexInput->readBytes((uint8_t*)this->buffer, ret);
+		pos += ret;
+		return ret;
+	}
+    int64_t skip(int64_t ntoskip){
+		int32_t origPos = this->pos;
+		int32_t r;
+		while ( ntoskip > 0 && pos < subLength ){
+			r = (int32_t)cl_min3(ntoskip, this->bufferLen, this->subLength-this->pos);
+			indexInput->readBytes((uint8_t*)this->buffer, r);
+			this->pos += r;
+			ntoskip -= r;
+		}
+		return this->pos-origPos;
+	}
+	int64_t position(){
+		return this->pos;
+	}
+	size_t size(){
+		return this->subLength;
+	}
 };
+
 
 FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, int32_t _readBufferSize, int32_t _docStoreOffset, int32_t size):
 	fieldInfos(fn), closed(false)
@@ -133,7 +177,7 @@ int32_t FieldsReader::size() const{
 	return _size;
 }
 
-bool FieldsReader::doc(int32_t n, Document* doc, CL_NS(document)::FieldSelector* fieldSelector) {
+bool FieldsReader::doc(int32_t n, Document& doc, CL_NS(document)::FieldSelector* fieldSelector) {
     if ( (n + docStoreOffset) * 8L > indexStream->length() )
         return false;
 	indexStream->seek((n + docStoreOffset) * 8L);
@@ -146,7 +190,7 @@ bool FieldsReader::doc(int32_t n, Document* doc, CL_NS(document)::FieldSelector*
 		FieldInfo* fi = fieldInfos->fieldInfo(fieldNumber);
         if ( fi == NULL ) _CLTHROWA(CL_ERR_IO, "Field stream is invalid");
 
-		FieldSelectorResult acceptField = (fieldSelector == NULL) ?	LOAD : fieldSelector->accept(fi->name);
+		FieldSelector::FieldSelectorResult acceptField = (fieldSelector == NULL) ?	FieldSelector::LOAD : fieldSelector->accept(fi->name);
 
 		uint8_t bits = fieldsStream->readByte();
 		CND_CONDITION(bits <= FieldsWriter::FIELD_IS_COMPRESSED + FieldsWriter::FIELD_IS_TOKENIZED + FieldsWriter::FIELD_IS_BINARY,
@@ -158,23 +202,23 @@ bool FieldsReader::doc(int32_t n, Document* doc, CL_NS(document)::FieldSelector*
 
 		//TODO: Find an alternative approach here if this list continues to grow beyond the
 		//list of 5 or 6 currently here.  See Lucene 762 for discussion
-		if (acceptField = LOAD) {
+		if (acceptField = FieldSelector::LOAD) {
 			addField(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = LOAD_FOR_MERGE) {
+		else if (acceptField = FieldSelector::LOAD_FOR_MERGE) {
 			addFieldForMerge(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = LOAD_AND_BREAK){
+		else if (acceptField = FieldSelector::LOAD_AND_BREAK){
 			addField(doc, fi, binary, compressed, tokenize);
 			break;//Get out of this loop
 		}
-		else if (acceptField = LAZY_LOAD) {
+		else if (acceptField = FieldSelector::LAZY_LOAD) {
 			addFieldLazy(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = SIZE){
+		else if (acceptField = FieldSelector::SIZE){
 			skipField(binary, compressed, addFieldSize(doc, fi, binary, compressed));
 		}
-		else if (acceptField = SIZE_AND_BREAK){
+		else if (acceptField = FieldSelector::SIZE_AND_BREAK){
 			addFieldSize(doc, fi, binary, compressed);
 			break;
 		}
@@ -300,17 +344,17 @@ void FieldsReader::skipField(const bool binary, const bool compressed, const int
 	}
 }
 
-void FieldsReader::addFieldLazy(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary,
+void FieldsReader::addFieldLazy(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary,
 								const bool compressed, const bool tokenize) {
 	if (binary) {
 		int32_t toRead = fieldsStream->readVInt();
 		int64_t pointer = fieldsStream->getFilePointer();
 		if (compressed) {
 			//was: doc.add(new Fieldable(fi.name, uncompress(b), Fieldable.Store.COMPRESS));
-			doc->add(*_CLNEW LazyField(this, fi->name, Field::STORE_COMPRESS, toRead, pointer));
+			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_COMPRESS, toRead, pointer));
 		} else {
 			//was: doc.add(new Fieldable(fi.name, b, Fieldable.Store.YES));
-			doc->add(*_CLNEW LazyField(this, fi->name, Field::STORE_YES, toRead, pointer));
+			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_YES, toRead, pointer));
 		}
 		//Need to move the pointer ahead by toRead positions
 		fieldsStream->seek(pointer + toRead);
@@ -331,44 +375,39 @@ void FieldsReader::addFieldLazy(CL_NS(document)::Document* doc, const FieldInfo*
 			f = _CLNEW LazyField(this, fi->name, Field::STORE_YES | getIndexType(fi, tokenize) | getTermVectorType(fi), length, pointer);
 			f->setOmitNorms(fi->omitNorms);
 		}
-		doc->add(*f);
+		doc.add(*f);
 	}
 }
 
 // in merge mode we don't uncompress the data of a compressed field
-void FieldsReader::addFieldForMerge(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) {
+void FieldsReader::addFieldForMerge(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) {
 	void* data;
 	Field::ValueType v;
 
 	if ( binary || compressed) {
 		int32_t toRead = fieldsStream->readVInt();
-		FieldsReader::FieldsStreamHolder* subStream = new FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
-		//final byte[] b = new byte[toRead];
-		//fieldsStream->readBytes(b, toRead);
-		data = subStream->getStream();
+		data = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
 		v = Field::VALUE_STREAM;
 	} else {
 		data = fieldsStream->readString();
 		v = Field::VALUE_STRING;
 	}
 
-	doc->add(*_CLNEW FieldForMerge(data, v, fi, binary, compressed, tokenize));
+	doc.add(*_CLNEW FieldForMerge(data, v, fi, binary, compressed, tokenize));
 }
 
-void FieldsReader::addField(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) {
+void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) {
 
 	//we have a binary stored field, and it may be compressed
 	if (binary) {
 		const int32_t toRead = fieldsStream->readVInt();
-		FieldsReader::FieldsStreamHolder* subStream = new FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
-		//final byte[] b = new byte[toRead];
-		//fieldsStream->readBytes(b, 0, b.length);
+		FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
 		if (compressed) {
 			// we still do not support compressed fields
-			doc->add(* _CLNEW Field(fi->name, subStream->getStream(), Field::STORE_COMPRESS)); // todo: uncompress(subStream->getStream())
+			doc.add(* _CLNEW Field(fi->name, subStream, Field::STORE_COMPRESS)); // todo: uncompress(subStream->getStream())
 		}
 		else
-			doc->add(* _CLNEW Field(fi->name, subStream->getStream(), Field::STORE_YES));
+			doc.add(* _CLNEW Field(fi->name, subStream, Field::STORE_YES));
 
 	} else {
 		uint8_t bits = 0;
@@ -381,14 +420,12 @@ void FieldsReader::addField(CL_NS(document)::Document* doc, const FieldInfo* fi,
 			const int32_t toRead = fieldsStream->readVInt();
 
 			FieldsStreamHolder* subStream = new FieldsStreamHolder(fieldsStream, toRead);
-			//final byte[] b = new byte[toRead];
-			//fieldsStream.readBytes(b, 0, b.length);
 
 			//todo: we dont have gzip inputstream available, must alert user
 			//to somehow use a gzip inputstream
 			f = _CLNEW Field(fi->name,      // field name
 				//todo: new String(uncompress(subStream->getStream()), "UTF-8"), // uncompress the value and add as string
-				subStream->getStream(), bits);
+				subStream, bits);
 			f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
@@ -397,11 +434,11 @@ void FieldsReader::addField(CL_NS(document)::Document* doc, const FieldInfo* fi,
 				bits, false);
 			f->setOmitNorms(fi->omitNorms);
 		}
-		doc->add(*f);
+		doc.add(*f);
 	}
 }
 
-int32_t FieldsReader::addFieldSize(CL_NS(document)::Document* doc, const FieldInfo* fi, const bool binary, const bool compressed) {
+int32_t FieldsReader::addFieldSize(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed) {
 	const int32_t size = fieldsStream->readVInt();
 	const int32_t bytesize = binary || compressed ? size : 2*size;
 	/*
@@ -443,46 +480,6 @@ CL_NS(document)::Field::Index FieldsReader::getIndexType(const FieldInfo* fi, co
 		return Field::INDEX_NO;
 }
 
-FieldsReader::FieldsStreamHolder::FieldsStreamHolder(IndexInput* indexInput, int32_t subLength){
-    this->indexInput = indexInput->clone();
-    this->indexInputStream = new IndexInputStream(this->indexInput);
-    this->subStream = new jstreams::SubInputStream<char>(indexInputStream, subLength);
-
-    this->size = subStream->getSize();
-    this->position = subStream->getPosition();
-    this->error = subStream->getError();
-    this->status = subStream->getStatus();
-}
-FieldsReader::FieldsStreamHolder::~FieldsStreamHolder(){
-    delete subStream;
-    delete indexInputStream;
-
-    indexInput->close();
-    _CLDELETE(indexInput);
-}
-int32_t FieldsReader::FieldsStreamHolder::read(const char*& start, int32_t _min, int32_t _max){
-    int32_t ret = subStream->read(start,_min,_max);
-    this->position = subStream->getPosition();
-    this->error = subStream->getError();
-    this->status = subStream->getStatus();
-    return ret;
-}
-int64_t FieldsReader::FieldsStreamHolder::skip(int64_t ntoskip){
-    int64_t ret = subStream->skip(ntoskip);
-    this->position = subStream->getPosition();
-    this->error = subStream->getError();
-    this->status = subStream->getStatus();
-    return ret;
-}
-int64_t FieldsReader::FieldsStreamHolder::reset(int64_t pos){
-    int64_t ret = subStream->reset(pos);
-    this->position = subStream->getPosition();
-    this->error = subStream->getError();
-    this->status = subStream->getStatus();
-    return ret;
-}
-jstreams::SubInputStream<char>* FieldsReader::FieldsStreamHolder::getStream() const { return subStream; }
-
 
 FieldsReader::LazyField::LazyField(FieldsReader* _parent, const TCHAR* _name,
 								   int config, const int32_t _toRead, const int64_t _pointer)
@@ -502,23 +499,24 @@ CL_NS(store)::IndexInput* FieldsReader::LazyField::getFieldStream() {
 	return localFieldsStream;
 }
 
-jstreams::StreamBase<char>* FieldsReader::LazyField::streamValue() {
+CL_NS(util)::InputStream* FieldsReader::LazyField::streamValue() {
 	parent->ensureOpen();
 	if (fieldsData == NULL) {
 		//uint8_t* b = _CL_NEWARRAY(uint8_t, toRead);
 		CL_NS(store)::IndexInput* localFieldsStream = getFieldStream();
 
 		localFieldsStream->seek(pointer);
-		FieldsReader::FieldsStreamHolder* subStream = new FieldsReader::FieldsStreamHolder(localFieldsStream, toRead);
+		FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(localFieldsStream, toRead);
 		//localFieldsStream->readBytes(b, toRead);
 		if (isCompressed()) {
 			//fieldsData = uncompress(b);
+			//todo: ... what happens here?
 		} else {
-			fieldsData = subStream->getStream();
+			fieldsData = subStream;
 		}
 		valueType = VALUE_STREAM;
 	}
-	return static_cast<jstreams::StreamBase<char>*>(fieldsData);
+	return static_cast<CL_NS(util)::InputStream*>(fieldsData);
 }
 
 CL_NS(util)::Reader* FieldsReader::LazyField::readerValue() const {
@@ -587,8 +585,8 @@ CL_NS(util)::Reader* FieldsReader::FieldForMerge::readerValue() const {
 	return NULL;
 }
 
-jstreams::StreamBase<char>* FieldsReader::FieldForMerge::streamValue() const {
-	return (valueType & VALUE_STREAM) ? static_cast<jstreams::StreamBase<char>*>(fieldsData) : NULL;
+CL_NS(util)::InputStream* FieldsReader::FieldForMerge::streamValue() const {
+	return (valueType & VALUE_STREAM) ? static_cast<CL_NS(util)::InputStream*>(fieldsData) : NULL;
 }
 
 CL_NS(analysis)::TokenStream* FieldsReader::FieldForMerge::tokenStreamValue() const {
