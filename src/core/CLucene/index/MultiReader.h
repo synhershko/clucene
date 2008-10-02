@@ -67,7 +67,7 @@ public:
 
 	int32_t maxDoc() const;
 
-	bool document(int32_t n, CL_NS(document)::Document* doc);
+	bool document(int32_t n, CL_NS(document)::Document& doc);
 
 	bool isDeleted(const int32_t n);
 	bool hasDeletions() const;

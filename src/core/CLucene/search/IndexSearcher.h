@@ -63,6 +63,7 @@ public:
 
 	int32_t docFreq(const CL_NS(index)::Term* term) const;
 
+	bool doc(int32_t i, CL_NS(document)::Document& document);
 	bool doc(int32_t i, CL_NS(document)::Document* document);
 	_CL_DEPRECATED( doc(i, document) ) CL_NS(document)::Document* doc(int32_t i);
 

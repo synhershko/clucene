@@ -453,7 +453,7 @@ CL_NS_DEF(index)
       return tis->terms(t);
   }
 
-  bool SegmentReader::document(int32_t n, Document* doc) {
+  bool SegmentReader::document(int32_t n, Document& doc) {
   //Func - writes the fields of document n into doc
   //Pre  - n >=0 and identifies the document n
   //Post - if the document has been deleted then an exception has been thrown

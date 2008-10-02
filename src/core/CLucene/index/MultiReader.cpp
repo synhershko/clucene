@@ -129,7 +129,7 @@ int32_t MultiReader::maxDoc() const {
 	return internal->_maxDoc;
 }
 
-bool MultiReader::document(int32_t n, CL_NS(document)::Document* doc){
+bool MultiReader::document(int32_t n, CL_NS(document)::Document& doc){
 	int32_t i = readerIndex(n);			  // find segment num
 	return subReaders[i]->document(n - starts[i],doc);	  // dispatch to segment reader
 }

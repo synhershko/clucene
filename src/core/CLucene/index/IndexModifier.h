@@ -312,7 +312,8 @@ public:
 	* while using the TermDocs. If the IndexReader that the modifier manages
 	* is closed, the Document will be invalid
 	*/
-	bool document(const int32_t n, CL_NS(document)::Document* doc);
+	bool document(const int32_t n, CL_NS(document)::Document& doc);
+	_CL_DEPRECATED( document(i, Document&) )bool document(const int32_t n, CL_NS(document)::Document* doc);
 	_CL_DEPRECATED( document(i, document) ) CL_NS(document)::Document* document(const int32_t n);
 
 	/**

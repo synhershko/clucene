@@ -241,11 +241,17 @@ TermEnum* IndexModifier::terms(Term* term){
 
   CL_NS(document)::Document* IndexModifier::document(const int32_t n){
     Document* ret = _CLNEW Document;
-    if (!document(n,ret) )
+    if (!document(n, *ret) )
         _CLDELETE(ret);
     return ret;
   }
 bool IndexModifier::document(int32_t n, CL_NS(document)::Document* doc){
+	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+	assureOpen();
+	createIndexReader();
+	return indexReader->document(n, *doc);
+}
+bool IndexModifier::document(int32_t n, CL_NS(document)::Document& doc){
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	assureOpen();
 	createIndexReader();

@@ -183,7 +183,7 @@ CL_NS_DEF(index)
   
   CL_NS(document)::Document* IndexReader::document(const int32_t n){
     CL_NS(document)::Document* ret = _CLNEW CL_NS(document)::Document;
-    if (!document(n,ret) )
+    if (!document(n,*ret) )
         _CLDELETE(ret);
     return ret;
   }
@@ -365,6 +365,14 @@ CL_NS_DEF(index)
       _termPositions->seek(term);
 	  //return the enumeration
       return _termPositions;
+  }
+
+  bool IndexReader::getTermFreqVectors(int32_t docNumber, Array<TermFreqVector*>& result){
+	  return this->getTermFreqVectors(docNumber, result);
+  }
+  
+  bool IndexReader::document(int32_t n, CL_NS(document)::Document* doc){
+  	return document(n, *doc);
   }
 
   void IndexReader::deleteDoc(const int32_t docNum){ 

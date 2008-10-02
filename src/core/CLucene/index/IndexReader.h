@@ -309,7 +309,9 @@ public:
    	 * The fields are not cleared before retrieving the document, so the
    	 * object should be new or just cleared.
    	 */ 
-	virtual bool document(int32_t n, CL_NS(document)::Document*) =0;
+	virtual bool document(int32_t n, CL_NS(document)::Document&) =0;
+
+	_CL_DEPRECATED( document(i, Document&) ) bool document(int32_t n, CL_NS(document)::Document*);
 	
 	_CL_DEPRECATED( document(i, document) ) CL_NS(document)::Document* document(const int32_t n);
 
