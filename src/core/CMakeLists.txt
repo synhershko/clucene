@@ -24,10 +24,8 @@ SET(clucene_core_Files
 	./CLucene/util/Reader.cpp
 	./CLucene/util/Equators.cpp
 	./CLucene/util/FastCharStream.cpp
-	./CLucene/util/fileinputstream.cpp
 	./CLucene/util/MD5Digester.cpp
 	./CLucene/util/StringIntern.cpp
-#	./CLucene/util/subinputstream.cpp
 	./CLucene/util/BitSet.cpp
 	./CLucene/queryParser/Lexer.cpp
 	./CLucene/queryParser/MultiFieldQueryParser.cpp

@@ -8,22 +8,11 @@
 #include "Field.h"
 #include "CLucene/util/_StringIntern.h"
 #include "CLucene/util/StringBuffer.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
+#include "CLucene/analysis/AnalysisHeader.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(document) 
-
-/*
-struct Field::Internal{
-	//const TCHAR* _name;
-	//TCHAR* _stringValue;
-	//CL_NS(util)::Reader* _readerValue;
-    //jstreams::StreamBase<char>* _streamValue;
-	//void* fieldsData;
-
-	//uint32_t config;
-	//float_t boost;
-};*/
 
 Field::Field(const TCHAR* Name, Reader* reader, int config):
 	/*_internal(new Internal),*/ lazy(false)
@@ -75,7 +64,7 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 	setConfig(_config);
 }
 
-Field::Field(const TCHAR* Name, jstreams::StreamBase<char>* Value, int config):
+Field::Field(const TCHAR* Name, InputStream* Value, int config):
 	/*_internal(new Internal),*/ lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
@@ -122,7 +111,7 @@ Field::~Field(){
 const TCHAR* Field::name() const	{ return _name; } ///<returns reference
 TCHAR* Field::stringValue() const	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
 Reader* Field::readerValue() const	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
-jstreams::StreamBase<char>* Field::streamValue() const	{ return (valueType & VALUE_STREAM) ? static_cast<jstreams::StreamBase<char>*>(fieldsData) : NULL; } ///<returns reference
+InputStream* Field::streamValue() const	{ return (valueType & VALUE_STREAM) ? static_cast<InputStream*>(fieldsData) : NULL; } ///<returns reference
 CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
 	    
 bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
@@ -154,7 +143,7 @@ void Field::setValue(CL_NS(util)::Reader* value) {
 	fieldsData = value;
 	valueType = VALUE_READER;
 }
-void Field::setValue(jstreams::StreamBase<char>* value) {
+void Field::setValue(InputStream* value) {
 	_resetValue();
 	fieldsData = value;
 	valueType = VALUE_STREAM;
@@ -311,7 +300,7 @@ void Field::_resetValue() {
 		Reader* r = static_cast<Reader*>(fieldsData);
 		_CLDELETE(r);
 	} else if (valueType & VALUE_STREAM) {
-		jstreams::StreamBase<char>* v = static_cast<jstreams::StreamBase<char>*>(fieldsData);
+		InputStream* v = static_cast<InputStream*>(fieldsData);
 		_CLVDELETE(v);
 	}
 	valueType=VALUE_NONE;

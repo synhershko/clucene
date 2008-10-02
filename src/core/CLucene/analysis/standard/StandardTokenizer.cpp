@@ -92,7 +92,7 @@ CL_NS_DEF2(analysis,standard)
   #define CONTAINS_ANY(sb, ofThese) (_tcscspn(sb.getBuffer(), _T(ofThese)) != static_cast<size_t>(sb.len))
 
 
-  StandardTokenizer::StandardTokenizer(Reader* reader):
+  StandardTokenizer::StandardTokenizer(BufferedReader* reader):
     /* rdPos is zero-based.  It starts at -1, and will advance to the first
     ** position when readChar() is first called. */
     rdPos(-1),

@@ -18,11 +18,8 @@ TODO: - Solve some inconsistencies between CL and JL - mainly in the constructor
 */
 
 CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,InputStream)
 CL_CLASS_DEF(analysis,TokenStream)
-namespace jstreams{
-    template <class T>
-    class StreamBase;
-}
 
 CL_NS_DEF(document)
 /**
@@ -151,7 +148,7 @@ public:
 	/**
 	* Stream constructor of Field.
 	*/
-	Field(const TCHAR* name, jstreams::StreamBase<char>* stream, int _config);
+	Field(const TCHAR* name, CL_NS(util)::InputStream* stream, int _config);
 
 	Field(const TCHAR* name, int _config); ///<No value, for lazy loading support
     ~Field();
@@ -173,7 +170,7 @@ public:
 	/** The value of the field as a String, or null.  If null, the String value
 	* or Reader value is used.  Exactly one of stringValue(), readerValue() and
 	* streamValue() must be set. */
-	jstreams::StreamBase<char>* streamValue() const;
+	CL_NS(util)::InputStream* streamValue() const;
 
 	/** The value of the field as a TokesStream, or null.  If null, the Reader value,
 	* String value, or binary value is used. Exactly one of stringValue(), 
@@ -301,7 +298,7 @@ public:
 	void setValue(CL_NS(util)::Reader* value);
 
 	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
-	void setValue(jstreams::StreamBase<char>* value) ;
+	void setValue(CL_NS(util)::InputStream* value) ;
 
 	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
 	void setValue(CL_NS(analysis)::TokenStream* value);

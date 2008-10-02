@@ -11,7 +11,7 @@
 # pragma once
 #endif
 
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "AnalysisHeader.h"
 #include "CLucene/util/VoidMapSetDefinitions.h"
 

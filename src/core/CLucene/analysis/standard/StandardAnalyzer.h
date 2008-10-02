@@ -9,7 +9,7 @@
 
 
 //#include "CLucene/util/VoidMap.h"
-CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,BufferedReader)
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/util/VoidMapSetDefinitions.h"
 //#include "CLucene/analysis/Analyzers.h"

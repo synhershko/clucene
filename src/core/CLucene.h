@@ -38,7 +38,7 @@
 #include "CLucene/analysis/standard/StandardAnalyzer.h"
 #include "CLucene/analysis/Analyzers.h"
 #include "CLucene/util/BitSet.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/util/PriorityQueue.h"
 
 #endif

@@ -10,7 +10,7 @@
 #include "QueryToken.h"
 #include "_Lexer.h"
 
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_FastCharStream.h"
 
@@ -46,7 +46,7 @@ Lexer::Lexer(QueryParserBase* queryparser, const TCHAR* query) {
 }
 
 
-Lexer::Lexer(QueryParserBase* queryparser, Reader* source) {
+Lexer::Lexer(QueryParserBase* queryparser, BufferedReader* source) {
    //Func - Constructor
    //       Initializes a new instance of the Lexer class with the specified
    //       TextReader to lex.

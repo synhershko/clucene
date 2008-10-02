@@ -8,7 +8,7 @@
 #include "QueryParser.h"
 
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/search/SearchHeader.h"
 #include "CLucene/search/BooleanClause.h"
 #include "CLucene/search/Query.h"
@@ -72,7 +72,7 @@ CL_NS_DEF(queryParser)
         CND_PRECONDITION(query != NULL, "query is NULL");
 
 		//Instantie a Stringer that can read the query string
-        Reader* r = _CLNEW StringReader(query);
+        BufferedReader* r = _CLNEW StringReader(query);
 
 		//Check to see if r has been created properly
 		CND_CONDITION(r != NULL, "Could not allocate memory for StringReader r");
@@ -91,7 +91,7 @@ CL_NS_DEF(queryParser)
 		return ret;
 	}
 
-	Query* QueryParser::parse(Reader* reader){
+	Query* QueryParser::parse(BufferedReader* reader){
 	//Func - Returns a parsed Query instance
 	//Pre  - reader contains a valid reference to a Reader and manages the query string
 	//Post - A parsed Query instance has been returned or

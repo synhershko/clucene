@@ -8,7 +8,7 @@
 #define _lucene_util_FastCharStream_
 
 
-CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,BufferedReader)
 
 CL_NS_DEF(util)
 
@@ -24,10 +24,10 @@ CL_NS_DEF(util)
 		// read character from stream return false on error
 		void readChar(TCHAR &);	
 	public:
-		Reader* input;
+		BufferedReader* input;
 
 		/// Initializes a new instance of the FastCharStream class LUCENE_EXPORT.
-		FastCharStream(Reader* reader);
+		FastCharStream(BufferedReader* reader);
 		~FastCharStream();
 		
 		/// Returns the next TCHAR from the stream.

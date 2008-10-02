@@ -16,7 +16,7 @@
 #include "CLucene/search/BooleanQuery.h"
 
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/search/SearchHeader.h"
 #include "CLucene/search/BooleanClause.h"
 #include "CLucene/search/Query.h"

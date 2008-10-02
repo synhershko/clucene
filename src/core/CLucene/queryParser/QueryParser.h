@@ -9,7 +9,7 @@
 
 
 //#include "CLucene/analysis/AnalysisHeader.h"
-CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,BufferedReader)
 //#include "CLucene/search/SearchHeader.h"
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(analysis,Analyzer)
@@ -267,7 +267,7 @@ public:
 	* <param name="reader">The TextReader value to be parsed.</param>
 	* <returns>A parsed Query instance.</returns>
 	*/
-	virtual CL_NS(search)::Query* parse(CL_NS(util)::Reader* reader);
+	virtual CL_NS(search)::Query* parse(CL_NS(util)::BufferedReader* reader);
 
 	/**
 	* Returns a new instance of the Query class with a specified query, field and

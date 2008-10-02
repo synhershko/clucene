@@ -11,7 +11,7 @@
 #include "../AnalysisHeader.h" //required for Tokenizer
 #include "StandardTokenizerConstants.h"
 CL_CLASS_DEF(analysis,Token)
-CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,BufferedReader)
 CL_CLASS_DEF(util,StringBuffer)
 CL_CLASS_DEF(util,FastCharStream)
 
@@ -53,7 +53,7 @@ CL_NS_DEF2(analysis,standard)
 	CL_NS(util)::FastCharStream* rd;
 
     // Constructs a tokenizer for this Reader.
-    StandardTokenizer(CL_NS(util)::Reader* reader);
+    StandardTokenizer(CL_NS(util)::BufferedReader* reader);
 
     ~StandardTokenizer();
 

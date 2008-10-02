@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "stdafx.h"
 #include "CLucene.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/util/dirent.h"
 #include "CLucene/config/repl_tchar.h"
 #include "CLucene/util/Misc.h"

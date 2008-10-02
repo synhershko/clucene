@@ -10,7 +10,7 @@
 #include "CLucene/store/IndexOutput.h"
 #include "CLucene/util/Array.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/document/Field.h"
 #include "CLucene/document/Document.h"
 #include "_FieldInfos.h"
@@ -256,7 +256,7 @@ void DocumentWriter::invertDocument(const Document* doc) {
 						// this may invalidate the string for the further calls
 						// it may be better to do this via a FilterReader
 						// TODO make a better implementation of this
-						dataLen = r->read(charBuf, LUCENE_INT32_MAX_SHOULDBE);
+						dataLen = r->read(charBuf, LUCENE_INT32_MAX_SHOULDBE,0);
 						if (dataLen == -1)
 							dataLen = 0;
 						//todo: would be better to pass the string length, in case

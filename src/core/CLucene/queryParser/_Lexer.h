@@ -9,7 +9,7 @@
 
 
 CL_CLASS_DEF(util,FastCharStream)
-CL_CLASS_DEF(util,Reader)
+CL_CLASS_DEF(util,BufferedReader)
 CL_CLASS_DEF(util,StringBuffer)
 
 //#include "TokenList.h"
@@ -34,7 +34,7 @@ CL_NS_DEF(queryParser)
 
 		// Initializes a new instance of the Lexer class with the specified
 		// TextReader to lex.
-		Lexer(QueryParserBase* queryparser, CL_NS(util)::Reader* source);
+		Lexer(QueryParserBase* queryparser, CL_NS(util)::BufferedReader* source);
 
 		//Breaks the input stream onto the tokens list tokens
 		void Lex(TokenList *tokens);

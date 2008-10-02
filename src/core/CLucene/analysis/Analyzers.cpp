@@ -35,7 +35,7 @@ bool CharTokenizer::next(Token* token){
 		TCHAR c;
 		offset++;
 		if (bufferIndex >= dataLen) {
-			dataLen = input->read(ioBuffer, LUCENE_IO_BUFFER_SIZE);
+			dataLen = input->read(ioBuffer, 1, LUCENE_IO_BUFFER_SIZE );
 			if (dataLen == -1)
 				dataLen = 0;
 			bufferIndex = 0;
@@ -504,7 +504,7 @@ bool KeywordTokenizer::next(Token* token){
 	  int32_t rd;
 	  const TCHAR* buffer=0;
       while (true) {
-        rd = input->read(buffer, bufferSize);
+        rd = input->read(buffer, 1, bufferSize);
         if (rd == -1) 
 			break;
 		token->growBuffer(token->_termTextLen +rd+1);
@@ -577,7 +577,7 @@ CLTCSetList* WordlistLoader::getWordSet(CL_NS(util)::Reader* reader, CLTCSetList
 	TCHAR* word = NULL;
 	try {
 		word = _CL_NEWARRAY(TCHAR, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
-		while (reader->readLine(word) > 0) {
+		while (reader->readLine(word, LUCENE_DEFAULT_TOKEN_BUFFER_SIZE) > 0) {
 			stopTable->insert( STRDUP_TtoT(CL_NS(util)::Misc::wordTrim(word)));
 		}
 	}
