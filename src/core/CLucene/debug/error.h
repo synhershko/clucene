@@ -56,19 +56,23 @@
 #else
   class CLUCENE_EXPORT CLuceneError
   {
-  	int error_number;
 	char* _awhat;
 	TCHAR* _twhat;
+  	int error_number;
   public:
+    CLuceneError();
     CLuceneError(const CLuceneError& clone);
     CLuceneError(int num, const char* str, bool ownstr);
 #ifdef _UCS2
     CLuceneError(int num, const TCHAR* str, bool ownstr);
 #endif
   	int number(){return error_number;}
-	char* what();
-	TCHAR* twhat();
-	~CLuceneError() throw();
+		char* what();
+		TCHAR* twhat();
+		~CLuceneError() throw();
+
+		void set(int num, const char*, bool ownstr=false);
+		void set(int num, const TCHAR*, bool ownstr=false);
   };
 	
  //#define _THROWS //does nothing

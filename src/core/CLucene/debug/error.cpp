@@ -17,6 +17,11 @@ CL_NS_USE(util)
 	 #warning "==================Lucene exceptions are disabled=================="
 	#endif
 #else
+	CLuceneError::CLuceneError(){
+		error_number = 0;
+		_awhat = NULL;
+		_twhat = NULL;
+	}
 	CLuceneError::CLuceneError(int num, const char* str, bool ownstr)
 	{
 		error_number = num;
@@ -58,6 +63,23 @@ CL_NS_USE(util)
 		if ( _twhat == NULL )
 			_twhat = STRDUP_AtoT(_awhat);
 		return _twhat;
+	}
+
+	void CLuceneError::set(int num, const char* str, bool ownstr){
+		_CLDELETE_CARRAY(_twhat);
+		_CLDELETE_CaARRAY(_awhat);
+		_awhat=STRDUP_AtoA(str);
+		error_number = num;
+		if ( ownstr )
+			_CLDELETE_CaARRAY(str);
+	}
+	void CLuceneError::set(int num, const TCHAR* str, bool ownstr){
+		_CLDELETE_CARRAY(_twhat);
+		_CLDELETE_CaARRAY(_awhat);
+		_twhat=STRDUP_TtoT(str);
+		error_number = num;
+		if ( ownstr )
+			_CLDELETE_CARRAY(str);
 	}
 
 #ifndef _ASCII
