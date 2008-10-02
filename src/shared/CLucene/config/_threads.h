@@ -31,6 +31,7 @@
           __declspec(dllimport) void __stdcall EnterCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall LeaveCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
+		  __declspec(dllimport) void __stdcall ExitThread(_cl_dword_t);
     	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
     	  
     	  typedef struct  _SECURITY_ATTRIBUTES

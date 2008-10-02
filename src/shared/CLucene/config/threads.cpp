@@ -58,6 +58,9 @@ CL_NS_DEF(util)
     _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
         return GetCurrentThreadId();
     }
+    void mutex_thread::_exitThread(int val){
+    	ExitThread(val);
+    }
     
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
 	    return (_LUCENE_THREADID_TYPE) ::_beginthread (func, 0, arg);

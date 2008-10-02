@@ -19,7 +19,8 @@ class CLuceneThreadIdCompare;
 	#define _LUCENE_CURRTHREADID 1
 	#define _LUCENE_THREADID_TYPE char
 	#define _LUCENE_THREAD_FUNC(name, argName) int name(void* argName)
-	#define _LUCENE_THREAD_CREATE(value, func, arg) func(arg)
+	#define _LUCENE_THREAD_FUNC_RETURN(val) return (int)val;
+	#define _LUCENE_THREAD_CREATE(func, arg) (*func)(arg)
 	#define _LUCENE_THREAD_JOIN(value) //nothing to do...
 
 #else
@@ -29,6 +30,7 @@ class CLuceneThreadIdCompare;
     	 #if defined(_CL_HAVE_PTHREAD)
             #define _LUCENE_THREADID_TYPE pthread_t
         	#define _LUCENE_THREAD_FUNC(name, argName) void* name(void* argName) //< use this macro to correctly define the thread start routine
+        	#define _LUCENE_THREAD_FUNC_RETURN(val) return (int)val;
             typedef void* (luceneThreadStartRoutine)(void* lpThreadParameter );
             class CLUCENE_SHARED_EXPORT mutex_thread
             {
@@ -49,6 +51,7 @@ class CLuceneThreadIdCompare;
     	#elif defined(_CL_HAVE_WIN32_THREADS)
         	#define _LUCENE_THREADID_TYPE uint64_t
     	    #define _LUCENE_THREAD_FUNC(name, argName) void __stdcall name(void* argName) //< use this macro to correctly define the thread start routine
+			#define _LUCENE_THREAD_FUNC_RETURN(val) mutex_thread::_exitThread(val)
             typedef void (__stdcall luceneThreadStartRoutine)(void* lpThreadParameter );
             class CLUCENE_SHARED_EXPORT mutex_thread
         	{
@@ -61,6 +64,7 @@ class CLuceneThreadIdCompare;
         		~mutex_thread();
         		void lock();
         		void unlock();
+				static void _exitThread(int ret);
         		static _LUCENE_THREADID_TYPE _GetCurrentThreadId();
         		static _LUCENE_THREADID_TYPE CreateThread(luceneThreadStartRoutine* func, void* arg);
         		static void JoinThread(_LUCENE_THREADID_TYPE id);
