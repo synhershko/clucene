@@ -6,11 +6,12 @@
 #include "CLucene/analysis/standard/StandardFilter.h"
 #include "CLucene/snowball/SnowballFilter.h"
 
-CL_NS_DEF(analysis)
 CL_NS_USE(util)
 CL_NS_USE2(analysis,cjk)
 CL_NS_USE2(analysis,standard)
 CL_NS_USE2(analysis,snowball)
+
+CL_NS_DEF(analysis)
 
 LanguageBasedAnalyzer::LanguageBasedAnalyzer(const TCHAR* language, bool stem)
 {
