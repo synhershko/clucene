@@ -1,6 +1,6 @@
 #include "test.h"
 #include "CLucene/util/dirent.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 
 CL_NS_USE(util)
 
@@ -88,12 +88,12 @@ CL_NS_USE(util)
 	size_t p, p1, p2;
 	p = p1 = p2 = 0;
 	while(true){
-		s = utf8.read(buf1, readLen);
+		s = utf8.read(buf1, 1, readLen);
 		if ( s == -1 )
 			break;
 		p1+=s;
 
-		s = unicode.read(buf2, readLen);
+		s = unicode.read(buf2, 1, readLen);
 		if (s == -1) 
 			break;
 		p2+=s;
@@ -145,8 +145,8 @@ CL_NS_USE(util)
 	FileReader utf8(utf8text,"UTF-8");
 	FileReader unicode(unicodetext, "UCS-2LE");
 
-	utf8.mark(10000);
-	unicode.mark(10000);
+	utf8.setMinBufSize(10000);
+	unicode.setMinBufSize(10000);
 
 	doReadChars(tc,utf8,unicode);
 	//now try reading with read, instead of readChar

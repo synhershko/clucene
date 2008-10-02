@@ -1,6 +1,6 @@
 #include "test.h"
 #include "CLucene/util/dirent.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/LuceneThreads.h"
 
 #ifdef _CL_HAVE_SYS_STAT_H
@@ -309,6 +309,7 @@ CL_NS_USE(util)
     	    threadSearch(searcher, _T("data") );
     	}
 		printf ("done...\n");
+		_LUCENE_THREAD_FUNC_RETURN(0);
 	}
 	
 	void testThreaded(CuTest* tc){

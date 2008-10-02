@@ -28,6 +28,7 @@
 		CLUCENE_ASSERT(3 == hits->length()); // All documents in /Computers category and below
 		_CLDELETE(query);
 		_CLDELETE(t);
+		_CLDELETE(hits);
 
 		t = _CLNEW Term(_T("category"), _T("/Computers/Mac"));
 		query = _CLNEW PrefixQuery(t);

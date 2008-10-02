@@ -236,7 +236,7 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 }
 
  sortScores* sort_getScores (CuTest* tc, Hits* hits, bool deleteHits=true){
-	sortScores* scoreMap = _CLNEW sortScores(_CLNEW TCharCompare);
+	sortScores* scoreMap = _CLNEW sortScores(true);
 	int n = hits->length();
 	float_t m=pow(10.0,-8);
 

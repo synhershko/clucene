@@ -106,7 +106,7 @@ public:
         }
     }
     
-    void put(_K k, _T v){
+    void add(_K k, _T v){
         this->insert ( std::pair<_K,_T>(k,v) );
     }
 };

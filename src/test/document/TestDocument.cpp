@@ -6,6 +6,49 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
+//an in memory input stream for testing binary data
+class MemReader: public CL_NS(util)::InputStream{
+	signed char* value;
+	size_t len;
+	int64_t pos;
+public:
+	MemReader ( const char* value, const int32_t length = -1 ){
+		if ( length >= 0 )
+			this->len = length;
+		else
+			this->len = strlen(value);
+		this->pos = 0;
+		this->value = _CL_NEWARRAY(signed char, this->len);
+		memcpy(this->value, value, this->len);
+	}
+	virtual ~MemReader(){
+		_CLDELETE_ARRAY(this->value);
+	}
+	
+    int32_t read(const signed char*& start, int32_t min, int32_t max){
+		start = this->value + pos;
+		int32_t r = max>min?max:min;
+		if ( len-pos < r )
+			r = len-pos;
+		pos += r;
+		return r;
+	}
+    int64_t position(){
+		return pos;
+	}
+	int64_t skip(int64_t ntoskip){
+		int64_t s = ntoskip;
+		if ( len-pos < s )
+			s = len-pos;
+
+		this->pos += s;
+		return s;
+	}
+	size_t size(){
+		return len;
+	}
+};
+
   void TestFields(CuTest *tc){
 	  Field *f = _CLNEW Field(_T("test"), _T("value"), Field::INDEX_TOKENIZED);
 	  CLUCENE_ASSERT(f->isIndexed() && f->isTokenized());
@@ -43,10 +86,10 @@
 
     Document doc;
     Field* f;
-    const char* _as;
-    const char* _as2;
+    const signed char* _as;
+    const signed char* _as2;
     const TCHAR* _ts;
-    jstreams::StreamBase<char>* strm;
+	CL_NS(util)::InputStream* strm;
     RAMDirectory ram;
 
     const char* areaderString = "a string reader field";
@@ -57,7 +100,7 @@
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
     //use binary utf8
-    doc.add( *_CLNEW Field(_T("utf8Field"), new jstreams::StringReader<char>(areaderString), 
+    doc.add( *_CLNEW Field(_T("utf8Field"), _CLNEW MemReader(areaderString), 
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
@@ -72,7 +115,7 @@
 	writer.optimize();
 	
     //use big file
-    doc.add( *_CLNEW Field(_T("fileField"), new jstreams::FileInputStream(factbook), 
+    doc.add( *_CLNEW Field(_T("fileField"), _CLNEW CL_NS(util)::FileInputStream(factbook), 
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
@@ -84,7 +127,7 @@
     IndexReader* reader = IndexReader::open(&ram);
     
     //now check binary stream
-    reader->document(0, &doc);
+    reader->document(0, doc);
     f = doc.getField(_T("utf8Field"));
     strm = f->streamValue();
 
@@ -97,7 +140,7 @@
 
 
     //and check reader stream
-    reader->document(1, &doc);
+    reader->document(1, doc);
     f = doc.getField(_T("readerField"));
     _ts = f->stringValue();
     CLUCENE_ASSERT(_tcscmp(treaderString,_ts)==0);
@@ -105,10 +148,10 @@
 
     
     //now check file stream
-    reader->document(2, &doc);
+    reader->document(2, doc);
     f = doc.getField(_T("fileField"));
     strm = f->streamValue();
-    jstreams::FileInputStream fbStream(factbook);
+    FileInputStream fbStream(factbook);
 
     do{
         int32_t rd = fbStream.read(_as2,1,1);
