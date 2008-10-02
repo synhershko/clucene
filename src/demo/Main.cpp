@@ -11,7 +11,7 @@
 //test for memory leaks:
 #ifdef _MSC_VER
 #ifdef _DEBUG
-	#define CRTDBG_MAP_ALLOC
+	#define _CRTDBG_MAP_ALLOC
 	#include <stdlib.h>
 	#include <crtdbg.h>
 #endif
@@ -29,11 +29,9 @@ void getStats(const char* directory);
 
 int main( int32_t argc, char** argv ){
 	//Dumper Debug
-	#ifdef TR_LEAKS 
-	#ifdef _CLCOMPILER_MSVC
+	#ifdef _MSC_VER
 	#ifdef _DEBUG
 		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );//| _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF );
-	#endif
 	#endif
 	#endif
 
@@ -63,21 +61,12 @@ int main( int32_t argc, char** argv ){
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug
-#ifdef LUCENE_ENABLE_MEMLEAKTRACKING
-	lucene::debug::LuceneBase::__cl_PrintUnclosedObjects();
-   //clear memtracking memory (not the unclosed objects)
-   lucene::debug::LuceneBase::__cl_ClearMemory();
-#endif
+
 
 	//Debuggin techniques:
 	//For msvc, use this for breaking on memory leaks: 
 	//	_crtBreakAlloc
-	//to break at this clucene item:
-	//	_lucene_counter_break
-	//run a memory check before deleting objects:
-	//	_lucene_run_objectcheck
-	//if LUCENE_ENABLE_CONSTRUCTOR_LOG is on, dont do log if this is true:
-	//	_lucene_disable_debuglogging
+	//for linux, use valgrind
 
 	printf ("\n\nTime taken: %d\n\n",Misc::currentTimeMillis() - str);
 	return 0;

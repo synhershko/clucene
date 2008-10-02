@@ -173,9 +173,9 @@ size_t	lucene_wctoutf8(char * outbuf, const wchar_t ch)
  * valid Unicode characters, you should use lucene_utf8towc_validated()
  * instead.
  *
- * Return value: the resulting character
+ * Return value: the number of p consumed for the character
  **/
-size_t lucene_utf8towc(wchar_t *pwc, const char *p, size_t n)
+size_t lucene_utf8towc(wchar_t& pwc, const char *p)
 {
   int i, mask = 0;
   int result;
@@ -187,7 +187,7 @@ size_t lucene_utf8towc(wchar_t *pwc, const char *p, size_t n)
     return 0;
   UTF8_GET (result, p, i, mask, len);
 
-  *pwc = result;
+  pwc = result;
   return len;
 }
 
@@ -210,7 +210,7 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
   wchar_t *rp = result;
 
   while (rp < result + result_length && *sp!=0){
-    size_t r = lucene_utf8towc(rp,sp,6);
+    size_t r = lucene_utf8towc(*rp,sp);
 	if ( r == -1 )
 		return 0;
 	sp += r;
@@ -225,11 +225,10 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
 }
 //get the number of bytes that make up the utf8 character.
 //this function was not taken from gnome
-size_t lucene_utf8charlen(const char *p)
+size_t lucene_utf8charlen(const unsigned char c)
 {
   int mask = 0;
   int len=0;
-  unsigned char c = (unsigned char) *p;
 
   UTF8_COMPUTE (c, mask, len);
   return len;

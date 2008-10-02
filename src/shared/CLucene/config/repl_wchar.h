@@ -20,11 +20,11 @@ CLUCENE_SHARED_EXPORT int cl_tcscasefoldcmp(const TCHAR * dst, const TCHAR * src
 CLUCENE_SHARED_EXPORT TCHAR* cl_tcscasefold( TCHAR * str, int len=-1 );
 
 //we provide utf8 conversion functions
-CLUCENE_SHARED_EXPORT size_t lucene_utf8towc  (wchar_t *ret, const char *s, size_t n);
+CLUCENE_SHARED_EXPORT size_t lucene_utf8towc  (wchar_t& ret, const char *s);
 CLUCENE_SHARED_EXPORT size_t lucene_utf8towcs(wchar_t *, const char *,  size_t maxslen);
 CLUCENE_SHARED_EXPORT size_t lucene_wctoutf8  (char * ret, const wchar_t  str);
 CLUCENE_SHARED_EXPORT size_t lucene_wcstoutf8 (char *,  const wchar_t *, size_t maxslen);
-CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const char *p);
+CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const unsigned char p); //< the number of characters that this first utf8 character will expect
 
 //string function replacements
 #if defined(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS) || (defined(_UCS2) && !defined(_CL_HAVE_FUNCTION_WCSCASECMP)) || (defined(_ASCII) && !defined(_CL_HAVE_FUNCTION_STRCASECMP))

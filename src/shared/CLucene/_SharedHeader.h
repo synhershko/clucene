@@ -22,8 +22,10 @@
 #include "CLucene/config/repl_tchar.h"
 #include "CLucene/config/repl_wchar.h"
 
-#define cl_min(a,b) (a>b?b:a)
-#define cl_max(a,b) (a>b?a:b)
+#define cl_min(a,b) ((a)>(b) ? (b) : (a))
+#define cl_min3(a,b,c) ((a)<(b) ? ((a)<(c) ? (a) : (c)) : ((b)<(c) ? (b) : (c)))
+#define cl_max(a,b) ((a)>(b) ? (a): (b))
+#define cl_max3(a,b,c) ((a)>(b) ? ((a)>(c) ? (a) : (c)) : ((b)>(c) ? (b) : (c)))
 
 #ifdef _CL_HAVE_SAFE_CRT
 	#define cl_sprintf sprintf_s

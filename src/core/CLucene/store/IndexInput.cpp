@@ -241,23 +241,5 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
 	  
   }
 
-IndexInputStream::IndexInputStream(IndexInput* input){
-	this->input = input;
-	this->size = input->length();
-    this->position = input->getFilePointer();
-}
-IndexInputStream::~IndexInputStream(){
-}
-int32_t IndexInputStream::fillBuffer(char* start, int32_t space){
-    int64_t avail = input->length()-input->getFilePointer();
-    if ( avail == 0 )
-		return -1;
-	else if ( avail<space )
-        space = (int32_t)avail;
-	
-	input->readBytes((uint8_t*)start,space);
-    return space;
-}
-
 CL_NS_END
 

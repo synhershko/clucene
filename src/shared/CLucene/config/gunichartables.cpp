@@ -232,7 +232,7 @@ TCHAR cl_tolower (TCHAR ch)
       {
         const gchar *p = special_case_table + val - 0x1000000;
 		wchar_t ret=0;
-		lucene_utf8towc(&ret,p,6);
+		lucene_utf8towc(ret,p);
 #ifdef _UCS2
 		return ret;
 #else
@@ -273,7 +273,7 @@ TCHAR cl_toupper (TCHAR ch)
 	  const gchar *p = special_case_table + val - 0x1000000;
 	  
 	  wchar_t ret=0;
-	  lucene_utf8towc(&ret,p,6);
+	  lucene_utf8towc(ret,p);
 #ifdef _UCS2
 	  return ret;
 #else
@@ -330,7 +330,7 @@ TCHAR cl_tcasefold(const TCHAR ch){
             if (ch == casefold_table[half].ch)
             {
 				   wchar_t ret=0;
-				   lucene_utf8towc(&ret,casefold_table[half].data,6);
+				   lucene_utf8towc(ret,casefold_table[half].data);
 
                #ifdef _UCS2
 		           return ret;

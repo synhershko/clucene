@@ -4,16 +4,16 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "test.h"
-
-//test for memory leaks:
+//msvc test for memory leaks:
 #ifdef _MSC_VER
-#ifdef _DEBUG
-	#define CRTDBG_MAP_ALLOC
-	#include <stdlib.h>
-	#include <crtdbg.h>
+	#ifdef _DEBUG
+		#define _CRTDBG_MAP_ALLOC
+		#include <stdlib.h>
+		#include <crtdbg.h>
+	#endif
 #endif
-#endif
+
+#include "test.h"
 
 #include <fcntl.h>
 #ifdef _CL_HAVE_DIRECT_H
@@ -32,9 +32,10 @@ char clucene_data_location[1024];
 
 int main(int argc, char *argv[])
 {
-	#ifdef _CLCOMPILER_MSVC
+	#ifdef _MSC_VER
 	#ifdef _DEBUG
-		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF  );// | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF );
+		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF ); //| _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF );
+		_crtBreakAlloc=-1;
 	#endif
 	#endif
 	int ret_result = 0;
@@ -202,12 +203,6 @@ exit_point:
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug
-#ifdef LUCENE_ENABLE_MEMLEAKTRACKING
-	CL_NS(debug)::LuceneBase::__cl_PrintUnclosedObjects();
-   //clear memtracking memory (not the unclosed objects)
-   CL_NS(debug)::LuceneBase::__cl_ClearMemory();
-#endif
-	
    
 	if ( ret_result != 0 )
 		return ret_result;
@@ -217,11 +212,6 @@ exit_point:
 	//Debuggin techniques:
 	//For msvc, use this for breaking on memory leaks: 
 	//	_crtBreakAlloc
-	//to break at this clucene item:
-	//	_lucene_counter_break
-	//run a memory check before deleting objects:
-	//	_lucene_run_objectcheck
-	//if LUCENE_ENABLE_CONSTRUCTOR_LOG is on, dont do log if this is true:
-	//	_lucene_disable_debuglogging
+	//for linux, use valgrind
 }
 
