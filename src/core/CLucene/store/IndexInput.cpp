@@ -8,8 +8,8 @@
 #include "IndexInput.h"
 #include "IndexOutput.h"
 
-CL_NS_USE(util)
 CL_NS_DEF(store)
+CL_NS_USE(util)
 
 	IndexInput::IndexInput()
 	{

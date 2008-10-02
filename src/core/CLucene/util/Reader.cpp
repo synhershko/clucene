@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "CLStreams.h"
+#include "CLucene/util/Misc.h"
 
 #include <fcntl.h>
 #ifdef _CL_HAVE_IO_H
@@ -89,7 +90,7 @@ public:
 		int32_t fillBuffer(signed char* start, int32_t space){
 			if (fhandle == 0) return -1;
 	    // read into the buffer
-	    int32_t nwritten = _read(fhandle, start, space);
+	    int32_t nwritten = ::_read(fhandle, start, space);
 
 	    // check the file stream status
 	    if (nwritten == -1 ) {

@@ -120,7 +120,7 @@ CL_NS_USE(util)
 	  strcpy(handle->path,path);
 
 	  //Open the file
-	  handle->fhandle  = _cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
+	  handle->fhandle  = ::_cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
 	  
 	  //Check if a valid handle was retrieved
 	  if (handle->fhandle >= 0){
