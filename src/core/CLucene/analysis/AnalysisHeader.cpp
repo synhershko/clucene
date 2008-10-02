@@ -22,6 +22,7 @@ Analyzer::Analyzer(){
 		CL_NS(util)::Deletor::Object<TokenStream> >;
 }
 Analyzer::~Analyzer(){
+	_CLDELETE(internal->tokenStreams);
 	delete internal;
 }
 TokenStream* Analyzer::getPreviousTokenStream() {
