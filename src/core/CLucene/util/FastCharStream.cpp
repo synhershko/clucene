@@ -7,13 +7,13 @@
 #include "CLucene/_ApiHeader.h"
 #include "_FastCharStream.h"
 
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 
 CL_NS_DEF(util)
 
 const int32_t FastCharStream::maxRewindSize = LUCENE_MAX_WORD_LEN*2;
 
-  FastCharStream::FastCharStream(Reader* reader):
+  FastCharStream::FastCharStream(BufferedReader* reader):
     pos(0),
     rewindPos(0),
 	resetPos(0),
@@ -21,9 +21,9 @@ const int32_t FastCharStream::maxRewindSize = LUCENE_MAX_WORD_LEN*2;
 	line(1),
 	input(reader)
   {
-    input->mark(maxRewindSize);
+    input->setMinBufSize(maxRewindSize);
   }
-	FastCharStream::~FastCharStream(){
+  FastCharStream::~FastCharStream(){
   }
   void FastCharStream::readChar(TCHAR &c) {
 	try{
@@ -39,7 +39,6 @@ const int32_t FastCharStream::maxRewindSize = LUCENE_MAX_WORD_LEN*2;
   }
   int FastCharStream::GetNext()
   {
- //   printf("getnext\n");
     if (input == 0 ) // end of file
     {
       _CLTHROWA(CL_ERR_IO,"warning : FileReader.GetNext : Read TCHAR over EOS.");
@@ -48,14 +47,6 @@ const int32_t FastCharStream::maxRewindSize = LUCENE_MAX_WORD_LEN*2;
     // implementing the functions from the java version of
     // charstream will be much more efficient.
 	++pos;
-    if ( pos > resetPos + maxRewindSize && rewindPos == 0) {
-        // move the marker one position (~expensive)
-        resetPos = pos-(maxRewindSize/2);
-		if ( resetPos != input->reset(resetPos) )
-			_CLTHROWA(CL_ERR_IO,"Unexpected reset() result");
-        input->mark(maxRewindSize);
-        input->skip((maxRewindSize/2) - 1);
-    }
     TCHAR ch;
     readChar(ch);
 
