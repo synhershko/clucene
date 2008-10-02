@@ -191,11 +191,13 @@ void CompoundFileReader::close(){
   }
 }
 
-IndexInput* CompoundFileReader::openInput(const char* id){
-  SCOPED_LOCK_MUTEX(THIS_LOCK)
+bool CompoundFileReader::openInput(const char * id, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize){
+	SCOPED_LOCK_MUTEX(THIS_LOCK)
 
-  if (stream == NULL)
-      _CLTHROWA(CL_ERR_IO,"Stream closed");
+	if (stream == NULL){
+      error.set(CL_ERR_IO,"Stream closed");
+	  return false;
+	}
 	 
   const ReaderFileEntry* entry = entries->get(id);
   if (entry == NULL){
@@ -203,9 +205,11 @@ IndexInput* CompoundFileReader::openInput(const char* id){
       strcpy(buf,"No sub-file with id ");
       strncat(buf,id,CL_MAX_PATH);
       strcat(buf," found");
-      _CLTHROWA(CL_ERR_IO,buf);
+      error.set(CL_ERR_IO,buf);
+	  return false;
   }
-  return _CLNEW CSIndexInput(stream, entry->offset, entry->length);
+  ret = _CLNEW CSIndexInput(stream, entry->offset, entry->length);
+  return true;
 }
 
 void CompoundFileReader::list(vector<string>* names) const{

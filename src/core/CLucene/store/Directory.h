@@ -57,9 +57,11 @@ CL_NS_DEF(store)
 		// Returns the length of a file in the directory. 
 		virtual int64_t fileLength(const char* name) const = 0;
 
+		// An advanced overload to avoid throwing an error. if result is false, error is filled with the reason
+		virtual bool openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize = -1) = 0;
+		
 		// Returns a stream reading an existing file. 
-		virtual IndexInput* openInput(const char* name) = 0;
-		virtual IndexInput* openInput(const char* name, int32_t bufferSize);
+		IndexInput* openInput(const char* name, int32_t bufferSize=-1);
 
 		/// Set the modified time of an existing file to now. */
 		virtual void touchFile(const char* name) = 0;

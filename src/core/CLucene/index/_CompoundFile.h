@@ -48,7 +48,7 @@ public:
 	const char* getName() const;
 
 	void close();
-	CL_NS(store)::IndexInput* openInput(const char* id);
+	bool openInput(const char * name, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize=1);
 
 	/** Returns an array of strings, one for each file in the directory-> */
 	void list(std::vector<std::string>* names) const;

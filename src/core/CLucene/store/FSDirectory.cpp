@@ -64,10 +64,16 @@ CL_NS_USE(util)
 		};
 		SharedHandle* handle;
 		int64_t _pos;
+		FSIndexInput(SharedHandle* handle, int32_t __bufferSize):
+			BufferedIndexInput(__bufferSize)
+		{
+			this->_pos = 0;
+			this->handle = handle;
+		};
 	protected:
 		FSIndexInput(const FSIndexInput& clone);
 	public:
-		FSIndexInput(const char* path, int32_t bufferSize=CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
+		static bool open(const char* path, IndexInput*& ret, CLuceneError& error, int32_t bufferSize=-1);
 		~FSIndexInput();
 
 		IndexInput* clone() const;
@@ -100,9 +106,7 @@ CL_NS_USE(util)
 		int64_t length() const;
 	};
 
-	FSDirectory::FSIndexInput::FSIndexInput(const char* path, int32_t __bufferSize):
-		BufferedIndexInput(__bufferSize)	
-    {
+	bool FSDirectory::FSIndexInput::open(const char* path, IndexInput*& ret, CLuceneError& error, int32_t __bufferSize )    {
 	//Func - Constructor.
 	//       Opens the file named path
 	//Pre  - path != NULL
@@ -110,29 +114,38 @@ CL_NS_USE(util)
 
 	  CND_PRECONDITION(path != NULL, "path is NULL");
 
-	  handle = _CLNEW SharedHandle();
+	  if ( __bufferSize == -1 )
+		  __bufferSize = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE;
+	  SharedHandle* handle = _CLNEW SharedHandle();
 	  strcpy(handle->path,path);
 
 	  //Open the file
 	  handle->fhandle  = _cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
 	  
 	  //Check if a valid handle was retrieved
-	  if (handle->fhandle < 0){
+	  if (handle->fhandle >= 0){
+		  //Store the file length
+		  handle->_length = fileSize(handle->fhandle);
+		  if ( handle->_length == -1 )
+	  		error.set( CL_ERR_IO,"fileStat error" );
+		  else{
+			  handle->_fpos = 0;
+			  ret = _CLNEW FSIndexInput(handle, __bufferSize);
+			  return true;
+		  }
+	  }else{
 		int err = errno;
         if ( err == ENOENT )
-		    _CLTHROWA(CL_ERR_IO, "File does not exist");
+		    error.set(CL_ERR_IO, "File does not exist");
         else if ( err == EACCES )
-            _CLTHROWA(CL_ERR_IO, "File Access denied");
+            error.set(CL_ERR_IO, "File Access denied");
         else if ( err == EMFILE )
-            _CLTHROWA(CL_ERR_IO, "Too many open files");
+            error.set(CL_ERR_IO, "Too many open files");
+        else
+        	error.set(CL_ERR_IO, "Could not open file");
 	  }
-
-	  //Store the file length
-	  handle->_length = fileSize(handle->fhandle);
-	  if ( handle->_length == -1 )
-	  	_CLTHROWA( CL_ERR_IO,"fileStat error" );
-	  handle->_fpos = 0;
-	  this->_pos = 0;
+	  _CLDELETE(handle);
+	  return false;
   }
 
   FSDirectory::FSIndexInput::FSIndexInput(const FSIndexInput& other): BufferedIndexInput(other){
@@ -519,10 +532,6 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     else
       return buf.st_size;
   }
-
-  IndexInput* FSDirectory::openInput(const char* name ) {
-  	return openInput(name, CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
-  }
   
   IndexInput* FSDirectory::openMMapFile(const char* name, int32_t bufferSize){
 #ifdef LUCENE_FS_MMAP
@@ -537,7 +546,8 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 #endif
   }
 
-  IndexInput* FSDirectory::openInput(const char* name, int32_t bufferSize ){
+  bool FSDirectory::openInput(const char * name, lucene::store::IndexInput *& ret, CLuceneError& error, int32_t bufferSize)
+  {
 	CND_PRECONDITION(directory[0]!=0,"directory is not open")
     char fl[CL_MAX_DIR];
     priv_getFN(fl, name);
@@ -546,10 +556,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	//is >2gb, then some system cannot mmap the file
 	//also some file systems mmap will fail?? could detect here too
 	if ( useMMap && Misc::file_Size(fl) < LUCENE_INT32_MAX_SHOULDBE ) //todo: would this be bigger on 64bit systems?. i suppose it would be...test first
-		return _CLNEW MMapIndexInput( fl );
+		return MMapIndexInput( fl, ret, error, bufferSize );
 	else
 #endif
-	return _CLNEW FSIndexInput( fl, bufferSize );
+	return FSIndexInput::open( fl, ret, error, bufferSize );
   }
 		
   void FSDirectory::close(){

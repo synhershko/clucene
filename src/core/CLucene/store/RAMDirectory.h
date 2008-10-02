@@ -43,7 +43,7 @@ CL_NS_DEF(store)
 		void _copyFromDir(Directory* dir, bool closeDir);
 		FileMap* files; // unlike the java Hashtable, FileMap is not synchronized, and all access must be protected by a lock
 	public:
-		int64_t sizeInBytes;
+		int64_t sizeInBytes; //todo
 		
 	    DEFINE_MUTABLE_MUTEX(files_mutex) // mutable: const methods must also be able to synchronize properly
 
@@ -87,7 +87,7 @@ CL_NS_DEF(store)
 		virtual IndexOutput* createOutput(const char* name);
 
 		/// Returns a stream reading an existing file. 
-		IndexInput* openInput(const char* name);
+		bool openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize = -1);
 
 		virtual void close();
 		

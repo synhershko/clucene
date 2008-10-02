@@ -56,7 +56,11 @@ bool Directory::deleteFile(const char* name, const bool throwError){
     return ret;
 }
 IndexInput* Directory::openInput(const char* name, int32_t bufferSize){ 
-	return openInput(name); //implementation didnt overload the bufferSize
+	IndexInput* ret;
+	CLuceneError err;
+	if ( ! openInput(name, ret, err, bufferSize) )
+		throw err;
+	return ret;
 }
 char** Directory:: list() const{
 	vector<string> names;

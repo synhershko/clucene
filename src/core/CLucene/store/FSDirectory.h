@@ -99,8 +99,7 @@ CL_CLASS_DEF(util,StringBuffer)
 		int64_t fileLength(const char* name) const;
 
 		/// Returns a stream reading an existing file. 
-		IndexInput* openInput(const char* name);
-		IndexInput* openInput(const char* name, int32_t bufferSize);
+		bool openInput(const char* name, IndexInput*& ret, CLuceneError& err, int32_t bufferSize=-1);
 
 		IndexInput* openMMapFile(const char* name, int32_t bufferSize=LUCENE_STREAM_BUFFER_SIZE);
 

@@ -790,11 +790,10 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 			  // getting the right generation.
 			  int64_t genB = -1;
 			  if (directory != NULL) {
+				  CLuceneError e;
 				  for(int32_t i=0;i<defaultGenFileRetryCount;i++) {
 					  IndexInput* genInput = NULL;
-					  try {
-						  genInput = directory->openInput(IndexFileNames::SEGMENTS_GEN);
-					  } catch (CLuceneError &e) {
+					  if ( ! directory->openInput(IndexFileNames::SEGMENTS_GEN, genInput, e) ){
 						  //if (e.number == CL_ERR_FileNotFound) { // FileNotFound not yet exists...
 						  //	CL_TRACE("segments.gen open: FileNotFoundException %s", e);
 						  //    _CLLDELETE(genInput);

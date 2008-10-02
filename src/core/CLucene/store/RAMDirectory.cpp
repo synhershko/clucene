@@ -444,13 +444,15 @@ CL_NS_DEF(store)
   }
 
 
-  IndexInput* RAMDirectory::openInput(const char* name) {
+  bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize) {
     SCOPED_LOCK_MUTEX(files_mutex);
     RAMFile* file = files->get(name);
     if (file == NULL) { /* DSR:PROPOSED: Better error checking. */
-      _CLTHROWA(CL_ERR_IO,"[RAMDirectory::open] The requested file does not exist.");
+		error.set(CL_ERR_IO, "[RAMDirectory::open] The requested file does not exist.");
+		return false;
     }
-    return _CLNEW RAMIndexInput( file );
+    ret = _CLNEW RAMIndexInput( file );
+	return true;
   }
 
   void RAMDirectory::close(){
