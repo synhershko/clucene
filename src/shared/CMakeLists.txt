@@ -32,8 +32,10 @@ INCLUDE (CheckErrorHandling)
 INCLUDE (CheckHashmaps)
 INCLUDE (CheckNamespace)
 INCLUDE (CheckSnprintf)
-INCLUDE (CheckPthread)
 INCLUDE (CheckStdCallFunctionExists)
+
+find_package(Threads REQUIRED)
+INCLUDE (CheckPthread)
 
 ########################################################################
 # test for headers
@@ -198,10 +200,8 @@ ENDIF ( NOT HAVE_SYMBOL__T )
 ########################################################################
 
 #check for pthreads
-find_package(Threads REQUIRED)
 IF ( CMAKE_USE_WIN32_THREADS_INIT )
     SET ( _CL_HAVE_WIN32_THREADS 1 )
-    SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_LIBS_INIT}" )
 ENDIF ( CMAKE_USE_WIN32_THREADS_INIT )
 IF ( CMAKE_USE_PTHREADS_INIT )
     SET ( _CL_HAVE_PTHREAD 1 )
@@ -209,6 +209,7 @@ ENDIF (CMAKE_USE_PTHREADS_INIT)
 IF ( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
     MESSAGE(FATAL_ERROR "Threads library not implemented")
 ENDIF( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
+SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_LIBS_INIT}" )
 
 #define if we have pthreads with recusrive capabilities
 CHECK_PTHREAD_RECURSIVE(_CL_HAVE_PTHREAD _CL_HAVE_PTHREAD_MUTEX_RECURSIVE)
