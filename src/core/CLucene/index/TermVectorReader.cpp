@@ -297,13 +297,13 @@ SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const i
 	}
 
     TCHAR** terms = _CL_NEWARRAY(TCHAR*,numTerms+1);
-    Array<int32_t>* termFreqs = _CLNEW Array<int32_t>(numTerms);
+    ValueArray<int32_t>* termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
 
     //  we may not need these, but declare them
     Array< Array<int32_t> >* positions = NULL;
 	Array< Array<TermVectorOffsetInfo> >* offsets = NULL;
 	if(storePositions){
-		Array<int32_t>* tmp = _CL_NEWARRAY(Array<int32_t>,numTerms);
+		Array<int32_t>* tmp = (Array<int32_t>*)_CL_NEWARRAY(ValueArray<int32_t>,numTerms);
 		positions = _CLNEW Array< Array<int32_t> >(tmp, numTerms);
 	}
 	if(storeOffsets){
@@ -369,9 +369,9 @@ SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const i
 	terms[numTerms]=NULL; //null terminate terms array
 
 	if (storePositions || storeOffsets){
-	  return _CLNEW SegmentTermPositionVector(field, terms, termFreqs, positions, offsets);
+	  return _CLNEW SegmentTermPositionVector(field, terms, (Array<int32_t>*)termFreqs, positions, offsets);
 	}else {
-	  return _CLNEW SegmentTermVector(field, terms, termFreqs);
+	  return _CLNEW SegmentTermVector(field, terms, (Array<int32_t>*)termFreqs);
 	}
 }
 

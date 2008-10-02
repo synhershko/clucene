@@ -276,7 +276,7 @@ public:
 	TermEnum* terms(const Term* t) const;
 
 	///Gets the document identified by n
-	bool document(int32_t n, CL_NS(document)::Document* doc);
+	bool document(int32_t n, CL_NS(document)::Document& doc);
 
 	///Checks if the n-th document has been marked deleted
 	bool isDeleted(const int32_t n);
