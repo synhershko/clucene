@@ -8,6 +8,7 @@
 #include "StandardTokenizer.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_FastCharStream.h"
+#include "CLucene/util/CLStreams.h"
 
 CL_NS_USE(analysis)
 CL_NS_USE(util)
@@ -92,17 +93,21 @@ CL_NS_DEF2(analysis,standard)
   #define CONTAINS_ANY(sb, ofThese) (_tcscspn(sb.getBuffer(), _T(ofThese)) != static_cast<size_t>(sb.len))
 
 
-  StandardTokenizer::StandardTokenizer(BufferedReader* reader):
+  StandardTokenizer::StandardTokenizer(BufferedReader* reader, bool deleteReader):
     /* rdPos is zero-based.  It starts at -1, and will advance to the first
     ** position when readChar() is first called. */
     rdPos(-1),
     tokenStart(-1),
     rd(_CLNEW FastCharStream(reader))
   {
+	  this->reader = reader;
+	  this->deleteReader = deleteReader;
   }
 
   StandardTokenizer::~StandardTokenizer() {
     _CLDELETE(rd);
+    if ( this->deleteReader )
+    	_CLDELETE(reader)
   }
 
   int StandardTokenizer::readChar() {

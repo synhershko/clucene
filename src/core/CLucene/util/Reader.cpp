@@ -340,4 +340,64 @@ void SimpleInputStreamReader::setMinBufSize(int32_t minbufsize){
 	internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 
+class FilteredBufferedReader::Internal{
+public:
+	class JStreamsFilteredBuffer: public jstreams::BufferedReader{
+		Reader* input;
+		bool deleteInput;
+	protected:
+		int32_t fillBuffer(TCHAR* start, int32_t space){
+			const TCHAR* buffer;
+			int32_t r = input->read(buffer, 1, space);
+			if ( r > 0 )
+				_tcsncpy(start, buffer, r);
+			return r;
+		}
+	public:
+		JStreamsFilteredBuffer(Reader* input, bool deleteInput){
+			this->input = input;
+			this->deleteInput = deleteInput;
+		}
+		~JStreamsFilteredBuffer(){
+			if ( deleteInput )
+				_CLDELETE(input);
+		}
+		void _setMinBufSize(int32_t min){
+			this->setMinBufSize(min);
+		}
+	};
+	JStreamsFilteredBuffer* jsbuffer;
+	
+	Internal(Reader* reader, bool deleteReader){
+		this->jsbuffer = new JStreamsFilteredBuffer(reader, deleteReader);
+	}
+	~Internal(){
+		delete jsbuffer;
+	}
+};
+FilteredBufferedReader::FilteredBufferedReader(Reader* reader, bool deleteReader){
+	internal = new Internal(reader, deleteReader);
+}
+FilteredBufferedReader::~FilteredBufferedReader(){
+	delete internal;
+}
+int32_t FilteredBufferedReader::read(const TCHAR*& start, int32_t min, int32_t max){
+	return internal->jsbuffer->read(start,min,max);
+}
+int64_t FilteredBufferedReader::position(){
+	return internal->jsbuffer->position();
+}
+int64_t FilteredBufferedReader::reset(int64_t p){
+	return internal->jsbuffer->reset(p);
+}
+int64_t FilteredBufferedReader::skip(int64_t ntoskip){
+	return internal->jsbuffer->skip(ntoskip);
+}
+size_t FilteredBufferedReader::size(){
+	return internal->jsbuffer->size();
+}
+void FilteredBufferedReader::setMinBufSize(int32_t minbufsize){
+	return internal->jsbuffer->_setMinBufSize(minbufsize);
+}
+
 CL_NS_END

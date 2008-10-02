@@ -8,7 +8,7 @@
 #include "StandardAnalyzer.h"
 
 ////#include "CLucene/util/VoidMap.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/analysis/Analyzers.h"
 #include "StandardFilter.h"
@@ -52,7 +52,13 @@ CL_NS_DEF2(analysis,standard)
 
 	TokenStream* StandardAnalyzer::tokenStream(const TCHAR* fieldName, Reader* reader) 
 	{
-		TokenStream* ret = _CLNEW StandardTokenizer(reader);
+		BufferedReader* bufferedReader = reader->__asBufferedReader();
+		TokenStream* ret;
+
+		if ( bufferedReader == NULL )
+			ret =  _CLNEW StandardTokenizer( _CLNEW FilteredBufferedReader(reader, false), true );
+		else
+			ret = _CLNEW StandardTokenizer(bufferedReader);
 		ret = _CLNEW StandardFilter(ret,true);
 		ret = _CLNEW LowerCaseFilter(ret,true);
 		ret = _CLNEW StopFilter(ret,true, stopSet);

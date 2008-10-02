@@ -49,11 +49,13 @@ CL_NS_DEF2(analysis,standard)
 
     bool ReadDotted(CL_NS(util)::StringBuffer* str, TokenTypes forcedType,Token* t);
 
-  public:
+	CL_NS(util)::BufferedReader* reader;
+	bool deleteReader;
 	CL_NS(util)::FastCharStream* rd;
+  public:
 
     // Constructs a tokenizer for this Reader.
-    StandardTokenizer(CL_NS(util)::BufferedReader* reader);
+    StandardTokenizer(CL_NS(util)::BufferedReader* reader, bool deleteReader=false);
 
     ~StandardTokenizer();
 

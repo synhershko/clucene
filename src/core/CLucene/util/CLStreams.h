@@ -102,6 +102,7 @@ public:
 template <class T> 
 class CLUCENE_EXPORT BufferedStream{
 public:
+		~BufferedStream(){}
     /**
      * @brief Repositions this stream to a given position.
      *
@@ -137,6 +138,7 @@ public:
 class BufferedReader;
 class CLUCENE_EXPORT Reader: public CLStream<TCHAR>{
 public:
+	~Reader(){}
 	virtual BufferedReader* __asBufferedReader(){ return NULL; }
 };
 class CLUCENE_EXPORT BufferedReader: public Reader, public BufferedStream<TCHAR>{
@@ -145,10 +147,33 @@ public:
 		this->setMinBufSize(readAheadlimit);
 		return this->position();
 	}
+	~BufferedReader(){}
 	BufferedReader* __asBufferedReader(){ return this; }
 };
-class CLUCENE_EXPORT InputStream: public CLStream<signed char>{};
-class CLUCENE_EXPORT BufferedInputStream: public InputStream, public BufferedStream<signed char>{};
+class CLUCENE_EXPORT InputStream: public CLStream<signed char>{
+public:
+	~InputStream(){}
+};
+class CLUCENE_EXPORT BufferedInputStream: public InputStream, public BufferedStream<signed char>{
+public:
+	~BufferedInputStream(){}
+};
+	
+
+class FilteredBufferedReader: public BufferedReader{
+	class Internal;
+	Internal* internal;
+public:
+	FilteredBufferedReader(Reader* reader, bool deleteReader);
+	virtual ~FilteredBufferedReader();
+	
+	int32_t read(const TCHAR*& start, int32_t min, int32_t max);
+	int64_t position();
+	int64_t reset(int64_t);
+	int64_t skip(int64_t ntoskip);
+	size_t size();
+	void setMinBufSize(int32_t minbufsize);
+};
 
 
 class CLUCENE_EXPORT StringReader: public BufferedReader{
