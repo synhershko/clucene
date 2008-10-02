@@ -10,6 +10,8 @@ MACRO (DEFINE_OPTIONS extraOptions)
     
     IF(DISABLE_MULTITHREADING)
     	SET (${extraOptions} "${${extraOptions}} -D_CL_DISABLE_MULTITHREADING")
+    ELSE(DISABLE_MULTITHREADING)
+	SET(${extraOptions} "${${extraOptions}} -D_REENTRANT")
     ENDIF(DISABLE_MULTITHREADING)
     
     IF(ENABLE_ASCII_MODE)
