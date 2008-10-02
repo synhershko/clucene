@@ -73,7 +73,7 @@ public:
 };
 
 /**
-* An array of objects
+* An array of objects. _CLDELETE is called on every containing object.
 */
 template<typename T>
 class CLUCENE_EXPORT ObjectArray: public ArrayBase<T>{
@@ -86,7 +86,7 @@ public:
         if ( this->values == NULL )
             return;
 		for (size_t i=0;i<this->length;i++){
-			this->values[i];
+			_CLLDELETE(this->values[i]);
 		}
 	    this->deleteArray();
 	}
@@ -96,14 +96,14 @@ public:
 };
 
 /**
-* An array of objects
+* Legacy code... don't use, remove all instances of this!
 */
 template<typename T>
 class CLUCENE_EXPORT Array: public ArrayBase<T>{
 public:
-    /*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array():ArrayBase<T>(){}
-	/*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array(T* values, size_t length):ArrayBase<T>(values,length){}
-	/*_CL_DEPRECATED(ObjectArray or ValueArray)*/ Array(size_t length):ArrayBase<T>(length){}
+    _CL_DEPRECATED(ObjectArray or ValueArray) Array():ArrayBase<T>(){}
+	_CL_DEPRECATED(ObjectArray or ValueArray) Array(T* values, size_t length):ArrayBase<T>(values,length){}
+	_CL_DEPRECATED(ObjectArray or ValueArray) Array(size_t length):ArrayBase<T>(length){}
     void deleteValues(){
         if ( this->values == NULL )
             return;

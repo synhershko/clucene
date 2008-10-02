@@ -236,8 +236,10 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 }
 
  sortScores* sort_getScores (CuTest* tc, Hits* hits, bool deleteHits=true){
-	sortScores* scoreMap = _CLNEW sortScores(true);
+	sortScores* scoreMap = _CLNEW sortScores(_CLNEW TCharCompare);
 	int n = hits->length();
+	float_t m=pow(10.0,-8);
+
 	for (int i=0; i<n; ++i) {
 		Document& doc = hits->doc(i);
 		TCHAR** v = doc.getValues( _T("tracer"));
@@ -248,8 +250,20 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 
 		CuAssertIntEquals (tc, _T("tracer values"), vLength, 1);
 
-		scoreMap->insert ( scorePair(v[0], hits->score(i)) );
-		_CLDELETE_ARRAY(v);
+		if ( scoreMap->find(v[0]) != scoreMap->end () ){
+			//this (should) be a multi search... the document will be double, so here we check that
+			//the existing value is the same as this value... and then delete and ignore it.
+			float_t diff = scoreMap->find(v[0])->second - hits->score(i);
+			if ( diff < 0 )
+				diff *= -1;
+			if ( diff>m )
+				CuAssert(tc,_T("sort_getScores(multi or incorrect) f1!=f2"),false);	
+
+			_CLDELETE_ARRAY_ALL(v);
+		}else{
+			scoreMap->insert ( scorePair(v[0], hits->score(i)) );
+			_CLDELETE_ARRAY(v);
+		}
 	}
 	if ( deleteHits )
 		_CLDELETE(hits);

@@ -274,7 +274,7 @@ int32_t SegmentMerger::mergeFields() {
 				//Check if the j-th document has been deleted, if so skip it
 				if (!reader->isDeleted(j)){ 
 					//Get the document
-					if ( reader->document(j, &doc) ){
+					if ( reader->document(j, doc) ){
     					//Add the document to the new FieldsWriter
     					fieldsWriter->addDocument( &doc );
     					docCount++;
@@ -307,10 +307,10 @@ void SegmentMerger::mergeVectors(){
 				if (reader->isDeleted(docNum))
 					continue;
 
-				Array<TermFreqVector*> tmp;
-				if ( reader->getTermFreqVectors(docNum, tmp) )
-					termVectorsWriter->addAllDocVectors(tmp);
-				tmp.deleteAll();
+				ObjectArray<TermFreqVector*> tmp;
+				if ( reader->getTermFreqVectors(docNum, (Array<TermFreqVector*>&)tmp) )
+					termVectorsWriter->addAllDocVectors((Array<TermFreqVector*>&)tmp);
+				tmp.deleteValues();
 			}
 		}
 	}_CLFINALLY( _CLDELETE(termVectorsWriter); );

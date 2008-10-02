@@ -21,10 +21,10 @@ void testTermPositionVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        Array<TermFreqVector*> vector;
-		CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), vector));
+        ObjectArray<TermFreqVector*> vector;
+		CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), (Array<TermFreqVector*>&)vector));
 		CLUCENE_ASSERT(vector.length== 1);
-		vector.deleteAll();
+		vector.deleteValues();
       }
 
       _CLDELETE(hits);
@@ -48,10 +48,10 @@ void testTermVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        Array<TermFreqVector*> vector;
-        CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), vector));
+        ObjectArray<TermFreqVector*> vector;
+        CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), (Array<TermFreqVector*>&)vector));
         CLUCENE_ASSERT(vector.length == 1);
-		vector.deleteAll();
+		vector.deleteValues();
       }
 
 	  //test mem leaks with vectors
@@ -118,18 +118,18 @@ void testKnownSetOfDocuments(CuTest *tc) {
     const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
     
     typedef StringMap<const TCHAR*, int32_t> test4MapType;
-    test4MapType test4Map(false);
-    test4Map.put(_T("chocolate"), 3);
-    test4Map.put(_T("lab"), 2);
-    test4Map.put(_T("eating"), 1);
-    test4Map.put(_T("computer"), 1);
-    test4Map.put(_T("with"), 1);
-    test4Map.put(_T("a"), 1);
-    test4Map.put(_T("colored"), 1);
-    test4Map.put(_T("in"), 1);
-    test4Map.put(_T("an"), 1);
-    test4Map.put(_T("computer"), 1);
-    test4Map.put(_T("old"), 1);
+    test4MapType test4Map(NULL);
+    test4Map.add(_T("chocolate"), 3);
+    test4Map.add(_T("lab"), 2);
+    test4Map.add(_T("eating"), 1);
+    test4Map.add(_T("computer"), 1);
+    test4Map.add(_T("with"), 1);
+    test4Map.add(_T("a"), 1);
+    test4Map.add(_T("colored"), 1);
+    test4Map.add(_T("in"), 1);
+    test4Map.add(_T("an"), 1);
+    test4Map.add(_T("computer"), 1);
+    test4Map.add(_T("old"), 1);
     
     Document testDoc1;
     setupDoc(testDoc1, test1);
