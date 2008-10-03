@@ -259,7 +259,7 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 			if ( diff>m )
 				CuAssert(tc,_T("sort_getScores(multi or incorrect) f1!=f2"),false);	
 
-			_CLDELETE_ARRAY_ALL(v);
+			_CLDELETE_CARRAY_ALL(v);
 		}else{
 			scoreMap->insert ( scorePair(v[0], hits->score(i)) );
 			_CLDELETE_ARRAY(v);
