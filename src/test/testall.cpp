@@ -196,10 +196,10 @@ int main(int argc, char *argv[])
 		printf("Tests run in %dms\n\n",CL_NS(util)::Misc::currentTimeMillis()-startTime);
 
 	CuSuiteListDelete(alltests);
-	CuStringFree(output);
-	_CLDELETE_CaARRAY(cl_tempDir)
 
 exit_point:
+	CuStringFree(output);
+	_CLDELETE_CaARRAY(cl_tempDir)
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug

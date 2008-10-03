@@ -13,6 +13,7 @@
 #include "CLucene/search/FieldSortedHitQueue.h"
 #include "CLucene/store/LockFactory.h"
 #include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/_ThreadLocal.h"
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 	#define CRTDBG_MAP_ALLOC
@@ -35,4 +36,6 @@ void _lucene_shutdown(){
 
     CLStringIntern::_shutdown();
     NoLockFactory::_shutdown();
+
+_ThreadLocal::_shutdown();
 }

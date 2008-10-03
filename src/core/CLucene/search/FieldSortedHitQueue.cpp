@@ -57,6 +57,7 @@ hitqueueCacheType* FieldSortedHitQueue::Comparators = _CLNEW hitqueueCacheType(f
 
 void FieldSortedHitQueue::_shutdown(){
 	Comparators->clear();
+	_CLDELETE(Comparators);
 }
 
 FieldSortedHitQueue::FieldSortedHitQueue (IndexReader* reader, SortField** _fields, int32_t size):
