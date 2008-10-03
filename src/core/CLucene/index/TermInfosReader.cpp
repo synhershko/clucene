@@ -152,7 +152,7 @@ CL_NS_DEF(index)
         //Delete the IndexInput 
         _CLDELETE(is);	
       }
-	  enumerators.set(NULL);
+	  enumerators.setNull();
   }
 
   int64_t TermInfosReader::size() const{

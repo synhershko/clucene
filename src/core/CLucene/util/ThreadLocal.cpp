@@ -26,10 +26,10 @@ CL_NS_DEF ( util )
 	#define INIT_THREAD(ret) ret=true
     extern "C"{
     #ifndef _WINBASE_
-	__declspec(dllimport) _cl_dword_t __stdcall TlsAlloc( );
+	/*__declspec(dllimport) _cl_dword_t __stdcall TlsAlloc( );
 	__declspec(dllimport) void* __stdcall TlsGetValue(_cl_dword_t dwTlsIndex );
 	__declspec(dllimport) bool __stdcall  TlsSetValue( _cl_dword_t dwTlsIndex, void* lpTlsValue );
-	__declspec(dllimport) bool __stdcall  TlsFree( _cl_dword_t dwTlsIndex );
+	__declspec(dllimport) bool __stdcall  TlsFree( _cl_dword_t dwTlsIndex );*/
 	#define DLL_THREAD_DETACH  3    
     #endif //_WINBASE_
 
@@ -38,10 +38,10 @@ CL_NS_DEF ( util )
                                 _cl_dword_t fdwReason,  // reason called
                                 void*)                  // reserved
         { 
-		if ( fdwReason == DLL_THREAD_DETACH )
-            		_ThreadLocal::UnregisterCurrentThread();
+			if ( fdwReason == DLL_THREAD_DETACH )
+            			_ThreadLocal::UnregisterCurrentThread();
 
-		return TRUE;
+			return true;
         }
     }
 #elif defined(_CL_HAVE_PTHREAD)
@@ -80,7 +80,7 @@ public:
 typedef CL_NS ( util ) ::CLMultiMap<const _LUCENE_THREADID_TYPE, ThreadLocals*,
 	CL_NS ( util ) ::CLuceneThreadIdCompare,
 	CL_NS ( util ) ::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>,
-	CL_NS ( util ) ::Deletor::ConstNullVal<ThreadLocals*> > ThreadDataType;
+	CL_NS ( util ) ::Deletor::Object<ThreadLocals> > ThreadDataType;
 static ThreadDataType*  threadData; 
 
 #ifdef _LUCENE_THREADMUTEX
@@ -156,6 +156,10 @@ void _ThreadLocal::setNull()
 
 void _ThreadLocal::set ( void* t )
 {
+	if ( t == NULL ){
+		setNull();
+		return;
+	}
 	//make sure we have a threadlocal context (for cleanup)
 	bool ret;
 	INIT_THREAD(ret);
@@ -174,12 +178,13 @@ void _ThreadLocal::set ( void* t )
 		SCOPED_LOCK_MUTEX ( *threadData_LOCK );
 
 		if ( threadData == NULL )
-			threadData = _CLNEW ThreadDataType ( false,false );
+			threadData = _CLNEW ThreadDataType ( false, true );
 
 		ThreadLocals* threadLocals = threadData->get(id);
 		if ( threadLocals == NULL ){
 			threadLocals = _CLNEW ThreadLocals;
 			threadData->put(id,threadLocals);
+			printf("starting thread %d\n",(int)id);
 		}
 		threadLocals->add(this);
 	}
@@ -207,13 +212,18 @@ void _ThreadLocal::UnregisterCurrentThread()
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
 	SCOPED_LOCK_MUTEX ( *threadData_LOCK );
 
-	ThreadLocals* threadLocals = threadData->get(id);
-	threadLocals->UnregisterThread();
+	ThreadDataType::iterator itr = threadData->find(id);
+	if ( itr != threadData->end() ){
+		ThreadLocals* threadLocals = itr->second;
+		threadLocals->UnregisterThread();
+		threadData->removeitr(itr);
+	}
 }
 
 void _ThreadLocal::_shutdown()
 {
-	
+	_CLDELETE(threadData_LOCK);
+	_CLDELETE(threadData);
 }
 
 
