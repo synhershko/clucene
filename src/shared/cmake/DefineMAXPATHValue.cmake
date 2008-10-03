@@ -1,6 +1,12 @@
 #checks if snprintf have bugs
 
 MACRO ( DEFINE_MAXPATH_VALUE MaxPathValue )
+# also check for MAXPATHLEN
+#or this:
+#path_max = pathconf (path, _PC_PATH_MAX);
+  #if (path_max <= 0)
+    #path_max = 4096;
+
 	#use CHOOSE_SYMBOL mechanism to determine which variable to use...
 	#CHOOSE_SYMBOL (_CL_MAX_PATH "PATH_MAX;MAX_PATH;_MAX_PATH;_POSIX_PATH_MAX" DefineMaxPathValue)
 	#IF ( DefineMaxPathValue )
@@ -20,5 +26,5 @@ MACRO ( DEFINE_MAXPATH_VALUE MaxPathValue )
     
     #HACK!!!
     #todo: fix this
-    SET( ${MaxPathValue} "#define CL_MAX_PATH 260")
+    SET( ${MaxPathValue} "#define CL_MAX_PATH 4096")
 ENDMACRO ( DEFINE_MAXPATH_VALUE )
