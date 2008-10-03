@@ -195,9 +195,9 @@ int main(int argc, char *argv[])
 	if ( times )
 		printf("Tests run in %dms\n\n",CL_NS(util)::Misc::currentTimeMillis()-startTime);
 
-	CuSuiteListDelete(alltests);
-
 exit_point:
+	if ( alltests != NULL )
+		CuSuiteListDelete(alltests);
 	CuStringFree(output);
 	_CLDELETE_CaARRAY(cl_tempDir)
 
