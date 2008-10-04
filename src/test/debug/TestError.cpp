@@ -67,7 +67,7 @@ _LUCENE_THREAD_FUNC ( threadLocalTest, arg )
 void testThreadLocal ( CuTest *tc )
 {
 
-	int threadsCount = 10;
+	const int threadsCount = 10;
 
 	//read using multiple threads...
 	_LUCENE_THREADID_TYPE threads[threadsCount];
