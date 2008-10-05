@@ -35,12 +35,17 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, An
 {
     BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
     int32_t i = 0;
-    while ( fields[i] != NULL ){
-		   Query* q = QueryParser::parse(query, fields[i], analyzer);
+	while ( fields[i] != NULL ){
+		Query* q = QueryParser::parse(query, fields[i], analyzer);
+		if (q && (q->getQueryName()!="BooleanQuery" || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+			//todo: Move to using BooleanClause::Occur
 			bQuery->add(q, true, false, false);
+		} else {
+			_CLDELETE(q);
+		}
 
-        i++;
-    }
+		i++;
+	}
     return bQuery;
 }
 
@@ -52,25 +57,34 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, co
     while ( fields[i] != NULL )
     {
 		Query* q = QueryParser::parse(query, fields[i], analyzer);
-        uint8_t flag = flags[i];
-        switch (flag)
-        {
+		if (q && (q->getQueryName()!="BooleanQuery" || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+			uint8_t flag = flags[i];
+			switch (flag)
+			{
+				//todo: Move to using BooleanClause::Occur
 			case MultiFieldQueryParser::REQUIRED_FIELD:
-                bQuery->add(q, true, true, false);
-                break;
-            case MultiFieldQueryParser::PROHIBITED_FIELD:
-                bQuery->add(q, true, false, true);
-                break;
-            default:
-                bQuery->add(q, true, false, false);
-                break;
-        }
+				bQuery->add(q, true, true, false);
+				break;
+			case MultiFieldQueryParser::PROHIBITED_FIELD:
+				bQuery->add(q, true, false, true);
+				break;
+			default:
+				bQuery->add(q, true, false, false);
+				break;
+			}
+		} else {
+			_CLDELETE(q);
+		}
 
         i++;
     }
     return bQuery;
 }
 
+//not static
+CL_NS(search)::Query* MultiFieldQueryParser::parse(const TCHAR* query) {
+	return parse(query, this->fields, this->analyzer);
+}
 
 Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText, int32_t slop){
 	if (field == NULL) {

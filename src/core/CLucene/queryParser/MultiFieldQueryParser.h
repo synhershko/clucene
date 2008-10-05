@@ -88,10 +88,10 @@ typedef CL_NS(util)::CLHashMap<const TCHAR*,
          * <p><pre>
          * Usage:
          * <code>
-         * String[] fields = {"filename", "contents", "description"};
-         * int32_t[] flags = {MultiFieldQueryParser.NORMAL FIELD,
-         *                MultiFieldQueryParser.REQUIRED FIELD,
-         *                MultiFieldQueryParser.PROHIBITED FIELD,};
+         * TCHAR** fields = {"filename", "contents", "description"};
+         * int8_t* flags = {MultiFieldQueryParser::NORMAL FIELD,
+         *                MultiFieldQueryParser::REQUIRED FIELD,
+         *                MultiFieldQueryParser::PROHIBITED FIELD};
          * parse(query, fields, flags, analyzer);
          * </code>
          * </pre>
@@ -112,7 +112,8 @@ typedef CL_NS(util)::CLHashMap<const TCHAR*,
          */
 		static CL_NS(search)::Query* parse(const TCHAR* query, const TCHAR** fields, const uint8_t* flags, CL_NS(analysis)::Analyzer* analyzer);
 
-
+		// non-static version of the above
+		CL_NS(search)::Query* parse(const TCHAR* query);
 
 	protected:
 		CL_NS(search)::Query* GetFieldQuery(const TCHAR* field, TCHAR* queryText);

@@ -22,6 +22,7 @@ SET(test_files ./tests.cpp
 ./CuTest.cpp
 ./testall.cpp
 ./queryParser/TestQueryParser.cpp
+./queryParser/TestMultiFieldQueryParser.cpp
 ./analysis/TestAnalysis.cpp
 ./analysis/TestAnalyzers.cpp
 ./debug/TestError.cpp

@@ -86,12 +86,13 @@ void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* 
 		return;
 
 	const TCHAR* s = q->toString(_T("field"));
-	if ( _tcscmp(s,result) != 0 ) {
+	int ret = _tcscmp(s,result);
+	_CLDELETE_CARRAY(s);
+	_CLDELETE(q);
+	if ( ret != 0 ) {
 		CuFail(tc, _T("FAILED Query /%s/ yielded /%s/, expecting /%s/\n"), query, s,
 			result);
 	}
-	_CLDELETE_CARRAY(s);
-	_CLDELETE(q);
 		
 }
 

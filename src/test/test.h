@@ -17,6 +17,7 @@
 #include "CLucene/store/RAMDirectory.h"
 #include "CLucene/store/Lock.h"
 #include "CLucene/index/TermVector.h"
+#include "CLucene/queryParser/MultiFieldQueryParser.h"
 
 
 CL_NS_USE(index)
@@ -38,6 +39,7 @@ CuSuite *testhighfreq(void);
 CuSuite *testhighlight(void);
 CuSuite *testpriorityqueue(void);
 CuSuite *testQueryParser(void);
+CuSuite *testMultiFieldQueryParser(void);
 CuSuite *testqueries(void);
 CuSuite *testsearch(void);
 CuSuite *testtermvector(void);

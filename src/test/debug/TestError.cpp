@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include "CLucene/util/_ThreadLocal.h"
+//#include "CLucene/util/_ThreadLocal.h"
 #include "CLucene/util/Equators.h"
 
 void testError ( CuTest *tc )
@@ -34,6 +34,7 @@ void testError ( CuTest *tc )
 	}
 }
 
+/*
 typedef CL_NS(util)::ThreadLocal<char*, CL_NS(util)::Deletor::acArray> tlTest;
 struct Data{
 	tlTest* tl;
@@ -87,13 +88,13 @@ void testThreadLocal ( CuTest *tc )
 	for ( i=0;i<threadsCount;i++ )
 		_LUCENE_THREAD_JOIN ( threads[i] );
 }
-
+*/
 CuSuite *testdebug ( void )
 {
 	CuSuite *suite = CuSuiteNew ( _T ( "CLucene Debug Test" ) );
 
-	//SUITE_ADD_TEST ( suite, testError );
-	SUITE_ADD_TEST ( suite, testThreadLocal );
+	SUITE_ADD_TEST ( suite, testError );
+	//SUITE_ADD_TEST ( suite, testThreadLocal );
 
 	return suite;
 }
