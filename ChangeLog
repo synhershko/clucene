@@ -1,3 +1,5 @@
+Removed jstreams namespace. Sorry, I couldn't think of a way to nicely deprecate jstreams.
+
 version 0.9.23:
 Changes:
 * Static object fields have been changed to method accessors (SortField::FIELDDOC now chould be accessed as SortField::FIELDDOC(), for example). Classes changed: FieldCache, ScoreDocComparator,
