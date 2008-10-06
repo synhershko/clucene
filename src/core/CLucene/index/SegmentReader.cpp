@@ -774,7 +774,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
   //Pre  - true
   //Post - All the norms have been destroyed
 
-    SCOPED_LOCK_MUTEX(_norms.THIS_LOCK)
+    SCOPED_LOCK_MUTEX(_norms_LOCK)
 	//Create an interator initialized at the beginning of norms
 	NormsType::iterator itr = _norms.begin();
 	//Iterate through all the norms

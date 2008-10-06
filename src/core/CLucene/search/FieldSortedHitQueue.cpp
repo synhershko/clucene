@@ -54,6 +54,7 @@ public:
 };
 
 hitqueueCacheType* FieldSortedHitQueue::Comparators = _CLNEW hitqueueCacheType(false,true);
+DEFINE_MUTEX(FieldSortedHitQueue::Comparators_LOCK)
 
 void FieldSortedHitQueue::_shutdown(){
 	Comparators->clear();
@@ -209,7 +210,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
       : _CLNEW FieldCacheImpl::FileEntry (field, type);
 	
 	{
-		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		SCOPED_LOCK_MUTEX(Comparators_LOCK)
 		hitqueueCacheReaderType* readerCache = Comparators->get(reader);
 		if (readerCache == NULL){
 			_CLDELETE(entry);
@@ -223,7 +224,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
   }
 
 	void FieldSortedHitQueue::closeCallback(CL_NS(index)::IndexReader* reader, void*){
-		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		SCOPED_LOCK_MUTEX(Comparators_LOCK)
 		Comparators->remove(reader);
 	}
 	
@@ -234,7 +235,7 @@ ScoreDocComparator* FieldSortedHitQueue::comparatorInt (IndexReader* reader, con
 		: _CLNEW FieldCacheImpl::FileEntry (field, type);
 
 	{
-		SCOPED_LOCK_MUTEX(Comparators->THIS_LOCK)
+		SCOPED_LOCK_MUTEX(Comparators_LOCK)
 		hitqueueCacheReaderType* readerCache = Comparators->get(reader);
 		if (readerCache == NULL) {
 			readerCache = _CLNEW hitqueueCacheReaderType(true);

@@ -38,6 +38,7 @@ struct AbstractCachingFilter::Internal{
 	  CL_NS(util)::Deletor::Object<BitSetHolder> > CacheType; 
 
 	CacheType cache;
+	DEFINE_MUTEX(cache_LOCK)
 	Internal():
 		cache(false,true)
 	{
@@ -57,7 +58,7 @@ AbstractCachingFilter::~AbstractCachingFilter(){
 }
 
 BitSet* AbstractCachingFilter::bits(IndexReader* reader){
-	SCOPED_LOCK_MUTEX(internal->cache.THIS_LOCK)
+	SCOPED_LOCK_MUTEX(internal->cache_LOCK)
 	BitSetHolder* cached = internal->cache.get(reader);
 	if ( cached != NULL )
 		return cached->bits;
@@ -67,7 +68,7 @@ BitSet* AbstractCachingFilter::bits(IndexReader* reader){
 	return bs;
 }
 void AbstractCachingFilter::closeCallback(CL_NS(index)::IndexReader* reader, void*){
-	SCOPED_LOCK_MUTEX(internal->cache.THIS_LOCK)
+	SCOPED_LOCK_MUTEX(internal->cache_LOCK)
 	internal->cache.remove(reader);
 }
 

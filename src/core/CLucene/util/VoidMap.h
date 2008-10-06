@@ -37,8 +37,6 @@ private:
 	bool dv;
 	typedef _base base;
 public:
-    DEFINE_MUTEX(THIS_LOCK)
-
 	typedef typename _base::iterator iterator;
 	typedef typename _base::const_iterator const_iterator;
 	typedef CL_NS_STD(pair)<_kt, _vt> _pair;

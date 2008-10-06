@@ -28,9 +28,10 @@ public:
   private:
 	  const char* lockName;
 	  LocksType* locks;
+	  DEFINE_MUTEX(*locks_LOCK);
 	  
   public:
-	  SingleInstanceLock( LocksType* locks, const char* lockName );
+	  SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName );
 
 	  bool obtain();
 	  void release();

@@ -118,7 +118,7 @@ TermVectorsReader::~TermVectorsReader(){
 void TermVectorsReader::close(){
 	// why don't we trap the exception and at least make sure that
     // all streams that we can close are closed?
-	CLuceneError keep(0,"",false);
+	CLuceneError keep;
 	bool thrown = false;
 
 	if (tvx != NULL){

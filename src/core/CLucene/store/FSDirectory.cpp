@@ -41,6 +41,7 @@ CL_NS_USE(util)
    * synchronize access between readers and writers.
    */
 	static CL_NS(util)::CLHashMap<const char*,FSDirectory*,CL_NS(util)::Compare::Char,CL_NS(util)::Equals::Char> DIRECTORIES(false,false);
+	STATIC_DEFINE_MUTEX(DIRECTORIES_LOCK)
 
 	bool FSDirectory::disableLocks=false;
 
@@ -57,9 +58,9 @@ CL_NS_USE(util)
 			int32_t fhandle;
 			int64_t _length;
 			int64_t _fpos;
-			DEFINE_MUTEX(THIS_LOCK)
+			DEFINE_MUTEX(*THIS_LOCK)
 			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
-			SharedHandle();
+			SharedHandle(const char* path);
 			~SharedHandle();
 		};
 		SharedHandle* handle;
@@ -116,8 +117,7 @@ CL_NS_USE(util)
 
 	  if ( __bufferSize == -1 )
 		  __bufferSize = CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE;
-	  SharedHandle* handle = _CLNEW SharedHandle();
-	  strcpy(handle->path,path);
+	  SharedHandle* handle = _CLNEW SharedHandle(path);
 
 	  //Open the file
 	  handle->fhandle  = ::_cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
@@ -156,16 +156,20 @@ CL_NS_USE(util)
 	if ( other.handle == NULL )
 		_CLTHROWA(CL_ERR_NullPointer, "other handle is null");
 
-	SCOPED_LOCK_MUTEX(other.handle->THIS_LOCK)
+	SCOPED_LOCK_MUTEX(*other.handle->THIS_LOCK)
 	handle = _CL_POINTER(other.handle);
 	_pos = other.handle->_fpos; //note where we are currently...
   }
 
-  FSDirectory::FSIndexInput::SharedHandle::SharedHandle(){
+  FSDirectory::FSIndexInput::SharedHandle::SharedHandle(const char* path){
   	fhandle = 0;
     _length = 0;
     _fpos = 0;
-    path[0]=0;
+    strcpy(this->path,path);
+
+#ifdef _LUCENE_THREADMUTEX
+	THIS_LOCK = new _LUCENE_THREADMUTEX;
+#endif
   }
   FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() {
     if ( fhandle >= 0 ){
@@ -191,7 +195,32 @@ CL_NS_USE(util)
   }
   void FSDirectory::FSIndexInput::close()  {
 	BufferedIndexInput::close();
+#ifdef _LUCENE_THREADMUTEX
+	if ( handle != NULL ){
+		//here we have a bit of a problem... we need to lock the handle to ensure that we can
+		//safely delete the handle... but if we delete the handle, then the scoped unlock, 
+		//won't be able to unlock the mutex...
+
+		//take a reference of the lock object...
+		_LUCENE_THREADMUTEX* mutex = handle->THIS_LOCK;
+		//lock the mutex
+		mutex->lock();
+
+		//determine if we are about to delete the handle...
+		bool dounlock = ( handle->__cl_refcount > 1 );
+		//decdelete (deletes if refcount is down to 0
+		_CLDECDELETE(handle);
+
+		//printf("handle=%d\n", handle->__cl_refcount);
+		if ( dounlock ){
+			mutex->unlock();
+		}else{
+			delete mutex;
+		}
+	}
+#else
 	_CLDECDELETE(handle);
+#endif
   }
 
   void FSDirectory::FSIndexInput::seekInternal(const int64_t position)  {
@@ -201,9 +230,9 @@ CL_NS_USE(util)
 
 /** IndexInput methods */
 void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
-	SCOPED_LOCK_MUTEX(handle->THIS_LOCK)
 	CND_PRECONDITION(handle!=NULL,"shared file handle has closed");
 	CND_PRECONDITION(handle->fhandle>=0,"file is not open");
+	SCOPED_LOCK_MUTEX(*handle->THIS_LOCK)
 
 	if ( handle->_fpos != _pos ){
 		if ( fileSeek(handle->fhandle,_pos,SEEK_SET) != _pos ){
@@ -469,7 +498,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		if ( !file || !*file )
 			_CLTHROWA(CL_ERR_IO,"Invalid directory");
 
-		SCOPED_LOCK_MUTEX(DIRECTORIES.THIS_LOCK)
+		SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
 		dir = DIRECTORIES.get(file);
 		if ( dir == NULL  ){
 			dir = _CLNEW FSDirectory(file,_create,lockFactory);
@@ -563,7 +592,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   }
 		
   void FSDirectory::close(){
-    SCOPED_LOCK_MUTEX(DIRECTORIES.THIS_LOCK)
+    SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
     {
 	    SCOPED_LOCK_MUTEX(THIS_LOCK)
 	

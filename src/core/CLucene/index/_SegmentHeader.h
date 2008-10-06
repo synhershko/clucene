@@ -200,6 +200,7 @@ class SegmentReader: public IndexReader{
 	//Holds all norms for all fields in the segment
 	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar> NormsType;
     NormsType _norms; 
+	DEFINE_MUTEX(_norms_LOCK)
     
 	uint8_t* ones;
 	uint8_t* fakeNorms();

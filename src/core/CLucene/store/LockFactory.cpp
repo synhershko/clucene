@@ -55,12 +55,12 @@ SingleInstanceLockFactory::~SingleInstanceLockFactory()
 
 LuceneLock* SingleInstanceLockFactory::makeLock( const char* lockName )
 {
-	return _CLNEW SingleInstanceLock( locks, lockName );
+	return _CLNEW SingleInstanceLock( locks, &locks_LOCK, lockName );
 }
 
 void SingleInstanceLockFactory::clearLock( const char* lockName )
 {
-	SCOPED_LOCK_MUTEX(locks->THIS_LOCK);
+	SCOPED_LOCK_MUTEX(locks_LOCK);
 	LocksType::iterator itr = locks->find( lockName );
 	if ( itr != locks->end() ) {
 		locks->remove( itr );

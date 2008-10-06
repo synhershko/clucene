@@ -60,21 +60,22 @@ CL_NS_DEF(store)
    
 
 
-   SingleInstanceLock::SingleInstanceLock( LocksType* locks, const char* lockName )
+   SingleInstanceLock::SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName )
    {
 	   this->locks = locks;
+	   this->locks_LOCK = locks_LOCK;
 	   this->lockName = lockName;
    }
    
    bool SingleInstanceLock::obtain()
    {
-	   SCOPED_LOCK_MUTEX(locks->THIS_LOCK);
+	   SCOPED_LOCK_MUTEX(*locks_LOCK);
 	   return locks->insert( lockName ).second;
    }
    
    void SingleInstanceLock::release()
    {
-	   SCOPED_LOCK_MUTEX(locks->THIS_LOCK);
+	   SCOPED_LOCK_MUTEX(*locks_LOCK);
 	   LocksType::iterator itr = locks->find( lockName );
 	   if ( itr != locks->end() ) {
 		   locks->remove(itr, true);
@@ -83,7 +84,7 @@ CL_NS_DEF(store)
    
    bool SingleInstanceLock::isLocked()
    {
-	   SCOPED_LOCK_MUTEX(locks->THIS_LOCK);
+	   SCOPED_LOCK_MUTEX(*locks_LOCK);
 	   return locks->find( lockName ) == locks->end();
    }
    

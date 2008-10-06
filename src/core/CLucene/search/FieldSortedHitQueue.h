@@ -44,6 +44,7 @@ public: //todo: remove this and below after close callback is implemented
 	*  caches comparators instead of term values. 
 	*/
 	static hitqueueCacheType* Comparators;
+	STATIC_DEFINE_MUTEX(Comparators_LOCK)
 	
 	/** Cleanup static data */
 	static CLUCENE_LOCAL void _shutdown();
