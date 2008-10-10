@@ -93,6 +93,7 @@ CL_NS_DEF(search)
             buffer.append( _T(":"));
         }
         buffer.append(term->text());
+		// todo: use ToStringUtils.boost()
         if (getBoost() != 1.0f) {
             buffer.appendChar ( '^' );
             buffer.appendFloat( getBoost(),1);

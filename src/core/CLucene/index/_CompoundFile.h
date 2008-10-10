@@ -11,6 +11,7 @@
 CL_CLASS_DEF(store,Lock)
 #include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexInput.h"
 
 CL_NS_DEF(index)
 
@@ -25,6 +26,8 @@ class ReaderFileEntry;
  */
 class CompoundFileReader: public CL_NS(store)::Directory {
 private:
+    int32_t readBufferSize;
+
 	// Base info
 	CL_NS(store)::Directory* directory;
 	char* fileName;
@@ -42,13 +45,13 @@ protected:
 	bool doDeleteFile(const char* name);
 
 public:
-	CompoundFileReader(CL_NS(store)::Directory* dir, char* name);
+	CompoundFileReader(CL_NS(store)::Directory* dir, char* name, int32_t _readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 	~CompoundFileReader();
 	CL_NS(store)::Directory* getDirectory();
 	const char* getName() const;
 
 	void close();
-	bool openInput(const char * name, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize=1);
+	bool openInput(const char * name, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize=0);
 
 	/** Returns an array of strings, one for each file in the directory-> */
 	void list(std::vector<std::string>* names) const;

@@ -362,4 +362,52 @@ CL_NS_DEF(search)
 	  return ret;
   }
 
+  /*
+  Query* FuzzyQuery::rewrite(IndexReader* reader) {
+	  FilteredTermEnum* enumerator = getEnum(reader);
+	  int32_t maxClauseCount = BooleanQuery::getMaxClauseCount();
+	  ScoreTermQueue* stQueue = _CLNEW ScoreTermQueue(maxClauseCount);
+	  ScoreTerm* reusableST = NULL;
+
+	  try {
+		  do {
+			  float_t score = 0.0f;
+			  Term* t = enumerator->term();
+			  if (t != null) {
+				  score = enumerator->difference();
+				  if (reusableST == NULL) {
+					  reusableST = _CLNEW ScoreTerm(t, score);
+				  } else if (score >= reusableST->score) {
+					  // reusableST holds the last "rejected" entry, so, if
+					  // this new score is not better than that, there's no
+					  // need to try inserting it
+					  reusableST->score = score;
+					  reusableST->term = t;
+				  } else {
+					  continue;
+				  }
+
+				  reusableST = (ScoreTerm) stQueue->insertWithOverflow(reusableST);
+			  }
+		  } while (enumerator->next());
+	  } _CLFINALLY({
+		  enumerator->close();
+		  _CLDELETE(enumerator);
+	  }
+
+	  BooleanQuery query = _CLNEW BooleanQuery(true);
+	  int size = stQueue->size();
+	  for(int i = 0; i < size; i++){
+		ScoreTerm* st = (ScoreTerm) stQueue->pop();
+		TermQuery* tq = new TermQuery(st.term);      // found a match
+		tq->setBoost(getBoost() * st.score); // set the boost
+		query->add(tq, BooleanClause.Occur.SHOULD);          // add to query
+	  }
+
+	  _CLDELETE(reusableST);
+
+	  return query;
+	  }*/
+
+
 CL_NS_END

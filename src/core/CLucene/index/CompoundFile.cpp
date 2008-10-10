@@ -57,7 +57,7 @@ protected:
 	}
 
 public:
-	CSIndexInput(CL_NS(store)::IndexInput* base, const int64_t fileOffset, const int64_t length);
+	CSIndexInput(CL_NS(store)::IndexInput* base, const int64_t fileOffset, const int64_t length, const int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 	CSIndexInput(const CSIndexInput& clone);
 	~CSIndexInput();
 
@@ -83,7 +83,7 @@ public:
 };
 
 
-CSIndexInput::CSIndexInput(CL_NS(store)::IndexInput* base, const int64_t fileOffset, const int64_t length){
+CSIndexInput::CSIndexInput(CL_NS(store)::IndexInput* base, const int64_t fileOffset, const int64_t length, const int32_t _readBufferSize):BufferedIndexInput(_readBufferSize){
    this->base = base;
    this->fileOffset = fileOffset;
    this->_length = length;
@@ -97,7 +97,7 @@ void CSIndexInput::readInternal(uint8_t* b, const int32_t len)
    if(start + len > _length)
       _CLTHROWA(CL_ERR_IO,"read past EOF");
    base->seek(fileOffset + start);
-   base->readBytes(b, len);
+   base->readBytes(b, len /*todo: , false*/);
 }
 CSIndexInput::~CSIndexInput(){
 }
@@ -116,16 +116,17 @@ void CSIndexInput::close(){
 
 
 
-CompoundFileReader::CompoundFileReader(Directory* dir, char* name):
+CompoundFileReader::CompoundFileReader(Directory* dir, char* name, int32_t _readBufferSize):
 	entries(_CLNEW EntriesType(true,true))
 {
    directory = dir;
    fileName = STRDUP_AtoA(name);
+   readBufferSize = _readBufferSize;
 
    bool success = false;
 
    try {
-      stream = dir->openInput(name);
+      stream = dir->openInput(name, readBufferSize);
 
       // read the directory and init files
       int32_t count = stream->readVInt();
@@ -192,24 +193,26 @@ void CompoundFileReader::close(){
 }
 
 bool CompoundFileReader::openInput(const char * id, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize){
-	SCOPED_LOCK_MUTEX(THIS_LOCK)
+	SCOPED_LOCK_MUTEX(THIS_LOCK);
 
 	if (stream == NULL){
-      error.set(CL_ERR_IO,"Stream closed");
-	  return false;
+		error.set(CL_ERR_IO,"Stream closed");
+		return false;
 	}
-	 
-  const ReaderFileEntry* entry = entries->get(id);
-  if (entry == NULL){
-      char buf[CL_MAX_PATH+30];
-      strcpy(buf,"No sub-file with id ");
-      strncat(buf,id,CL_MAX_PATH);
-      strcat(buf," found");
-      error.set(CL_ERR_IO,buf);
-	  return false;
-  }
-  ret = _CLNEW CSIndexInput(stream, entry->offset, entry->length);
-  return true;
+
+	const ReaderFileEntry* entry = entries->get(id);
+	if (entry == NULL){
+		char buf[CL_MAX_PATH+26];
+		cl_sprintf(buf, CL_MAX_PATH+26, "No sub-file with id %s found", id);
+		error.set(CL_ERR_IO,buf);
+		return false;
+	}
+
+	if (bufferSize < 1)
+		bufferSize = readBufferSize;
+
+	ret = _CLNEW CSIndexInput(stream, entry->offset, entry->length, bufferSize);
+	return true;
 }
 
 void CompoundFileReader::list(vector<string>* names) const{

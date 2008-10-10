@@ -71,17 +71,19 @@ CL_NS_DEF(search)
 		*/
 		size_t getPrefixLength() const;
 
+		//Query* FuzzyQuery::rewrite(IndexReader* reader)
+
   protected:
 	  FilteredTermEnum* getEnum(CL_NS(index)::IndexReader* reader);
   };
 
-   /** FuzzyTermEnum is a subclass of FilteredTermEnum for enumerating all 
-  *  terms that are similiar to the specified filter term.
-  *
-  *  Term enumerations are always ordered by Term.compareTo().  Each term in
-  *  the enumeration is greater than all that precede it.
-  */
-  class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
+/** Subclass of FilteredTermEnum for enumerating all terms that are similiar
+ * to the specified filter term.
+ *
+ * <p>Term enumerations are always ordered by Term.compareTo().  Each term in
+ * the enumeration is greater than all that precede it.
+ */
+class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
   private:
 		float_t distance;
 		bool _endEnum;
@@ -120,8 +122,8 @@ CL_NS_DEF(search)
 
     protected:
 		/**
-		The termCompare method in FuzzyTermEnum uses Levenshtein distance to 
-		calculate the distance between the given term and the comparing term. 
+		* The termCompare method in FuzzyTermEnum uses Levenshtein distance to 
+		* calculate the distance between the given term and the comparing term. 
 		*/
 		bool termCompare(CL_NS(index)::Term* term) ;
 		

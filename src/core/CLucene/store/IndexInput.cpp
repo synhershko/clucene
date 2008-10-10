@@ -149,6 +149,7 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     }
   }
 
+	//todo: support an extra parameter: bool useBuffer (as per JLucene)
   void BufferedIndexInput::readBytes(uint8_t* b, const int32_t len){
     if (len < bufferSize) {
       for (int32_t i = 0; i < len; ++i)		  // read byte-by-byte

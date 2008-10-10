@@ -56,7 +56,7 @@ CL_NS_DEF(search)
         /** Prints a user-readable version of this query. */
         TCHAR* toString(const TCHAR* field) const;
 
-		Query* rewrite(CL_NS(index)::IndexReader* reader);
+		virtual Query* rewrite(CL_NS(index)::IndexReader* reader);
     };
 CL_NS_END
 #endif
