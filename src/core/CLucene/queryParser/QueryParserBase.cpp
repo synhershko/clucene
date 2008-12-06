@@ -241,30 +241,33 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   bool from=true;
   while(tret)
   {
-	try{
-	  tret = source->next(&t);
-	}catch (CLuceneError& err){
-		if ( err.number() == CL_ERR_IO )
-			tret=false;
-		else
-			throw err;
-	}
-	if (tret)
-	{
-		if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
-			continue;
-
-		
-		TCHAR* tmp = STRDUP_TtoT(t.termBuffer());
-		discardEscapeChar(tmp);
-		terms[from? 0 : 1] = tmp;
-
-		if (from)
-			from = false;
-		else
-			break;
-	}
+		try{
+		  tret = source->next(&t);
+		}catch (CLuceneError& err){
+			if ( err.number() == CL_ERR_IO )
+				tret=false;
+			else
+				throw err;
+		}
+		if (tret)
+		{
+			if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
+				continue;
+	
+			
+			TCHAR* tmp = STRDUP_TtoT(t.termBuffer());
+			discardEscapeChar(tmp);
+			terms[from? 0 : 1] = tmp;
+	
+			if (from)
+				from = false;
+			else
+				break;
+		}
   }
+  if ((terms[0] == NULL) || (terms[1] == NULL)) {
+		_CLTHROWA(CL_ERR_Parse, "No range given.");
+	}
   Query* ret = GetRangeQuery(field, terms[0], terms[1],inclusive);
   _CLDELETE_CARRAY(terms[0]);
   _CLDELETE_CARRAY(terms[1]);
