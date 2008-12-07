@@ -60,7 +60,7 @@ PhrasePositions::PhrasePositions(TermPositions* Tp, const int32_t OffSet) {
          //delete tp and reset tp to NULL
          _CLVDELETE(tp); //todo: not a clucene object... should be
          //Assign Doc sentinel value
-         doc = INT_MAX; 
+         doc = LUCENE_INT32_MAX_SHOULDBE; 
          return false;
 		}else{
          doc  = tp->doc();

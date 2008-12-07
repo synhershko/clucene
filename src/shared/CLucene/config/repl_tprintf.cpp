@@ -7,6 +7,8 @@
 #include "CLucene/_SharedHeader.h"
 #include "CLucene/util/StringBuffer.h"
 
+#include <limits.h> //MB_LEN_MAX
+
 CL_NS_USE(util)
 
 //print a variable argument to a stream
