@@ -75,7 +75,7 @@ CL_NS_DEF(search)
 	// count # deletions, return -1 if unknown.
 	int32_t Hits::countDeletions(CL_NS(search)::Searcher* s) {
 		int32_t cnt = -1;
-		if ( s->getClassName() == _T("IndexSearcher") ) {
+		if ( s->getObjectName() == IndexSearcher::getClassName() ) {
 			cnt = s->maxDoc() - static_cast<IndexSearcher*>(s)->getReader()->numDocs(); 
 		}
 		return cnt;

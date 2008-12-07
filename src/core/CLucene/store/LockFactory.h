@@ -37,7 +37,7 @@ public:
 class CLUCENE_EXPORT SingleInstanceLockFactory: public LockFactory {
 private:
 	LocksType* locks;
-	DEFINE_MUTEX(locks_LOCK);
+	DEFINE_MUTEX(locks_LOCK)
 	
 public:
 	SingleInstanceLockFactory();

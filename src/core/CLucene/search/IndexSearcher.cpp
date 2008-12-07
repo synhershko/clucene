@@ -367,8 +367,11 @@ CL_NS_DEF(search)
 		return reader;
 	}
 
-	const TCHAR* IndexSearcher::getClassName(){
-		return _T("IndexSearcher");
+	const char* IndexSearcher::getClassName(){
+		return "IndexSearcher";
+	}
+	const char* IndexSearcher::getObjectName(){
+		return IndexSearcher::getClassName();
 	}
 	
 CL_NS_END

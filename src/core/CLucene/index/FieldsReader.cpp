@@ -202,27 +202,26 @@ bool FieldsReader::doc(int32_t n, Document& doc, CL_NS(document)::FieldSelector*
 
 		//TODO: Find an alternative approach here if this list continues to grow beyond the
 		//list of 5 or 6 currently here.  See Lucene 762 for discussion
-		if (acceptField = FieldSelector::LOAD) {
+		if (acceptField == FieldSelector::LOAD) {
 			addField(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::LOAD_FOR_MERGE) {
+		else if (acceptField == FieldSelector::LOAD_FOR_MERGE) {
 			addFieldForMerge(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::LOAD_AND_BREAK){
+		else if (acceptField == FieldSelector::LOAD_AND_BREAK){
 			addField(doc, fi, binary, compressed, tokenize);
 			break;//Get out of this loop
 		}
-		else if (acceptField = FieldSelector::LAZY_LOAD) {
+		else if (acceptField == FieldSelector::LAZY_LOAD) {
 			addFieldLazy(doc, fi, binary, compressed, tokenize);
 		}
-		else if (acceptField = FieldSelector::SIZE){
+		else if (acceptField == FieldSelector::SIZE){
 			skipField(binary, compressed, addFieldSize(doc, fi, binary, compressed));
 		}
-		else if (acceptField = FieldSelector::SIZE_AND_BREAK){
+		else if (acceptField == FieldSelector::SIZE_AND_BREAK){
 			addFieldSize(doc, fi, binary, compressed);
 			break;
-		}
-		else {
+		}else {
 			skipField(binary, compressed);
 		}
 
@@ -440,8 +439,8 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 
 int32_t FieldsReader::addFieldSize(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed) {
 	const int32_t size = fieldsStream->readVInt();
-	const int32_t bytesize = binary || compressed ? size : 2*size;
 	/*
+	const int32_t bytesize = binary || compressed ? size : 2*size;
 	uint8_t* sizebytes = _CL_NEWARRAY(uint8_t, 4);
 	sizebytes[0] = (byte) (bytesize>>>24);
 	sizebytes[1] = (byte) (bytesize>>>16);

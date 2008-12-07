@@ -92,7 +92,7 @@ ${FUNCTION_SLEEPFUNCTION}
 */
 #cmakedefine LUCENE_USE_INTERNAL_CHAR_FUNCTIONS 1
 
-/** fix ansi for loop scope
+/** fix ansi for loop scope */
 #if @CMAKE_ANSI_FOR_SCOPE@==0
  #define for if (0); else for
 #endif

@@ -160,7 +160,7 @@ public:
 };
 	
 
-class FilteredBufferedReader: public BufferedReader{
+class CLUCENE_EXPORT FilteredBufferedReader: public BufferedReader{
 	class Internal;
 	Internal* internal;
 public:

@@ -103,7 +103,6 @@
 #include "CLucene/util/BitSet.cpp"
 #include "CLucene/util/Equators.cpp"
 #include "CLucene/util/FastCharStream.cpp"
-#include "CLucene/util/fileinputstream.cpp"
 #include "CLucene/util/MD5Digester.cpp"
 #include "CLucene/util/Reader.cpp"
 #include "CLucene/util/StringIntern.cpp"

@@ -79,7 +79,8 @@ public:
 	Query* rewrite(Query* original);
 	void explain(Query* query, int32_t doc, Explanation* ret);
 
-	virtual const TCHAR* getClassName();
+   virtual const char* getObjectName();
+   static const char* getClassName();
 };
 CL_NS_END
 #endif

@@ -184,8 +184,12 @@ Similarity* Searcher::getSimilarity(){
 	return this->similarity;
 }
 
-const TCHAR* Searcher::getClassName(){
-	return _T("Searcher");
+const char* Searcher::getClassName(){
+	return "Searcher";
+}
+
+const char* Searcher::getObjectName(){
+	return Searcher::getClassName();
 }
 
 
