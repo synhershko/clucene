@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
-class QPTestFilter: public TokenFilter {
+class MQPTestFilter: public TokenFilter {
 public:
 
 	bool inPhrase;
@@ -16,7 +16,7 @@ public:
 	* Filter which discards the token 'stop' and which expands the
 	* token 'phrase' into 'phrase1 phrase2'
 	*/
-	QPTestFilter(TokenStream* in):
+	MQPTestFilter(TokenStream* in):
 		TokenFilter(in,true),
 		inPhrase(false),
 		savedStart(0),
@@ -46,14 +46,14 @@ public:
 	}
 };
 
-class QPTestAnalyzer: public Analyzer {
+class MQPTestAnalyzer: public Analyzer {
 public:
-	QPTestAnalyzer() {
+	MQPTestAnalyzer() {
 	}
 
 	/** Filters LowerCaseTokenizer with StopFilter. */
 	TokenStream* tokenStream(const TCHAR* fieldName, Reader* reader) {
-		return _CLNEW QPTestFilter(_CLNEW LowerCaseTokenizer(reader));
+		return _CLNEW MQPTestFilter(_CLNEW LowerCaseTokenizer(reader));
 	}
 };
 
@@ -74,7 +74,7 @@ void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
 void assertStopQueryEquals(CuTest *tc, const TCHAR* qtxt, const TCHAR* expectedRes) {
 	const TCHAR* fields[] = {_T("b"), _T("t"), NULL };
 	//Occur occur[] = {Occur.SHOULD, Occur.SHOULD};
-	QPTestAnalyzer *a = _CLNEW QPTestAnalyzer();
+	MQPTestAnalyzer *a = _CLNEW MQPTestAnalyzer();
 	MultiFieldQueryParser mfqp(fields, a);
 
 	Query *q = mfqp.parse(qtxt);

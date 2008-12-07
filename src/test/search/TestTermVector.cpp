@@ -21,10 +21,10 @@ void testTermPositionVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        ObjectArray<TermFreqVector*> vector;
-		CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), (Array<TermFreqVector*>&)vector));
-		CLUCENE_ASSERT(vector.length== 1);
-		vector.deleteValues();
+		  ObjectArray<TermFreqVector*> vector;
+		  CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), *(Array<TermFreqVector*>*)(&vector)));
+		  CLUCENE_ASSERT(vector.length== 1);
+		  vector.deleteValues();
       }
 
       _CLDELETE(hits);
@@ -172,6 +172,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
           float_t tf = sim->tf(freq);
           float_t idf = sim->idf(term, &knownSearcher);
           //float_t qNorm = sim.queryNorm()
+			 idf += tf; //remove warning
           
           int termsCount=0;
           const TCHAR** terms = vector->getTerms();
@@ -181,6 +182,8 @@ void testKnownSetOfDocuments(CuTest *tc) {
 
           //This is fine since we don't have stop words
           float_t lNorm = sim->lengthNorm(_T("field"), termsCount);
+			 lNorm ++;//remove warning
+
           //float_t coord = sim.coord()
           //System.out.println("TF: " + tf + " IDF: " + idf + " LenNorm: " + lNorm);
           const TCHAR** vTerms = vector->getTerms();
@@ -212,6 +215,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
       //doc 3 should be the first hit b/c it is the shortest match
       CLUCENE_ASSERT(hits->length() == 3);
       float_t score = hits->score(0);
+		score++;
       
       CLUCENE_ASSERT(2==hits->id(0) );
       CLUCENE_ASSERT(3==hits->id(1) );

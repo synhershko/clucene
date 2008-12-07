@@ -46,7 +46,6 @@ CL_NS_USE(util)
 
   void testUTF8(CuTest *tc) {
     RAMDirectory ram;
-    Directory* pram = &ram;
 	StandardAnalyzer a;
 	IndexWriter ndx(&ram,&a,true);
 	_Index(tc, &ndx,"arabic");

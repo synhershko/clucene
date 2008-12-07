@@ -351,9 +351,9 @@ void testSrchManyHits(CuTest *tc) {
 	Term* t = _CLNEW Term(_T("contents"), _T("a"));
 	query.add(_CLNEW TermQuery(t),true,false, false);
 	_CLDECDELETE(t);
-    Hits* hits = searcher.search(&query);
-    for ( int32_t x=0;x<hits->length();x++ ){
-      Document& doc = hits->doc(x);
+	Hits* hits = searcher.search(&query);
+	for ( int32_t x=0;x<hits->length();x++ ){
+	      hits->doc(x);
 	}
 	_CLDELETE(hits);
 	searcher.close(); 

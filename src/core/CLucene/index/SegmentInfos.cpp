@@ -940,7 +940,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 				  // try it if so:
 				  const char* prevSegmentFileName = IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", gen-1 );
 
-				  bool prevExists;
+				  bool prevExists=false;
 				  if (directory != NULL)
 					  prevExists = directory->fileExists(prevSegmentFileName);
 				  //todo: File implementation below

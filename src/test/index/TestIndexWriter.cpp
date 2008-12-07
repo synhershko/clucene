@@ -33,7 +33,6 @@ void testIWmergeSegments1(CuTest *tc){
 	//test the ram loading
 	RAMDirectory ram2(&ram);
 	IndexReader* reader2 = IndexReader::open(&ram2);
-	SegmentReader* segreader = (SegmentReader*)reader2;
 	Term* term = _CLNEW Term(_T("field"),fld);
 	TermEnum* en = reader2->terms(term);
 	CLUCENE_ASSERT(en->next());

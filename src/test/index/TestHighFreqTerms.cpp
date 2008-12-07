@@ -32,7 +32,6 @@
     };
 
   void _TestHighFreqTerms(const char* index, size_t numTerms) {
-	    uint64_t start = Misc::currentTimeMillis();
 
 		IndexReader* reader = IndexReader::open(index);
     

@@ -10,7 +10,6 @@
    Reader* reader = _CLNEW StringReader(input);
 	TokenStream* ts = a->tokenStream(_T("dummy"), reader );
 
-	int32_t i = 0;
 	const TCHAR* pos = output;
 	TCHAR buffer[80];
 	const TCHAR* last = output;

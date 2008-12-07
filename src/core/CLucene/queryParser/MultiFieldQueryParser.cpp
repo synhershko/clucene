@@ -37,7 +37,7 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, An
     int32_t i = 0;
 	while ( fields[i] != NULL ){
 		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!="BooleanQuery" || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
 			//todo: Move to using BooleanClause::Occur
 			bQuery->add(q, true, false, false);
 		} else {
@@ -57,7 +57,7 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, co
     while ( fields[i] != NULL )
     {
 		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!="BooleanQuery" || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
 			uint8_t flag = flags[i];
 			switch (flag)
 			{

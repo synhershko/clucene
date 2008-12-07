@@ -25,6 +25,7 @@
 #include "debug/TestError.cpp"
 #include "document/TestDocument.cpp"
 #include "queryParser/TestQueryParser.cpp"
+#include "queryParser/TestMultiFieldQueryParser.cpp"
 #include "search/TestSearch.cpp"
 #include "search/TestSort.cpp"
 #include "search/TestTermVector.cpp"

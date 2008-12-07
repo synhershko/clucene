@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	#endif
 	#endif
 	int ret_result = 0;
-	int i;
+	int i=0;
 	int exclude = 0;
 	int list_provided = 0;
 	CuSuiteList *alltests = NULL;
