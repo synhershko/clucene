@@ -301,14 +301,12 @@ CL_NS_USE(util)
 	}
 	_LUCENE_THREAD_FUNC(threadedSearcherTest, arg){
 	    IndexSearcher* searcher = (IndexSearcher*)arg;
-		printf("thread started :-)...\n");
 	    
 	    for ( int i=0;i<100;i++ ){
     	    threadSearch(searcher, _T("test") );
     	    threadSearch(searcher, _T("reuters") );
     	    threadSearch(searcher, _T("data") );
     	}
-		printf ("done...\n");
 		_LUCENE_THREAD_FUNC_RETURN(0);
 	}
 	

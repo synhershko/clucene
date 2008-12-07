@@ -59,8 +59,7 @@ CL_NS_DEF ( util )
     //the key initialiser function
     void pthread_threadlocal_make_key()
     {
-	printf("pthread_threadlocal_make_key\n");
-	(void) pthread_key_create(&pthread_threadlocal_key, &pthread_threadlocal_destructor);
+		(void) pthread_key_create(&pthread_threadlocal_key, &pthread_threadlocal_destructor);
     }
 #endif
 
@@ -184,7 +183,6 @@ void _ThreadLocal::set ( void* t )
 		if ( threadLocals == NULL ){
 			threadLocals = _CLNEW ThreadLocals;
 			threadData->put(id,threadLocals);
-			printf("starting thread %d\n",(int)id);
 		}
 		threadLocals->add(this);
 	}
@@ -235,7 +233,6 @@ void ThreadLocals::UnregisterThread()
 	{
 		_ThreadLocal* tl = this->back();
 		this->pop_back();
-		printf ( "shutting down thread %d, object: %d, we have %d objects\n", ( int ) _LUCENE_CURRTHREADID, tl, this->size() );
 		tl->setNull();
 	}
 
