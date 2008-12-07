@@ -10,7 +10,7 @@
 	void testPrefixQuery(CuTest *tc){
 		WhitespaceAnalyzer analyzer;
 		RAMDirectory directory;
-		TCHAR* categories[] = {_T("/Computers"), _T("/Computers/Mac"), _T("/Computers/Windows")};
+		const TCHAR* categories[] = {_T("/Computers"), _T("/Computers/Mac"), _T("/Computers/Windows")};
 
 		IndexWriter writer( &directory, &analyzer, true);
 		for (int i = 0; i < 3; i++) {
