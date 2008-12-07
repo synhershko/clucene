@@ -10,7 +10,10 @@
 #include "Equators.h"
 #include "CLucene/LuceneThreads.h"
 
-#if defined(_CL_HAVE_HASH_MAP) && defined(_CL_HAVE_HASH_SET)
+#if defined(_CL_HAVE_TR1_UNORDERED_MAP) && defined(_CL_HAVE_TR1_UNORDERED_SET)
+	#include <tr1/unordered_map>
+	#include <tr1/unordered_set>
+#elif defined(_CL_HAVE_HASH_MAP) && defined(_CL_HAVE_HASH_SET)
 	//hashing is all or nothing!
 	#include <hash_map>
 	#include <hash_set>
@@ -186,10 +189,10 @@ template<typename _kt, typename _vt,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLUCENE_INLINE_EXPORT CLHashMap:public __CLMap<_kt,_vt,
-	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher,_Equals>,
+	CL_NS_HASHING(_CL_HASH_MAP)<_kt,_vt, _Hasher,_Equals>,
 	_KeyDeletor,_ValueDeletor>
 {
-	typedef __CLMap<_kt,_vt, CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher,_Equals>,
+	typedef __CLMap<_kt,_vt, CL_NS_HASHING(_CL_HASH_MAP)<_kt,_vt, _Hasher,_Equals>,
 		_KeyDeletor,_ValueDeletor> _this;
 public:
 	CLHashMap ( const bool deleteKey=false, const bool deleteValue=false )
@@ -208,10 +211,10 @@ template<typename _kt, typename _vt,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLUCENE_INLINE_EXPORT CLHashMap:public __CLMap<_kt,_vt,
-	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher>,
+	CL_NS_HASHING(_CL_HASH_MAP)<_kt,_vt, _Hasher>,
 	_KeyDeletor,_ValueDeletor>
 {
-	typedef __CLMap<_kt,_vt, CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher>,
+	typedef __CLMap<_kt,_vt, CL_NS_HASHING(_CL_HASH_MAP)<_kt,_vt, _Hasher>,
 		_KeyDeletor,_ValueDeletor> _this;
 public:
 	CLHashMap ( const bool deleteKey=false, const bool deleteValue=false )

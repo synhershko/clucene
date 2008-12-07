@@ -71,7 +71,7 @@ void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
 }
 
 // verify parsing of query using a stopping analyzer  
-void assertStopQueryEquals(CuTest *tc, TCHAR* qtxt, TCHAR* expectedRes) {
+void assertStopQueryEquals(CuTest *tc, const TCHAR* qtxt, const TCHAR* expectedRes) {
 	const TCHAR* fields[] = {_T("b"), _T("t"), NULL };
 	//Occur occur[] = {Occur.SHOULD, Occur.SHOULD};
 	QPTestAnalyzer *a = _CLNEW QPTestAnalyzer();

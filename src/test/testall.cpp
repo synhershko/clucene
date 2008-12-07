@@ -14,6 +14,7 @@
 #endif
 
 #include "test.h"
+#include <stdlib.h>
 
 #include <fcntl.h>
 #ifdef _CL_HAVE_DIRECT_H
@@ -193,7 +194,7 @@ int main(int argc, char *argv[])
     _tprintf(_T("%s\n"), output->buffer);
 
 	if ( times )
-		printf("Tests run in %dms\n\n",CL_NS(util)::Misc::currentTimeMillis()-startTime);
+		printf("Tests run in %dms\n\n", (int32_t)(CL_NS(util)::Misc::currentTimeMillis()-startTime));
 
 exit_point:
 	if ( alltests != NULL )

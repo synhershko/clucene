@@ -24,6 +24,8 @@
 #cmakedefine _CL_HAVE_DLFCN_H  1 
 #cmakedefine _CL_HAVE_EXT_HASH_MAP  1 
 #cmakedefine _CL_HAVE_EXT_HASH_SET  1 
+#cmakedefine _CL_HAVE_TR1_UNORDERED_MAP 1 
+#cmakedefine _CL_HAVE_TR1_UNORDERED_SET  1 
 #cmakedefine _CL_HAVE_HASH_MAP
 #cmakedefine _CL_HAVE_HASH_SET
 #cmakedefine _CL_HAVE_NDIR_H
@@ -69,6 +71,9 @@ ${SYMBOL__T}
 
 /* If we use hashmaps, which namespace do we use: */
 #define CL_NS_HASHING(func) ${CL_NS_HASHING_VALUE}
+/* If we use hashmaps, which classes do we use: */
+#define _CL_HASH_MAP ${_CL_HASH_MAP}
+#define _CL_HASH_SET ${_CL_HASH_SET}
 
 /* define if the compiler implements namespaces */
 #cmakedefine _CL_HAVE_NAMESPACES   

@@ -47,9 +47,9 @@ CHECK_REQUIRED_HEADERS ( stdlib.h stdarg.h stdio.h stddef.h ctype.h algorithm
 						 functional map vector list set math.h fcntl.h limits.h)
 						 
 CHECK_OPTIONAL_HEADERS ( string.h sys/time.h memory.h sys/types.h 
-                        stdint.h unistd.h io.h direct.h sys/dir.h sys/ndir.h dirent.h 
+                        stdint.h unistd.h io.h direct.h sys/dir.h sys/ndir.h dirent.h wctype.h fcntl.h
                         stat.h sys/stat.h stdexcept errno.h fcntl.h windef.h windows.h wchar.h 
-                        wctype.h fcntl.h hash_map hash_set ext/hash_map ext/hash_set 
+                        hash_map hash_set ext/hash_map ext/hash_map tr1/unordered_set tr1/unordered_map
                         sys/timeb.h tchar.h strings.h stdexcept sys/mman.h winerror.h )
 
 

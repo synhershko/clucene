@@ -353,7 +353,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
    refCount(0),
    useMMap(LUCENE_USE_MMAP)
   {
-  	_realpath(path,directory);//set a realpath so that if we change directory, we can still function
+  	directory = _realpath(path,directory);//set a realpath so that if we change directory, we can still function
   	if ( !directory || !*directory ){
   		strcpy(directory,path);	
   	}

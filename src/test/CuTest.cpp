@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 #include "CuTest.h"
+#include <stdlib.h>
 #include <assert.h>
 
 static int verbose = 0;

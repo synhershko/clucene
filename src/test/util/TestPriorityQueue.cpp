@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include <stdlib.h>
 #include <time.h>
 
 	class integerQueue: public CL_NS(util)::PriorityQueue<int32_t,Deletor::DummyInt32 >{

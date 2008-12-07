@@ -7,6 +7,7 @@
 #include "test.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
+#include <stdlib.h>
 
 void hashTest(CuTest *tc){
     //todo: this is testing internal stuff, turn it on again using a shared test..
