@@ -90,7 +90,9 @@ ${FUNCTION_SLEEPFUNCTION}
 * character functions.
 * Tests may display unpredictable behaviour if this is not defined.
 */
-#cmakedefine LUCENE_USE_INTERNAL_CHAR_FUNCTIONS 1
+#ifndef LUCENE_USE_INTERNAL_CHAR_FUNCTIONS
+	#cmakedefine LUCENE_USE_INTERNAL_CHAR_FUNCTIONS 1
+#endif
 
 /** fix ansi for loop scope */
 #if @CMAKE_ANSI_FOR_SCOPE@==0
