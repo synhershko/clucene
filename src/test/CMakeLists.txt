@@ -27,6 +27,7 @@ SET(test_files ./tests.cpp
 ./analysis/TestAnalyzers.cpp
 ./debug/TestError.cpp
 ./document/TestDocument.cpp
+./document/TestNumberTools.cpp
 ./store/TestStore.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp

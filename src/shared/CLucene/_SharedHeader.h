@@ -12,6 +12,9 @@
 #include "CLucene/_clucene-config.h"
 #include "CLucene/SharedHeader.h"
 
+#define LUCENE_INT64_MAX_SHOULDBE _ILONGLONG(0x7FFFFFFFFFFFFFFF)
+#define LUCENE_INT64_MIN_SHOULDBE (-LUCENE_INT64_MAX_SHOULDBE - _ILONGLONG(1) )
+
 //required globally (internally only)
 #include <stdio.h>
 #include <stdlib.h>

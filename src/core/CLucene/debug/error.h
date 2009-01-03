@@ -25,6 +25,7 @@
 #define CL_ERR_UnknownOperator 14
 #define CL_ERR_ConcurrentModification 15
 #define CL_ERR_CorruptIndex 16
+#define CL_ERR_NumberFormat 17
 
 
 

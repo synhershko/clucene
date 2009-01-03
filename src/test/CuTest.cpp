@@ -250,8 +250,10 @@ void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expecte
 	CuString* message;
 	if (_tcscmp(expected, actual) == 0) return;
 	message = CuStringNew();
-	CuStringAppend(message, preMessage);
-	CuStringAppend(message, _T(" : ") );
+	if (preMessage) {
+		CuStringAppend(message, preMessage);
+		CuStringAppend(message, _T(" : ") );
+	}
 	CuStringAppend(message, _T("expected\n---->\n"));
 	CuStringAppend(message, expected);
 	CuStringAppend(message, _T("\n<----\nbut saw\n---->\n"));

@@ -30,7 +30,7 @@ CL_NS_DEF(util)
 	  bufferOwner  = true;
   }
 
-  StringBuffer::StringBuffer(const size_t initSize){
+  StringBuffer::StringBuffer(const size_t initSize, const bool consumeBuffer){
   //Func - Constructor. Allocates a buffer of length initSize + 1
   //Pre  - initSize > 0
   //Post - A buffer has been allocated of length initSize + 1
@@ -40,7 +40,7 @@ CL_NS_DEF(util)
       len = 0;
       //Allocate a buffer of length bufferLength
       buffer = _CL_NEWARRAY(TCHAR,bufferLength);
-	  bufferOwner  = true;
+	  bufferOwner = !consumeBuffer;
   }
 
   StringBuffer::StringBuffer(const TCHAR* value){
@@ -138,15 +138,15 @@ CL_NS_DEF(util)
       len += appendedLength;
   }
 
-  void StringBuffer::appendInt(const size_t value) {
+  void StringBuffer::appendInt(const int64_t value, const int32_t _Radix) {
   //Func - Appends an integer (after conversion to a character string)
   //Pre  - true 
   //Post - The converted integer value has been appended to the string in buffer
   
       //instantiate a buffer of 30 charactes for the conversion of the integer
       TCHAR buf[30];
-      //Convert the integer value to a string buf using the radix 10 (duh)
-      _i64tot(value, buf, 10);
+      //Convert the integer value to a string buf using _Radix
+      _i64tot(value, buf, _Radix);
 	  //Have the converted integer now stored in buf appended to the string in buffer
       append(buf);
   }

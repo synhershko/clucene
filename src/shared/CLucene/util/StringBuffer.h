@@ -13,7 +13,7 @@ CL_NS_DEF(util)
    ///Constructor. Allocates a buffer with the default length.
    StringBuffer();
    ///Constructor. Allocates a buffer of length initSize + 1
-   StringBuffer(const size_t initSize);
+   StringBuffer(const size_t initSize, const bool consumeBuffer = true);
    ///Constructor. Creates an instance of Stringbuffer containing a copy of 
    ///the string value
    StringBuffer(const TCHAR* value);
@@ -31,8 +31,8 @@ CL_NS_DEF(util)
    void append(const TCHAR* value);
    ///Appends a copy of the string value
    void append(const TCHAR* value, size_t appendedLength);
-   ///Appends an integer (after conversion to a character string)
-   void appendInt(const size_t value);
+   ///Appends an integer (after conversion to a character string) with a default radix of 10. Radixes lower than 10 not supported.
+   void appendInt(const int64_t value, const int32_t _Radix = 10);
    ///Appends a float_t (after conversion to a character string)
    void appendFloat(const float_t value, const size_t digits);
    ///Puts a copy of the string value in front of the current string in the StringBuffer

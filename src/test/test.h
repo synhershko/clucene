@@ -19,6 +19,8 @@
 #include "CLucene/index/TermVector.h"
 #include "CLucene/queryParser/MultiFieldQueryParser.h"
 
+#define LUCENE_INT64_MAX_SHOULDBE _ILONGLONG(0x7FFFFFFFFFFFFFFF)
+#define LUCENE_INT64_MIN_SHOULDBE (-LUCENE_INT64_MAX_SHOULDBE - _ILONGLONG(1) )
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -51,6 +53,7 @@ CuSuite *testdebug(void);
 CuSuite *testutf8(void);
 CuSuite *testreuters(void);
 CuSuite *testdocument(void);
+CuSuite *testNumberTools(void);
 
 class English{
 public:

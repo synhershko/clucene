@@ -8,6 +8,7 @@
 
 unittest tests[] = {
     {"document", testdocument},
+	{"numbertools", testNumberTools},
     {"debug", testdebug},
     {"analysis", testanalysis},
     {"analyzers", testanalyzers},
