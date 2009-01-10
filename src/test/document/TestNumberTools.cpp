@@ -31,8 +31,8 @@
         CuAssertTrue(tc, i == i2);
         CuAssertTrue(tc, j == j2);
 
-		//_CLDELETE_ARRAY(a);
-		//_CLDELETE_ARRAY(b);
+		_CLDELETE_CARRAY(a);
+		_CLDELETE_CARRAY(b);
     }
 
     void testNearZero(CuTest *tc) {

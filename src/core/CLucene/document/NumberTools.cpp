@@ -42,7 +42,7 @@ TCHAR* NumberTools::longToString(int64_t l)
 	for ( int32_t i=1;i<STR_SIZE-len;i++ )
 		buf[i] = (int)'0';
 
-	buf[STR_SIZE+1] = 0;
+	buf[STR_SIZE] = 0;
 
 	return buf;
 }
