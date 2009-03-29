@@ -187,7 +187,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
           //float_t coord = sim.coord()
           //System.out.println("TF: " + tf + " IDF: " + idf + " LenNorm: " + lNorm);
           const TCHAR** vTerms = vector->getTerms();
-          const ValueArray<int32_t>* freqs = vector->getTermFrequencies();
+          const Array<int32_t>* freqs = vector->getTermFrequencies();
           int32_t i=0; 
           while ( vTerms && vTerms[i] != NULL )
           {
@@ -225,7 +225,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
       CLUCENE_ASSERT(vector != NULL);
       //_tprintf(_T("Vector: %s\n"),vector);
       const TCHAR** terms = vector->getTerms();
-      const ValueArray<int32_t>* freqs = vector->getTermFrequencies();
+      const Array<int32_t>* freqs = vector->getTermFrequencies();
       CLUCENE_ASSERT(terms != NULL);
       
       int termsLength = 0;
