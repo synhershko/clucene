@@ -24,6 +24,7 @@
 #include "util/English.cpp"
 #include "debug/TestError.cpp"
 #include "document/TestDocument.cpp"
+#include "document/TestNumberTools.cpp"
 #include "queryParser/TestQueryParser.cpp"
 #include "queryParser/TestMultiFieldQueryParser.cpp"
 #include "search/TestSearch.cpp"

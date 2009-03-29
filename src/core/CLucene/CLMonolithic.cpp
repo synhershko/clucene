@@ -20,6 +20,7 @@
 #include "CLucene/document/DateField.cpp"
 #include "CLucene/document/DateTools.cpp"
 #include "CLucene/document/Document.cpp"
+#include "CLucene/document/NumberTools.cpp"
 #include "CLucene/document/Field.cpp"
 #include "CLucene/index/CompoundFile.cpp"
 #include "CLucene/index/DocumentWriter.cpp"
