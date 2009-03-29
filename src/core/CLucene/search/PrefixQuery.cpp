@@ -94,7 +94,7 @@ CL_NS_DEF(search)
       const TCHAR* prefixField = prefix->field();
       const TCHAR* tmp;
       size_t i;
-	  int32_t prefixLen = prefix->textLength();
+	size_t prefixLen = prefix->textLength();
       do {
         lastTerm = enumerator->term();
 		if (lastTerm != NULL &&
@@ -235,7 +235,7 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
     const TCHAR* prefixField = prefix->field();
     const TCHAR* tmp;
     size_t i;
-    int32_t prefixLen = prefix->textLength();
+    size_t prefixLen = prefix->textLength();
 	Term* lastTerm = NULL;
     
 	try{
