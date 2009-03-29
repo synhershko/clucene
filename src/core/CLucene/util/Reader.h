@@ -11,7 +11,7 @@
 CL_NS_DEF(util)
 
 #error Reader has been refactored. It is recommended that you use strigi streams
-#error for all input into CLucene. If, however, you don't want to use that dependency, 
+#error for all input into CLucene. If, however, you dont want to use that dependency, 
 #error then you'll have to refactor your current code. The jstreams namespace
 #error was completely removed
 
