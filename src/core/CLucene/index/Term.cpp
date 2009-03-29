@@ -220,8 +220,14 @@ int32_t Term::compareTo(const Term* other) const {
 	if ( _field == other->_field ){ // fields are interned
 		//Compare text with text of other and return the result
 		return _tcscmp(_text,other->_text);
-	}else
-		return _tcscmp(_field,other->_field);
+	}else{
+		int32_t ret = _tcscmp(_field,other->_field);
+                if ( ret == 0 ){
+                    return _tcscmp(_text,other->_text);
+                }else{
+                    return ret;
+                }
+        }
 }
 
 int32_t Term::hashedCompareTo(Term* other) {
