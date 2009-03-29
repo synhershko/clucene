@@ -11,14 +11,10 @@
 CL_CLASS_DEF(search,FieldDoc)
 CL_CLASS_DEF(search,SortComparatorSource)
 CL_CLASS_DEF(search,SortField)
-//#include "FieldCache.h"
-//#include "Sort.h"
-//#include "FieldDocSortedHitQueue.h"
 #include "FieldDoc.h" //required to expose destructor
-//#include "SearchHeader.h"
-//#include "FieldCacheImpl.h"
 #include "CLucene/util/PriorityQueue.h"
 #include "CLucene/util/Equators.h"
+#include "CLucene/LuceneThreads.h"
 
 CL_CLASS_DEF(index,IndexReader)
 

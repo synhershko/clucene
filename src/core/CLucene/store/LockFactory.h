@@ -7,8 +7,7 @@
 #ifndef _lucene_store_LockFactory_
 #define _lucene_store_LockFactory_
 
-//#include "Lock.h"
-
+#include "CLucene/LuceneThreads.h"
 
 CL_CLASS_DEF(store,LuceneLock)
 CL_CLASS_DEF(store,NoLock)

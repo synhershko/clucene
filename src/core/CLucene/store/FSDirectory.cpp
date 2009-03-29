@@ -577,7 +577,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 #endif
   }
 
-  bool FSDirectory::openInput(const char * name, lucene::store::IndexInput *& ret, CLuceneError& error, int32_t bufferSize)
+  bool FSDirectory::openInput(const char * name, IndexInput *& ret, CLuceneError& error, int32_t bufferSize)
   {
 	CND_PRECONDITION(directory[0]!=0,"directory is not open")
     char fl[CL_MAX_DIR];

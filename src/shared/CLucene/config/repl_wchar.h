@@ -8,6 +8,7 @@
 #define _lucene_repl_wchar_h
 
 #include <stdarg.h>
+#include "repl_tchar.h"
 #ifdef _CL_HAVE_STRING_H
     #include <string.h>
 #endif

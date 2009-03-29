@@ -71,7 +71,7 @@ fi
 #check to see that no #ifdefs exist in headers that don't belong
 function checkForIfdefs {
     I=0
-    grep "#if" $1| while read line; do
+    grep "#if" $1| grep -v "_UCS2" |grep -v "_CL_HAVE_" |grep -v "_ASCII" |grep -v "_WIN32" |grep -v "_WIN64" | while read line; do
         I=`expr $I + 1`
         if [ $I -gt 1 ]; then
             echo $1 has invalid ifdef: $line
@@ -102,7 +102,9 @@ if [ $t_env == 1 ]; then
             ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
             
             #create pub-headers.cpp
-            echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
+            if [ "${H:7}" != "core/CLucene/util/Reader.h" ]; then
+              echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
+            fi
         fi
     done
 fi
@@ -147,11 +149,12 @@ if [ $t_c_h == 1 ] || [ $t_ifdefs == 1 ] || [ $t_exports == 1 ]; then
         fi
         
         #test that each header compiles independently...
-        if [ $t_c_h == 1 ]; then
+        if [ $t_c_h == 1 ] && [ "${H:7}" != "disttest/src/core/CLucene/util/Reader.h" ]; then
+            echo "Test that $H compiles seperately..."
             echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-header.cpp
             echo "#include \"$H"\" >>$TMP/pub-header.cpp
             echo "int main(){return 0;}"  >>$TMP/pub-header.cpp
-            g++ -I. -I$TMP/src/shared -I$TMP/src/core $TMP/pub-header.cpp
+            g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp
             if [ $? != 0 ]; then 
                 FAIL=1; 
             fi
