@@ -124,7 +124,7 @@ CL_NS_DEF(index)
         _freq = freqStream->readVInt();		  // else read _freq
       count++;
 
-      if ( (deletedDocs == NULL) || (deletedDocs->get(_doc) == false ) )
+      if ( (deletedDocs == NULL) || (_doc >= 0 && deletedDocs->get(_doc) == false ) )
         break;
       skippingDoc();
     }
@@ -144,7 +144,7 @@ CL_NS_DEF(index)
         _freq = freqStream->readVInt();		  // else read _freq
       count++;
 
-      if (deletedDocs == NULL || !deletedDocs->get(_doc)) {
+      if (deletedDocs == NULL || (_doc >= 0 && !deletedDocs->get(_doc))) {
         docs[i] = _doc;
         freqs[i] = _freq;
         i++;
