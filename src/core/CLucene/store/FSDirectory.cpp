@@ -353,10 +353,12 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
    refCount(0),
    useMMap(LUCENE_USE_MMAP)
   {
-  	directory = _realpath(path,directory);//set a realpath so that if we change directory, we can still function
-  	if ( !directory || !*directory ){
-  		strcpy(directory,path);	
-  	}
+  	char* tmpdirectory = _realpath(path,directory);//set a realpath so that if we change directory, we can still function
+  	if ( !tmpdirectory || !*tmpdirectory ){
+  		strncpy(directory,path, CL_MAX_PATH);
+  	}else{
+      directory = tmpdirectory; //repoint tmpdirectory at directory
+    }
         
     bool doClearLockID = false;
     
@@ -380,10 +382,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     }
 
     if (!Misc::dir_Exists(directory)){
-		char* err = _CL_NEWARRAY(char,19+strlen(path)+1); //19: len of " is not a directory"
-		strcpy(err,path);
-		strcat(err," is not a directory");
-        _CLTHROWA_DEL(CL_ERR_IO, err );
+      char* err = _CL_NEWARRAY(char,19+strlen(path)+1); //19: len of " is not a directory"
+      strcpy(err,path);
+      strcat(err," is not a directory");
+      _CLTHROWA_DEL(CL_ERR_IO, err );
     }
 
   }
@@ -391,7 +393,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   void FSDirectory::create(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-	struct cl_stat_t fstat;
+    struct cl_stat_t fstat;
     if ( fileStat(directory,&fstat) != 0 ) {
 	  	//todo: should construct directory using _mkdirs... have to write replacement
       if ( _mkdir(directory) == -1 ){
