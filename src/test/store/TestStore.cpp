@@ -54,7 +54,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 		file->close();
 		_CLDELETE(file);
 	}
-	CuMessageA(tc, "%d total milliseconds to create\n", Misc::currentTimeMillis() - start);
+	CuMessageA(tc, "%d total milliseconds to create\n", (int32_t)(Misc::currentTimeMillis() - start));
 
 	if (!ram){
 		store->close();
@@ -85,7 +85,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 		_CLDELETE(file);
 	}
 
-	CuMessageA(tc,"%d total milliseconds to read\n", Misc::currentTimeMillis() - start);
+	CuMessageA(tc,"%d total milliseconds to read\n", (int32_t)(Misc::currentTimeMillis() - start));
 
 	srand(1251971);
 	start = Misc::currentTimeMillis();
@@ -95,8 +95,8 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 		store->deleteFile(name);
 	}
 
-	CuMessageA(tc, "%d total milliseconds to delete\n",Misc::currentTimeMillis() - start);
-	CuMessageA(tc, "%d total milliseconds \n", Misc::currentTimeMillis() - veryStart);
+	CuMessageA(tc, "%d total milliseconds to delete\n",(int32_t)(Misc::currentTimeMillis() - start));
+	CuMessageA(tc, "%d total milliseconds \n", (int32_t)(Misc::currentTimeMillis() - veryStart));
 
 	//test makeLock::toString
 	CL_NS(store)::LuceneLock* lf = store->makeLock("testlock");

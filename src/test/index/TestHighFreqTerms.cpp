@@ -66,7 +66,7 @@
         reader->close();
         _CLDELETE( reader );
 
-		//CuMessageA(tc,"%d milliseconds\n",Misc::currentTimeMillis()-start);;
+		//CuMessageA(tc,"%d milliseconds\n",(int32_t)(Misc::currentTimeMillis()-start));
   }
   void TestHighFreqTerms(CuTest *tc){
 	char loc[1024];

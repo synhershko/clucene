@@ -377,7 +377,7 @@ void CuSuiteSummary(CuSuite* testSuite, CuString* summary, bool times)
 		int bufferLen = 25-summary->length-10;
 		for (int i=0;i<bufferLen;i++ )
 			CuStringAppend(summary,_T(" "));
-		CuStringAppendFormat(summary,_T(" - %dms"),testSuite->timeTaken);
+		CuStringAppendFormat(summary,_T(" - %dms"), (int32_t)testSuite->timeTaken);
 	}
 	CuStringAppend(summary, _T("\n"));
 }

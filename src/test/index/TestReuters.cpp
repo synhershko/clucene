@@ -181,7 +181,7 @@ CL_NS_USE(util)
 					    diff *= -1;
 					if ( diff > 16 ){
                         TCHAR tmp[1024];
-                        _sntprintf(tmp,1024,_T("Norms are off by more than the threshold! %d, should be %d"), norms2[i], norms1[i]);
+                        _sntprintf(tmp,1024,_T("Norms are off by more than the threshold! %d, should be %d"), (int32_t)norms2[i], (int32_t)norms1[i]);
 						CuAssert(tc,tmp,false);
 					}
 				}

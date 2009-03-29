@@ -24,7 +24,7 @@
 
     uint64_t end = Misc::currentTimeMillis();
     int64_t time = end - start;
-	CuMessageA (tc,"%d milliseconds to extract ",time);
+	CuMessageA (tc,"%d milliseconds to extract ", (int32_t)time);
     CuMessageA (tc,"%d tokens\n", count);
     CuMessageA (tc,"%f microseconds/token\n",(time*1000.0)/count );
     CuMessageA (tc,"%f megabytes/hour\n", (bytes * 1000.0 * 60.0 * 60.0)/(time * 1000000.0) );

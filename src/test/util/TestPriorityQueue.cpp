@@ -33,7 +33,7 @@
 			sum += next;
 			pq.put( next );
 		}
-		CuMessageA(tc,"%d milliseconds/",CL_NS(util)::Misc::currentTimeMillis()-start);
+		CuMessageA(tc,"%d milliseconds/", (int32_t)(CL_NS(util)::Misc::currentTimeMillis()-start));
 		CuMessageA(tc,"%d puts\n",count);
 		start = CL_NS(util)::Misc::currentTimeMillis();
 
@@ -50,7 +50,7 @@
 			sum2 += last;
 		}
 
-		CuMessageA(tc,"%d milliseconds",(CL_NS(util)::Misc::currentTimeMillis()-start));
+		CuMessageA(tc,"%d milliseconds", (int32_t)(CL_NS(util)::Misc::currentTimeMillis()-start));
 		CuMessageA(tc,"/%d pops\n",count);
 
 		CLUCENE_ASSERT(sum == sum);

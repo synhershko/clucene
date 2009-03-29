@@ -285,7 +285,7 @@ void SearchTest(CuTest *tc, bool bram) {
 	ram->close();
 	_CLDECDELETE(ram);
 
-	CuMessageA (tc,"took %d milliseconds\n", Misc::currentTimeMillis()-start);
+	CuMessageA (tc,"took %d milliseconds\n", (int32_t)(Misc::currentTimeMillis()-start));
 }
 
 void testNormEncoding(CuTest *tc) {
