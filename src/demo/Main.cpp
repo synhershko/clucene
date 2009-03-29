@@ -18,6 +18,7 @@
 #endif
 
 #include <iostream>
+#include <string.h>
 
 using namespace std;
 using namespace lucene::util;
@@ -40,12 +41,14 @@ int main( int32_t argc, char** argv ){
 
 		printf("Location of text files to be indexed: ");
 		char files[250];
-		fgets(files,250,stdin);
+		char* tmp = fgets(files,250,stdin);
+		if ( tmp == NULL ) return 1;
 		files[strlen(files)-1] = 0;
 		
 		printf("Location to store the clucene index: ");
 		char ndx[250];
-		fgets(ndx,250,stdin);
+		tmp = fgets(ndx,250,stdin);
+		if ( tmp == NULL ) return 1;
 		ndx[strlen(ndx)-1] = 0;
 
 		IndexFiles(files,ndx,true);
@@ -54,9 +57,9 @@ int main( int32_t argc, char** argv ){
 		DeleteFiles(ndx);
 
 	}catch(CLuceneError& err){
-		printf(err.what());
+		printf("Error: %s\n", err.what());
     }catch(...){
-		printf("Unknown error");
+		printf("Unknown error\n");
 	}
 
 	_lucene_shutdown(); //clears all static memory
@@ -68,6 +71,6 @@ int main( int32_t argc, char** argv ){
 	//	_crtBreakAlloc
 	//for linux, use valgrind
 
-	printf ("\n\nTime taken: %d\n\n",Misc::currentTimeMillis() - str);
+	printf ("\n\nTime taken: %d\n\n", (int32_t)(Misc::currentTimeMillis() - str));
 	return 0;
 }

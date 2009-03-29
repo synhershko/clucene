@@ -15,8 +15,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <cctype>
-#include <string>
-
+#include <string.h>
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -137,5 +136,5 @@ void IndexFiles(char* path, char* target, const bool clearIndex){
 	writer->close();
 	_CLDELETE(writer);
 
-	printf("Indexing took: %d ms.\n\n", Misc::currentTimeMillis() - str);
+	printf("Indexing took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));
 }

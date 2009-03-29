@@ -31,7 +31,8 @@ void SearchFiles(const char* index){
 	IndexSearcher s(index);
     while (true) {
 		printf("Enter query string: ");
-		fgets(line,80,stdin);
+		char* tmp = fgets(line,80,stdin);
+		if ( tmp == NULL ) continue;
 		line[strlen(line)-1]=0;
 
 		if ( strlen(line) == 0 )
@@ -45,7 +46,7 @@ void SearchFiles(const char* index){
 
 		uint64_t str = Misc::currentTimeMillis();
 		Hits* h = s.search(q);
-		uint64_t srch = Misc::currentTimeMillis() - str;
+		uint32_t srch = (int32_t)(Misc::currentTimeMillis() - str);
 		str = Misc::currentTimeMillis();
 
 		for ( int32_t i=0;i<h->length();i++ ){
@@ -56,7 +57,7 @@ void SearchFiles(const char* index){
 		}
 
 		printf("\n\nSearch took: %d ms.\n", srch);
-		printf("Screen dump took: %d ms.\n\n", Misc::currentTimeMillis() - str);
+		printf("Screen dump took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));
 
 		_CLDELETE(h);
 		_CLDELETE(q);
