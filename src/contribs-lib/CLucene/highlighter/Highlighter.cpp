@@ -28,7 +28,7 @@
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/util/PriorityQueue.h"
 #include "CLucene/util/StringBuffer.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 
 CL_NS_DEF2(search,highlight)
 CL_NS_USE(analysis)

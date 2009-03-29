@@ -1,6 +1,6 @@
 #include "CLucene/_ApiHeader.h"
 #include "CJKAnalyzer.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 
 CL_NS_DEF2(analysis,cjk)
 CL_NS_USE(analysis)
@@ -36,7 +36,7 @@ bool CJKTokenizer::next(Token* token){
         offset++;
 
         if (bufferIndex >= dataLen) {
-            dataLen = input->read(ioBuffer);
+            dataLen = input->read(ioBuffer, 1, LUCENE_IO_BUFFER_SIZE);
             bufferIndex = 0;
         }
 

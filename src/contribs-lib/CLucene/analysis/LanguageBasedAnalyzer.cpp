@@ -31,7 +31,12 @@ TokenStream* LanguageBasedAnalyzer::tokenStream(const TCHAR* fieldName, Reader* 
 	if ( _tcscmp(lang, _T("cjk"))==0 ){
 		ret = _CLNEW CL_NS2(analysis,cjk)::CJKTokenizer(reader);
 	}else{
-		ret = _CLNEW StandardTokenizer(reader);
+    BufferedReader* bufferedReader = reader->__asBufferedReader();
+    if ( bufferedReader == NULL )
+      ret =  _CLNEW StandardTokenizer( _CLNEW FilteredBufferedReader(reader, false), true );
+    else
+      ret = _CLNEW StandardTokenizer(bufferedReader);
+
 		ret = _CLNEW StandardFilter(ret,true);
 
 		if ( stem )

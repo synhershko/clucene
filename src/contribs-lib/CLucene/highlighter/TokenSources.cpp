@@ -18,7 +18,7 @@
 #include "TokenSources.h"
 
 #include "CLucene/util/VoidList.h"
-#include "CLucene/util/Reader.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/index/TermVector.h"
 #include "CLucene/document/Document.h"

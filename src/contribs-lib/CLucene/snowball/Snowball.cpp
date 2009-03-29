@@ -7,6 +7,7 @@
 #include "CLucene/analysis/standard/StandardFilter.h"
 
 CL_NS_USE(analysis)
+CL_NS_USE(util)
 CL_NS_USE2(analysis,standard)
 
 CL_NS_DEF2(analysis,snowball)
@@ -35,8 +36,14 @@ CL_NS_DEF2(analysis,snowball)
   /** Constructs a {@link StandardTokenizer} filtered by a {@link
       StandardFilter}, a {@link LowerCaseFilter} and a {@link StopFilter}. */
   TokenStream* SnowballAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
-    TokenStream* result = _CLNEW StandardTokenizer(reader);
-	result = _CLNEW StandardFilter(result, true);
+    TokenStream* result = NULL;
+    BufferedReader* bufferedReader = reader->__asBufferedReader();
+    if ( bufferedReader == NULL )
+      result =  _CLNEW StandardTokenizer( _CLNEW FilteredBufferedReader(reader, false), true );
+    else
+      result = _CLNEW StandardTokenizer(bufferedReader);
+
+    result = _CLNEW StandardFilter(result, true);
     result = _CLNEW CL_NS(analysis)::LowerCaseFilter(result, true);
     if (stopSet != NULL)
       result = _CLNEW CL_NS(analysis)::StopFilter(result, true, stopSet);
