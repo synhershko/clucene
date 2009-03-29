@@ -56,7 +56,7 @@ CL_NS_DEF(search)
 
 		/** Expert: Constructs a TopDocs. TopDocs takes ownership of the ScoreDoc array*/
 		TopDocs(const int32_t th, ScoreDoc* sds, int32_t scoreDocsLength);
-		~TopDocs();
+		virtual ~TopDocs();
 
 	private:
 		/** Expert: Stores the maximum score value encountered, needed for normalizing. */

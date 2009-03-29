@@ -156,7 +156,7 @@ public:
 };
 class CLUCENE_EXPORT BufferedInputStream: public InputStream, public BufferedStream<signed char>{
 public:
-	~BufferedInputStream(){}
+	virtual ~BufferedInputStream(){}
 };
 	
 

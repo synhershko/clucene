@@ -52,7 +52,7 @@ protected:
 	
 public:
 	QueryParserBase(CL_NS(analysis)::Analyzer* analyzer);
-	~QueryParserBase();
+	virtual ~QueryParserBase();
 
     /**
     * Whether terms of wildcard, prefix, fuzzy and range queries are to be automatically
