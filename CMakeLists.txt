@@ -62,11 +62,16 @@ OPTION(ENABLE_PACKAGING
 OPTION(BUILD_STATIC_LIBRARIES
   "create targets for building static libraries"
   OFF)
+OPTION(BUILD_CONTRIBS
+  "create targets for building the clucene-contribs"
+  OFF)
+OPTION(BUILD_CONTRIBS_LIB
+  "create targets for building the clucene-contribs-lib"
+  OFF)
+SET(LUCENE_SYS_INCLUDES "" CACHE PATH
+      "location for non-system independent files. defaults to CMAKE_INSTALL_PREFIX. see INSTALL documentation for further information."
+      )
 
-OPTION(LUCENE_SYS_INCLUDES
-  "location for non-system independent files. defaults to CMAKE_INSTALL_PREFIX. see INSTALL documentation for further information."
-  "")
-  
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )
 IF ( MSVC_IDE )
@@ -132,7 +137,12 @@ ADD_SUBDIRECTORY (src/shared)
 ADD_SUBDIRECTORY (src/core)
 ADD_SUBDIRECTORY (src/test)
 ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)
-ADD_SUBDIRECTORY (src/contribs-lib EXCLUDE_FROM_ALL)
+IF ( BUILD_CONTRIBS )
+  ADD_SUBDIRECTORY (src/contribs EXCLUDE_FROM_ALL)
+ENDIF ( BUILD_CONTRIBS )
+IF ( BUILD_CONTRIBS_LIB )
+  ADD_SUBDIRECTORY (src/contribs-lib EXCLUDE_FROM_ALL)
+ENDIF ( BUILD_CONTRIBS_LIB )
 
 #add uninstall command
 CONFIGURE_FILE(
