@@ -28,6 +28,7 @@ INCLUDE (DefineLongLongSyntax)
 INCLUDE (DefineStaticSyntax)
 INCLUDE (DefineMAXPATHValue)
 
+INCLUDE (CheckFloatByte)
 INCLUDE (CheckErrorHandling)
 INCLUDE (CheckHashmaps)
 INCLUDE (CheckNamespace)
@@ -86,9 +87,8 @@ CHECK_REQUIRED_FUNCTIONS(  printf strftime wcscpy wcsncpy wcscat wcschr wcsstr w
                            wcscmp wcsncmp wcscspn )
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
-CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf 
-    "MapViewOfFile(0,0,0,0,0)" 
-    mmap
+CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow 
+    wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf mmap "MapViewOfFile(0,0,0,0,0)"
 )
 
 #make decisions about which functions to use...
@@ -219,6 +219,9 @@ MACRO_CHECK_GCC_VISIBILITY(_CL_HAVE_GCCVISIBILITYPATCH)
 
 #Check that we can handle try/catch
 CHECK_HAVE_FUNCTION_TRY_BLOCKS (_CL_HAVE_TRY_BLOCKS)
+
+#check that we support new float byte<->float conversions
+CHECK_FLOAT_BYTE_WORKS(_CL_HAVE_NO_FLOAT_BYTE, 1)
 
 #check how to use hashmaps
 CHECK_HASH_MAPS (CL_NS_HASHING_VALUE LUCENE_DISABLE_HASHING)
