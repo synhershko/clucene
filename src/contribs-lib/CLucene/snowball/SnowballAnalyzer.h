@@ -3,6 +3,7 @@
 
 #include "CLucene/analysis/AnalysisHeader.h"
 
+CL_CLASS_DEF(util,BufferedReader)
 CL_NS_DEF2(analysis,snowball)
 
 /** Filters {@link StandardTokenizer} with {@link StandardFilter}, {@link
@@ -29,6 +30,7 @@ public:
   /** Constructs a {@link StandardTokenizer} filtered by a {@link
       StandardFilter}, a {@link LowerCaseFilter} and a {@link StopFilter}. */
   TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+  TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader, bool deleteReader);
 };
 
 CL_NS_END2

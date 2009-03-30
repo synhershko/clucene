@@ -2,6 +2,7 @@
 #include "SnowballAnalyzer.h"
 #include "SnowballFilter.h"
 #include "CLucene/util/Misc.h"
+#include "CLucene/util/CLStreams.h"
 #include "CLucene/analysis/Analyzers.h"
 #include "CLucene/analysis/standard/StandardTokenizer.h"
 #include "CLucene/analysis/standard/StandardFilter.h"
@@ -33,17 +34,22 @@ CL_NS_DEF2(analysis,snowball)
 	StopFilter::fillStopTable(stopSet,stopWords);
   }
 
+  TokenStream* SnowballAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+	 return this->tokenStream(fieldName,reader,false);
+  }
+
   /** Constructs a {@link StandardTokenizer} filtered by a {@link
       StandardFilter}, a {@link LowerCaseFilter} and a {@link StopFilter}. */
-  TokenStream* SnowballAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
-    TokenStream* result = NULL;
-    BufferedReader* bufferedReader = reader->__asBufferedReader();
-    if ( bufferedReader == NULL )
-      result =  _CLNEW StandardTokenizer( _CLNEW FilteredBufferedReader(reader, false), true );
-    else
-      result = _CLNEW StandardTokenizer(bufferedReader);
+  TokenStream* SnowballAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader, bool deleteReader) {
+		BufferedReader* bufferedReader = reader->__asBufferedReader();
+		TokenStream* result;
 
-    result = _CLNEW StandardFilter(result, true);
+		if ( bufferedReader == NULL )
+			result =  _CLNEW StandardTokenizer( _CLNEW FilteredBufferedReader(reader, deleteReader), true );
+		else
+			result = _CLNEW StandardTokenizer(bufferedReader, deleteReader);
+
+	 result = _CLNEW StandardFilter(result, true);
     result = _CLNEW CL_NS(analysis)::LowerCaseFilter(result, true);
     if (stopSet != NULL)
       result = _CLNEW CL_NS(analysis)::StopFilter(result, true, stopSet);
