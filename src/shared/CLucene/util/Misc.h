@@ -49,8 +49,8 @@ CL_NS_DEF(util)
 	static TCHAR* stringTrim(TCHAR* s);
 	static TCHAR* wordTrim(TCHAR* s);
 	
-	static char* longToBase( int64_t value, int32_t base );
-	static int64_t base36ToLong( const char* value );	
+	_CL_DEPRECATED(_i64tot) static char* longToBase( int64_t value, int32_t base );
+	_CL_DEPRECATED(_tcstoi64) static int64_t base36ToLong( const char* value );	
 
 #ifdef _UCS2
     static size_t whashCode(const wchar_t* str);
