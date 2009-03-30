@@ -15,7 +15,10 @@ CL_NS_DEF(analysis)
 
 LanguageBasedAnalyzer::LanguageBasedAnalyzer(const TCHAR* language, bool stem)
 {
-	_tcsncpy(lang,language,100);
+  if ( language == NULL )
+	 _tcsncpy(lang,LUCENE_BLANK_STRING,100);
+  else
+	 _tcsncpy(lang,language,100);
 	this->stem = stem;
 }
 LanguageBasedAnalyzer::~LanguageBasedAnalyzer(){

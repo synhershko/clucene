@@ -24,7 +24,7 @@ class CLUCENE_CONTRIBS_EXPORT LanguageBasedAnalyzer: public CL_NS(analysis)::Ana
 	TCHAR lang[100];
 	bool stem;
 public:
-	LanguageBasedAnalyzer(const TCHAR* language=LUCENE_BLANK_STRING, bool stem=true);
+	LanguageBasedAnalyzer(const TCHAR* language=NULL, bool stem=true);
 	~LanguageBasedAnalyzer();
 	void setLanguage(const TCHAR* language);
 	void setStem(bool stem);
