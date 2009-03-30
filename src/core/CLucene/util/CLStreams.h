@@ -95,6 +95,7 @@ public:
      * The value obtained from this function can be used to reset the stream.
      **/
 	virtual int64_t position() = 0;
+	int64_t getPosition(){ return this->position(); }
 
 	virtual size_t size() = 0;
 };
@@ -175,6 +176,21 @@ public:
 	void setMinBufSize(int32_t minbufsize);
 };
 
+class CLUCENE_EXPORT FilteredBufferedInputStream: public BufferedInputStream{
+	class Internal;
+	Internal* internal;
+public:
+	FilteredBufferedInputStream(InputStream* input, bool deleteInput);
+	virtual ~FilteredBufferedInputStream();
+	
+	int32_t read(const signed char*& start, int32_t min, int32_t max);
+	int64_t position();
+	int64_t reset(int64_t);
+	int64_t skip(int64_t ntoskip);
+	size_t size();
+	void setMinBufSize(int32_t minbufsize);
+};
+
 
 class CLUCENE_EXPORT StringReader: public BufferedReader{
 	TCHAR* value;
@@ -185,9 +201,28 @@ protected:
 public:
     StringReader ( const TCHAR* value, const int32_t length = -1 );
     StringReader ( TCHAR* value, const int32_t length, bool copyData = true );
-		virtual ~StringReader();
+	 virtual ~StringReader();
 	
     int32_t read(const TCHAR*& start, int32_t min, int32_t max);
+    int64_t position();
+    int64_t reset(int64_t);
+	 int64_t skip(int64_t ntoskip);
+	 void setMinBufSize(int32_t s);
+	 size_t size();
+};
+class CLUCENE_EXPORT AStringReader: public BufferedInputStream{
+	signed char* value;
+	bool ownValue;
+	int64_t pos;
+protected:
+	size_t m_size;
+public:
+    AStringReader ( const char* value, const int32_t length = -1 );
+    AStringReader ( char* value, const int32_t length, bool copyData = true );
+	 virtual ~AStringReader();
+	
+    int32_t read(const signed char*& start, int32_t min, int32_t max);
+    int32_t read(const unsigned char*& start, int32_t min, int32_t max);
     int64_t position();
     int64_t reset(int64_t);
 	int64_t skip(int64_t ntoskip);
@@ -230,6 +265,7 @@ public:
 	};
 	
 	SimpleInputStreamReader();
+   SimpleInputStreamReader(InputStream *i, int encoding);
 	virtual ~SimpleInputStreamReader();
 	
   int32_t read(const TCHAR*& start, int32_t min, int32_t max);
@@ -255,4 +291,7 @@ public:
 };
 
 CL_NS_END
+
+#define jstreams CL_NS(util)
+
 #endif

@@ -1,21 +1,21 @@
-#ifndef STRIGI_BUFFEREDSTREAM_H
-#define STRIGI_BUFFEREDSTREAM_H
+#ifndef JSTREAMS_BUFFEREDSTREAM_H
+#define JSTREAMS_BUFFEREDSTREAM_H
 
 #include "_streambase.h"
 #include "_streambuffer.h"
 #include <cassert>
 
-namespace jstreams {
+CL_NS_DEF(util)
 
 /**
- * @brief Abstract class providing a buffered input stream.
+ * @brief Abstract implementation class providing a buffered input stream.
  *
  * You can inherit this class to provide buffered access to a
  * resource.  You just need to implement fillBuffer, and
  * BufferedStream will do the rest.
  */
 template <class T>
-class BufferedStream : public StreamBase<T> {
+class BufferedStreamImpl : public StreamBase<T> {
 private:
     StreamBuffer<T> buffer;
     bool finishedWritingToBuffer;
@@ -62,7 +62,7 @@ protected:
     void setMinBufSize(int32_t s) {
         buffer.makeSpace(s);
     }
-    BufferedStream<T>();
+    BufferedStreamImpl<T>();
 public:
     int32_t read(const T*& start, int32_t min, int32_t max);
     int64_t reset(int64_t pos);
@@ -71,20 +71,20 @@ public:
 
 
 /** Abstract class for a buffered stream of bytes */
-typedef BufferedStream<signed char> BufferedInputStream;
+typedef BufferedStreamImpl<signed char> BufferedInputStreamImpl;
 
 /** Abstract class for a buffered stream of Unicode characters */
-typedef BufferedStream<wchar_t> BufferedReader;
+typedef BufferedStreamImpl<wchar_t> BufferedReaderImpl;
 
 
 template <class T>
-BufferedStream<T>::BufferedStream() {
+BufferedStreamImpl<T>::BufferedStreamImpl() {
     finishedWritingToBuffer = false;
 }
 
 template <class T>
 void
-BufferedStream<T>::writeToBuffer(int32_t ntoread, int32_t maxread) {
+BufferedStreamImpl<T>::writeToBuffer(int32_t ntoread, int32_t maxread) {
     int32_t missing = ntoread - buffer.avail;
     int32_t nwritten = 0;
     while (missing > 0 && nwritten >= 0) {
@@ -107,7 +107,7 @@ BufferedStream<T>::writeToBuffer(int32_t ntoread, int32_t maxread) {
 }
 template <class T>
 int32_t
-BufferedStream<T>::read(const T*& start, int32_t min, int32_t max) {
+BufferedStreamImpl<T>::read(const T*& start, int32_t min, int32_t max) {
     if (StreamBase<T>::m_status == Error) return -2;
     if (StreamBase<T>::m_status == Eof) return -1;
 
@@ -143,7 +143,7 @@ BufferedStream<T>::read(const T*& start, int32_t min, int32_t max) {
 }
 template <class T>
 int64_t
-BufferedStream<T>::reset(int64_t newpos) {
+BufferedStreamImpl<T>::reset(int64_t newpos) {
     assert(newpos >= 0);
     if (StreamBase<T>::m_status == Error) return -2;
     // check to see if we have this position
@@ -158,7 +158,7 @@ BufferedStream<T>::reset(int64_t newpos) {
 }
 template <class T>
 int64_t
-BufferedStream<T>::skip(int64_t ntoskip) {
+BufferedStreamImpl<T>::skip(int64_t ntoskip) {
     const T *begin;
     int32_t nread;
     int64_t skipped = 0;
@@ -174,6 +174,6 @@ BufferedStream<T>::skip(int64_t ntoskip) {
     return skipped;
 }
 
-} // end namespace Strigi
+CL_NS_END
 
 #endif

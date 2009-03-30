@@ -82,9 +82,75 @@ int64_t StringReader::skip(int64_t ntoskip){
 	return s;
 }
 
+
+
+
+AStringReader::AStringReader ( char* value, const int32_t length, bool copyData )
+{
+	this->m_size = length;
+	this->pos = 0;
+	if ( copyData ){
+		this->value = _CL_NEWARRAY(signed char, this->m_size);
+		strncpy((char*)this->value, value, this->m_size);
+	}else{
+		this->value = (signed char*)value;
+	}
+	this->ownValue = copyData;
+}
+
+AStringReader::AStringReader ( const char* value, const int32_t length ){
+	if ( length >= 0 )
+		this->m_size = length;
+	else
+		this->m_size = strlen(value);
+	this->pos = 0;
+	this->value = _CL_NEWARRAY(signed char, this->m_size);
+	strncpy((char*)this->value, value, this->m_size);
+	this->ownValue = true;
+}
+AStringReader::~AStringReader(){
+	if ( ownValue )
+		_CLDELETE_ARRAY(this->value);
+}
+
+size_t AStringReader::size(){
+	return m_size;
+}
+int32_t AStringReader::read(const signed char*& start, int32_t min, int32_t max){
+	if ( m_size == pos )
+		return -1;
+	start = this->value + pos;
+	int32_t r = (int32_t)cl_min(cl_max(min,max),m_size-pos);
+	pos += r;
+	return r;
+}
+int32_t AStringReader::read(const unsigned char*& start, int32_t min, int32_t max){
+	if ( m_size == pos )
+		return -1;
+	start = (unsigned char*)(this->value + pos);
+	int32_t r = (int32_t)cl_min(cl_max(min,max),m_size-pos);
+	pos += r;
+	return r;
+}
+int64_t AStringReader::position(){
+	return pos;
+}
+void AStringReader::setMinBufSize(int32_t s){
+}
+int64_t AStringReader::reset(int64_t pos){
+	if ( pos >= 0 && pos < this->m_size )
+		this->pos = pos;
+	return this->pos;
+}
+int64_t AStringReader::skip(int64_t ntoskip){
+	int64_t s = cl_min(ntoskip, m_size-pos);
+	this->pos += s;
+	return s;
+}
+
 class FileInputStream::Internal{
 public:
-	class JStreamsBuffer: public jstreams::BufferedInputStream{
+	class JStreamsBuffer: public BufferedInputStreamImpl{
 		int32_t fhandle;
 	protected:
 		int32_t fillBuffer(signed char* start, int32_t space){
@@ -95,7 +161,7 @@ public:
 	    // check the file stream status
 	    if (nwritten == -1 ) {
 	        m_error = "Could not read from file";
-			m_status = jstreams::Error;
+			m_status = CL_NS(util)::Error;
 			if ( fhandle > 0 ){
 				::_close(fhandle);
 				fhandle = 0;
@@ -146,7 +212,7 @@ public:
 			else if ( err == EMFILE )
 				_CLTHROWA(CL_ERR_IO, "Too many open files");
 			else
-	    			_CLTHROWA(CL_ERR_IO, "Could not open file");
+	    		_CLTHROWA(CL_ERR_IO, "Could not open file");
 	   }
 		jsbuffer = new JStreamsBuffer(fhandle, buffersize);
 		
@@ -215,7 +281,7 @@ FileReader::~FileReader(){
 class SimpleInputStreamReader::Internal{
 public:
 	
-	class JStreamsBuffer: public jstreams::BufferedReader{
+	class JStreamsBuffer: public BufferedReaderImpl{
 		InputStream* input;
 		char utf8buf[6]; //< buffer used for converting utf8 characters
 	protected:
@@ -261,10 +327,10 @@ public:
 				}else if ( ret == -1 )
 					return -1;
 				this->m_error = "Invalid multibyte sequence.";
-				this->m_status = jstreams::Error;
+				this->m_status = CL_NS(util)::Error;
 			}else{
 				this->m_error = "Unexpected encoding";
-				this->m_status = jstreams::Error;
+				this->m_status = CL_NS(util)::Error;
 			}
 			return -1;
 		}
@@ -276,7 +342,7 @@ public:
 			for(i=0;i<space;i++){
 				c = readChar();
 				if ( c == -1 ){
-					if ( this->m_status == jstreams::Ok ){
+					if ( this->m_status == CL_NS(util)::Ok ){
 						if ( i == 0 )
 							return -1;
 						break;
@@ -293,6 +359,7 @@ public:
 		JStreamsBuffer(InputStream* input, int encoding){
 			this->input = input;
 			this->encoding = encoding;
+		   setMinBufSize(1024);
 		}
 		~JStreamsBuffer(){
 			_CLDELETE(input);
@@ -314,6 +381,9 @@ public:
 
 SimpleInputStreamReader::SimpleInputStreamReader(){
 	internal = NULL;
+}
+SimpleInputStreamReader::SimpleInputStreamReader(InputStream *i, int encoding){
+	internal = new Internal(i, encoding);
 }
 void SimpleInputStreamReader::init(InputStream *i, int encoding){
 	internal = new Internal(i, encoding);
@@ -343,7 +413,7 @@ void SimpleInputStreamReader::setMinBufSize(int32_t minbufsize){
 
 class FilteredBufferedReader::Internal{
 public:
-	class JStreamsFilteredBuffer: public jstreams::BufferedReader{
+	class JStreamsFilteredBuffer: public BufferedReaderImpl{
 		Reader* input;
 		bool deleteInput;
 	protected:
@@ -398,6 +468,69 @@ size_t FilteredBufferedReader::size(){
 	return internal->jsbuffer->size();
 }
 void FilteredBufferedReader::setMinBufSize(int32_t minbufsize){
+	return internal->jsbuffer->_setMinBufSize(minbufsize);
+}
+
+
+
+
+class FilteredBufferedInputStream::Internal{
+public:
+	class JStreamsFilteredBuffer: public BufferedInputStreamImpl{
+		InputStream* input;
+		bool deleteInput;
+	protected:
+		int32_t fillBuffer(signed char* start, int32_t space){
+			const signed char* buffer;
+			int32_t r = input->read(buffer, 1, space);
+			if ( r > 0 )
+				memcpy(start, buffer, r);
+			return r;
+		}
+	public:
+		JStreamsFilteredBuffer(InputStream* input, bool deleteInput){
+			this->input = input;
+			this->deleteInput = deleteInput;
+		}
+		~JStreamsFilteredBuffer(){
+			if ( deleteInput )
+				_CLDELETE(input);
+		}
+		void _setMinBufSize(int32_t min){
+			this->setMinBufSize(min);
+		}
+	};
+	JStreamsFilteredBuffer* jsbuffer;
+	
+	Internal(InputStream* input, bool deleteInput){
+		this->jsbuffer = new JStreamsFilteredBuffer(input, deleteInput);
+	}
+	~Internal(){
+		delete jsbuffer;
+	}
+};
+FilteredBufferedInputStream::FilteredBufferedInputStream(InputStream* input, bool deleteInput){
+	internal = new Internal(input, deleteInput);
+}
+FilteredBufferedInputStream::~FilteredBufferedInputStream(){
+	delete internal;
+}
+int32_t FilteredBufferedInputStream::read(const signed char*& start, int32_t min, int32_t max){
+	return internal->jsbuffer->read(start,min,max);
+}
+int64_t FilteredBufferedInputStream::position(){
+	return internal->jsbuffer->position();
+}
+int64_t FilteredBufferedInputStream::reset(int64_t p){
+	return internal->jsbuffer->reset(p);
+}
+int64_t FilteredBufferedInputStream::skip(int64_t ntoskip){
+	return internal->jsbuffer->skip(ntoskip);
+}
+size_t FilteredBufferedInputStream::size(){
+	return internal->jsbuffer->size();
+}
+void FilteredBufferedInputStream::setMinBufSize(int32_t minbufsize){
 	return internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 

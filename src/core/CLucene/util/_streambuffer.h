@@ -1,11 +1,11 @@
 
-#ifndef STRIGI_STREAMBUFFER_H
-#define STRIGI_STREAMBUFFER_H
+#ifndef JSTREAM_STREAMBUFFER_H
+#define JSTREAM_STREAMBUFFER_H
 
 #include <cstdlib>
 #include <cstring>
 
-namespace jstreams {
+CL_NS_DEF(util)
 
 /**
  * @internal
@@ -157,6 +157,6 @@ StreamBuffer<T>::read(const T*& start, int32_t max) {
     return max;
 }
 
-} // end namespace Strigi
+CL_NS_END
 
 #endif

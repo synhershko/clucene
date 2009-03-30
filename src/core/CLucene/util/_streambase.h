@@ -1,13 +1,13 @@
 
-#ifndef STRIGI_STREAMBASE_H
-#define STRIGI_STREAMBASE_H
+#ifndef JSTREAMS_STREAMBASE_H
+#define JSTREAMS_STREAMBASE_H
 
 #include <stdio.h>
 #include <string>
 
 #define INT32MAX 0x7FFFFFFFL
 
-namespace jstreams {
+CL_NS_DEF(util)
 
 /** Used to indicate the current status of a Stream */
 enum StreamStatus {
@@ -173,13 +173,6 @@ public:
 };
 
 
-/** Abstract class for a stream of bytes */
-typedef StreamBase<char> InputStream;
-
-/** Abstract class for a stream of Unicode characters */
-typedef StreamBase<wchar_t> Reader;
-
-
 template <class T>
 int64_t
 StreamBase<T>::skip(int64_t ntoskip) {
@@ -207,6 +200,6 @@ StreamBase<T>::skip(int64_t ntoskip) {
     return skipped;
 }
 
-} // end namespace Strigi
+CL_NS_END
 
 #endif
