@@ -76,12 +76,7 @@ ${FUNCTION_SLEEPFUNCTION}
 /* CMake will determine these specifics. Things like bugs, etc */
 
 /* Does not support new float byte<->float conversions */
-//todo: not being checked for...
-#cmakedefine _CL_HAVE_NO_FLOAT_BYTE
-
-/* Does not support try/catch blocks */
-//todo: this is not checked properly
-//#cmakedefine _CL_HAVE_NO_FUNCTION_TRY_BLOCKS
+#cmakedefine _CL_HAVE_NO_FLOAT_BYTE 1
 
 /* Define if recursive pthread mutexes are available */
 #cmakedefine _CL_HAVE_PTHREAD_MUTEX_RECURSIVE  1 
