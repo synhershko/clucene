@@ -25,20 +25,13 @@ CL_NS_DEF ( util )
 #if defined(_CL_HAVE_WIN32_THREADS)
 	#define INIT_THREAD(ret) ret=true
     extern "C"{
-    #ifndef _WINBASE_
-	/*__declspec(dllimport) _cl_dword_t __stdcall TlsAlloc( );
-	__declspec(dllimport) void* __stdcall TlsGetValue(_cl_dword_t dwTlsIndex );
-	__declspec(dllimport) bool __stdcall  TlsSetValue( _cl_dword_t dwTlsIndex, void* lpTlsValue );
-	__declspec(dllimport) bool __stdcall  TlsFree( _cl_dword_t dwTlsIndex );*/
-	#define DLL_THREAD_DETACH  3    
-    #endif //_WINBASE_
 
         //todo: move this to StdHeader and make it usable by other functions...
         bool __stdcall DllMain( unsigned short hinstDLL,     // DLL module handle
                                 _cl_dword_t fdwReason,  // reason called
                                 void*)                  // reserved
         { 
-			if ( fdwReason == DLL_THREAD_DETACH )
+			if ( fdwReason == 3 )
             			_ThreadLocal::UnregisterCurrentThread();
 
 			return true;
