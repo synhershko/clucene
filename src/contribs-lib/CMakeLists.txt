@@ -1,27 +1,18 @@
-PROJECT(clucene-contribs)
+PROJECT(clucene-contribs-lib)
 
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CONTRIBS_LIB)
 
-set(CMAKE_MODULE_PATH "${clucene-contribs_SOURCE_DIR}/cmake")
-
-Include(FindIconv)
-IF ( ICONV_SECOND_ARGUMENT_IS_CONST )
-    SET ( ICONV_SECOND_ARGUMENT_IS_CONST 1 )
-ELSE ( ICONV_SECOND_ARGUMENT_IS_CONST )
-    SET ( ICONV_SECOND_ARGUMENT_IS_CONST 0 )
-ENDIF ( ICONV_SECOND_ARGUMENT_IS_CONST )
-
-CONFIGURE_FILE(${clucene-contribs_SOURCE_DIR}/CLucene/jstreams/jstreamsconfig.h.cmake ${clucene-contribs_BINARY_DIR}/CLucene/jstreams/jstreamsconfig.h)
+set(CMAKE_MODULE_PATH "${clucene-contribs-lib_SOURCE_DIR}/cmake")
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis" ./CLucene/analysis/*)
+SOURCE_GROUP("util" ./CLucene/util/*)
 #seems to be a bug in cmake, can't put these in analysis\\standard folder :(
 SOURCE_GROUP("analysis-cjk" ./CLucene/analysis/cjk/*)
 SOURCE_GROUP("highlighter" ./CLucene/highlighter/*)
 SOURCE_GROUP("index" ./CLucene/index/*)
-SOURCE_GROUP("jstreams" ./CLucene/jstreams/*)
 SOURCE_GROUP("snowball" ./CLucene/snowball/*)
 SOURCE_GROUP("snowball-impl" ./CLucene/snowball/include/*)
 SOURCE_GROUP("snowball-impl" ./CLucene/snowball/libstemmer/*)
@@ -29,14 +20,11 @@ SOURCE_GROUP("snowball-impl" ./CLucene/snowball/runtime/*)
 SOURCE_GROUP("snowball-impl" ./CLucene/snowball/src_c/*)
 
 SET(clucene_contribs_Files
+    ./CLucene/util/gzipcompressstream.cpp
+    ./CLucene/util/gzipinputstream.cpp
+
     ./CLucene/analysis/LanguageBasedAnalyzer.cpp
-    ./CLucene/analysis/PorterStemmer.cpp
     ./CLucene/analysis/cjk/CJKAnalyzer.cpp
-    
-    ./CLucene/jstreams/dostime.cpp
-    ./CLucene/jstreams/fileinputstream.cpp
-    ./CLucene/jstreams/subinputstream.cpp
-    ./CLucene/jstreams/tarinputstream.cpp
     
     ./CLucene/highlighter/Encoder.cpp
     ./CLucene/highlighter/Formatter.cpp
@@ -83,47 +71,20 @@ SET(clucene_contribs_Files
     ./CLucene/snowball/src_c/stem_UTF_8_spanish.c
     ./CLucene/snowball/src_c/stem_UTF_8_swedish.c
 )
+SET ( clucene_contrib_extras clucene-core clucene-shared )
 
 #add extra capabilities
 find_package(ZLIB)
-find_package(BZip2)
+IF ( NOT ZLIB_FOUND )
+  MESSAGE ( FATAL "ZLib not found" )
+ENDIF ( NOT ZLIB_FOUND )
+INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+SET ( clucene_contrib_extras "${clucene_contrib_extras}" ${ZLIB_LIBRARIES} ) 
+
 find_package(Iconv)
+#find_package(Strigi)
 SET ( clucene-contrib-libs "" )
-IF ( BZIP2_FOUND )
-    SET ( clucene_contribs_Files ${clucene_contribs_Files}
-          ./CLucene/jstreams/bz2inputstream.cpp 
-        )
-    INCLUDE_DIRECTORIES(${BZIP2_INCLUDE_DIR})
-    SET ( clucene-contrib-libs "${clucene-contrib-libs} ${BZIP2_LIBRARIES}" )
-ELSE ( BZIP2_FOUND )
-    MESSAGE ( STATUS "warning: BZIP2 Library not found, BZ2InputStream will not be built" )
-ENDIF ( BZIP2_FOUND )
 
-IF ( ZLIB_FOUND )
-    SET ( clucene_contribs_Files ${clucene_contribs_Files}
-        ./CLucene/jstreams/gzipcompressstream.cpp
-        ./CLucene/jstreams/gzipinputstream.cpp
-		./CLucene/jstreams/zipinputstream.cpp
-    )
-    INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
-    SET ( clucene-contrib-libs "${clucene-contrib-libs} ${ZLIB_LIBRARIES}" )
-ELSE ( ZLIB_FOUND )
-    MESSAGE ( STATUS "warning: ZLIB Library not found, GZipCompressInputStream and GZipInputStream will not be built" )
-ENDIF ( ZLIB_FOUND )
-
-IF ( ICONV_FOUND )
-    SET ( clucene_contribs_Files ${clucene_contribs_Files}
-        ./CLucene/jstreams/inputstreamreader.cpp
-        ./CLucene/jstreams/filereader.cpp
-    )
-    INCLUDE_DIRECTORIES(${ICONV_INCLUDE_DIR})
-    SET ( clucene-contrib-libs "${clucene-contrib-libs} ${ICONV_LIBRARIES}" )
-ELSE ( ICONV_FOUND )
-    MESSAGE ( STATUS "warning: ICONV Library not found, InputStreamReader and FileReader will not be built" )
-ENDIF ( ICONV_FOUND )
-
-
-    
 IF ( USE_SHARED_OBJECT_FILES )
     GET_SHARED_FILES(clucene_shared_Files)
 ENDIF ( USE_SHARED_OBJECT_FILES )
@@ -131,30 +92,15 @@ ENDIF ( USE_SHARED_OBJECT_FILES )
 #create the libraries
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/contribs-lib )
-INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/contribs-lib )
 
-add_library(clucene-contribs SHARED
+add_library(clucene-contribs-lib SHARED
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
 )
-IF ( NOT USE_SHARED_OBJECT_FILES )
-    TARGET_LINK_LIBRARIES(clucene-contribs clucene-shared)
-ENDIF ( NOT USE_SHARED_OBJECT_FILES )
+TARGET_LINK_LIBRARIES(clucene-contribs-lib ${clucene_contrib_extras}) 
 
 #set properties on the libraries
-SET_TARGET_PROPERTIES(clucene-contribs PROPERTIES
+SET_TARGET_PROPERTIES(clucene-contribs-lib PROPERTIES
     VERSION ${CLUCENE_VERSION}
     SOVERSION ${CLUCENE_SOVERSION}
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
-
-IF ( BUILD_STATIC_LIBRARIES )
-	add_library(clucene-contribs-static STATIC
-		${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
-	)
-	
-	SET_TARGET_PROPERTIES(clucene-contribs-static PROPERTIES
-	    VERSION ${CLUCENE_VERSION}
-	    SOVERSION ${CLUCENE_SOVERSION}
-	    COMPILE_DEFINITIONS_DEBUG _DEBUG
-	)
-ENDIF ( BUILD_STATIC_LIBRARIES )
