@@ -79,20 +79,6 @@ IF ( GccFlagWall )
     SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -Wall")
     SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
 ENDIF ( GccFlagWall )
-IF ( GccFlagPedantic )
-    SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -pedantic")
-    SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -pedantic")
-ENDIF ( GccFlagPedantic )
-
-ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
-SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES 
-    COMPILE_DEFINITIONS ""
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
-    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
-ADD_CUSTOM_TARGET(test-pedantic
-    COMMENT "Running cl_test-pedantic"
-    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-pedantic
-    DEPENDS cl_test-pedantic)
 
 ADD_EXECUTABLE(cl_test-ascii EXCLUDE_FROM_ALL ${test_monolithic_Files} )
 SET_TARGET_PROPERTIES(cl_test-ascii PROPERTIES 
@@ -155,6 +141,22 @@ ADD_CUSTOM_TARGET(test-platform-charfuncs
     COMMENT "Running cl_test-platform-charfuncs"
     COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-platform-charfuncs
     DEPENDS cl_test-platform-charfuncs)
+
+#this one last so we only have pedantic for test-pedantic
+IF ( GccFlagPedantic )
+    SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -pedantic")
+    SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -pedantic")
+ENDIF ( GccFlagPedantic )
+ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
+SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES
+    COMPILE_DEFINITIONS ""
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
+ADD_CUSTOM_TARGET(test-pedantic
+    COMMENT "Running cl_test-pedantic"
+    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-pedantic
+    DEPENDS cl_test-pedantic)
+
 
 #target for running all tests
 ADD_CUSTOM_TARGET(test-all 
