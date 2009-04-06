@@ -46,7 +46,9 @@
     void testMin(CuTest *tc) {
         // make sure the constants convert to their equivelents
 		CuAssertTrue(tc, LUCENE_INT64_MIN_SHOULDBE == NumberTools::stringToLong(const_cast<TCHAR*>(NumberTools::MIN_STRING_VALUE)));
-		CuAssertStrEquals(tc, _T("Min value"), NumberTools::MIN_STRING_VALUE, NumberTools::longToString(LUCENE_INT64_MIN_SHOULDBE));
+		TCHAR* actual = NumberTools::longToString(LUCENE_INT64_MIN_SHOULDBE);
+		CuAssertStrEquals(tc, _T("Min value"), NumberTools::MIN_STRING_VALUE, actual);
+		_CLDELETE_LCARRAY(actual);
 
         // test near MIN, too
         for (int64_t l = LUCENE_INT64_MIN_SHOULDBE; l < LUCENE_INT64_MIN_SHOULDBE + 10000; l++) {
@@ -57,7 +59,9 @@
     void testMax(CuTest *tc) {
         // make sure the constants convert to their equivelents
 		CuAssertTrue(tc, LUCENE_INT64_MAX_SHOULDBE == NumberTools::stringToLong(const_cast<TCHAR*>(NumberTools::MAX_STRING_VALUE)));
-		CuAssertStrEquals(tc, _T("Max value"), NumberTools::MAX_STRING_VALUE, NumberTools::longToString(LUCENE_INT64_MAX_SHOULDBE));
+		TCHAR* actual = NumberTools::longToString(LUCENE_INT64_MAX_SHOULDBE);
+		CuAssertStrEquals(tc, _T("Max value"), NumberTools::MAX_STRING_VALUE, actual);
+		_CLDELETE_LCARRAY(actual);
 
         // test near MAX, too
         for (int64_t l = LUCENE_INT64_MAX_SHOULDBE; l > LUCENE_INT64_MAX_SHOULDBE - 10000; l--) {
