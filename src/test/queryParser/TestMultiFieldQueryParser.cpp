@@ -63,11 +63,14 @@ void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
 
 	const TCHAR* s = q->toString();
 	int ret = _tcscmp(s,result);
-	_CLDELETE_LCARRAY(s);
 	_CLDELETE(q);
 	if ( ret != 0 ) {
-		CuFail(tc, _T("FAILED Query yielded /%s/, expecting /%s/\n"), s, result);
+		TCHAR buf[HUGE_STRING_LEN];
+		_sntprintf(buf, HUGE_STRING_LEN, _T("FAILED Query yielded /%s/, expecting /%s/\n"), s, result);
+		_CLDELETE_LCARRAY(s);
+		CuFail(tc, buf);
 	}
+	_CLDELETE_LCARRAY(s);
 }
 
 // verify parsing of query using a stopping analyzer  
