@@ -50,6 +50,7 @@
 
 //a shortcut for deleting a carray and all its contents
 #define _CLDELETE_CARRAY_ALL(x) {if ( x!=NULL ){ for(int xcda=0;x[xcda]!=NULL;xcda++)_CLDELETE_CARRAY(x[xcda]);}_CLDELETE_ARRAY(x)};
+#define _CLDELETE_LCARRAY_ALL(x) {if ( x!=NULL ){ for(int xcda=0;x[xcda]!=NULL;xcda++)_CLDELETE_LCARRAY(x[xcda]);}_CLDELETE_LARRAY(x)};
 #define _CLDELETE_CaARRAY_ALL(x) {if ( x!=NULL ){ for(int xcda=0;x[xcda]!=NULL;xcda++)_CLDELETE_CaARRAY(x[xcda]);}_CLDELETE_ARRAY(x)};
 #define _CLDELETE_ARRAY_ALL(x) {if ( x!=NULL ){ for(int xcda=0;x[xcda]!=NULL;xcda++)_CLDELETE(x[xcda]);}_CLDELETE_ARRAY(x)};
 #ifndef _CLDELETE_CaARRAY
