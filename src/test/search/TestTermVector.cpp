@@ -6,8 +6,8 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
-IndexSearcher* tv_searcher;
-RAMDirectory* tv_directory;
+IndexSearcher* tv_searcher = NULL;
+RAMDirectory* tv_directory = NULL;
 
 void testTermPositionVectors(CuTest *tc) {
     CLUCENE_ASSERT(tv_searcher!=NULL);
@@ -21,10 +21,11 @@ void testTermPositionVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-		  ObjectArray<TermFreqVector> vector;
-		  CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), *(ObjectArray<TermFreqVector>*)(&vector)));
-		  CLUCENE_ASSERT(vector.length== 1);
-		  vector.deleteValues();
+		  ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+		  CLUCENE_ASSERT(vector != NULL);
+		  CLUCENE_ASSERT(vector->length== 1);
+		  vector->deleteValues();
+		  _CLLDELETE(vector);
       }
 
       _CLDELETE(hits);
@@ -48,10 +49,11 @@ void testTermVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        ObjectArray<TermFreqVector> vector;
-        CLUCENE_ASSERT(tv_searcher->getReader()->getTermFreqVectors(hits->id(i), (ObjectArray<TermFreqVector>&)vector));
-        CLUCENE_ASSERT(vector.length == 1);
-		vector.deleteValues();
+        ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+        CLUCENE_ASSERT(vector != NULL);
+        CLUCENE_ASSERT(vector->length == 1);
+		vector->deleteValues();
+		_CLLDELETE(vector);
       }
 
 	  //test mem leaks with vectors
@@ -70,11 +72,6 @@ void testTermVectors(CuTest *tc) {
     }
 }
 
-void testTVCleanup(CuTest *tc) {
-    _CLDELETE(tv_searcher);
-    tv_directory->close();
-    _CLDELETE(tv_directory);
-}
 void testTVSetup(CuTest *tc) {
     SimpleAnalyzer a;
     tv_directory = _CLNEW RAMDirectory();
@@ -82,7 +79,7 @@ void testTVSetup(CuTest *tc) {
     writer.setUseCompoundFile(false);
 
     TCHAR buf[200];
-    for (int32_t i = 0; i < 1000; i++) { //todo: was 1000
+    for (int32_t i = 0; i < 1000; i++) {
       Document doc;
       English::IntToEnglish(i,buf,200);
 
@@ -90,7 +87,7 @@ void testTVSetup(CuTest *tc) {
       int mod2 = i % 2;
 	  int termVector = 0;
       if (mod2 == 0 && mod3 == 0)
-		  termVector = Field::TERMVECTOR_WITH_POSITIONS;
+		  termVector = Field::TERMVECTOR_WITH_POSITIONS_OFFSETS;
       else if (mod2 == 0)
 		  termVector = Field::TERMVECTOR_WITH_POSITIONS;
       else if (mod3 == 0)
@@ -104,7 +101,11 @@ void testTVSetup(CuTest *tc) {
     writer.close();
     tv_searcher = _CLNEW IndexSearcher(tv_directory);
 }
-
+void testTVCleanup(CuTest *tc) {
+    _CLDELETE(tv_searcher);
+    tv_directory->close();
+    _CLDELETE(tv_directory);
+}
 
 void setupDoc(Document& doc, const TCHAR* text)
 {

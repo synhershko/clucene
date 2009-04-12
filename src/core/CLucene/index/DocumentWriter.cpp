@@ -35,38 +35,28 @@ CL_NS_DEF(index)
 
 /*Posting*/
 
-DocumentWriter::Posting::Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset):offsets(NULL)
+DocumentWriter::Posting::Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset)
 {
-//Func - Constructor
-//Pre  - t contains a valid reference to a Term
-//Post - Instance has been created
 	freq = 1;
 	
 	term = _CL_POINTER(t);
-	this->positions = _CLNEW ValueArray<int32_t>(1);
-	this->positions->values[0] = position;
-	//positions.values = (int32_t*)malloc(sizeof(int32_t));
-	//positions.values[0] = position;
-	//positions.length = 1;
+	positions.values = (int32_t*)malloc(sizeof(int32_t));
+	positions.values[0] = position;
+	positions.length = 1;
 	
 	if ( offset != NULL ){
-		this->offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(1);
-		this->offsets->values[0] = offset;
-		//this->offsets.values = (TermVectorOffsetInfo**)malloc(sizeof(TermVectorOffsetInfo));
-		//this->offsets.values[0] = offset;
-		//this->offsets.length = 1;
+		this->offsets.values = (TermVectorOffsetInfo**)malloc(sizeof(TermVectorOffsetInfo*));
+		this->offsets.values[0] = offset;
+		this->offsets.length = 1;
 	}
 }
 DocumentWriter::Posting::~Posting(){
-//Func - Destructor
-//Pre  - true
-//Post - The instance has been destroyed
-
-	_CLDELETE_LARRAY(this->positions->values);
-	//_CLLDELETE(this->positions);
-	//_CLLDELETE(this->offsets);
-	if ( this->offsets != NULL )
-		_CLDELETE_LARRAY(this->offsets->values);
+	free(this->positions.values);
+	this->positions.values = NULL;
+	if (this->offsets.values != NULL){
+		free(this->offsets.values);
+		this->offsets.values=NULL;
+	}
 	_CLDECDELETE(this->term);
 }
 
@@ -82,18 +72,18 @@ DocumentWriter::DocumentWriter(Directory* d, Analyzer* a, CL_NS(search)::Similar
 		postingTable(_CLNEW PostingTableType),
 		fieldLengths(NULL),
 		fieldPositions(NULL),
+		fieldOffsets(NULL),
 		fieldBoosts(NULL),
-		termBuffer(_CLNEW Term){
+		termBuffer(_CLNEW Term)
+{
 //Pre  - d contains a valid reference to a Directory
 //       d contains a valid reference to a Analyzer
 //       mfl > 0 and contains the maximum field length
 //Post - Instance has been created
  
-CND_PRECONDITION(((mfl > 0) || (mfl == IndexWriter::FIELD_TRUNC_POLICY__WARN)),
- "mfl is 0 or smaller than IndexWriter::FIELD_TRUNC_POLICY__WARN")
+			CND_PRECONDITION(((mfl > 0) || (mfl == IndexWriter::FIELD_TRUNC_POLICY__WARN)),
+				"mfl is 0 or smaller than IndexWriter::FIELD_TRUNC_POLICY__WARN")
  
-   fieldInfos     = NULL;
-   fieldLengths   = NULL;
 }
 
 DocumentWriter::DocumentWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, IndexWriter* writer):
@@ -106,19 +96,17 @@ DocumentWriter::DocumentWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Anal
 		postingTable(_CLNEW PostingTableType),
 		fieldLengths(NULL),
 		fieldPositions(NULL),
+		fieldOffsets(NULL),
 		fieldBoosts(NULL),
-		termBuffer(_CLNEW Term){
+		termBuffer(_CLNEW Term)
+{
 //Pre  - d contains a valid reference to a Directory
 //       d contains a valid reference to a Analyzer
 //       mfl > 0 and contains the maximum field length
 //Post - Instance has been created
  
-CND_PRECONDITION(((maxFieldLength > 0) || (maxFieldLength == IndexWriter::FIELD_TRUNC_POLICY__WARN)),
- "mfl is 0 or smaller than IndexWriter::FIELD_TRUNC_POLICY__WARN")
- 
-   fieldInfos     = NULL;
-   fieldLengths   = NULL;
-
+			CND_PRECONDITION(((maxFieldLength > 0) || (maxFieldLength == IndexWriter::FIELD_TRUNC_POLICY__WARN)),
+				"mfl is 0 or smaller than IndexWriter::FIELD_TRUNC_POLICY__WARN")
 }
 
 DocumentWriter::~DocumentWriter(){
@@ -171,7 +159,9 @@ void DocumentWriter::addDocument(const char* segment, Document* doc) {
 	fieldLengths = _CL_NEWARRAY(int32_t,size);	// init fieldLengths
 	fieldPositions = _CL_NEWARRAY(int32_t,size);  // init fieldPositions
 	fieldOffsets = _CL_NEWARRAY(int32_t,size);    // init fieldOffsets
+	memset(fieldLengths, 0, sizeof(int32_t) * size);
 	memset(fieldPositions, 0, sizeof(int32_t) * size);
+	memset(fieldOffsets, 0, sizeof(int32_t) * size);
       
 	//initialise fieldBoost array with default boost
 	int32_t fbl = fieldInfos->size();
@@ -217,19 +207,19 @@ void DocumentWriter::addDocument(const char* segment, Document* doc) {
 	_CLDELETE_ARRAY( postings );
 }
 
-void DocumentWriter::sortPostingTable(Posting**& array, int32_t& arraySize) {
+void DocumentWriter::sortPostingTable(Posting**& _array, int32_t& arraySize) {
 	// copy postingTable into an array
 	arraySize = postingTable->size();
-	array = _CL_NEWARRAY(Posting*,arraySize);
+	_array = _CL_NEWARRAY(Posting*,arraySize);
 	PostingTableType::iterator postings = postingTable->begin();
 	int32_t i=0;
 	while ( postings != postingTable->end() ){
-		array[i] = (Posting*)postings->second;
+		_array[i] = (Posting*)postings->second;
 		postings++;
 		i++;
 	}
 	// sort the array
-	quickSort(array, 0, i - 1);
+	quickSort(_array, 0, i - 1);
 }
 
 
@@ -369,7 +359,7 @@ void DocumentWriter::invertDocument(const Document* doc) {
 	} _CLFINALLY (
 	  _CLDELETE(fields);
 	);
-} // Document:;invertDocument
+} // Document::invertDocument
 
 
 void DocumentWriter::addPosition(const TCHAR* field,
@@ -382,19 +372,19 @@ void DocumentWriter::addPosition(const TCHAR* field,
 	Posting* ti = postingTable->get(termBuffer);
 	if (ti != NULL) {				  // word seen before
 		int32_t freq = ti->freq;
-		if (ti->positions->length == freq) {
-		    // positions array is full, realloc its size
-				ti->positions->length = freq*2;
-		    ti->positions->values = (int32_t*)realloc(ti->positions->values, ti->positions->length * sizeof(int32_t));
+		if (ti->positions.length == freq) {
+			// positions array is full, realloc its size
+			ti->positions.length = freq*2;
+			ti->positions.values = (int32_t*)realloc(ti->positions.values, ti->positions.length * sizeof(int32_t));
 		}
-		ti->positions->values[freq] = position;		  // add new position
+		ti->positions.values[freq] = position;		  // add new position
 		
 		if (offset != NULL) {
-			if (ti->offsets->length == freq){
-				ti->offsets->length = freq*2;
-				ti->offsets->values = (TermVectorOffsetInfo**)realloc(ti->offsets->values, ti->offsets->length * sizeof(TermVectorOffsetInfo));
+			if (ti->offsets.length == freq){
+				ti->offsets.length = freq*2;
+				ti->offsets.values = (TermVectorOffsetInfo**)realloc(ti->offsets.values, ti->offsets.length * sizeof(TermVectorOffsetInfo*));
 			}
-			ti->offsets->values[freq] = offset;
+			ti->offsets.values[freq] = offset;
 		}
 
 		ti->freq = freq + 1;			  // update frequency
@@ -496,8 +486,8 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 			
 			int32_t lastPosition = 0;			  // write positions
 			for (int32_t j = 0; j < postingFreq; ++j) {		  // use delta-encoding
-				prox->writeVInt(posting->positions->values[j] - lastPosition);
-				lastPosition = posting->positions->values[j];
+				prox->writeVInt(posting->positions.values[j] - lastPosition);
+				lastPosition = posting->positions.values[j];
 			}
 
 	        // check to see if we switched to a new field
@@ -519,7 +509,7 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 	           }
 	        }
 	        if (termVectorWriter != NULL && termVectorWriter->isFieldOpen()) {
-	           termVectorWriter->addTerm(posting->term->text(), postingFreq, posting->positions, posting->offsets);
+	           termVectorWriter->addTerm(posting->term->text(), postingFreq, &posting->positions, &posting->offsets);
 	        }
 		}
 	    if (termVectorWriter != NULL)

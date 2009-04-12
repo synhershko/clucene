@@ -202,7 +202,9 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
 	ParallelArrayTermVectorMapper* mapper = _CLNEW ParallelArrayTermVectorMapper();
 	get(docNum, field, (TermVectorMapper*)mapper);
 
-	return mapper->materializeVector();
+	TermFreqVector* ret = mapper->materializeVector();
+	_CLLDELETE(mapper);
+	return ret;
 }
 
 
@@ -305,12 +307,13 @@ void TermVectorsReader::get(const int32_t docNumber, TermVectorMapper* mapper) {
 ObjectArray<SegmentTermVector>* TermVectorsReader::readTermVectors(const int32_t docNum,
 										const TCHAR** fields, const int64_t* tvfPointers, const int32_t len){
 	ObjectArray<SegmentTermVector>* res = _CLNEW CL_NS(util)::ObjectArray<SegmentTermVector>(len);
+	ParallelArrayTermVectorMapper* mapper = _CLNEW ParallelArrayTermVectorMapper();
 	for (int32_t i = 0; i < len; i++) {
-		ParallelArrayTermVectorMapper* mapper = _CLNEW ParallelArrayTermVectorMapper();
 		mapper->setDocumentNumber(docNum);
 		readTermVector(fields[i], tvfPointers[i], mapper);
 		res->values[i] = static_cast<SegmentTermVector*>(mapper->materializeVector());
 	}
+	_CLLDELETE(mapper);
 	return res;
 }
 
@@ -490,7 +493,7 @@ ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():
 {
 }
 ParallelArrayTermVectorMapper::~ParallelArrayTermVectorMapper(){
-	_CLDELETE_LCARRAY(field);
+	//_CLDELETE_LCARRAY(field);
 }
 
 void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const int32_t numTerms,

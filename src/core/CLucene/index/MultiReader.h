@@ -58,7 +58,7 @@ public:
 	*  in a given vectorized field.
 	*  If no such fields existed, the method returns null.
 	*/
-	bool getTermFreqVectors(int32_t n, CL_NS(util)::ObjectArray<TermFreqVector>& result);
+	CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t n);
 	TermFreqVector* getTermFreqVector(int32_t n, const TCHAR* field);
 
 

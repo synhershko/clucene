@@ -13,7 +13,6 @@
 
 #include "NumberTools.h"
 #include "CLucene/util/Misc.h"
-#include "CLucene/util/StringBuffer.h"
 
 CL_NS_DEF(document)
 

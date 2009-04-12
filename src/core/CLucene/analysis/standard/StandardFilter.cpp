@@ -10,7 +10,6 @@
 #include "../AnalysisHeader.h"
 #include "../Analyzers.h"
 #include "StandardTokenizerConstants.h"
-#include "CLucene/util/StringBuffer.h"
 
 CL_NS_USE(analysis)
 CL_NS_USE(util)

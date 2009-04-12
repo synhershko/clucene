@@ -366,10 +366,6 @@ CL_NS_DEF(index)
 	  //return the enumeration
       return _termPositions;
   }
-
-  bool IndexReader::getTermFreqVectors(int32_t docNumber, ObjectArray<TermFreqVector>& result){
-	  return this->getTermFreqVectors(docNumber, result);
-  }
   
   bool IndexReader::document(int32_t n, CL_NS(document)::Document* doc){
   	return document(n, *doc);

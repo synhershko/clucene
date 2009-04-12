@@ -32,8 +32,8 @@ public:
 	public:
 		Term* term;					  // the Term
 		int32_t freq;					  // its frequency in doc
-		CL_NS(util)::ValueArray<int32_t>* positions;				  // positions it occurs at
-		CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* offsets;
+		CL_NS(util)::ValueArray<int32_t> positions;				  // positions it occurs at
+		CL_NS(util)::ObjectArray<TermVectorOffsetInfo> offsets;
 		
 		Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset);
 		~Posting();
@@ -79,7 +79,7 @@ private:
 
 	void addPosition(const TCHAR* field, const TCHAR* text, const int32_t position, TermVectorOffsetInfo* offset);
 
-	void sortPostingTable(Posting**& array, int32_t& arraySize);
+	void sortPostingTable(Posting**& _array, int32_t& arraySize);
 
 	static void quickSort(Posting**& postings, const int32_t lo, const int32_t hi);
 

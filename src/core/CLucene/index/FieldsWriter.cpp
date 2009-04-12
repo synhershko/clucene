@@ -107,7 +107,7 @@ void FieldsWriter::addDocument(Document* doc) {
 		if (field->isStored())
 			storedCount++;
 	}
-	_CLDELETE(fields);
+	_CLLDELETE(fields);
 	fieldsStream->writeVInt(storedCount);
 
 	fields = doc->getFields();

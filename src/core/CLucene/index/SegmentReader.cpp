@@ -817,16 +817,15 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 		return termVectorsReader->get(docNumber, field);
   }
 
-   bool SegmentReader::getTermFreqVectors(int32_t docNumber, ObjectArray<TermFreqVector>& result) {
+  ObjectArray<TermFreqVector>* SegmentReader::getTermFreqVectors(int32_t docNumber) {
     if (termVectorsReaderOrig == NULL)
-      return false;
+      return NULL;
     
     TermVectorsReader* termVectorsReader = getTermVectorsReader();
     if (termVectorsReader == NULL)
-      return false;
+      return NULL;
     
-    result = (*termVectorsReader->get(docNumber));
-	return true;
+	return termVectorsReader->get(docNumber);
   }
 
 CL_NS_END

@@ -90,7 +90,7 @@ void FieldInfos::add(const Document* doc) {
 			add(field->name(), field->isIndexed(), field->isTermVectorStored(), field->isStorePositionWithTermVector(),
               field->isStoreOffsetWithTermVector(), field->getOmitNorms());
 	}
-	_CLDELETE(fields);
+	_CLLDELETE(fields);
 }
 
 void FieldInfos::addIndexed(const TCHAR** names, const bool storeTermVectors, const bool storePositionWithTermVector,
