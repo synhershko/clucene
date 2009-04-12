@@ -40,7 +40,7 @@ CL_NS_DEF(util)
       len = 0;
       //Allocate a buffer of length bufferLength
       buffer = _CL_NEWARRAY(TCHAR,bufferLength);
-	  bufferOwner = !consumeBuffer;
+	  bufferOwner = consumeBuffer;
   }
 
   StringBuffer::StringBuffer(const TCHAR* value){
