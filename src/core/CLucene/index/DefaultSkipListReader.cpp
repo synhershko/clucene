@@ -19,9 +19,9 @@ DefaultSkipListReader::DefaultSkipListReader(CL_NS(store)::IndexInput* _skipStre
 }
 
 DefaultSkipListReader::~DefaultSkipListReader(){
-	_CLLDELETE(freqPointer);
-	_CLLDELETE(proxPointer);
-	_CLLDELETE(payloadLength);
+	_CLDELETE_LARRAY(freqPointer);
+	_CLDELETE_LARRAY(proxPointer);
+	_CLDELETE_LARRAY(payloadLength);
 }
 
 void DefaultSkipListReader::init(const int64_t _skipPointer, const int64_t freqBasePointer, const int64_t proxBasePointer, const int32_t df, const bool storesPayloads) {
@@ -48,14 +48,14 @@ int32_t DefaultSkipListReader::getPayloadLength() const {
 }
 
 void DefaultSkipListReader::seekChild(const int32_t level) {
-	//super.seekChild(level);
+	MultiLevelSkipListReader::seekChild(level);
 	freqPointer[level] = lastFreqPointer;
 	proxPointer[level] = lastProxPointer;
 	payloadLength[level] = lastPayloadLength;
 }
 
 void DefaultSkipListReader::setLastSkipData(const int32_t level) {
-	//super.setLastSkipData(level);
+	MultiLevelSkipListReader::setLastSkipData(level);
 	lastFreqPointer = freqPointer[level];
 	lastProxPointer = proxPointer[level];
 	lastPayloadLength = payloadLength[level];

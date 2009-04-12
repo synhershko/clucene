@@ -118,6 +118,7 @@ protected:
 
 		uint8_t readByte();
 
+		/* Make sure b is passed after the offset has been calculated into it, if necessary! */
 		void readBytes(uint8_t* b, const int32_t len);
 
 		void seek(const int64_t _pos);

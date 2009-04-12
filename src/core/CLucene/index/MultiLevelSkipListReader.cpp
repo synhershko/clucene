@@ -12,15 +12,14 @@ CL_NS_DEF(index)
 
 MultiLevelSkipListReader::MultiLevelSkipListReader(IndexInput* _skipStream, const int32_t maxSkipLevels,
 												   const int32_t _skipInterval):
-		numberOfLevelsToBuffer(1),skipStream(NULL),skipPointer(NULL),skipInterval(NULL),
-		numSkipped(NULL),skipDoc(_CL_NEWARRAY(int32_t,maxSkipLevels)),childPointer(NULL)
+		maxNumberOfSkipLevels(maxSkipLevels),numberOfLevelsToBuffer(1),
+		skipStream(_CL_NEWARRAY(IndexInput*,maxSkipLevels)),
+		skipPointer(_CL_NEWARRAY(int64_t,maxSkipLevels)),
+		skipInterval(_CL_NEWARRAY(int32_t,maxSkipLevels)),
+		numSkipped(_CL_NEWARRAY(int32_t,maxSkipLevels)),
+		skipDoc(_CL_NEWARRAY(int32_t,maxSkipLevels)),
+		childPointer(_CL_NEWARRAY(int64_t,maxSkipLevels))
 {
-	this->skipStream = _CL_NEWARRAY(IndexInput*,maxSkipLevels);
-	this->skipPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
-	this->childPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
-	this->numSkipped = _CL_NEWARRAY(int32_t,maxSkipLevels);
-	this->maxNumberOfSkipLevels = maxSkipLevels;
-	this->skipInterval = _CL_NEWARRAY(int32_t,maxSkipLevels);
 	this->skipStream[0] = _skipStream;
 	this->inputIsBuffered = (strcmp(_skipStream->getObjectName(),"BufferedIndexInput") == 0);
 	this->skipInterval[0] = _skipInterval;
@@ -203,12 +202,12 @@ uint8_t MultiLevelSkipListReader::SkipBuffer::readByte() {
 }
 
 void MultiLevelSkipListReader::SkipBuffer::readBytes(uint8_t* b, const int32_t len) {
-	memcpy(b,data+pos,len);
+	memcpy(b,data+pos,len*sizeof(uint8_t));
 	pos += len;
 }
 
 void MultiLevelSkipListReader::SkipBuffer::seek(const int64_t _pos) {
-	this->pos = (int32_t) (_pos - pointer);
+	this->pos = static_cast<int32_t>(_pos - pointer);
 }
 
 const char* MultiLevelSkipListReader::SkipBuffer::getObjectName(){ return "SkipBuffer"; }
