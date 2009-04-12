@@ -28,7 +28,7 @@ public:
 	}
 
 	/**
-	* The {@link org.apache.lucene.document.Fieldable} name. 
+	* The Field name. 
 	* @return The name of the field this vector is associated with.
 	* 
 	*/ 
@@ -53,7 +53,7 @@ public:
 	*  The size of the returned array is size()
 	*  @memory Returning a pointer to internal data. Do not delete.
 	*/
-	virtual const CL_NS(util)::Array<int32_t>* getTermFrequencies() = 0;
+	virtual const CL_NS(util)::ValueArray<int32_t>* getTermFrequencies() = 0;
 
 
 	/** Return an index in the term numbers array returned from
@@ -73,7 +73,7 @@ public:
 	*  @param start index in the array where the list of terms starts
 	*  @param len the number of terms in the list
 	*/
-	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, CL_NS(util)::Array<int32_t>& ret) = 0;
+	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, CL_NS(util)::ValueArray<int32_t>& ret) = 0;
 
 	/** Solve the diamond inheritence problem by providing a reinterpret function.
     *	No dynamic casting is required and no RTTI data is needed to do this
@@ -82,19 +82,45 @@ public:
 };
 
 
-
+/**
+* The TermVectorOffsetInfo class holds information pertaining to a Term in a {@link TermPositionVector}'s
+* offset information.  This offset information is the character offset as set during the Analysis phase (and thus may not be the actual offset in the
+* original content).
+*/
 struct CLUCENE_EXPORT TermVectorOffsetInfo {
+public:
+	/**
+	* Convenience declaration when creating a {@link org.apache.lucene.index.TermPositionVector} that stores only position information.
+	*/
+private:
     int startOffset;
     int endOffset;
-public:
-	static CL_NS(util)::Array<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
+public: // TODO: Remove after TermVectorWriter has been ported
+	static CL_NS(util)::ObjectArray<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
     TermVectorOffsetInfo();
     ~TermVectorOffsetInfo();
     TermVectorOffsetInfo(int32_t startOffset, int32_t endOffset);
+
+	/**
+	* The accessor for the ending offset for the term
+	* @return The offset
+	*/
     int32_t getEndOffset() const;
-    void setEndOffset(int32_t endOffset);
+    void setEndOffset(const int32_t _endOffset);
+
+	/**
+	* The accessor for the starting offset of the term.
+	*
+	* @return The offset
+	*/
     int32_t getStartOffset() const;
-    void setStartOffset(int32_t startOffset);
+    void setStartOffset(const int32_t _startOffset);
+
+	/**
+	* Two TermVectorOffsetInfos are equals if both the start and end offsets are the same
+	* @param o The comparison Object
+	* @return true if both {@link #getStartOffset()} and {@link #getEndOffset()} are the same for both objects.
+	*/
     bool equals(TermVectorOffsetInfo* o);
     size_t hashCode() const;
 };
@@ -112,7 +138,7 @@ public:
      *  term String array obtained from the <code>indexOf</code> method.
      *  May return null if positions have not been stored.
      */
-    virtual CL_NS(util)::Array<int32_t>* getTermPositions(const size_t index) = 0;
+    virtual CL_NS(util)::ValueArray<int32_t>* getTermPositions(const size_t index) = 0;
   
     /**
      * Returns an array of TermVectorOffsetInfo in which the term is found.
@@ -123,7 +149,7 @@ public:
      * @param index The position in the array to get the offsets from
      * @return An array of TermVectorOffsetInfo objects or the empty list
      */ 
-     virtual CL_NS(util)::Array<TermVectorOffsetInfo>* getOffsets(const size_t index) = 0;
+     virtual CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* getOffsets(const size_t index) = 0;
      
      virtual ~TermPositionVector(){
 	 }

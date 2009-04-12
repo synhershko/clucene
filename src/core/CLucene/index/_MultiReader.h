@@ -112,7 +112,7 @@ public:
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	uint8_t* getPayload(uint8_t* data, int32_t offset) {
+	uint8_t* getPayload(uint8_t* data, const int32_t offset) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: MultiTermPositions::getPayload");
 	}
 

@@ -22,43 +22,44 @@
 //#include "IndexReader.h"
 #include "_TermInfosReader.h"
 #include "_CompoundFile.h"
+#include "DefaultSkipListReader.h"
 #include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_DEF(index)
 class SegmentReader;
 
 class SegmentTermDocs:public virtual TermDocs {
-	
-	int32_t _doc;
-	
-	int32_t skipInterval;
-	
-	int64_t freqBasePointer;
-	int64_t proxBasePointer;
-	
-	int32_t numSkips;
-	int32_t skipCount;
-	CL_NS(store)::IndexInput* skipStream;
-	int32_t skipDoc;
-	int64_t freqPointer;
-	int64_t proxPointer;
-	int64_t skipPointer;
-	bool haveSkipped;
-	
 protected:
-	// SegmentReader parent
 	const SegmentReader* parent;
 	CL_NS(store)::IndexInput* freqStream;
 	int32_t count;
 	int32_t df;
-	int32_t _freq;
 	CL_NS(util)::BitSet* deletedDocs;
+	int32_t _doc;
+	int32_t _freq;
+	
+private:
+	int32_t skipInterval;
+	int32_t maxSkipLevels;
+	DefaultSkipListReader* skipListReader;
+	
+	int64_t freqBasePointer;
+	int64_t proxBasePointer;
+
+	int64_t skipPointer;
+	bool haveSkipped;
+
+protected:
+	bool currentFieldStoresPayloads;
+
 public:
+	///\param Parent must be a segment reader
+	SegmentTermDocs( const SegmentReader* Parent);
     virtual ~SegmentTermDocs();
 
-    virtual void seek(TermEnum* termEnum);
 	virtual void seek(Term* term);
-	virtual void seek(const TermInfo* ti);
+    virtual void seek(TermEnum* termEnum);
+	virtual void seek(const TermInfo* ti,Term* term);
 
 	virtual void close();
 	virtual int32_t doc()const;
@@ -73,12 +74,10 @@ public:
 	virtual bool skipTo(const int32_t target);
 	
 	virtual TermPositions* __asTermPositions();
-	
-	///\param Parent must be a segment reader
-	SegmentTermDocs( const SegmentReader* Parent);
+
 protected:
 	virtual void skippingDoc(){}
-	virtual void skipProx(int64_t proxPointer){}
+	virtual void skipProx(const int64_t proxPointer, const int32_t payloadLength){}
 };
 
 
@@ -94,23 +93,60 @@ private:
 	// been read from the proxStream yet
 	bool needToLoadPayload;
 	
+	// these variables are being used to remember information
+	// for a lazy skip
 	int64_t lazySkipPointer;
-	int64_t lazySkipDocCount;
-	//int32_t lazySkipProxCount;
+	int32_t lazySkipProxCount;
 
-	void skipPositions( int32_t n );
-	void lazySkip();
-	
 public:
 	///\param Parent must be a segment reader
 	SegmentTermPositions(const SegmentReader* Parent);
 	~SegmentTermPositions();
 
-    void seek(const TermInfo* ti);
+private:
+	void seek(const TermInfo* ti, Term* term);
+
+public:
 	void close();
+
 	int32_t nextPosition();
+private:
+	int32_t readDeltaPosition();
+
+protected:
+	void skippingDoc();
+
+public:
 	bool next();
 	int32_t read(int32_t* docs, int32_t* freqs, int32_t length);
+
+protected:
+	/** Called by super.skipTo(). */
+	void skipProx(const int64_t proxPointer, const int32_t _payloadLength);
+
+private:
+	void skipPositions( int32_t n );
+	void skipPayload();
+
+	// It is not always neccessary to move the prox pointer
+	// to a new document after the freq pointer has been moved.
+	// Consider for example a phrase query with two terms:
+	// the freq pointer for term 1 has to move to document x
+	// to answer the question if the term occurs in that document. But
+	// only if term 2 also matches document x, the positions have to be
+	// read to figure out if term 1 and term 2 appear next
+	// to each other in document x and thus satisfy the query.
+	// So we move the prox pointer lazily to the document
+	// as soon as positions are requested.
+	void lazySkip();
+public:
+	int32_t getPayloadLength() const;
+
+	uint8_t* getPayload(uint8_t* data, const int32_t offset);
+
+	bool isPayloadAvailable() const;
+
+private:	
 	virtual TermDocs* __asTermDocs();
 	virtual TermPositions* __asTermPositions();
 
@@ -120,43 +156,6 @@ public:
     int32_t doc() const{ return SegmentTermDocs::doc(); }
 	int32_t freq() const{ return SegmentTermDocs::freq(); }
 	bool skipTo(const int32_t target){ return SegmentTermDocs::skipTo(target); }
-
-	int32_t getPayloadLength() const {
-		return payloadLength;
-	}
-
-	// INITIAL DESIGN
-	uint8_t* getPayload(uint8_t* data, int32_t offset) {
-		if (!needToLoadPayload) {
-			_CLTHROWA(CL_ERR_IO, "Payload cannot be loaded more than once for the same term position.");
-		}
-
-		// read payloads lazily
-		uint8_t* retArray;
-		int32_t retOffset;
-		if (data == NULL /*|| data.length - offset < payloadLength*/) {
-			// the array is too small to store the payload data,
-			// so we allocate a new one
-			_CLDELETE_ARRAY(data);
-			retArray = _CL_NEWARRAY(uint8_t, payloadLength);
-			retOffset = 0;
-		} else {
-			retArray = data;
-			retOffset = offset;
-		}
-		proxStream->readBytes(retArray + retOffset, payloadLength);
-		needToLoadPayload = false;
-		return retArray;
-	}
-
-	bool isPayloadAvailable() const {
-		return needToLoadPayload && (payloadLength > 0);
-	}
-
-protected:
-	void skippingDoc();
-	/** Called by super.skipTo(). */
-	void skipProx(int64_t proxPointer);
 };
 
 
@@ -330,7 +329,7 @@ public:
 	*  If no such fields existed, the method returns null.
 	* @throws IOException
 	*/
-	bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::Array<TermFreqVector*>& result);
+	bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::ObjectArray<TermFreqVector>& result);
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir);

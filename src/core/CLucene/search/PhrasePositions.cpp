@@ -10,20 +10,20 @@
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-PhrasePositions::PhrasePositions(TermPositions* Tp, const int32_t OffSet) {
+PhrasePositions::PhrasePositions(TermPositions* t, const int32_t OffSet) {
   //Func - Constructor
   //Pre  - t != NULL
   //       OffSet != NULL
   //Post - The instance has been created
 
-      CND_PRECONDITION(Tp != NULL,"Tp is NULL");
+      CND_PRECONDITION(t != NULL,"Tp is NULL");
       CND_PRECONDITION(OffSet >= 0 ,"OffSet is a negative number");
 
-      tp       = Tp;
+      tp       = t;
       offset   = OffSet;
       position = 0;
       count    = 0;
-	  	doc      = 0;
+	  doc      = 0;
 
       _next     = NULL;
   }
@@ -91,12 +91,6 @@ PhrasePositions::PhrasePositions(TermPositions* Tp, const int32_t OffSet) {
 	  nextPosition();
   }
 
-  /**
-  * Go to next location of this term current document, and set 
-  * <code>position</code> as <code>location - offset</code>, so that a 
-  * matching exact phrase is easily identified when all PhrasePositions 
-  * have exactly the same <code>position</code>.
-  */
   bool PhrasePositions::nextPosition(){
   //Func - Move to the next position
   //Pre  - tp != NULL

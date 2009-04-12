@@ -66,12 +66,14 @@ SET(clucene_core_Files
 	./CLucene/index/TermVectorReader.cpp
 	./CLucene/index/FieldInfos.cpp
 	./CLucene/index/CompoundFile.cpp
+	./CLucene/index/DefaultSkipListReader.cpp
 	./CLucene/index/SegmentReader.cpp
 	./CLucene/index/TermVectorWriter.cpp
 	./CLucene/index/IndexReader.cpp
 	./CLucene/index/SegmentTermPositions.cpp
 	./CLucene/index/SegmentMerger.cpp
 	./CLucene/index/IndexWriter.cpp
+	./CLucene/index/MultiLevelSkipListReader.cpp
 	./CLucene/index/MultiReader.cpp
 	./CLucene/index/Payload.cpp
 	./CLucene/index/SegmentTermEnum.cpp

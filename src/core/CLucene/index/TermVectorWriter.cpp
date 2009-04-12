@@ -113,7 +113,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
   }
 
   void TermVectorsWriter::addTerm(const TCHAR* termText, int32_t freq, 
-	  Array<int32_t>* positions, Array<TermVectorOffsetInfo>* offsets) {
+	  ValueArray<int32_t>* positions, ObjectArray<TermVectorOffsetInfo>* offsets) {
     if (!isDocumentOpen()) 
 		_CLTHROWA(CL_ERR_InvalidState,"Cannot add terms when document is not open");
     if (!isFieldOpen())
@@ -123,7 +123,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
   }
 
   void TermVectorsWriter::addTermInternal(const TCHAR* termText, int32_t freq,
-	  Array<int32_t>* positions, Array<TermVectorOffsetInfo>* offsets) {
+	  ValueArray<int32_t>* positions, ObjectArray<TermVectorOffsetInfo>* offsets) {
     TVTerm* term = _CLNEW TVTerm();
     term->setTermText(termText);
     term->freq = freq;
@@ -132,7 +132,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
     terms.push_back(term);
   }
 
-  void TermVectorsWriter::addAllDocVectors(Array<TermFreqVector*>& vectors){
+  void TermVectorsWriter::addAllDocVectors(ObjectArray<TermFreqVector>& vectors){
 	openDocument();
 
 	for (size_t i = 0; i < vectors.length; ++i) {
@@ -140,7 +140,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
 		bool storeOffsetWithTermVector = false;
 
 		if ( vectors[i]->__asTermPositionVector() != NULL ) {
-			TermPositionVector* tpVector = vectors[i]->__asTermPositionVector();
+			TermPositionVector* tpVector = vectors.values[i]->__asTermPositionVector();
 
 			if (tpVector->size() > 0 && tpVector->getTermPositions(0) != NULL)
 				storePositionWithTermVector = true;
@@ -260,9 +260,9 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
         // use delta encoding for offsets
         int32_t position = 0;
         for (int32_t j = 0; j < term->freq; ++j) {
-          tvf->writeVInt((*term->offsets)[j].getStartOffset() - position);
-          tvf->writeVInt((*term->offsets)[j].getEndOffset() - (*term->offsets)[j].getStartOffset()); //Save the diff between the two.
-          position = (*term->offsets)[j].getEndOffset();
+          tvf->writeVInt((*term->offsets)[j]->getStartOffset() - position);
+          tvf->writeVInt((*term->offsets)[j]->getEndOffset() - (*term->offsets)[j]->getStartOffset()); //Save the diff between the two.
+          position = (*term->offsets)[j]->getEndOffset();
         }
       }
     }

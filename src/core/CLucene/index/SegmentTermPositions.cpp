@@ -13,25 +13,13 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 SegmentTermPositions::SegmentTermPositions(const SegmentReader* _parent):
-  SegmentTermDocs(_parent){
-//Func - Constructor
-//Pre  - Parent != NULL
-//Post - The instance has been created
-
-    CND_PRECONDITION(_parent != NULL, "Parent is NULL");
-    
-    proxStream = _parent->proxStream->clone();
-    
-    CND_CONDITION(proxStream != NULL,"proxStream is NULL");
-    
-    position  = 0;
-    proxCount = 0;
+	SegmentTermDocs(_parent), proxStream(NULL)// the proxStream will be cloned lazily when nextPosition() is called for the first time
+	,lazySkipPointer(-1), lazySkipProxCount(0)
+{
+    CND_CONDITION(_parent != NULL, "Parent is NULL");
 }
 
 SegmentTermPositions::~SegmentTermPositions() {
-//Func - Destructor
-//Pre  - true
-//Post - The intance has been closed
     close();
 }
 
@@ -42,43 +30,61 @@ TermPositions* SegmentTermPositions::__asTermPositions(){
     return (TermPositions*) this;
 }
 
-void SegmentTermPositions::seek(const TermInfo* ti) {
-    SegmentTermDocs::seek(ti);
+void SegmentTermPositions::seek(const TermInfo* ti, Term* term) {
+    SegmentTermDocs::seek(ti, term);
     if (ti != NULL)
-    	//lazySkipPointer = ti->proxPointer;
-        proxStream->seek(ti->proxPointer);
+    	lazySkipPointer = ti->proxPointer;
     
-    //lazySkipDocCount = 0;
+    lazySkipProxCount = 0;
     proxCount = 0;
+    payloadLength = 0;
+    needToLoadPayload = false;
 }
 
 void SegmentTermPositions::close() {
-//Func - Frees the resources
-//Pre  - true
-//Post - The resources  have been freed
-
     SegmentTermDocs::close();
     //Check if proxStream still exists
     if(proxStream){
-        proxStream->close();         
+        proxStream->close();
         _CLDELETE( proxStream );
     }
 }
 
 int32_t SegmentTermPositions::nextPosition() {
-    /* DSR:CL_BUG: Should raise exception if proxCount == 0 at the
+    /* todo: DSR:CL_BUG: Should raise exception if proxCount == 0 at the
     ** beginning of this method, as in
     **   if (--proxCount == 0) throw ...;
     ** The JavaDocs for TermPositions.nextPosition declare this constraint,
     ** but CLucene doesn't enforce it. */
-	//lazySkip();
+	lazySkip();
     proxCount--;
-    return position += proxStream->readVInt();
+    return position += readDeltaPosition();
+}
+
+int32_t SegmentTermPositions::readDeltaPosition() {
+	int32_t delta = proxStream->readVInt();
+	if (currentFieldStoresPayloads) {
+		// if the current field stores payloads then
+		// the position delta is shifted one bit to the left.
+		// if the LSB is set, then we have to read the current
+		// payload length
+		if ((delta & 1) != 0) {
+			payloadLength = proxStream->readVInt();
+		} 
+		delta = (int32_t)((uint32_t)delta >> (uint32_t)1);
+		needToLoadPayload = true;
+	}
+	return delta;
+}
+
+void SegmentTermPositions::skippingDoc() {
+	lazySkipProxCount += _freq;
 }
 
 bool SegmentTermPositions::next() {
-    for (int32_t f = proxCount; f > 0; f--)		  // skip unread positions
-        proxStream->readVInt();
+	// we remember to skip the remaining positions of the current
+    // document lazily
+    lazySkipProxCount += proxCount;
     
     if (SegmentTermDocs::next()) {				  // run super
         proxCount = _freq;				  // note frequency
@@ -89,35 +95,78 @@ bool SegmentTermPositions::next() {
 }
 
 int32_t SegmentTermPositions::read(int32_t* docs, int32_t* freqs, int32_t length) {
-    _CLTHROWA(CL_ERR_InvalidState,"TermPositions does not support processing multiple documents in one call. Use TermDocs instead.");
+    _CLTHROWA(CL_ERR_UnsupportedOperation,"TermPositions does not support processing multiple documents in one call. Use TermDocs instead.");
 }
 
-void SegmentTermPositions::skippingDoc() {
-    for (int32_t f = _freq; f > 0; f--)		  // skip all positions
-        proxStream->readVInt();
-//	lazySkipDocCount += _freq;
-}
-
-void SegmentTermPositions::skipProx(int64_t proxPointer){
-    proxStream->seek(proxPointer);
-//	lazySkipPointer = proxPointer;
-//	lazySkipDocCount = 0;
+void SegmentTermPositions::skipProx(const int64_t proxPointer, const int32_t _payloadLength){
+    // we save the pointer, we might have to skip there lazily
+    lazySkipPointer = proxPointer;
+    lazySkipProxCount = 0;
     proxCount = 0;
+    this->payloadLength = _payloadLength;
+    needToLoadPayload = false;
 }
 
 void SegmentTermPositions::skipPositions(int32_t n) {
-	for ( int32_t f = n; f > 0; f-- )
-		proxStream->readVInt();
+	for ( int32_t f = n; f > 0; f-- ) {		// skip unread positions
+		readDeltaPosition();
+		skipPayload();
+	}
+}
+
+void SegmentTermPositions::skipPayload() {
+	if (needToLoadPayload && payloadLength > 0) {
+		proxStream->seek(proxStream->getFilePointer() + payloadLength);
+	}
+	needToLoadPayload = false;
 }
 
 void SegmentTermPositions::lazySkip() {
-	if ( lazySkipPointer != 0 ) {
-		proxStream->seek( lazySkipPointer );
-		lazySkipPointer = 0;
-	}
-	if ( lazySkipDocCount != 0 ) {
-		skipPositions( lazySkipDocCount );
-		lazySkipDocCount = 0;
-	}
+    if (proxStream == NULL) {
+      // clone lazily
+      proxStream = parent->proxStream->clone();
+    }
+    
+    // we might have to skip the current payload
+    // if it was not read yet
+    skipPayload();
+      
+    if (lazySkipPointer != -1) {
+      proxStream->seek(lazySkipPointer);
+      lazySkipPointer = -1;
+    }
+     
+    if (lazySkipProxCount != 0) {
+      skipPositions(lazySkipProxCount);
+      lazySkipProxCount = 0;
+    }
 }
+
+int32_t SegmentTermPositions::getPayloadLength() const { return payloadLength; }
+
+uint8_t* SegmentTermPositions::getPayload(uint8_t* data, const int32_t offset) {
+	if (!needToLoadPayload) {
+		_CLTHROWA(CL_ERR_IO, "Payload cannot be loaded more than once for the same term position.");
+	}
+
+	// read payloads lazily
+	uint8_t* retArray;
+	int32_t retOffset;
+	// TODO: Complete length logic ( possibly using ValueArray ? )
+	if (data == NULL /*|| data.length - offset < payloadLength*/) {
+		// the array is too small to store the payload data,
+		// so we allocate a new one
+		_CLDELETE_ARRAY(data);
+		retArray = _CL_NEWARRAY(uint8_t, payloadLength);
+		retOffset = 0;
+	} else {
+		retArray = data;
+		retOffset = offset;
+	}
+	proxStream->readBytes(retArray + retOffset, payloadLength);
+	needToLoadPayload = false;
+	return retArray;
+}
+bool SegmentTermPositions::isPayloadAvailable() const { return needToLoadPayload && (payloadLength > 0); }
+
 CL_NS_END

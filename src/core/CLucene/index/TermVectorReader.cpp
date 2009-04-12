@@ -40,14 +40,14 @@ TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* seg
 			tvf = d->openInput(fbuf, readBufferSize);
 			tvfFormat = checkValidFormat(tvf);
 			if (-1 == docStoreOffset) {
-				//this->docStoreOffset = 0;
-				this->_size = static_cast<int32_t>(tvx->length() >> 3);
+				this->docStoreOffset = 0;
+				this->_size = static_cast<int64_t>(tvx->length() >> 3);
 			} else {
 				this->docStoreOffset = docStoreOffset;
 				this->_size = size;
 				// Verify the file is long enough to hold all of our
 				// docs
-				CND_CONDITION( ((int32_t) (tvx->length() / 8)) >= size + docStoreOffset , "file is not ling enought to hold all our docs");
+				CND_CONDITION( ((int64_t) (tvx->length() / 8)) >= size + docStoreOffset , "file is not long enough to hold all of our docs");
 			}
 		}
 
@@ -63,34 +63,6 @@ TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* seg
 			close();
 		}
 	});
-/*
-	char fbuf[CL_MAX_NAME];
-	strcpy(fbuf,segment);
-	char* fpbuf=fbuf+strlen(fbuf);
-
-	strcpy(fpbuf, TermVectorsWriter::LUCENE_TVX_EXTENSION);
-	if (d->fileExists(fbuf)) {
-      tvx = d->openInput(fbuf);
-      checkValidFormat(tvx);
-	  
-	  strcpy(fpbuf, TermVectorsWriter::LUCENE_TVD_EXTENSION);
-	  tvd = d->openInput(fbuf);
-      tvdFormat = checkValidFormat(tvd);
-	  
-	  strcpy(fpbuf, TermVectorsWriter::LUCENE_TVF_EXTENSION);
-	  tvf = d->openInput(fbuf);
-      tvfFormat = checkValidFormat(tvf);
-
-      _size = tvx->length() / 8;
-	}else{
-	  tvx = NULL;
-	  tvd = NULL;
-	  tvf = NULL;
-	  _size = 0;
-	}
-
-    this->fieldInfos = fieldInfos;
-*/
 }
 
 TermVectorsReader::TermVectorsReader(const TermVectorsReader& copy)
@@ -115,16 +87,32 @@ TermVectorsReader::~TermVectorsReader(){
 	close();
 }
 
+int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
+	int32_t format = in->readInt();
+	if (format > TermVectorsWriter::FORMAT_VERSION)
+	{
+		CL_NS(util)::StringBuffer err;
+		err.append(_T("Incompatible format version: "));
+		err.appendInt(format);
+		err.append(_T(" expected "));
+		err.appendInt(TermVectorsWriter::FORMAT_VERSION);
+		err.append(_T(" or less"));
+		_CLTHROWT(CL_ERR_CorruptIndex,err.getBuffer());
+	}
+	return format;
+}
+
 void TermVectorsReader::close(){
-	// why don't we trap the exception and at least make sure that
+	// make all effort to close up. Keep the first exception
+  	// and throw it as a new one.
+	// todo: why don't we trap the exception and at least make sure that
     // all streams that we can close are closed?
 	CLuceneError keep;
 	bool thrown = false;
 
 	if (tvx != NULL){
-		try{
-			tvx->close();
-		}catch(CLuceneError& err){
+		try{tvx->close();}
+		catch(CLuceneError& err){
 			if ( err.number() == CL_ERR_IO ){
 				keep = err;
 				thrown = true;
@@ -134,9 +122,8 @@ void TermVectorsReader::close(){
 		_CLDELETE(tvx);//delete even  if error thrown
 	}
     if (tvd != NULL){
-		try{
-			tvd->close();
-		}catch(CLuceneError& err){
+		try{tvd->close();}
+		catch(CLuceneError& err){
 			if ( err.number() == CL_ERR_IO ){
 				keep = err;
 				thrown = true;
@@ -146,9 +133,8 @@ void TermVectorsReader::close(){
 		_CLDELETE(tvd);
 	}
     if (tvf != NULL){
-		try{
-			tvf->close();
-		}catch(CLuceneError& err){
+		try{tvf->close();}
+		catch(CLuceneError& err){
 			if ( err.number() == CL_ERR_IO ){
 				keep = err;
 				thrown = true;
@@ -162,16 +148,18 @@ void TermVectorsReader::close(){
 		throw keep;
 }
 
-TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field){
-	// Check if no term vectors are available for this segment at all
-    int32_t fieldNumber = fieldInfos->fieldNumber(field);
-    TermFreqVector* result = NULL;
-    if (tvx != NULL) {
+int64_t TermVectorsReader::size() const{
+    return _size;
+}
+
+void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVectorMapper* mapper){
+	if (tvx != NULL) {
+		int32_t fieldNumber = fieldInfos->fieldNumber(field);
 		//We need to account for the FORMAT_SIZE at when seeking in the tvx
 		//We don't need to do this in other seeks because we already have the
 		// file pointer
 		//that was written in another file
-        tvx->seek(((docNum + docStoreOffset) * 8L) + TermVectorsWriter::FORMAT_SIZE);
+        tvx->seek(((docNum + docStoreOffset) * 8L) + FORMAT_SIZE);
         int64_t position = tvx->readLong();
 
         tvd->seek(position);
@@ -182,10 +170,11 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
         int32_t number = 0;
         int32_t found = -1;
         for (int32_t i = 0; i < fieldCount; ++i) {
-			if(tvdFormat == TermVectorsWriter::FORMAT_VERSION)
+			if(tvdFormat == FORMAT_VERSION)
 				number = tvd->readVInt();
 			else
 				number += tvd->readVInt();
+
           if (number == fieldNumber) 
 			  found = i;
         }
@@ -195,20 +184,34 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
 		if (found != -1) {
           // Compute position in the tvf file
           position = 0;
-          for (int32_t i = 0; i <= found; ++i)
+          for (int32_t i = 0; i <= found; i++) // TODO: Was ++i, make sure its still good
             position += tvd->readVLong();
-          result = readTermVector(field, position);
-        }
-    }
-    return result;
+          
+		  mapper->setDocumentNumber(docNum);
+		  readTermVector(field, position, mapper);
+      } else {
+        // "Fieldable not found"
+      }
+    } else {
+      // "No tvx file"
+	}
+}
+
+TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field){
+	// Check if no term vectors are available for this segment at all
+	ParallelArrayTermVectorMapper* mapper = _CLNEW ParallelArrayTermVectorMapper();
+	get(docNum, field, (TermVectorMapper*)mapper);
+
+	return mapper->materializeVector();
 }
 
 
-bool TermVectorsReader::get(int32_t docNum, Array<TermFreqVector*>& result){
+ObjectArray<TermFreqVector>* TermVectorsReader::get(const int32_t docNum){
+	ObjectArray<TermFreqVector>* result = NULL;
     // Check if no term vectors are available for this segment at all
     if (tvx != NULL) {
         //We need to offset by
-		tvx->seek((docNum * 8L) + TermVectorsWriter::FORMAT_SIZE);
+		tvx->seek(((docNum + docStoreOffset) * 8L) + FORMAT_SIZE);
         int64_t position = tvx->readLong();
 
         tvd->seek(position);
@@ -221,7 +224,7 @@ bool TermVectorsReader::get(int32_t docNum, Array<TermFreqVector*>& result){
     		
 			{ //msvc6 scope fix
 				for (int32_t i = 0; i < fieldCount; ++i) {
-					if(tvdFormat == TermVectorsWriter::FORMAT_VERSION)
+					if(tvdFormat == FORMAT_VERSION)
 						number = tvd->readVInt();
 					else
 						number += tvd->readVInt();
@@ -240,39 +243,85 @@ bool TermVectorsReader::get(int32_t docNum, Array<TermFreqVector*>& result){
 				}
 			}
 
-			readTermVectors(fields, tvfPointers, fieldCount, result);
+			result = (ObjectArray<TermFreqVector>*)readTermVectors(docNum, fields, tvfPointers, fieldCount);
+
             _CLDELETE_ARRAY(tvfPointers);
             _CLDELETE_ARRAY(fields);
         }
-		return true;
-    }
-	return false;
-}
-
-
-int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
-	int32_t format = in->readInt();
-	if (format > TermVectorsWriter::FORMAT_VERSION)
-	{
-		CL_NS(util)::StringBuffer err;
-		err.append(_T("Incompatible format version: "));
-		err.appendInt(format);
-		err.append(_T(" expected "));
-		err.appendInt(TermVectorsWriter::FORMAT_VERSION);
-		err.append(_T(" or less"));
-		_CLTHROWT(CL_ERR_CorruptIndex,err.getBuffer());
+    } else {
+			// "No tvx file"
 	}
-	return format;
+	return result;
 }
 
-void TermVectorsReader::readTermVectors(const TCHAR** fields, const int64_t* tvfPointers, const int32_t len, Array<TermFreqVector*>& result){
-	result.length = len;
-	result.values = _CL_NEWARRAY(TermFreqVector*,len);
-    for (int32_t i = 0; i < len; ++i) {
-      result.values[i] = readTermVector(fields[i], tvfPointers[i]);
+void TermVectorsReader::get(const int32_t docNumber, TermVectorMapper* mapper) {
+    // Check if no term vectors are available for this segment at all
+    if (tvx != NULL) {
+      //We need to offset by
+      tvx->seek((docNumber * 8L) + FORMAT_SIZE);
+      int64_t position = tvx->readLong();
+
+      tvd->seek(position);
+      int32_t fieldCount = tvd->readVInt();
+
+      // No fields are vectorized for this document
+      if (fieldCount != 0) {
+        int32_t number = 0;
+        const TCHAR** fields = _CL_NEWARRAY(const TCHAR*, fieldCount+1);
+
+		{ //msvc6 scope fix
+			for (int32_t i = 0; i < fieldCount; i++) {
+				if(tvdFormat == FORMAT_VERSION)
+					number = tvd->readVInt();
+				else
+					number += tvd->readVInt();
+
+				fields[i] = fieldInfos->fieldName(number);
+			}
+		}
+		fields[fieldCount]=NULL;
+
+		// Compute position in the tvf file
+		position = 0;
+		int64_t* tvfPointers = _CL_NEWARRAY(int64_t,fieldCount);
+		{ //msvc6 scope fix
+			for (int32_t i = 0; i < fieldCount; i++) {
+				position += tvd->readVLong();
+				tvfPointers[i] = position;
+			}
+		}
+
+        mapper->setDocumentNumber(docNumber);
+        readTermVectors(fields, tvfPointers, fieldCount, mapper);
+
+		_CLDELETE_ARRAY(tvfPointers);
+		_CLDELETE_ARRAY(fields);
+      }
+    } else {
+      // "No tvx file"
     }
+  }
+
+ObjectArray<SegmentTermVector>* TermVectorsReader::readTermVectors(const int32_t docNum,
+										const TCHAR** fields, const int64_t* tvfPointers, const int32_t len){
+	ObjectArray<SegmentTermVector>* res = _CLNEW CL_NS(util)::ObjectArray<SegmentTermVector>(len);
+	for (int32_t i = 0; i < len; i++) {
+		ParallelArrayTermVectorMapper* mapper = _CLNEW ParallelArrayTermVectorMapper();
+		mapper->setDocumentNumber(docNum);
+		readTermVector(fields[i], tvfPointers[i], mapper);
+		res->values[i] = static_cast<SegmentTermVector*>(mapper->materializeVector());
+	}
+	return res;
 }
-SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPointer){
+
+void TermVectorsReader::readTermVectors(const TCHAR** fields, const int64_t* tvfPointers,
+										const int32_t len, TermVectorMapper* mapper){
+	for (int32_t i = 0; i < len; i++) {
+		readTermVector(fields[i], tvfPointers[i], mapper);
+	}
+}
+
+void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPointer, TermVectorMapper* mapper){
 	//Now read the data from specified position
     //We don't need to offset by the FORMAT here since the pointer already includes the offset
     tvf->seek(tvfPointer);
@@ -280,36 +329,22 @@ SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const i
     int32_t numTerms = tvf->readVInt();
     // If no terms - return a constant empty termvector. However, this should never occur!
     if (numTerms == 0) 
-		return _CLNEW SegmentTermVector(field, NULL, NULL);
+		return;
 
 	bool storePositions;
     bool storeOffsets;
 
-	if(tvfFormat == TermVectorsWriter::FORMAT_VERSION){
+	if(tvfFormat == FORMAT_VERSION){
 		uint8_t bits = tvf->readByte();
-		storePositions = (bits & TermVectorsWriter::STORE_POSITIONS_WITH_TERMVECTOR) != 0;
-		storeOffsets = (bits & TermVectorsWriter::STORE_OFFSET_WITH_TERMVECTOR) != 0;
+		storePositions = (bits & STORE_POSITIONS_WITH_TERMVECTOR) != 0;
+		storeOffsets = (bits & STORE_OFFSET_WITH_TERMVECTOR) != 0;
 	}
 	else{
 		tvf->readVInt();
 		storePositions = false;
 		storeOffsets = false;
 	}
-
-    TCHAR** terms = _CL_NEWARRAY(TCHAR*,numTerms+1);
-    ValueArray<int32_t>* termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
-
-    //  we may not need these, but declare them
-    Array< Array<int32_t> >* positions = NULL;
-	Array< Array<TermVectorOffsetInfo> >* offsets = NULL;
-	if(storePositions){
-		Array<int32_t>* tmp = (Array<int32_t>*)_CL_NEWARRAY(ValueArray<int32_t>,numTerms);
-		positions = _CLNEW Array< Array<int32_t> >(tmp, numTerms);
-	}
-	if(storeOffsets){
-		Array<TermVectorOffsetInfo>* tmp = _CL_NEWARRAY(Array<TermVectorOffsetInfo>,numTerms);
-		offsets = _CLNEW Array< Array<TermVectorOffsetInfo> >(tmp, numTerms);
-	}
+	mapper->setExpectations(field, numTerms, storeOffsets, storePositions);
 
     int32_t start = 0;
     int32_t deltaLength = 0;
@@ -329,60 +364,59 @@ SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const i
 
 		//read the term
 		tvf->readChars(buffer, start, deltaLength);
-		terms[i] = _CL_NEWARRAY(TCHAR,totalLength+1);
-		_tcsncpy(terms[i],buffer,totalLength);
-		terms[i][totalLength] = '\0'; //null terminate term
+		TCHAR* term = _CL_NEWARRAY(TCHAR,totalLength+1);
+		_tcsncpy(term,buffer,totalLength);
+		term[totalLength] = '\0'; //null terminate term
 
 		//read the frequency
 		int32_t freq = tvf->readVInt();
-		termFreqs->values[i] = freq;
+		ValueArray<int32_t>* positions = NULL;
 
 		if (storePositions) { //read in the positions
-			Array<int32_t>& pos = positions->values[i];
-			pos.length = freq;
-			pos.values = _CL_NEWARRAY(int32_t,freq);
-
-			int32_t prevPosition = 0;
-			for (int32_t j = 0; j < freq; ++j)
-			{
-				pos.values[j] = prevPosition + tvf->readVInt();
-				prevPosition = pos.values[j];
+			//does the mapper even care about positions?
+			if (mapper->isIgnoringPositions() == false) {
+				positions = _CLNEW ValueArray<int32_t>(freq);
+				int32_t prevPosition = 0;
+				for (int32_t j = 0; j < freq; j++)
+				{
+					positions->values[j] = prevPosition + tvf->readVInt();
+					prevPosition = positions->values[j];
+				}
+			} else {
+				//we need to skip over the positions.  Since these are VInts, I don't believe there is anyway to know for sure how far to skip
+				//
+				for (int32_t j = 0; j < freq; j++)
+				{
+					tvf->readVInt();
+				}
 			}
 		}
 
+		ObjectArray<TermVectorOffsetInfo>* offsets = NULL;
 		if (storeOffsets) {
-			Array<TermVectorOffsetInfo>& offs = offsets->values[i];
-			offs.length = freq;
-			offs.values = _CL_NEWARRAY(TermVectorOffsetInfo,freq);
-
-			int32_t prevOffset = 0;
-			for (int32_t j = 0; j < freq; ++j) {
-				int32_t startOffset = prevOffset + tvf->readVInt();
-				int32_t endOffset = startOffset + tvf->readVInt();
-				offs.values[j].setStartOffset(startOffset);
-				offs.values[j].setEndOffset(endOffset);
-				prevOffset = endOffset;
+			//does the mapper even care about offsets?
+			if (mapper->isIgnoringOffsets() == false) {
+				offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(freq); offsets->initArray();
+				int32_t prevOffset = 0;
+				for (int32_t j = 0; j < freq; j++) {
+					int32_t startOffset = prevOffset + tvf->readVInt();
+					int32_t endOffset = startOffset + tvf->readVInt();
+					offsets->values[j] = _CLNEW TermVectorOffsetInfo(startOffset, endOffset);
+					prevOffset = endOffset;
+				}
+			} else {
+				for (int32_t j = 0; j < freq; j++){
+					tvf->readVInt();
+					tvf->readVInt();
+				}
 			}
 		}
-    }
-    free(buffer);
-	terms[numTerms]=NULL; //null terminate terms array
-
-	if (storePositions || storeOffsets){
-	  return _CLNEW SegmentTermPositionVector(field, terms, (Array<int32_t>*)termFreqs, positions, offsets);
-	}else {
-	  return _CLNEW SegmentTermVector(field, terms, (Array<int32_t>*)termFreqs);
+		mapper->map(term, totalLength, freq, offsets, positions);
 	}
+    free(buffer);
 }
 
-int64_t TermVectorsReader::size(){
-    return _size;
-}
- 
-
-
-
-Array<TermVectorOffsetInfo> TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
+ObjectArray<TermVectorOffsetInfo> TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
 
 TermVectorOffsetInfo::TermVectorOffsetInfo() {
 	startOffset = 0;
@@ -400,15 +434,15 @@ int32_t TermVectorOffsetInfo::getEndOffset() const{
 	return endOffset;
 }
 
-void TermVectorOffsetInfo::setEndOffset(int32_t endOffset) {
-	this->endOffset = endOffset;
+void TermVectorOffsetInfo::setEndOffset(const int32_t _endOffset) {
+	this->endOffset = _endOffset;
 }
 
 int32_t TermVectorOffsetInfo::getStartOffset() const{
 	return startOffset;
 }
 
-void TermVectorOffsetInfo::setStartOffset(int32_t startOffset) {
+void TermVectorOffsetInfo::setStartOffset(const int32_t _startOffset) {
 	this->startOffset = startOffset;
 }
 
@@ -428,4 +462,85 @@ size_t TermVectorOffsetInfo::hashCode() const{
 	result = 29 * result + endOffset;
 	return result;
 }
+
+TermVectorMapper::TermVectorMapper(){
+}
+
+TermVectorMapper::TermVectorMapper(const bool _ignoringPositions, const bool _ignoringOffsets){
+	this->ignoringPositions = _ignoringPositions;
+	this->ignoringOffsets = _ignoringOffsets;
+}
+
+bool TermVectorMapper::isIgnoringPositions() const
+{
+	return ignoringPositions;
+}
+
+bool TermVectorMapper::isIgnoringOffsets() const
+{
+	return ignoringOffsets;
+}
+
+void TermVectorMapper::setDocumentNumber(const int32_t documentNumber)
+{
+}
+
+ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():
+	  terms(NULL),termFreqs(NULL),positions(NULL),offsets(NULL),currentPosition(0),field(NULL)
+{
+}
+ParallelArrayTermVectorMapper::~ParallelArrayTermVectorMapper(){
+	_CLDELETE_LCARRAY(field);
+}
+
+void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const int32_t numTerms,
+													const bool storeOffsets, const bool storePositions) {
+	this->field = const_cast<TCHAR*>(_field);
+
+	terms = _CL_NEWARRAY(TCHAR*,numTerms+1);
+	terms[numTerms]=NULL; //null terminate terms array
+
+	termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
+
+	this->storingOffsets = storeOffsets;
+	this->storingPositions = storePositions;
+	if(storePositions){
+		positions = _CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
+		positions->initArray();
+	}
+	if(storeOffsets){
+		offsets = _CLNEW ObjectArray< ObjectArray<TermVectorOffsetInfo> >(numTerms);
+		offsets->initArray();
+	}
+}
+
+void ParallelArrayTermVectorMapper::map(const TCHAR* term, int32_t termLen, const int32_t frequency,
+										ObjectArray<TermVectorOffsetInfo>* _offsets, ValueArray<int32_t>* _positions) {
+	terms[currentPosition] = const_cast<TCHAR*>(term);
+
+	termFreqs->values[currentPosition] = frequency;
+
+	if (storingOffsets)
+	{
+		this->offsets->values[currentPosition] = _offsets;
+	}
+	if (storingPositions)
+	{
+		this->positions->values[currentPosition] = _positions;
+	}
+	currentPosition++;
+}
+
+TermFreqVector* ParallelArrayTermVectorMapper::materializeVector() {
+	SegmentTermVector* tv = NULL;
+	if (field != NULL && terms != NULL) {
+		if (storingPositions || storingOffsets) {
+			tv = _CLNEW SegmentTermPositionVector(field, terms, termFreqs, positions, offsets);
+		} else {
+			tv = _CLNEW SegmentTermVector(field, terms, termFreqs);
+		}
+	}
+	return tv;
+}
+
 CL_NS_END

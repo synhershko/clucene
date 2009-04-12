@@ -307,9 +307,9 @@ void SegmentMerger::mergeVectors(){
 				if (reader->isDeleted(docNum))
 					continue;
 
-				ObjectArray<TermFreqVector*> tmp;
-				if ( reader->getTermFreqVectors(docNum, (Array<TermFreqVector*>&)tmp) )
-					termVectorsWriter->addAllDocVectors((Array<TermFreqVector*>&)tmp);
+				ObjectArray<TermFreqVector> tmp;
+				if ( reader->getTermFreqVectors(docNum, (ObjectArray<TermFreqVector>&)tmp) )
+					termVectorsWriter->addAllDocVectors((ObjectArray<TermFreqVector>&)tmp);
 				tmp.deleteValues();
 			}
 		}

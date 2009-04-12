@@ -175,7 +175,7 @@ public:
      *               is to be stored.
      * @return a byte[] array containing the data of this payload
      */
-    virtual uint8_t* getPayload(uint8_t* data, int32_t offset) = 0;
+    virtual uint8_t* getPayload(uint8_t* data, const int32_t offset) = 0;
 
 	/**
 	* Checks if a payload can be loaded at this position.

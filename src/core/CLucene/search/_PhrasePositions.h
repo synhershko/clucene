@@ -10,9 +10,10 @@
 #include "CLucene/index/Terms.h"
 
 CL_NS_DEF(search)
+
 /**
-* Position of a term in a document that takes into account the term offset within the phrase. 
-*/
+ * Position of a term in a document that takes into account the term offset within the phrase. 
+ */
 class PhrasePositions:LUCENE_BASE {
 public:
 	int32_t doc;					  // current doc
@@ -23,10 +24,7 @@ public:
 	PhrasePositions* _next;				  // used to make lists
 	bool repeats;       // there's other pp for same term (e.g. query="1st word 2nd word"~1) 
 
-
-	//Constructor
 	PhrasePositions(CL_NS(index)::TermPositions* Tp, const int32_t o);
-	//Destructor
 	~PhrasePositions();
 
 	bool next();
@@ -34,6 +32,12 @@ public:
 
 	void firstPosition();
 
+	/**
+	* Go to next location of this term current document, and set 
+	* <code>position</code> as <code>location - offset</code>, so that a 
+	* matching exact phrase is easily identified when all PhrasePositions 
+	* have exactly the same <code>position</code>.
+	*/
 	bool nextPosition();
 };
 CL_NS_END

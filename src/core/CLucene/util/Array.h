@@ -73,14 +73,14 @@ public:
 };
 
 /**
-* An array of objects. _CLDELETE is called on every containing object.
+* An array of objects. _CLDELETE is called on every contained object.
 */
 template<typename T>
-class CLUCENE_EXPORT ObjectArray: public ArrayBase<T>{
+class CLUCENE_EXPORT ObjectArray: public ArrayBase<T*>{
 public:
-    ObjectArray():ArrayBase<T>(){}
-	ObjectArray(T* values, size_t length):ArrayBase<T>(values,length){}
-	ObjectArray(size_t length):ArrayBase<T>(length){}
+    ObjectArray():ArrayBase<T*>(){}
+	ObjectArray(T** values, size_t length):ArrayBase<T*>(values,length){}
+	ObjectArray(size_t length):ArrayBase<T*>(length){}
 	
     void deleteValues(){
         if ( this->values == NULL )
@@ -92,6 +92,13 @@ public:
 	}
 	virtual ~ObjectArray(){
 	    deleteValues();
+	}
+
+	/* Initializes all cells in the array with a NULL value */
+	void initArray(){
+		for (size_t i=0;i<this->length;i++){
+			this->values[i]=NULL;
+		}
 	}
 };
 

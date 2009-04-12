@@ -103,7 +103,7 @@ MultiReader::~MultiReader() {
 	_CLDELETE(internal);
 }
 
-bool MultiReader::getTermFreqVectors(int32_t n, Array<TermFreqVector*>& result){
+bool MultiReader::getTermFreqVectors(int32_t n, ObjectArray<TermFreqVector>& result){
 	int32_t i = readerIndex(n);        // find segment num
 	return subReaders[i]->getTermFreqVectors(n - starts[i], result); // dispatch to segment
 }

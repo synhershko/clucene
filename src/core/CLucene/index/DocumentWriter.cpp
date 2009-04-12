@@ -35,7 +35,7 @@ CL_NS_DEF(index)
 
 /*Posting*/
 
-DocumentWriter::Posting::Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset)
+DocumentWriter::Posting::Posting(Term* t, const int32_t position, TermVectorOffsetInfo* offset):offsets(NULL)
 {
 //Func - Constructor
 //Pre  - t contains a valid reference to a Term
@@ -43,14 +43,18 @@ DocumentWriter::Posting::Posting(Term* t, const int32_t position, TermVectorOffs
 	freq = 1;
 	
 	term = _CL_POINTER(t);
-	positions.values = (int32_t*)malloc(sizeof(int32_t));
-	positions.values[0] = position;
-	positions.length = 1;
+	this->positions = _CLNEW ValueArray<int32_t>(1);
+	this->positions->values[0] = position;
+	//positions.values = (int32_t*)malloc(sizeof(int32_t));
+	//positions.values[0] = position;
+	//positions.length = 1;
 	
 	if ( offset != NULL ){
-		this->offsets.values = (TermVectorOffsetInfo*)malloc(sizeof(TermVectorOffsetInfo));
-		this->offsets.values[0] = *offset;
-		this->offsets.length = 1;
+		this->offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(1);
+		this->offsets->values[0] = offset;
+		//this->offsets.values = (TermVectorOffsetInfo**)malloc(sizeof(TermVectorOffsetInfo));
+		//this->offsets.values[0] = offset;
+		//this->offsets.length = 1;
 	}
 }
 DocumentWriter::Posting::~Posting(){
@@ -58,9 +62,11 @@ DocumentWriter::Posting::~Posting(){
 //Pre  - true
 //Post - The instance has been destroyed
 
-	free(this->positions.values);
-	if ( this->offsets.values != NULL )
-		free(this->offsets.values);
+	_CLDELETE_LARRAY(this->positions->values);
+	//_CLLDELETE(this->positions);
+	//_CLLDELETE(this->offsets);
+	if ( this->offsets != NULL )
+		_CLDELETE_LARRAY(this->offsets->values);
 	_CLDECDELETE(this->term);
 }
 
@@ -376,19 +382,19 @@ void DocumentWriter::addPosition(const TCHAR* field,
 	Posting* ti = postingTable->get(termBuffer);
 	if (ti != NULL) {				  // word seen before
 		int32_t freq = ti->freq;
-		if (ti->positions.length == freq) {
+		if (ti->positions->length == freq) {
 		    // positions array is full, realloc its size
-				ti->positions.length = freq*2;
-		    ti->positions.values = (int32_t*)realloc(ti->positions.values, ti->positions.length * sizeof(int32_t));
+				ti->positions->length = freq*2;
+		    ti->positions->values = (int32_t*)realloc(ti->positions->values, ti->positions->length * sizeof(int32_t));
 		}
-		ti->positions.values[freq] = position;		  // add new position
+		ti->positions->values[freq] = position;		  // add new position
 		
 		if (offset != NULL) {
-			if (ti->offsets.length == freq){
-				ti->offsets.length = freq*2;
-				ti->offsets.values = (TermVectorOffsetInfo*)realloc(ti->offsets.values, ti->offsets.length * sizeof(TermVectorOffsetInfo));
+			if (ti->offsets->length == freq){
+				ti->offsets->length = freq*2;
+				ti->offsets->values = (TermVectorOffsetInfo**)realloc(ti->offsets->values, ti->offsets->length * sizeof(TermVectorOffsetInfo));
 			}
-			ti->offsets[freq] = *offset;
+			ti->offsets->values[freq] = offset;
 		}
 
 		ti->freq = freq + 1;			  // update frequency
@@ -490,8 +496,8 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 			
 			int32_t lastPosition = 0;			  // write positions
 			for (int32_t j = 0; j < postingFreq; ++j) {		  // use delta-encoding
-				prox->writeVInt(posting->positions.values[j] - lastPosition);
-				lastPosition = posting->positions.values[j];
+				prox->writeVInt(posting->positions->values[j] - lastPosition);
+				lastPosition = posting->positions->values[j];
 			}
 
 	        // check to see if we switched to a new field
@@ -513,7 +519,7 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 	           }
 	        }
 	        if (termVectorWriter != NULL && termVectorWriter->isFieldOpen()) {
-	           termVectorWriter->addTerm(posting->term->text(), postingFreq, &posting->positions, &posting->offsets);
+	           termVectorWriter->addTerm(posting->term->text(), postingFreq, posting->positions, posting->offsets);
 	        }
 		}
 	    if (termVectorWriter != NULL)

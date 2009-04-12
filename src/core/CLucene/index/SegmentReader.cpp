@@ -817,7 +817,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 		return termVectorsReader->get(docNumber, field);
   }
 
-   bool SegmentReader::getTermFreqVectors(int32_t docNumber, Array<TermFreqVector*>& result) {
+   bool SegmentReader::getTermFreqVectors(int32_t docNumber, ObjectArray<TermFreqVector>& result) {
     if (termVectorsReaderOrig == NULL)
       return false;
     
@@ -825,7 +825,8 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
     if (termVectorsReader == NULL)
       return false;
     
-    return termVectorsReader->get(docNumber, result);
+    result = (*termVectorsReader->get(docNumber));
+	return true;
   }
 
 CL_NS_END
