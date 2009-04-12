@@ -39,7 +39,7 @@ TCHAR* NumberTools::longToString(int64_t l)
 	_i64tot(l, tmp, NUMBERTOOLS_RADIX);
 	size_t len = _tcslen(tmp);
 	_tcscpy(buf+(STR_SIZE-len),tmp);
-	for ( int32_t i=1;i<STR_SIZE-len;i++ )
+	for ( size_t i=1;i<STR_SIZE-len;i++ )
 		buf[i] = (int)'0';
 
 	buf[STR_SIZE] = 0;

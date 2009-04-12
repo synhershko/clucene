@@ -47,7 +47,7 @@ public:
 	/**
      * The length of (all) strings returned by {@link #longToString}
      */
-    LUCENE_STATIC_CONSTANT (int32_t, STR_SIZE = 14);
+    LUCENE_STATIC_CONSTANT (size_t, STR_SIZE = 14);
 
 	/**
      * Converts a long to a String suitable for indexing.
