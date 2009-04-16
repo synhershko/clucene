@@ -183,7 +183,7 @@ CL_NS_DEF(search)
 	  positions->push_back(position);
   }
 
-	void PhraseQuery::getPositions(Array<int32_t>& result) const{
+	void PhraseQuery::getPositions(ValueArray<int32_t>& result) const{
 		result.length = positions->size();
 		result.values = _CL_NEWARRAY(int32_t,result.length);
 		for(size_t i = 0; i < result.length; i++){
@@ -353,7 +353,7 @@ CL_NS_DEF(search)
 
     Scorer* ret = NULL;
 
-    Array<int32_t> positions;
+    ValueArray<int32_t> positions;
 	_this->getPositions(positions);
 	int32_t slop = _this->getSlop();
 	if ( slop != 0)

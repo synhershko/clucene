@@ -107,33 +107,36 @@ public:
 	};
 
 
-	class CLUCENE_INLINE_EXPORT Char: public _base //<char*>
+	class CLUCENE_INLINE_EXPORT Char: public _base, public Comparable //<char*>
 	{
+	    const char* s;
 	public:
+    	const char* getValue() const;
+    	Char();
+    	Char(const char* str);
+    	int32_t compareTo(void* o);
+
 		bool operator()( const char* val1, const char* val2 ) const;
 		size_t operator()( const char* val1) const;
 	};
 
 #ifdef _UCS2
-	class CLUCENE_INLINE_EXPORT WChar: public _base //<wchar_t*>
+	class CLUCENE_INLINE_EXPORT WChar: public _base, public Comparable //<wchar_t*>
 	{
+	    const wchar_t* s;
 	public:
+    	const wchar_t* getValue() const;
+    	WChar();
+    	WChar(const wchar_t* str);
+    	int32_t compareTo(void* o);
+
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
 		size_t operator()( const wchar_t* val1) const;
 	};
+	typedef WChar TChar;
+#else
+	typedef Char TChar;
 #endif
-
-	class CLUCENE_INLINE_EXPORT TChar: public _base, public Comparable{
-	    const TCHAR* s;
-    public:
-    	const TCHAR* getValue() const;
-    	TChar();
-    	TChar(const TCHAR* str);
-    	int32_t compareTo(void* o);
-    	bool operator()( const TCHAR* val1, const TCHAR* val2 ) const;
-    	size_t operator()( const TCHAR* val1) const;
-	};
-
 
 	template<typename _cl>
 	class CLUCENE_INLINE_EXPORT Void:public _base //<const void*,const void*,bool>

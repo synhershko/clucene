@@ -89,6 +89,22 @@ bool Compare::Char::operator()( const char* val1, const char* val2 ) const{
 size_t Compare::Char::operator()( const char* val1) const{
 	return CL_NS(util)::Misc::ahashCode(val1);
 }
+const char* Compare::Char::getValue() const{ return s; }
+
+Compare::Char::Char(){
+	s=NULL;
+}
+ Compare::Char::Char(const char* str){
+	this->s = str;
+}
+int32_t Compare::Char::compareTo(void* o){
+	try{
+		Char* os = (Char*)o;
+		return strcmp(s,os->s);
+	}catch(...){
+		_CLTHROWA(CL_ERR_Runtime,"Couldnt compare types");
+	}
+}
 
 #ifdef _UCS2
 bool Compare::WChar::operator()( const wchar_t* val1, const wchar_t* val2 ) const{
@@ -100,17 +116,16 @@ bool Compare::WChar::operator()( const wchar_t* val1, const wchar_t* val2 ) cons
 size_t Compare::WChar::operator()( const wchar_t* val1) const{
 	return CL_NS(util)::Misc::whashCode(val1);
 }
-#endif
 
-const TCHAR* Compare::TChar::getValue() const{ return s; }
+const wchar_t* Compare::WChar::getValue() const{ return s; }
 
-Compare::TChar::TChar(){
+Compare::WChar::WChar(){
 	s=NULL;
 }
- Compare::TChar::TChar(const TCHAR* str){
+ Compare::WChar::WChar(const wchar_t* str){
 	this->s = str;
 }
-int32_t Compare::TChar::compareTo(void* o){
+int32_t Compare::WChar::compareTo(void* o){
 	try{
 		TChar* os = (TChar*)o;
 		return _tcscmp(s,os->s);
@@ -120,14 +135,7 @@ int32_t Compare::TChar::compareTo(void* o){
 
 }
 
-bool Compare::TChar::operator()( const TCHAR* val1, const TCHAR* val2 ) const{
-	if ( val1==val2)
-		return false;
-	bool ret = (_tcscmp( val1,val2 ) < 0);
-	return ret;
-}
-size_t Compare::TChar::operator()( const TCHAR* val1) const{
-	return CL_NS(util)::Misc::thashCode(val1);
-}
+#endif
+
 
 CL_NS_END

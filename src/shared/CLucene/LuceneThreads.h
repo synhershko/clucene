@@ -36,7 +36,7 @@ class CLuceneThreadIdCompare;
             {
             private:
                 struct Internal;
-                Internal* internal;
+                Internal* _internal;
             public:
             	mutex_thread(const mutex_thread& clone);
             	mutex_thread();

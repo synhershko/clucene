@@ -102,7 +102,7 @@ CL_NS_DEF(search)
 		/**
 		* Returns the relative positions of terms in this phrase.
 		*/
-		void getPositions(CL_NS(util)::Array<int32_t>& result) const;
+		void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
         const TCHAR* getFieldName() const{ return field; }
  
 		/** Prints a user-readable version of this query. */

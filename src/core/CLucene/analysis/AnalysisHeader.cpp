@@ -67,8 +67,7 @@ Token::Token():
 
 Token::~Token(){
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-    //free(_termText);
-	delete[] _termText;
+  free(_termText);
 #endif
 	_CLLDELETE(payload);
 }
@@ -148,16 +147,13 @@ void Token::growBuffer(size_t size){
 	if(bufferTextLen>=size)
 		return;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-	if ( _termText == NULL )
-		//_termText = (TCHAR*)malloc( size * sizeof(TCHAR) );
-		_termText = new TCHAR[size * sizeof(TCHAR)];
-	else{
-		// ISH: Use new/delete[] instead of realloc, since a copy is being made anyway and there's no
-		//		need to preserve the current content
-		//_termText = (TCHAR*)realloc( _termText, size * sizeof(TCHAR) );
-		TCHAR* __termText = new TCHAR[size * sizeof(TCHAR)];
-		delete[] _termText;
-		_termText = __termText;
+	if ( _termText == NULL ){
+		_termText = (TCHAR*)malloc( size * sizeof(TCHAR) );
+		_termText[0] = NULL;
+	}else{
+		//use realloc. growBuffer is public, therefore could be called 
+		//without a subsequent call to overwriting the memory
+		_termText = (TCHAR*)realloc( _termText, size * sizeof(TCHAR) );
 	}
 	bufferTextLen = size;
 #else
