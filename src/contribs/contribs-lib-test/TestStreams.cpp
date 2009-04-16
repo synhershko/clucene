@@ -40,7 +40,7 @@ void testDocument(CuTest* tc) {
     InputStream* sb2 = doc2.getField(_T("test"))->streamValue();
     GZipInputStream zip2(sb2, GZipInputStream::ZLIBFORMAT);
 
-    int rd = zip2.read(tmp, 1, 0);
+    int rd = zip2.read(tmp, 100000, 0);
     std::string str((const char*) tmp, rd);
     CLUCENE_ASSERT(str.compare(str2) == 0);
 

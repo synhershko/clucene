@@ -245,7 +245,7 @@ void cleanupHighlighter(CuTest *tc) {
 CuSuite *testhighlighter(void) {
     CuSuite *suite = CuSuiteNew(_T("CLucene Highlight Test"));
 
-    (suite, setupHighlighter);
+    SUITE_ADD_TEST(suite, setupHighlighter);
 
     SUITE_ADD_TEST(suite, testSimpleHighlighter);
     SUITE_ADD_TEST(suite, testGetBestFragmentsSimpleQuery);
