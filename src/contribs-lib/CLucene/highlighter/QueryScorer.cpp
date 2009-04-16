@@ -82,7 +82,7 @@ CL_NS_USE(analysis)
 	
 	float_t QueryScorer::getTokenScore(Token * token)
 	{
-		const TCHAR* termText=token->termText();
+		const TCHAR* termText=token->termBuffer();
 		
 		const WeightedTerm* queryTerm = _termsToFind.get(termText);
 		if(queryTerm==NULL)

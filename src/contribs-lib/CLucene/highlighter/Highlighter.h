@@ -41,7 +41,7 @@ CL_NS_DEF2(search,highlight)
 * and tokenizers. 	  
 * {@link Encoder} and tokenizers.
 */
-class Highlighter :LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT Highlighter :LUCENE_BASE
 {
 private:
 	int32_t maxDocBytesToAnalyze;

@@ -26,7 +26,7 @@ CL_NS_DEF2(search,highlight)
  * Simple {@link Encoder} implementation to escape text for HTML output
  *
  */
-class SimpleHTMLEncoder:public Encoder
+class CLUCENE_CONTRIBS_EXPORT SimpleHTMLEncoder:public Encoder
 {
 public:
 	SimpleHTMLEncoder(void);

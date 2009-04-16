@@ -26,7 +26,7 @@ struct z_stream_s;
 
 CL_NS_DEF(util)
 
-class GZipCompressInputStream : public InputStream{
+class CLUCENE_CONTRIBS_EXPORT GZipCompressInputStream : public InputStream{
 private:
 	 class Internal;
 	 Internal* internal;

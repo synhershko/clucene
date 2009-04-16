@@ -16,7 +16,7 @@ CL_CLASS_DEF(index, TermPositionVector)
 
 CL_NS_DEF2(search,highlight)
 
-class TokenSources: LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT TokenSources: LUCENE_BASE
 {
 	//an object used to iterate across an array of tokens
 	class StoredTokenStream:public CL_NS(analysis)::TokenStream

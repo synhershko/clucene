@@ -26,7 +26,7 @@ CL_NS_DEF2(search,highlight)
  * Simple {@link Formatter} implementation to highlight terms with a pre and post tag
  *
  */
-class SimpleHTMLFormatter :public Formatter
+class CLUCENE_CONTRIBS_EXPORT SimpleHTMLFormatter :public Formatter
 {
 private:
 	const TCHAR* _preTag;

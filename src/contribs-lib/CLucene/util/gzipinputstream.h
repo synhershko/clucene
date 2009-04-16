@@ -13,7 +13,7 @@ struct z_stream_s;
 
 CL_NS_DEF(util)
 
-class GZipInputStream : public CL_NS(util)::BufferedInputStream {
+class CLUCENE_CONTRIBS_EXPORT GZipInputStream : public CL_NS(util)::BufferedInputStream {
 public:
     enum ZipFormat { ZLIBFORMAT, GZIPFORMAT, ZIPFORMAT};
 private:

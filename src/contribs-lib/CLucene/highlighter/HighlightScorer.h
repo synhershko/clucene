@@ -27,7 +27,7 @@ class TextFragment;
 /**
  * Adds to the score for a fragment based on its tokens
  */
-class HighlightScorer:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT HighlightScorer:LUCENE_BASE
 {
 public:
 	virtual ~HighlightScorer(){

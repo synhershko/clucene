@@ -73,6 +73,9 @@ SET(clucene_contribs_Files
 )
 SET ( clucene_contrib_extras clucene-core clucene-shared )
 
+#find our headers
+file(GLOB_RECURSE HEADERS ${clucene-contribs-lib_SOURCE_DIR}/*.h)
+
 #add extra capabilities
 find_package(ZLIB)
 IF ( NOT ZLIB_FOUND )

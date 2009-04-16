@@ -28,10 +28,10 @@ namespace lucene { namespace search { namespace highlight {
 
 	class TextFragment;
 
-class Scorer
+class CLUCENE_CONTRIBS_EXPORT Scorer
 {
 public:
-	virtual ~Scorer() = 0;
+	virtual ~Scorer(){};
 	/**
 	 * called when a new fragment is started for consideration
 	 * @param newFragment

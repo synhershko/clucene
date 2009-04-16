@@ -24,7 +24,7 @@ CL_NS_DEF2(search,highlight)
 
 /** Lightweight class to hold term and a weight value used for scoring this term 
  */
-class WeightedTerm:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT WeightedTerm:LUCENE_BASE
 {
 private:
 	float_t _weight; // multiplier

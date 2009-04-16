@@ -25,7 +25,7 @@ class TokenGroup;
  * of mark-up to highlight terms in HTML search results pages.
  *
  */
-class Formatter:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT Formatter:LUCENE_BASE
 {
 public:
 

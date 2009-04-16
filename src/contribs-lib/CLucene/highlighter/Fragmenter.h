@@ -27,7 +27,7 @@ CL_NS_DEF2(search,highlight)
  * by the {@link Highlighter} class. A sophisticated implementation may do this on the basis
  * of detecting end of sentences in the text. 
  */
-class Fragmenter:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT Fragmenter:LUCENE_BASE
 {
 public:
 	/** Virtual destructor */

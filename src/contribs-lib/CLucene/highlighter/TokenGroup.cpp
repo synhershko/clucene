@@ -47,7 +47,7 @@ void TokenGroup::addToken(Token* token, float_t score)
 			startOffset=cl_min(startOffset,token->startOffset());		
 			endOffset=cl_max(endOffset,token->endOffset());		
 		}
-		tokens[numTokens].set(token->termText(),token->startOffset(),token->endOffset(),token->type());;
+		tokens[numTokens].set(token->termBuffer(),token->startOffset(),token->endOffset(),token->type());;
 		scores[numTokens]=score;
 		numTokens++;
     }

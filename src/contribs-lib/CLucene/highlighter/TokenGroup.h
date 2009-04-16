@@ -26,7 +26,7 @@ CL_NS_DEF2(search,highlight)
  * One, or several overlapping tokens, along with the score(s) and the
  * scope of the original text
  */
-class TokenGroup: LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT TokenGroup: LUCENE_BASE
 {
 	LUCENE_STATIC_CONSTANT(int32_t,MAX_NUM_TOKENS_PER_GROUP=50);
 	CL_NS(analysis)::Token* tokens;

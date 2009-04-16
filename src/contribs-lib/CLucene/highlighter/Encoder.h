@@ -23,7 +23,7 @@ CL_NS_DEF2(search,highlight)
  * Encodes original text. The Encoder works with the Formatter to generate the output.
  *
  */
-class Encoder:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT Encoder:LUCENE_BASE
 {
 public:
 	/** Virtual destructor */

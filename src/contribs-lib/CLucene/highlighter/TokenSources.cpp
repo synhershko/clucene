@@ -98,7 +98,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
     }     */   
     //code to reconstruct the original sequence of Tokens
     const TCHAR** terms=tpv->getTerms();          
-    const Array<int32_t>* freq=tpv->getTermFrequencies();
+    const ValueArray<int32_t>* freq=tpv->getTermFrequencies();
 
     size_t totalTokens=0;
 	for (int32_t i = 0; i < freq->length; i++)
@@ -108,11 +108,11 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
 	CLSetList<Token*,TokenOrderCompare>* unsortedTokens = NULL;
     for (int32_t t = 0; t < freq->length; t++)
     {
-        Array<TermVectorOffsetInfo>* offsets=tpv->getOffsets(t);
+        ObjectArray<TermVectorOffsetInfo>* offsets=tpv->getOffsets(t);
         if(offsets==NULL)
             return NULL;
         
-        Array<int32_t>* pos=NULL;
+        ValueArray<int32_t>* pos=NULL;
         if(tokenPositionsGuaranteedContiguous)
         {
             //try get the token position info to speed up assembly of tokens into sorted sequence
@@ -130,8 +130,8 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
             for (int32_t tp=0; tp < offsets->length; tp++)
             {
                 unsortedTokens->insert(_CLNEW Token(terms[t],
-                    (*offsets)[tp].getStartOffset(),
-                    (*offsets)[tp].getEndOffset()));
+                    (*offsets)[tp]->getStartOffset(),
+                    (*offsets)[tp]->getEndOffset()));
             }
         }
         else
@@ -145,8 +145,8 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
             for (int32_t tp = 0; tp < pos->length; tp++)
             {
                 tokensInOriginalOrder[(*pos)[tp]]=_CLNEW Token(terms[t],
-                        (*offsets)[tp].getStartOffset(),
-                        (*offsets)[tp].getEndOffset());
+                        (*offsets)[tp]->getStartOffset(),
+						(*offsets)[tp]->getEndOffset());
             }                
         }
     }
@@ -192,8 +192,9 @@ TokenStream* TokenSources::getTokenStream(IndexReader* reader,int32_t docId, TCH
 //convenience method
 TokenStream* TokenSources::getTokenStream(IndexReader* reader,int32_t docId, TCHAR* field,Analyzer* analyzer)
 {
-	CL_NS(document)::Document* doc=reader->document(docId);
-	const TCHAR* contents=doc->get(field);
+	CL_NS(document)::Document doc;
+	reader->document(docId, doc);
+	const TCHAR* contents=doc.get(field);
 	if(contents==NULL)
 	{
 		TCHAR buf[250];
@@ -218,7 +219,7 @@ bool TokenSources::StoredTokenStream::next(CL_NS(analysis)::Token* token)
     }
 	Token* t = tokens[currentToken++];
 
-	token->set(t->termText(),t->startOffset(),t->endOffset(),t->type());;
+	token->set(t->termBuffer(),t->startOffset(),t->endOffset(),t->type());;
     return true;
 }
 void TokenSources::StoredTokenStream::close(){

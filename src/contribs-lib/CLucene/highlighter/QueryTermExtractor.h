@@ -34,7 +34,7 @@ CL_NS_DEF2(search,highlight)
  * expanded terms. 
  * 
  */
-class QueryTermExtractor
+class CLUCENE_CONTRIBS_EXPORT QueryTermExtractor
 {
 	QueryTermExtractor(){
 	}

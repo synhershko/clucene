@@ -13,7 +13,7 @@ CL_NS_DEF2(analysis,snowball)
  * stemmer is the part of the class name before "Stemmer", e.g., the stemmer in
  * {@link EnglishStemmer} is named "English".
  */
-class SnowballAnalyzer: public Analyzer {
+class CLUCENE_CONTRIBS_EXPORT SnowballAnalyzer: public Analyzer {
   const TCHAR* language;
   CLTCSetList* stopSet;
 

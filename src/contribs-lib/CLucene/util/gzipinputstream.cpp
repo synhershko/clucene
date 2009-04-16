@@ -52,7 +52,7 @@ public:
 				  break;
 			 case Z_STREAM_END:
 				  if (zstream->avail_in) {
-						input->reset(input->getPosition()-zstream->avail_in);
+						input->reset(input->position()-zstream->avail_in);
 				  }
 				  // we are finished decompressing,
 				  // (but this stream is not yet finished)
@@ -72,7 +72,7 @@ public:
 			 const signed char* begin;
 			 int32_t nread;
 
-			 int64_t pos = input->getPosition();
+			 int64_t pos = input->position();
 			 nread = input->read(begin, 2, 2);
 			 input->reset(pos);
 			 if (nread != 2) {

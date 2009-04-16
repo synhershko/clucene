@@ -39,7 +39,7 @@ class TextFragment;
  */
 //TODO: provide option to boost score of fragments near beginning of document 
 // based on fragment.getFragNum()
-class QueryScorer : public HighlightScorer
+class CLUCENE_CONTRIBS_EXPORT QueryScorer : public HighlightScorer
 {
 private:
 	TextFragment * _currentTextFragment;

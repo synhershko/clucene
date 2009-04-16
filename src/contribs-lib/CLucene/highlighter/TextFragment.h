@@ -27,7 +27,7 @@ CL_NS_DEF2(search,highlight)
  * Low-level class used to record information about a section of a document 
  * with a score.
  */
-class TextFragment:LUCENE_BASE
+class CLUCENE_CONTRIBS_EXPORT TextFragment:LUCENE_BASE
 {
 	int32_t _fragNum;
 	int32_t _textStartPos;

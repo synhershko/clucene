@@ -27,7 +27,7 @@ CL_NS_DEF2(search,highlight)
  * fragments with no concerns over spotting sentence boundaries.
  */
 
-class SimpleFragmenter:public Fragmenter
+class CLUCENE_CONTRIBS_EXPORT SimpleFragmenter:public Fragmenter
 {
 private:
 	LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_FRAGMENT_SIZE =100 );
