@@ -145,7 +145,7 @@
 #else
     #define CLUCENE_EXPORT CLUCENE_IMPORT_DECL
 #endif
-#if defined(clucene_contribs_EXPORTS)
+#if defined(clucene_contribs_lib_EXPORTS)
 	#define CLUCENE_CONTRIBS_EXPORT CLUCENE_EXPORT_DECL
 	#define CLUCENE_LOCAL CLUCENE_LOCAL_DECL
 #elif defined(MAKE_CLUCENE_CONTRIBS_LIB)
