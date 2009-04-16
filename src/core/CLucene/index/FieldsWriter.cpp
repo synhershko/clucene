@@ -169,7 +169,7 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 			//how do wemake sure we read the entire index in now???
 			//todo: we need to have a max amount, and guarantee its all in or throw an error..
 			//todo: make this value configurable....
-			int32_t rl = stream->read(sd, sz, 0);
+			int32_t rl = stream->read(sd, sz, 1);
 
 			if ( rl < 0 ){
 				fieldsStream->writeVInt(0); //todo: could we detect this earlier and not actually write the field??
@@ -183,11 +183,15 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 
 		}else if ( field->stringValue() == NULL ){ //we must be using readerValue
 			CND_PRECONDITION(!field->isIndexed(), "Cannot store reader if it is indexed too")
-				Reader* r = field->readerValue();
+			Reader* r = field->readerValue();
+
+			int32_t sz = r->size();
+			if ( sz < 0 )
+				sz = 10000000; //todo: we should warn the developer here....
 
 			//read the entire string
 			const TCHAR* rv;
-			int64_t rl = r->read(rv, LUCENE_INT32_MAX_SHOULDBE, 0);
+			int64_t rl = r->read(rv, sz, 1);
 			if ( rl > LUCENE_INT32_MAX_SHOULDBE )
 				_CLTHROWA(CL_ERR_Runtime,"Field length too long");
 			else if ( rl < 0 )
