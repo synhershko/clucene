@@ -9,13 +9,36 @@
 
 
 CL_CLASS_DEF(store,Directory)
+CL_CLASS_DEF(store,IndexInput)
+CL_CLASS_DEF(store,IndexOutput)
 
 CL_NS_DEF(util)
+
+
+/** Optimized implementation of a vector of bits.  This is more-or-less like
+  java.util.BitSet, but also includes the following:
+  <ul>
+  <li>a count() method, which efficiently computes the number of one bits;</li>
+  <li>optimized read from and write to disk;</li>
+  <li>inlinable get() method;</li>
+  <li>store and load, as bit set or d-gaps, depending on sparseness;</li> 
+  </ul>
+  */
 class CLUCENE_EXPORT BitSet:LUCENE_BASE {
 	int32_t _size;
 	int32_t _count;
 	uint8_t *bits;
-	
+
+  void readBits(CL_NS(store)::IndexInput* input);
+  /** read as a d-gaps list */
+  void readDgaps(CL_NS(store)::IndexInput* input);
+  /** Write as a bit set */
+  void writeBits(CL_NS(store)::IndexOutput* output);
+  /** Write as a d-gaps list */
+  void writeDgaps(CL_NS(store)::IndexOutput* output);
+  /** Indicates if the bit vector is sparse and should be saved as a d-gaps list, or dense, and should be saved as a bit set. */
+  bool isSparse();
+  static const uint8_t BYTE_COUNTS[256];
 protected:
 	BitSet( const BitSet& copy );
 
@@ -29,7 +52,11 @@ public:
 	~BitSet();
 	
 	///get the value of the specified bit
+	///get the value of the specified bit
 	inline bool get(const int32_t bit) const{
+		if (bit >= _size) {
+		_CLTHROWA(CL_ERR_IndexOutOfBounds, "bit out of range");
+		}
 		return (bits[bit >> 3] & (1 << (bit & 7))) != 0;
 	}
 	
