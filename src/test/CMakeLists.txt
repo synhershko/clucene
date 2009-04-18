@@ -62,7 +62,7 @@ ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 IF ( ENABLE_COMPILE_TESTS )
    
-SET(test_monolithic_Files ./CLMonolithic_Test.cpp ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp)
+SET(test_monolithic_Files ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp ./CLMonolithic_Test.cpp)
 
 IF ( CMAKE_COMPILER_IS_GNUCC )
     CHECK_CXX_ACCEPTS_FLAG(-Wall GccFlagWall)
