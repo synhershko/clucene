@@ -50,6 +50,9 @@ OPTION(ENABLE_MMAP
 OPTION(DISABLE_MULTITHREADING
   "disable multithreading - remove all locking code"
   OFF)
+OPTION(ENABLE_DMALLOC
+  "enable dmalloc memory leak checker"
+  OFF)
 OPTION(ENABLE_ASCII_MODE
   "enable ascii support"
   OFF)

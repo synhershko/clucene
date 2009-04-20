@@ -1,7 +1,7 @@
 PROJECT(clucene-test)
 
 INCLUDE (DefineOptions)
-DEFINE_OPTIONS(EXTRA_OPTIONS)
+DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS})
 
 INCLUDE_DIRECTORIES( ${clucene-test_SOURCE_DIR} )
@@ -53,7 +53,7 @@ ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} )
 
 #link the executable against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    TARGET_LINK_LIBRARIES(cl_test clucene-core clucene-shared)
+    TARGET_LINK_LIBRARIES(cl_test clucene-core clucene-shared ${EXTRA_LIBS})
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 ############################

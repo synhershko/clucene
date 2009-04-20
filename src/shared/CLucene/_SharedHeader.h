@@ -24,6 +24,7 @@
 #include "CLucene/LuceneThreads.h"
 #include "CLucene/config/repl_tchar.h"
 #include "CLucene/config/repl_wchar.h"
+#include "CLucene/config/repl_wctype.h" //replacements for functions
 
 #define cl_min(a,b) ((a)>(b) ? (b) : (a))
 #define cl_min3(a,b,c) ((a)<(b) ? ((a)<(c) ? (a) : (c)) : ((b)<(c) ? (b) : (c)))
@@ -57,8 +58,5 @@ CLUCENE_SHARED_EXPORT extern const char* _LUCENE_BLANK_ASTRING;
 //cannot fit, this character is used instead.
 #define LUCENE_OOR_CHAR(c) ((char)(((unsigned short)c)&0xFF))
 
-
-#include "CLucene/config/repl_tchar.h"  //replacements for functions
-#include "CLucene/config/repl_wctype.h" //replacements for functions
 
 #endif //lucene_internal_sharedheader_h

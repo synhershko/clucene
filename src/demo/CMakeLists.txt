@@ -1,7 +1,7 @@
 PROJECT(cl_demo)
 
 INCLUDE (DefineOptions)
-DEFINE_OPTIONS(EXTRA_OPTIONS)
+DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS})
 
 INCLUDE_DIRECTORIES( ${clucene-demo_SOURCE_DIR} )
@@ -21,4 +21,4 @@ ${clucene-shared_SOURCE_DIR}/CLucene/util/dirent.cpp
 ${demo_HEADERS}
 )
 
-TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared)
+TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared ${EXTRA_LIBS})

@@ -1,7 +1,7 @@
 PROJECT(clucene-contribs-lib)
 
 INCLUDE (DefineOptions)
-DEFINE_OPTIONS(EXTRA_OPTIONS)
+DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CONTRIBS_LIB)
 
 set(CMAKE_MODULE_PATH "${clucene-contribs-lib_SOURCE_DIR}/cmake")
@@ -71,7 +71,7 @@ SET(clucene_contribs_Files
     ./CLucene/snowball/src_c/stem_UTF_8_spanish.c
     ./CLucene/snowball/src_c/stem_UTF_8_swedish.c
 )
-SET ( clucene_contrib_extras clucene-core clucene-shared )
+SET ( clucene_contrib_extra_libs clucene-core clucene-shared ${EXTRA_LIBS})
 
 #find our headers
 file(GLOB_RECURSE HEADERS ${clucene-contribs-lib_SOURCE_DIR}/*.h)
@@ -82,7 +82,7 @@ IF ( NOT ZLIB_FOUND )
   MESSAGE ( FATAL "ZLib not found" )
 ENDIF ( NOT ZLIB_FOUND )
 INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
-SET ( clucene_contrib_extras "${clucene_contrib_extras}" ${ZLIB_LIBRARIES} ) 
+SET ( clucene_contrib_extra_libs "${clucene_contrib_extra_libs}" ${ZLIB_LIBRARIES} )
 
 find_package(Iconv)
 #find_package(Strigi)
@@ -99,7 +99,7 @@ INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/contribs-lib )
 add_library(clucene-contribs-lib SHARED
 	${clucene_contribs_Files} ${clucene_shared_Files} ${HEADERS}
 )
-TARGET_LINK_LIBRARIES(clucene-contribs-lib ${clucene_contrib_extras}) 
+TARGET_LINK_LIBRARIES(clucene-contribs-lib ${clucene_contrib_extra_libs})
 
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-contribs-lib PROPERTIES

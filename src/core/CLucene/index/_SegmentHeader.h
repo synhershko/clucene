@@ -330,7 +330,7 @@ public:
 	* @throws IOException
 	*/
 	//bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::ObjectArray<TermFreqVector>& result);
-	CL_NS(util)::ObjectArray<TermFreqVector>* SegmentReader::getTermFreqVectors(int32_t docNumber);
+	CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir);

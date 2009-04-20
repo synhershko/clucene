@@ -137,7 +137,7 @@ CL_NS_DEF(index)
 		
 
 		//Delete the buffer if necessary
-		free(buffer);
+		if ( buffer != NULL ) free(buffer);
 		//Delete termInfo if necessary
 		_CLDELETE(termInfo);
 
