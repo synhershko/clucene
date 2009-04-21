@@ -8,6 +8,6 @@
 #define _lucene_index_FieldInfo_
 
 
-#error "This header is deprecated, use FieldInfos.h instead"
+#error "This header is deprecated, use _FieldInfos.h instead"
 
 #endif
