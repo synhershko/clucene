@@ -46,12 +46,19 @@ class CLUCENE_EXPORT Term:LUCENE_REFBASE {
   public:
 	
 	//uses the specified fieldTerm's field. this saves on intern'ing time.
+  /** Constructs a Term with the given field and text.
+   * <p>Note that a null field or null text value results in undefined
+   * behavior for most Lucene APIs that accept a Term parameter.
+  */
 	Term(const Term* fieldTerm, const TCHAR* txt);
 		
-	///Constructs a blank term
+	/** Constructs a blank term */
 	Term();
 	
-	//todo: these need to be private, but a few other things need to be changed first...
+  /** Constructs a Term with the given field and text.
+   * <p>Note that a null field or null text value results in undefined
+   * behavior for most Lucene APIs that accept a Term parameter.
+  */
 	Term(const TCHAR* fld, const TCHAR* txt, bool internField);
 
 	/**
