@@ -102,7 +102,7 @@ CL_NS_DEF(search)
 		{
 		  
 		  //now see if term->text() starts with prefixText
-		  int32_t termLen = lastTerm->textLength();
+		  size_t termLen = lastTerm->textLength();
 		  if ( prefixLen>termLen )
 			  break; //the prefix is longer than the term, can't be matched
 
@@ -243,7 +243,7 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
             lastTerm = enumerator->term(false);
     		if (lastTerm != NULL && lastTerm->field() == prefixField ){
     		    //now see if term->text() starts with prefixText
-                int32_t termLen = lastTerm->textLength();
+                size_t termLen = lastTerm->textLength();
                 if ( prefixLen>termLen )
                     break; //the prefix is longer than the term, can't be matched
 
