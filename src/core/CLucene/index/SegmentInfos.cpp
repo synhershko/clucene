@@ -11,6 +11,7 @@
 #include "_IndexFileNames.h"
 #include "_SegmentHeader.h"
 #include "MultiReader.h"
+#include <iostream>
 
 #include "CLucene/store/Directory.h"
 //#include "CLucene/util/VoidMap.h"
@@ -443,6 +444,24 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 
 
 
+
+
+  std::ostream* SegmentInfos::infoStream = &std::cout;
+
+  /** If non-null, information about retries when loading
+  * the segments file will be printed to this.
+  */
+  void SegmentInfos::setInfoStream(std::ostream* infoStream) {
+    SegmentInfos::infoStream = infoStream;
+  }
+
+  /**
+  * @see #setInfoStream
+  */
+  std::ostream* SegmentInfos::getInfoStream() {
+    return infoStream;
+  }
+
   SegmentInfos::SegmentInfos(bool deleteMembers, int32_t reserveCount) :
       generation(0),lastGeneration(0), infos(deleteMembers) {
   //Func - Constructor
@@ -781,7 +800,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 				  _CLDELETE_CaARRAY_ALL( files );
 			  }
 
-			  //CL_TRACE("directory listing genA=%d\n", genA);
+        if ( infoStream ){
+          (*infoStream) << "[SIS]: directory listing genA=" << genA << "\n";
+        }
 
 			  // Method 2: open segments.gen and read its
 			  // contents.  Then we take the larger of the two
@@ -794,13 +815,11 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 				  for(int32_t i=0;i<defaultGenFileRetryCount;i++) {
 					  IndexInput* genInput = NULL;
 					  if ( ! directory->openInput(IndexFileNames::SEGMENTS_GEN, genInput, e) ){
-						  //if (e.number == CL_ERR_FileNotFound) { // FileNotFound not yet exists...
-						  //	CL_TRACE("segments.gen open: FileNotFoundException %s", e);
-						  //    _CLLDELETE(genInput);
-						  //	break;
-						  //} else
-						  if (e.number() == CL_ERR_IO) {
-							  //CL_TRACE("segments.gen open: IOException %s", e);
+              if (e.number() == CL_ERR_IO ) {
+							  if ( infoStream ){
+                  (*infoStream) << "[SIS]: segments.gen open: IOException " << e.what() << "\n";
+                }
+                break;
 						  } else {
 							  _CLLDELETE(genInput);
 							  _CLDELETE_LARRAY(exc_txt);

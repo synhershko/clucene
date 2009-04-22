@@ -22,7 +22,7 @@ CL_NS_DEF(index)
 
 	/**
 	* Class responsible for access to stored document fields.
-	*
+  * <p/>
 	* It uses &lt;segment&gt;.fdt and &lt;segment&gt;.fdx; files.
 	*/
 	class FieldsReader :LUCENE_BASE{
@@ -30,7 +30,7 @@ CL_NS_DEF(index)
 		const FieldInfos* fieldInfos;
 
 		// The main fieldStream, used only for cloning.
-		CL_NS(store)::IndexInput* cloneableFieldsStream;
+		CL_NS(sre)::IndexInput* cloneableFieldsStream;
 
 		// This is a clone of cloneableFieldsStream used for reading documents.
 		// It should not be cloned outside of a synchronized context. 

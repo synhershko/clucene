@@ -53,7 +53,7 @@ SET(clucene_core_Files
 	./CLucene/document/Field.cpp
 	./CLucene/document/FieldSelector.cpp
 	./CLucene/document/NumberTools.cpp
-	./CLucene/index/IndexFileNames.cpp
+  ./CLucene/index/IndexFileNames.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp
 	./CLucene/index/SegmentTermDocs.cpp
@@ -82,6 +82,7 @@ SET(clucene_core_Files
 	./CLucene/index/SegmentMergeQueue.cpp
 	./CLucene/index/FieldsReader.cpp
 	./CLucene/index/TermInfosReader.cpp
+  ./CLucene/index/DirectoryIndexReader.cpp
 	./CLucene/search/Compare.cpp
 	./CLucene/search/Scorer.cpp
 	./CLucene/search/ScorerDocQueue.cpp

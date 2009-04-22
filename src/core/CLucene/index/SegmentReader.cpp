@@ -22,22 +22,6 @@ CL_NS_USE(document)
 CL_NS_USE(search)
 CL_NS_DEF(index)
 
- SegmentReader::Norm::Norm(IndexInput* instrm, int32_t n, SegmentReader* r, const char* seg): 
-	number(n), 
-	normSeek(0),
-	reader(r), 
-	segment(seg), 
-	in(instrm),
-	bytes(NULL), 
-	dirty(false){
-  //Func - Constructor
-  //Pre  - instrm is a valid reference to an IndexInput
-  //Post - A Norm instance has been created with an empty bytes array
-
-	 bytes = NULL;
-     dirty = false;
-  }
-
  SegmentReader::Norm::Norm(IndexInput* instrm, int32_t n, int64_t ns, SegmentReader* r, const char* seg): 
 	number(n), 
 	normSeek(ns),
@@ -70,22 +54,16 @@ CL_NS_DEF(index)
 
   }
 
-  void SegmentReader::Norm::reWrite(){
-      char buf[CL_MAX_PATH];
-      char fileName[CL_MAX_PATH];
-      sprintf(buf,"%s.tmp",segment);
-
+  void SegmentReader::Norm::reWrite(SegmentInfo* si){
       // NOTE: norms are re-written in regular directory, not cfs
-      IndexOutput* out = reader->getDirectory()->createOutput(buf);
+      si.advanceNormGen(this.number);
+      IndexOutput* out = reader->getDirectory()->createOutput(si.getNormFileName(this.number));
       try {
         out->writeBytes(bytes, reader->maxDoc());
-      }_CLFINALLY( out->close(); _CLDELETE(out) );
-
-	  if ( reader->cfsReader == NULL )
-		sprintf(fileName,"%s.f%d",segment,number);
-	  else // use a different file name if we have compound format
-		sprintf(fileName,"%s.s%d",segment,number);
-      reader->getDirectory()->renameFile(buf, fileName);
+      }_CLFINALLY(
+        out->close();
+        _CLDELETE(out)
+      );
       this->dirty = false;
     }
 
@@ -125,96 +103,87 @@ CL_NS_DEF(index)
       // so that if an index update removes them we'll still have them
       freqStream       = NULL;
       proxStream       = NULL;
-      
-	  //instantiate a buffer large enough to hold a directory path
-      char buf[CL_MAX_PATH];
 
+    segment = si.name;
+    this.si = si;
+    this.readBufferSize = readBufferSize;
+
+    boolean success = false;
+
+    try {
       // Use compound file directory for some files, if it exists
-      Directory* cfsDir = getDirectory();
-      SegmentName(buf, CL_MAX_PATH, ".cfs");
-      if (cfsDir->fileExists(buf)) {
-         cfsReader = _CLNEW CompoundFileReader(cfsDir, buf);
-         cfsDir = cfsReader;
-	  }else {
-		 cfsReader = NULL;
-	  }
+      Directory cfsDir = directory();
+      if (si.getUseCompoundFile()) {
+        cfsReader = new CompoundFileReader(directory(), segment + "." + IndexFileNames.COMPOUND_FILE_EXTENSION, readBufferSize);
+        cfsDir = cfsReader;
+      }
 
-	  //Create the name of the field info file with suffix .fnm in buf
-      SegmentName(buf, CL_MAX_PATH, ".fnm");
-      fieldInfos = _CLNEW FieldInfos(cfsDir, buf );
+      final Directory storeDir;
 
-      //Condition check to see if fieldInfos points to a valid instance
-      CND_CONDITION(fieldInfos != NULL,"No memory could be allocated for fieldInfos");
+      if (doOpenStores) {
+        if (si.getDocStoreOffset() != -1) {
+          if (si.getDocStoreIsCompoundFile()) {
+            storeCFSReader = new CompoundFileReader(directory(), si.getDocStoreSegment() + "." + IndexFileNames.COMPOUND_FILE_STORE_EXTENSION, readBufferSize);
+            storeDir = storeCFSReader;
+          } else {
+            storeDir = directory();
+          }
+        } else {
+          storeDir = cfsDir;
+        }
+      } else
+        storeDir = null;
 
-	  //Create the name of the frequence file with suffix .frq in buf
-      SegmentName(buf,CL_MAX_PATH, ".frq");
+      // No compound file exists - use the multi-file format
+      fieldInfos = new FieldInfos(cfsDir, segment + ".fnm");
 
-	  //Open an IndexInput freqStream to the frequency file
-#ifdef LUCENE_FS_MMAP
-	  if ( cfsDir->getDirectoryType() == FSDirectory::DirectoryType() ){
-		  FSDirectory* fsdir = (FSDirectory*)cfsDir;
-		  freqStream = fsdir->openMMapFile( buf );
-      } else if (strcmp(cfsDir->getDirectoryType(), "CFS") == 0) { //todo: we should have a CFS Directory
-          freqStream = cfsDir->openInput(buf,true);
-	  }else
-#endif
-		freqStream = cfsDir->openInput( buf );
+      final String fieldsSegment;
 
-      //Condition check to see if freqStream points to a valid instance and was able to open the
-	  //frequency file
-      CND_CONDITION(freqStream != NULL, "IndexInput freqStream could not open the frequency file");
+      if (si.getDocStoreOffset() != -1)
+        fieldsSegment = si.getDocStoreSegment();
+      else
+        fieldsSegment = segment;
 
-	  //Create the name of the prox file with suffix .prx in buf
-      SegmentName(buf, CL_MAX_PATH,".prx");
+      if (doOpenStores) {
+        fieldsReader = new FieldsReader(storeDir, fieldsSegment, fieldInfos, readBufferSize,
+                                        si.getDocStoreOffset(), si.docCount);
 
-	  //Open an IndexInput proxStream to the prox file
-#ifdef LUCENE_FS_MMAP
-    if (cfsDir->getDirectoryType() == FSDirectory::DirectoryType()) {
-        FSDirectory* fsdir = (FSDirectory*)cfsDir;
-        proxStream = fsdir->openMMapFile( buf );
-    } else if (strcmp(cfsDir->getDirectoryType(), "CFS") == 0) {
-        proxStream = cfsDir->openInput(buf,true);
-    } else
-#endif
-      proxStream = cfsDir->openInput( buf );
+        // Verify two sources of "maxDoc" agree:
+        if (si.getDocStoreOffset() == -1 && fieldsReader.size() != si.docCount) {
+          throw new CorruptIndexException("doc counts differ for segment " + si.name + ": fieldsReader shows " + fieldsReader.size() + " but segmentInfo shows " + si.docCount);
+        }
+      }
 
-	  //Condition check to see if proxStream points to a valid instance and was able to open the
-	  //prox file
-      CND_CONDITION(proxStream != NULL, "IndexInput proxStream could not open proximity file");
+      tis = new TermInfosReader(cfsDir, segment, fieldInfos, readBufferSize);
 
-	  //Instantiate a FieldsReader for reading the Field Info File
-      fieldsReader = _CLNEW FieldsReader(cfsDir, segment, fieldInfos);
+      loadDeletedDocs();
 
-      //Condition check to see if fieldsReader points to a valid instance 
-      CND_CONDITION(fieldsReader != NULL,"No memory could be allocated for fieldsReader");
+      // make sure that all index files have been read or are kept open
+      // so that if an index update removes them we'll still have them
+      freqStream = cfsDir.openInput(segment + ".frq", readBufferSize);
+      proxStream = cfsDir.openInput(segment + ".prx", readBufferSize);
+      openNorms(cfsDir, readBufferSize);
 
-	  //Instantiate a TermInfosReader for reading the Term Dictionary .tis file
-      tis = _CLNEW TermInfosReader(cfsDir, segment, fieldInfos);
+      if (doOpenStores && fieldInfos.hasVectors()) { // open term vector files only as needed
+        final String vectorsSegment;
+        if (si.getDocStoreOffset() != -1)
+          vectorsSegment = si.getDocStoreSegment();
+        else
+          vectorsSegment = segment;
+        termVectorsReaderOrig = new TermVectorsReader(storeDir, vectorsSegment, fieldInfos, readBufferSize, si.getDocStoreOffset(), si.docCount);
+      }
+      success = true;
+    } finally {
 
-      //Condition check to see if tis points to a valid instance 
-      CND_CONDITION(tis != NULL,"No memory could be allocated for tis");
-
-	  //Check if the segment has deletion according to the SegmentInfo instance si->
-      // NOTE: the bitvector is stored using the regular directory, not cfs
-      if (hasDeletions(si)){
-		  //Create a deletion file with suffix .del          
-          SegmentName(buf, CL_MAX_PATH,".del");
-		  //Instantiate a BitVector that manages which documents have been deleted
-          deletedDocs = _CLNEW BitSet(getDirectory(), buf );
-       }
-
-	  //Open the norm file. There's a norm file for each indexed field with a byte for each document. 
-	  //The .f[0-9]* file contains, for each document, a byte that encodes a value 
-	  //that is multiplied into the score for hits on that field
-      hasSingleNorm = si->hasSingleNormFile;
-      singleNormStream = NULL;
-      openNorms(cfsDir);
-
-      if (fieldInfos->hasVectors()) { // open term vector files only as needed
-         termVectorsReaderOrig = _CLNEW TermVectorsReader(cfsDir, segment, fieldInfos);
-      }else
-		 termVectorsReaderOrig = NULL;
-            
+      // With lock-less commits, it's entirely possible (and
+      // fine) to hit a FileNotFound exception above.  In
+      // this case, we want to explicitly close any subset
+      // of things that were opened so that we don't have to
+      // wait for a GC to do so.
+      if (!success) {
+        doClose();
+      }
+    }
   }
 
   SegmentReader::~SegmentReader(){
@@ -237,29 +206,26 @@ CL_NS_DEF(index)
     //termVectorsLocal->unregister(this);
   }
 
-  void SegmentReader::doCommit(){
-   char bufdel[CL_MAX_PATH];
-   strcpy(bufdel,segment);
-   strcat(bufdel,".del");
+  void SegmentReader::commitChanges(){
+    if (deletedDocsDirty) {               // re-write deleted
+      si.advanceDelGen();
 
-    if (deletedDocsDirty) {               // re-write deleted 
-		char buftmp[CL_MAX_PATH];
-		strcpy(buftmp,segment);
-		strcat(buftmp,".tmp");
-		deletedDocs->write(getDirectory(), buftmp);
-		getDirectory()->renameFile(buftmp,bufdel);
+      // We can write directly to the actual name (vs to a
+      // .tmp & renaming it) because the file is not live
+      // until segments file is written:
+      deletedDocs.write(directory(), si.getDelFileName());
     }
-    if(undeleteAll && getDirectory()->fileExists(bufdel)){
-      getDirectory()->deleteFile(bufdel, true);
+    if (undeleteAll && si.hasDeletions()) {
+      si.clearDelGen();
     }
-    if (normsDirty) {               // re-write norms 
-	  NormsType::iterator itr = _norms.begin();
-      while (itr != _norms.end()) {
-        Norm* norm = itr->second;
-        if (norm->dirty) {
-          norm->reWrite();
+    if (normsDirty) {               // re-write norms
+      si.setNumFields(fieldInfos.size());
+      Iterator it = norms.values().iterator();
+      while (it.hasNext()) {
+        Norm norm = (Norm) it.next();
+        if (norm.dirty) {
+          norm.reWrite(si);
         }
-        ++itr;
       }
     }
     deletedDocsDirty = false;
@@ -276,64 +242,71 @@ CL_NS_DEF(index)
       CND_PRECONDITION(fieldsReader != NULL, "fieldsReader is NULL");
       CND_PRECONDITION(tis != NULL, "tis is NULL");
 
-	  //Close the fieldsReader
-      fieldsReader->close();
-	  //Close the TermInfosReader
-      tis->close();
+      boolean hasReferencedReader = (referencedSegmentReader != null);
 
-	  //Close the frequency stream
-	  if (freqStream != NULL){
-          freqStream->close();
-	  }
-	  //Close the prox stream
-	  if (proxStream != NULL){
-         proxStream->close();
-	   }
+      if (hasReferencedReader) {
+        referencedSegmentReader.decRefReaderNotNorms();
+        referencedSegmentReader = null;
+      }
 
-	  //Close the norm file
-      closeNorms();
-    
-     if (termVectorsReaderOrig != NULL) 
-        termVectorsReaderOrig->close();
+      deletedDocs = null;
 
-     if (cfsReader != NULL)
-         cfsReader->close();
+      // close the single norms stream
+      if (singleNormStream != null) {
+        // we can close this stream, even if the norms
+        // are shared, because every reader has it's own
+        // singleNormStream
+        singleNormStream.close();
+        singleNormStream = null;
+      }
+
+      // re-opened SegmentReaders have their own instance of FieldsReader
+      if (fieldsReader != null) {
+        fieldsReader->close();
+      }
+
+      if (!hasReferencedReader) {
+        // close everything, nothing is shared anymore with other readers
+        if (tis != null) {
+          tis->close();
+        }
+
+        //Close the frequency stream
+        if (freqStream != NULL){
+              freqStream->close();
+        }
+        //Close the prox stream
+        if (proxStream != NULL){
+            proxStream->close();
+        }
+
+        if (termVectorsReaderOrig != NULL)
+            termVectorsReaderOrig->close();
+
+        if (cfsReader != NULL)
+          cfsReader->close();
+
+        if (storeCFSReader != null)
+          storeCFSReader.close();
+
+        // maybe close directory
+        super.doClose();
+      }
   }
 
   bool SegmentReader::hasDeletions()  const{
+    // Don't call ensureOpen() here (it could affect performance)
       return deletedDocs != NULL;
   }
 
   //static 
   bool SegmentReader::usesCompoundFile(SegmentInfo* si) {
-    char buf[CL_MAX_PATH];
-	_snprintf(buf, CL_MAX_PATH, "%s.cfs", si->name);
-    //strcpy(buf,si->name);
-    //strcat(buf,".cfs");
-    return si->getDir()->fileExists(buf);
+    return si.getUseCompoundFile();
   }
   
   //static
   bool SegmentReader::hasSeparateNorms(SegmentInfo* si) {
-  	vector<string> names;
-  	si->getDir()->list(&names);
-  	
-    char pattern[CL_MAX_PATH];
-	_snprintf(pattern, CL_MAX_PATH, "%s.s", si->name);
-    //strcpy(pattern,si->name);
-    //strcat(pattern,".s");
-    size_t patternLength = strlen(pattern);
-
-    string res;
-	vector<string>::iterator itr = names.begin();
-    while ( itr != names.end() ){
-		if ( (*itr).length()>patternLength && strncmp((*itr).c_str(),pattern,patternLength) == 0 ){
-			if ( (*itr).at(patternLength) >= '0' && (*itr).at(patternLength) <= '9' )
-				return true;
-		}
-		itr++;
-    }
-    return false;
+    return si.hasSeparateNorms();
   }
 
   bool SegmentReader::hasDeletions(const SegmentInfo* si) {
@@ -342,13 +315,8 @@ CL_NS_DEF(index)
   //Pre  - si-> holds a valid reference to an SegmentInfo instance
   //Post - if the segement contains deleteions true is returned otherwise flas
 
-	  //Create a buffer f of length CL_MAX_PATH
-      char f[CL_MAX_PATH];
-      //SegmentReader::segmentname(f, si->name,_T(".del"),-1 );
-      //create the name of the deletion file
-	  Misc::segmentname(f,CL_MAX_PATH, si->name,".del",-1 );
-	  //Check if the deletion file exists and return the result
-      return si->getDir()->fileExists( f );
+    // Don't call ensureOpen() here (it could affect performance)
+    return si.hasDeletions();
   }
 
 	//synchronized
@@ -389,46 +357,8 @@ CL_NS_DEF(index)
   //Func - Returns all file names managed by this SegmentReader
   //Pre  - segment != NULL
   //Post - All filenames managed by this SegmentRead have been returned
- 
-     CND_PRECONDITION(segment != NULL, "segment is NULL");
 
-     char* temp = NULL;
-     #define _ADD_SEGMENT(ext) temp = SegmentName( ext ); if ( getDirectory()->fileExists(temp) ) retarray.push_back(temp); else _CLDELETE_CaARRAY(temp);
-								
-     //Add the name of the Field Info file
-     _ADD_SEGMENT(".cfs" );
-     _ADD_SEGMENT(".fnm" );
-     _ADD_SEGMENT(".fdx" );
-     _ADD_SEGMENT(".fdt" );
-     _ADD_SEGMENT(".tii" );
-     _ADD_SEGMENT(".tis" );
-     _ADD_SEGMENT(".frq" );
-     _ADD_SEGMENT(".prx" );
-     _ADD_SEGMENT(".del" );
-     _ADD_SEGMENT(".tvx" );
-     _ADD_SEGMENT(".tvd" );
-     _ADD_SEGMENT(".tvf" );
-     _ADD_SEGMENT(".tvp" );
-
-      //iterate through the field infos
-			FieldInfo* fi;
-      for (size_t i = 0; i < fieldInfos->size(); ++i) {
-          //Get the field info for the i-th field   
-          fi = fieldInfos->fieldInfo(i);
-          //Check if the field has been indexed
-          if (fi->isIndexed && !fi->omitNorms){
-			  char* name;
-			  if ( cfsReader == NULL )
-				  name = SegmentName(".f", i);
-			  else
-				  name = SegmentName(".s", i);
-              //The field has been indexed so add its norm file
-              if ( getDirectory()->fileExists(name) )
-				  retarray.push_back( name );
-			  else
-				  _CLDELETE_CaARRAY(name);
-          }
-       }
+    return new Vector(si.files());
   }
 
   TermEnum* SegmentReader::terms() const {
@@ -438,6 +368,7 @@ CL_NS_DEF(index)
 
       CND_PRECONDITION(tis != NULL, "tis is NULL");
 
+      ensureOpen();
       return tis->terms();
   }
 
@@ -450,17 +381,20 @@ CL_NS_DEF(index)
       CND_PRECONDITION(t   != NULL, "t is NULL");
       CND_PRECONDITION(tis != NULL, "tis is NULL");
 
+      ensureOpen();
       return tis->terms(t);
   }
 
-  bool SegmentReader::document(int32_t n, Document& doc) {
+  bool SegmentReader::document(int32_t n, Document& doc, FieldSelector* fieldSelector) {
   //Func - writes the fields of document n into doc
   //Pre  - n >=0 and identifies the document n
   //Post - if the document has been deleted then an exception has been thrown
   //       otherwise a reference to the found document has been returned
 
       SCOPED_LOCK_MUTEX(THIS_LOCK)
-      
+
+      ensureOpen();
+    
       CND_PRECONDITION(n >= 0, "n is a negative number");
 
 	  //Check if the n-th document has been marked deleted
@@ -469,7 +403,7 @@ CL_NS_DEF(index)
        }
 
 	   //Retrieve the n-th document
-       return fieldsReader->doc(n, doc);
+       return fieldsReader->doc(n, doc, fieldSelector);
   }
 
 
@@ -493,6 +427,7 @@ CL_NS_DEF(index)
   //Pre  - true
   //Post - An unpositioned TermDocs enumerator has been returned
 
+        ensureOpen();
        return _CLNEW SegmentTermDocs(this);
   }
 
@@ -501,6 +436,7 @@ CL_NS_DEF(index)
   //Pre  - true
   //Post - An unpositioned TermPositions enumerator has been returned
 
+        ensureOpen();
       return _CLNEW SegmentTermPositions(this);
   }
 
@@ -508,6 +444,8 @@ CL_NS_DEF(index)
   //Func - Returns the number of documents which contain the term t
   //Pre  - t holds a valid reference to a Term
   //Post - The number of documents which contain term t has been returned
+
+        ensureOpen();
 
       //Get the TermInfo ti for Term  t in the set
       TermInfo* ti = tis->get(t);
@@ -530,6 +468,8 @@ CL_NS_DEF(index)
   //Pre  - true
   //Post - The actual number of documents in the segments
 
+        ensureOpen();
+
 	  //Get the number of all the documents in the segment including the ones that have 
 	  //been marked deleted
       int32_t n = maxDoc();
@@ -549,10 +489,14 @@ CL_NS_DEF(index)
   //Pre  - true
   //Post - The total number of documents in the segment has been returned
 
-      return fieldsReader->size();
+    // Don't call ensureOpen() here (it could affect performance)
+
+      return si.docCount;
   }
 
 void SegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray){
+  ensureOpen();
+
 	size_t len = fieldInfos->size();
 	for (size_t i = 0; i < len; i++) {
 		FieldInfo* fi = fieldInfos->fieldInfo(i);
@@ -562,24 +506,26 @@ void SegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor&
 		}else {
 			if (!fi->isIndexed && (fldOption & IndexReader::UNINDEXED) )
 				v=true;
-			if (fi->isIndexed && (fldOption & IndexReader::INDEXED) )
+			else if (fi->isIndexed && (fldOption & IndexReader::INDEXED) )
 				v=true;
-			if (fi->isIndexed && fi->storeTermVector == false && ( fldOption & IndexReader::INDEXED_NO_TERMVECTOR) )
+      else if (fi->storePayloads && (fieldOption & IndexReader::STORES_PAYLOADS) )
+        v=true;
+			else if (fi->isIndexed && fi->storeTermVector == false && ( fldOption & IndexReader::INDEXED_NO_TERMVECTOR) )
 				v=true;
-			if ( (fldOption & IndexReader::TERMVECTOR) &&
+			else if ( (fldOption & IndexReader::TERMVECTOR) &&
 				    fi->storeTermVector == true &&
 					fi->storePositionWithTermVector == false &&
 					fi->storeOffsetWithTermVector == false )
 				v=true;
-			if (fi->isIndexed && fi->storeTermVector && (fldOption & IndexReader::INDEXED_WITH_TERMVECTOR) )
+			else if (fi->isIndexed && fi->storeTermVector && (fldOption & IndexReader::INDEXED_WITH_TERMVECTOR) )
 				v=true;
-			if (fi->storePositionWithTermVector && fi->storeOffsetWithTermVector == false && 
+			else if (fi->storePositionWithTermVector && fi->storeOffsetWithTermVector == false && 
 					(fldOption & IndexReader::TERMVECTOR_WITH_POSITION))
 				v=true;
-			if (fi->storeOffsetWithTermVector && fi->storePositionWithTermVector == false && 
+			else if (fi->storeOffsetWithTermVector && fi->storePositionWithTermVector == false && 
 					(fldOption & IndexReader::TERMVECTOR_WITH_OFFSET) )
 				v=true;
-			if ((fi->storeOffsetWithTermVector && fi->storePositionWithTermVector) &&
+			else if ((fi->storeOffsetWithTermVector && fi->storePositionWithTermVector) &&
 					(fldOption & IndexReader::TERMVECTOR_WITH_POSITION_OFFSET) )
 				v=true;
 		}
@@ -589,6 +535,7 @@ void SegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor&
 }
 
 bool SegmentReader::hasNorms(const TCHAR* field) const{
+    ensureOpen();
 	return _norms.find(field) != _norms.end();
 }
 
@@ -604,36 +551,38 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
     CND_PRECONDITION(field != NULL, "field is NULL");
     CND_PRECONDITION(bytes != NULL, "field is NULL");
 
-	SCOPED_LOCK_MUTEX(THIS_LOCK)
-    
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+
+    ensureOpen();
     Norm* norm = _norms.get(field);
-	if ( norm == NULL ){
-		memcpy(bytes, fakeNorms(), maxDoc());
-		return;
-	}
-    if (norm->bytes != NULL) { // can copy from cache
-	  memcpy(bytes, norm->bytes, maxDoc());
+    if ( norm == NULL ){
+      memcpy(bytes, fakeNorms(), maxDoc());
       return;
     }
 
-   IndexInput* _normStream = norm->in->clone();
-   CND_PRECONDITION(_normStream != NULL, "normStream==NULL")
 
-    // read from disk
-    try{ 
-       _normStream->seek(0);
-       _normStream->readBytes(bytes, maxDoc());
-    }_CLFINALLY(
-        //Have the normstream closed
-        _normStream->close();
-        //Destroy the normstream
-        _CLDELETE( _normStream );
-	);	
+    {SCOPED_MUTEX_LOCK(norm->THIS_LOCK)
+      if (norm->bytes != NULL) { // can copy from cache
+      memcpy(bytes, norm->bytes, maxDoc());
+        return;
+      }
+
+      // Read from disk.  norm.in may be shared across  multiple norms and
+      // should only be used in a synchronized context.
+      IndexInput normStream;
+      if (norm.useSingleNormStream) {
+        normStream = singleNormStream;
+      } else {
+        normStream = norm.in;
+      }
+      normStream.seek(norm.normSeek);
+      normStream.readBytes(bytes, offset, maxDoc());
+    }
   }
 
   uint8_t* SegmentReader::createFakeNorms(int32_t size) {
     uint8_t* ones = _CL_NEWARRAY(uint8_t,size);
-	memset(ones, DefaultSimilarity::encodeNorm(1.0f), size);
+    memset(ones, DefaultSimilarity::encodeNorm(1.0f), size);
     return ones;
   }
 
@@ -644,17 +593,21 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
   }
   // can return null if norms aren't stored
   uint8_t* SegmentReader::getNorms(const TCHAR* field) {
-	SCOPED_LOCK_MUTEX(THIS_LOCK)
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
     Norm* norm = _norms.get(field);
-    if (norm == NULL) 
-		return NULL;  // not indexed, or norms not stored
+    if (norm == NULL)  return NULL;  // not indexed, or norms not stored
 
-    if (norm->bytes == NULL) {                     // value not yet read
-      uint8_t* bytes = _CL_NEWARRAY(uint8_t, maxDoc());
-      norms(field, bytes);
-      norm->bytes = bytes;                         // cache it
+    {SCOPED_MUTEX_LOCK(norm->THIS_LOCK)
+      if (norm->bytes == NULL) {                     // value not yet read
+        uint8_t* bytes = _CL_NEWARRAY(uint8_t, maxDoc());
+        norms(field, bytes);
+        norm->bytes = bytes;                         // cache it
+        // it's OK to close the underlying IndexInput as we have cached the
+        // norms and will never read them again.
+        norm->close();
+      }
+      return norm->bytes;
     }
-    return norm->bytes;
   }
 
   uint8_t* SegmentReader::norms(const TCHAR* field) {
@@ -666,7 +619,8 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
     CND_PRECONDITION(field != NULL, "field is NULL");
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-	uint8_t* bytes = getNorms(field);
+    ensureOpen();
+    uint8_t* bytes = getNorms(field);
     if (bytes==NULL) 
 		bytes=fakeNorms();
     return bytes;
@@ -715,82 +669,51 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
       Misc::segmentname(buffer,bufferLen,segment,ext,x);
   }
-  void SegmentReader::openNorms(Directory* cfsDir) {
+  void SegmentReader::openNorms(Directory* cfsDir, int32_t readBufferSize) {
   //Func - Open all norms files for all fields
   //       Creates for each field a norm Instance with an open inputstream to 
   //       a corresponding norm file ready to be read
   //Pre  - true
   //Post - For each field a norm instance has been created with an open inputstream to
   //       a corresponding norm file ready to be read
-
-	  int64_t nextNormSeek = 0;
-	  int32_t max = maxDoc();
-	  
-      //Iterate through all the fields
-      for (size_t i = 0; i < fieldInfos->size(); i++) {
-		  //Get the FieldInfo for the i-th field
-          FieldInfo* fi = fieldInfos->fieldInfo(i);
-          //Check if the field is indexed
-		  if (fi->isIndexed && !fi->omitNorms ) {
-		      //Allocate a buffer
-              char fileName[CL_MAX_PATH];
-			  
-			  // look first if there are separate norms in compound format
-              SegmentName(fileName,CL_MAX_PATH, ".s", fi->number);
-			  Directory* d = getDirectory();
-			  if(!d->fileExists(fileName)){
-				SegmentName(fileName,CL_MAX_PATH, ".f", fi->number);
-				d = cfsDir;
-			  }
-             
-			  IndexInput* normInput = NULL;
-			  int64_t normSeek;
-			  
-			  if ( hasSingleNorm == 1 ) {
-				  
-				  normSeek = nextNormSeek;
-				  SegmentName( fileName, CL_MAX_PATH, ".nrm" );
-				  if ( singleNormStream == NULL ) {
-					  singleNormStream = d->openInput( fileName );
-				  }
-				  normInput = singleNormStream;
-				  
-			  } else {
-				  
-				  normSeek = 0;
-				  normInput = d->openInput( fileName );
-				  
-			  }
-			  
-			  _norms.put(fi->name, _CLNEW Norm( normInput, fi->number, normSeek, this, segment ));
-			  normSeek += max;
-			  
-          }
+    long nextNormSeek = SegmentMerger.NORMS_HEADER.length; //skip header (header unused for now)
+    int maxDoc = maxDoc();
+    for (int i = 0; i < fieldInfos.size(); i++) {
+      FieldInfo fi = fieldInfos.fieldInfo(i);
+      if (norms.containsKey(fi.name)) {
+        // in case this SegmentReader is being re-opened, we might be able to
+        // reuse some norm instances and skip loading them here
+        continue;
       }
-  }
+      if (fi.isIndexed && !fi.omitNorms) {
+        Directory d = directory();
+        String fileName = si.getNormFileName(fi.number);
+        if (!si.hasSeparateNorms(fi.number)) {
+          d = cfsDir;
+        }
 
-  void SegmentReader::closeNorms() {
-  //Func - Close all the norms stored in norms
-  //Pre  - true
-  //Post - All the norms have been destroyed
+        // singleNormFile means multiple norms share this file
+        boolean singleNormFile = fileName.endsWith("." + IndexFileNames.NORMS_EXTENSION);
+        IndexInput normInput = null;
+        long normSeek;
 
-    SCOPED_LOCK_MUTEX(_norms_LOCK)
-	//Create an interator initialized at the beginning of norms
-	NormsType::iterator itr = _norms.begin();
-	//Iterate through all the norms
-    while (itr != _norms.end()) {
-        //Get the norm
-        Norm* n = itr->second;
-        //delete the norm n
-        _CLDELETE(n);
-        //Move the interator to the next norm in the norms collection.
-	    //Note ++ is an overloaded operator
-        ++itr;
-     }
-    _norms.clear(); //bvk: they're deleted, so clear them so that they are not re-used
-    if ( singleNormStream != NULL ) {
-    	singleNormStream->close();
-    	_CLDELETE(singleNormStream);
+        if (singleNormFile) {
+          normSeek = nextNormSeek;
+          if (singleNormStream==null) {
+            singleNormStream = d.openInput(fileName, readBufferSize);
+          }
+          // All norms in the .nrm file can share a single IndexInput since
+          // they are only used in a synchronized context.
+          // If this were to change in the future, a clone could be done here.
+          normInput = singleNormStream;
+        } else {
+          normSeek = 0;
+          normInput = d.openInput(fileName);
+        }
+
+        norms.put(fi.name, new Norm(normInput, singleNormFile, fi.number, normSeek));
+        nextNormSeek += maxDoc; // increment also if some norms are separate
+      }
     }
   }
 
@@ -805,7 +728,8 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 	}
 
    TermFreqVector* SegmentReader::getTermFreqVector(int32_t docNumber, const TCHAR* field){
-		if ( field != NULL ){
+    ensureOpen();
+ 		if ( field != NULL ){
 			// Check if this field is invalid or has no stored term vector
 			FieldInfo* fi = fieldInfos->fieldInfo(field);
 			if (fi == NULL || !fi->storeTermVector || termVectorsReaderOrig == NULL ) 
@@ -818,6 +742,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
   }
 
   ObjectArray<TermFreqVector>* SegmentReader::getTermFreqVectors(int32_t docNumber) {
+    ensureOpen();
     if (termVectorsReaderOrig == NULL)
       return NULL;
     

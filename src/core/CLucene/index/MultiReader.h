@@ -16,28 +16,37 @@ CL_CLASS_DEF(document,Document)
 
 CL_NS_DEF(index)
 
+/** An IndexReader which reads multiple indexes, appending their content.
+*/
 class CLUCENE_EXPORT MultiReader:public IndexReader{
 private:
-    class Internal;
-    Internal* internal;
+  class Internal;
+  Internal* internal;
 	int32_t readerIndex(const int32_t n) const;
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
+  CL_NS(util)::ValueArray<bool> decrefOnClose; //remember which subreaders to decRef on close
+
+
 protected:
-	IndexReader** subReaders;
-	int32_t subReadersLength;
-	int32_t* starts;			  // 1st docno for each segment
+	CL_NS(util)::ObjectArray<IndexReader>* subReaders;
+	CL_NS(util)::ValueArray<int32_t> starts;			  // 1st docno for each segment
 
 	void doSetNorm(int32_t n, const TCHAR* field, uint8_t value);
 	void doUndeleteAll();
 	void doCommit();
-	// synchronized
 	void doClose();
-	
-	// synchronized
 	void doDelete(const int32_t n);
 public:
-	/** Construct reading the named set of readers. */
+  /**
+   * <p>Construct a MultiReader aggregating the named set of (sub)readers.
+   * Directory locking for delete, undeleteAll, and setNorm operations is
+   * left to the subreaders. </p>
+   * @param closeSubReaders indicates whether the subreaders should be closed
+   * when this MultiReader is closed
+   * @param subReaders set of (sub)readers
+   * @throws IOException
+   */
 	MultiReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, IndexReader** subReaders);
 
 	/**
@@ -48,9 +57,85 @@ public:
 	* @param subReaders set of (sub)readers
 	* @throws IOException
 	*/
-	MultiReader(IndexReader** subReaders);
+	MultiReader(CL_NS(util)::ObjectArray<IndexReader>* subReaders, bool closeSubReaders=true);
 
 	~MultiReader();
+
+
+  /**
+   * Tries to reopen the subreaders.
+   * <br>
+   * If one or more subreaders could be re-opened (i. e. subReader.reopen()
+   * returned a new instance != subReader), then a new MultiReader instance
+   * is returned, otherwise this instance is returned.
+   * <p>
+   * A re-opened instance might share one or more subreaders with the old
+   * instance. Index modification operations result in undefined behavior
+   * when performed before the old instance is closed.
+   * (see {@link IndexReader#reopen()}).
+   * <p>
+   * If subreaders are shared, then the reference count of those
+   * readers is increased to ensure that the subreaders remain open
+   * until the last referring reader is closed.
+   *
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  public IndexReader reopen() throws CorruptIndexException, IOException {
+    ensureOpen();
+
+    boolean reopened = false;
+    IndexReader[] newSubReaders = new IndexReader[subReaders.length];
+    boolean[] newDecrefOnClose = new boolean[subReaders.length];
+
+    boolean success = false;
+    try {
+      for (int i = 0; i < subReaders.length; i++) {
+        newSubReaders[i] = subReaders[i].reopen();
+        // if at least one of the subreaders was updated we remember that
+        // and return a new MultiReader
+        if (newSubReaders[i] != subReaders[i]) {
+          reopened = true;
+          // this is a new subreader instance, so on close() we don't
+          // decRef but close it
+          newDecrefOnClose[i] = false;
+        }
+      }
+
+      if (reopened) {
+        for (int i = 0; i < subReaders.length; i++) {
+          if (newSubReaders[i] == subReaders[i]) {
+            newSubReaders[i].incRef();
+            newDecrefOnClose[i] = true;
+          }
+        }
+
+        MultiReader mr = new MultiReader(newSubReaders);
+        mr.decrefOnClose = newDecrefOnClose;
+        success = true;
+        return mr;
+      } else {
+        success = true;
+        return this;
+      }
+    } finally {
+      if (!success && reopened) {
+        for (int i = 0; i < newSubReaders.length; i++) {
+          if (newSubReaders[i] != null) {
+            try {
+              if (newDecrefOnClose[i]) {
+                newSubReaders[i].decRef();
+              } else {
+                newSubReaders[i].close();
+              }
+            } catch (IOException ignore) {
+              // keep going - we want to clean up as much as possible
+            }
+          }
+        }
+      }
+    }
+  }
 
 	/** Return an array of term frequency vectors for the specified document.
 	*  The array contains a vector for each vectorized field in the document.
@@ -62,20 +147,29 @@ public:
 	TermFreqVector* getTermFreqVector(int32_t n, const TCHAR* field);
 
 
-	// synchronized
+  public void getTermFreqVector(int docNumber, String field, TermVectorMapper mapper) throws IOException {
+    ensureOpen();
+    int i = readerIndex(docNumber);        // find segment num
+    subReaders[i].getTermFreqVector(docNumber - starts[i], field, mapper);
+  }
+
+  public void getTermFreqVector(int docNumber, TermVectorMapper mapper) throws IOException {
+    ensureOpen();
+    int i = readerIndex(docNumber);        // find segment num
+    subReaders[i].getTermFreqVector(docNumber - starts[i], mapper);
+  }
+
+  public boolean isOptimized() {
+    return false;
+  }
+
 	int32_t numDocs();
-
 	int32_t maxDoc() const;
-
-	bool document(int32_t n, CL_NS(document)::Document& doc);
-
+	bool document(int32_t n, CL_NS(document)::Document& doc, FieldSelector* fieldSelector);
 	bool isDeleted(const int32_t n);
 	bool hasDeletions() const;
-
-	// synchronized
 	uint8_t* norms(const TCHAR* field);
 	void norms(const TCHAR* field, uint8_t* result);
-
 	TermEnum* terms() const;
 	TermEnum* terms(const Term* term) const;
 	
@@ -84,11 +178,37 @@ public:
 	TermDocs* termDocs() const;
 	TermPositions* termPositions() const;
 	
-		
 	/**
 	* @see IndexReader#getFieldNames(IndexReader.FieldOption fldOption)
 	*/
 	void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray);
+
+
+  /**
+   * Checks recursively if all subreaders are up to date.
+   */
+  public boolean isCurrent() throws CorruptIndexException, IOException {
+    for (int i = 0; i < subReaders.length; i++) {
+      if (!subReaders[i].isCurrent()) {
+        return false;
+      }
+    }
+
+    // all subreaders are up to date
+    return true;
+  }
+
+  /** Not implemented.
+   * @throws UnsupportedOperationException
+   */
+  public long getVersion() {
+    throw new UnsupportedOperationException("MultiReader does not support this method.");
+  }
+
+  // for testing
+  IndexReader[] getSubReaders() {
+    return subReaders;
+  }
 };
 
 
