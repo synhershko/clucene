@@ -43,8 +43,8 @@ CL_NS_USE(util)
 			this->_twhat = STRDUP_TtoT(clone._twhat);
 	}
 	CLuceneError::~CLuceneError() throw(){
-		_CLDELETE_CARRAY(_twhat);
-		_CLDELETE_CaARRAY(_awhat);
+		_CLDELETE_LCARRAY(_twhat);
+		_CLDELETE_LCaARRAY(_awhat);
 	}
 	char* CLuceneError::what(){
 #ifdef _ASCII
