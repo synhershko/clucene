@@ -21,7 +21,7 @@ CL_NS_DEF(util)
 		int64_t resetPos;
 		int32_t col;
 		int32_t line;
-		// read character from stream return false on error
+		// read character from stream throws an exception on error
 		void readChar(TCHAR &);	
 	public:
 		BufferedReader* input;
