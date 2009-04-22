@@ -264,7 +264,7 @@ CL_NS_DEF(index)
 		* If non-null, information about loading segments_N files
 		* will be printed here.  @see #setInfoStream.
 		*/
-		//static PrintStream infoStream;
+		static std::ostream* infoStream;
 
 		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryCount=10);
 		LUCENE_STATIC_CONSTANT(int32_t,defaultGenFileRetryPauseMsec=50);
@@ -273,6 +273,8 @@ CL_NS_DEF(index)
 		segmentInfosType infos;
 
 		friend class IndexWriter; //allow IndexWriter to use counter
+
+    static void message(const char* _message, ...);
 
     public:
         SegmentInfos(bool deleteMembers=true, int32_t reserveCount=0);
@@ -383,6 +385,16 @@ CL_NS_DEF(index)
 		*/
 		static int64_t readCurrentVersion(CL_NS(store)::Directory* directory);
 
+
+    /** If non-null, information about retries when loading
+    * the segments file will be printed to this.
+    */
+    static void setInfoStream(std::ostream* infoStream);
+
+    /**
+    * @see #setInfoStream
+    */
+    static std::ostream* getInfoStream();
 
 		/**
 		* Advanced: set how many times to try loading the

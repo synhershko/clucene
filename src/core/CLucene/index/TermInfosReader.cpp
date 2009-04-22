@@ -112,9 +112,9 @@ CL_NS_DEF(index)
 	      //destroy their elements
 #ifdef _DEBUG
          for ( int32_t i=0; i<indexTermsLength;++i ){
-			 if ( indexTerms[i].__cl_refcount != 1 ){
-				 CND_PRECONDITION(indexTerms[i].__cl_refcount==1,"TermInfosReader term was references more than internally");
-			 }
+          if ( indexTerms[i].__cl_refcount != 1 ){
+            CND_PRECONDITION(indexTerms[i].__cl_refcount==1,"TermInfosReader term was references more than internally");
+          }
          }
 #endif
          //Delete the arrays
@@ -196,7 +196,7 @@ CL_NS_DEF(index)
 	//we are stuck with the terminfosreader of that thread. Hopefully this won't
 	//be too big a problem... solutions anyone?
   SegmentTermEnum* TermInfosReader::getEnum(){
-	SegmentTermEnum* termEnum = enumerators.get();
+    SegmentTermEnum* termEnum = enumerators.get();
     if (termEnum == NULL){
       termEnum = terms();
       enumerators.set(termEnum);
