@@ -30,7 +30,7 @@ CL_NS_DEF(index)
 		const FieldInfos* fieldInfos;
 
 		// The main fieldStream, used only for cloning.
-		CL_NS(sre)::IndexInput* cloneableFieldsStream;
+		CL_NS(store)::IndexInput* cloneableFieldsStream;
 
 		// This is a clone of cloneableFieldsStream used for reading documents.
 		// It should not be cloned outside of a synchronized context. 

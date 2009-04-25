@@ -1,9 +1,14 @@
 PROJECT(clucene-core)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${clucene-shared_SOURCE_DIR}/cmake")
 
 #define command line options
 INCLUDE (DefineOptions)
+
 DEFINE_OPTIONS(EXTRA_OPTIONS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
+
+#see if we can hide all symbols by default...
+MACRO_CHECK_GCC_VISIBILITY(_CL_HAVE_GCCVISIBILITYPATCH)
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis" ./CLucene/analysis/*)
@@ -67,14 +72,15 @@ SET(clucene_core_Files
 	./CLucene/index/FieldInfos.cpp
 	./CLucene/index/CompoundFile.cpp
 	./CLucene/index/DefaultSkipListReader.cpp
-	./CLucene/index/SegmentReader.cpp
+	#./CLucene/index/SegmentReader.cpp
 	./CLucene/index/TermVectorWriter.cpp
-	./CLucene/index/IndexReader.cpp
+	#./CLucene/index/IndexReader.cpp
 	./CLucene/index/SegmentTermPositions.cpp
 	./CLucene/index/SegmentMerger.cpp
 	./CLucene/index/IndexWriter.cpp
 	./CLucene/index/MultiLevelSkipListReader.cpp
-	./CLucene/index/MultiReader.cpp
+  #./CLucene/index/MultiReader.cpp
+  #./CLucene/index/MultiSegmentReader.cpp
 	./CLucene/index/Payload.cpp
 	./CLucene/index/SegmentTermEnum.cpp
 	./CLucene/index/TermInfo.cpp

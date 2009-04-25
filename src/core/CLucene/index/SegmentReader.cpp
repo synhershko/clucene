@@ -54,6 +54,28 @@ CL_NS_DEF(index)
 
   }
 
+  void SegmentReader::Norm::close(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    if (in != NULL && !useSingleNormStream) {
+      in->close();
+    }
+    in = null;
+  }
+
+  void SegmentReader::Norm::incRef() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    refCount++;
+  }
+
+  void SegmentReader::Norm::decRef(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    if (refCount == 1) {
+      close();
+    }
+    refCount--;
+  }
   void SegmentReader::Norm::reWrite(SegmentInfo* si){
       // NOTE: norms are re-written in regular directory, not cfs
       si.advanceNormGen(this.number);
@@ -89,12 +111,16 @@ CL_NS_DEF(index)
       //Post - All files of the segment have been read
 
       deletedDocs      = NULL;
-	  ones			   = NULL;
-	  //There are no documents yet marked as deleted
+      ones			   = NULL;
+      //There are no documents yet marked as deleted
       deletedDocsDirty = false;
       
       normsDirty=false;
       undeleteAll=false;
+
+      rollbackDeletedDocsDirty = false;
+      rollbackNormsDirty = false;
+      rollbackUndeleteAll = false;
 
 	  //Duplicate the name of the segment from SegmentInfo to segment
       segment          = STRDUP_AtoA(si->name);
@@ -103,6 +129,9 @@ CL_NS_DEF(index)
       // so that if an index update removes them we'll still have them
       freqStream       = NULL;
       proxStream       = NULL;
+
+      storeCFSReader = NULL;
+      referencedSegmentReader = NULL
 
     segment = si.name;
     this.si = si;
@@ -184,6 +213,76 @@ CL_NS_DEF(index)
         doClose();
       }
     }
+  }
+
+  public static SegmentReader SegmentReader::get(SegmentInfo si) throws CorruptIndexException, IOException {
+    return get(si.dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, true);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader SegmentReader::get(SegmentInfo si, boolean doOpenStores) throws CorruptIndexException, IOException {
+    return get(si.dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, doOpenStores);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  public static SegmentReader SegmentReader::get(SegmentInfo si, int readBufferSize) throws CorruptIndexException, IOException {
+    return get(si.dir, si, null, false, false, readBufferSize, true);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader SegmentReader::get(SegmentInfo si, int readBufferSize, boolean doOpenStores) throws CorruptIndexException, IOException {
+    return get(si.dir, si, null, false, false, readBufferSize, doOpenStores);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  public static SegmentReader SegmentReader::get(SegmentInfos sis, SegmentInfo si,
+                                  boolean closeDir) throws CorruptIndexException, IOException {
+    return get(si.dir, si, sis, closeDir, true, BufferedIndexInput.BUFFER_SIZE, true);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  public static SegmentReader SegmentReader::get(Directory dir, SegmentInfo si,
+                                  SegmentInfos sis,
+                                  boolean closeDir, boolean ownDir,
+                                  int readBufferSize)
+    throws CorruptIndexException, IOException {
+    return get(dir, si, sis, closeDir, ownDir, readBufferSize, true);
+  }
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  public static SegmentReader SegmentReader::get(Directory dir, SegmentInfo si,
+                                  SegmentInfos sis,
+                                  boolean closeDir, boolean ownDir,
+                                  int readBufferSize,
+                                  boolean doOpenStores)
+    throws CorruptIndexException, IOException {
+    SegmentReader instance;
+    try {
+      instance = (SegmentReader)IMPL.newInstance();
+    } catch (Exception e) {
+      throw new RuntimeException("cannot load SegmentReader class: " + e, e);
+    }
+    instance.init(dir, sis, closeDir);
+    instance.initialize(si, readBufferSize, doOpenStores);
+    return instance;
   }
 
   SegmentReader::~SegmentReader(){
@@ -494,6 +593,16 @@ CL_NS_DEF(index)
       return si.docCount;
   }
 
+
+  void SegmentReader::setTermInfosIndexDivisor(int32_t indexDivisor){
+    tis.setIndexDivisor(indexDivisor);
+  }
+
+  int32_t SegmentReader::getTermInfosIndexDivisor() {
+    return tis.getIndexDivisor();
+  }
+
+
 void SegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray){
   ensureOpen();
 
@@ -609,6 +718,48 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
       return norm->bytes;
     }
   }
+/**
+   * Increments the RC of this reader, as well as
+   * of all norms this reader is using
+   */
+  void SegmentReader::incRef() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    super.incRef();
+    Iterator it = norms.values().iterator();
+    while (it.hasNext()) {
+      Norm norm = (Norm) it.next();
+      norm.incRef();
+    }
+  }
+  void SegmentReader::decRef(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    super.decRef();
+    Iterator it = norms.values().iterator();
+    while (it.hasNext()) {
+      Norm norm = (Norm) it.next();
+      norm.decRef();
+    }
+  }
+  DirectoryIndexReader* SegmentReader::doReopen(SegmentInfos* infos){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    DirectoryIndexReader newReader;
+
+    if (infos.size() == 1) {
+      SegmentInfo si = infos.info(0);
+      if (segment.equals(si.name) && si.getUseCompoundFile() == SegmentReader.this.si.getUseCompoundFile()) {
+        newReader = reopenSegment(si);
+      } else {
+        // segment not referenced anymore, reopen not possible
+        // or segment format changed
+        newReader = SegmentReader.get(infos, infos.info(0), false);
+      }
+    } else {
+      return new MultiSegmentReader(directory, infos, closeDirectory, new SegmentReader[] {this}, null, null);
+    }
+
+    return newReader;
+  }
+
 
   uint8_t* SegmentReader::norms(const TCHAR* field) {
   //Func - Returns the bytes array that holds the norms of a named field
@@ -727,6 +878,14 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 		return tvReader;
 	}
 
+  FieldsReader* SegmentReader::getFieldsReader() {
+    return fieldsReader;
+  }
+
+  FieldInfos SegmentReader::getFieldInfos() {
+    return fieldInfos;
+  }
+
    TermFreqVector* SegmentReader::getTermFreqVector(int32_t docNumber, const TCHAR* field){
     ensureOpen();
  		if ( field != NULL ){
@@ -753,4 +912,248 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 	return termVectorsReader->get(docNumber);
   }
 
+
+  void SegmentReader::getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper) {
+    ensureOpen();
+    FieldInfo fi = fieldInfos.fieldInfo(field);
+    if (fi == null || !fi.storeTermVector || termVectorsReaderOrig == null)
+      return;
+
+    TermVectorsReader termVectorsReader = getTermVectorsReader();
+    if (termVectorsReader == null)
+    {
+      return;
+    }
+
+
+    termVectorsReader.get(docNumber, field, mapper);
+  }
+
+
+  void SegmentReader::getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper){
+    ensureOpen();
+    if (termVectorsReaderOrig == null)
+      return;
+
+    TermVectorsReader termVectorsReader = getTermVectorsReader();
+    if (termVectorsReader == null)
+      return;
+
+    termVectorsReader.get(docNumber, mapper);
+  }
+
+
+
+
+  void SegmentReader::incRefReaderNotNorms() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    super.incRef();
+  }
+
+  void SegmentReader::decRefReaderNotNorms(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    super.decRef();
+  }
+
+  void SegmentReader::loadDeletedDocs(){
+    // NOTE: the bitvector is stored using the regular directory, not cfs
+    if (hasDeletions(si)) {
+      deletedDocs = new BitVector(directory(), si.getDelFileName());
+
+      // Verify # deletes does not exceed maxDoc for this segment:
+      if (deletedDocs.count() > maxDoc()) {
+        throw new CorruptIndexException("number of deletes (" + deletedDocs.count() + ") exceeds max doc (" + maxDoc() + ") for segment " + si.name);
+      }
+    }
+  }
+
+  SegmentReader* SegmentReader::reopenSegment(SegmentInfo* si){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    bool deletionsUpToDate = (this.si.hasDeletions() == si.hasDeletions())
+                                  && (!si.hasDeletions() || this.si.getDelFileName().equals(si.getDelFileName()));
+    bool normsUpToDate = true;
+
+
+    bool[] fieldNormsChanged = new bool[fieldInfos.size()];
+    if (normsUpToDate) {
+      for (int32_t i = 0; i < fieldInfos.size(); i++) {
+        if (!this.si.getNormFileName(i).equals(si.getNormFileName(i))) {
+          normsUpToDate = false;
+          fieldNormsChanged[i] = true;
+        }
+      }
+    }
+
+    if (normsUpToDate && deletionsUpToDate) {
+      return this;
+    }
+
+
+      // clone reader
+    SegmentReader clone = new SegmentReader();
+    bool success = false;
+    try {
+      clone.directory = directory;
+      clone.si = si;
+      clone.segment = segment;
+      clone.readBufferSize = readBufferSize;
+      clone.cfsReader = cfsReader;
+      clone.storeCFSReader = storeCFSReader;
+
+      clone.fieldInfos = fieldInfos;
+      clone.tis = tis;
+      clone.freqStream = freqStream;
+      clone.proxStream = proxStream;
+      clone.termVectorsReaderOrig = termVectorsReaderOrig;
+
+
+      // we have to open a new FieldsReader, because it is not thread-safe
+      // and can thus not be shared among multiple SegmentReaders
+      // TODO: Change this in case FieldsReader becomes thread-safe in the future
+      final String fieldsSegment;
+
+      Directory storeDir = directory();
+
+      if (si.getDocStoreOffset() != -1) {
+        fieldsSegment = si.getDocStoreSegment();
+        if (storeCFSReader != null) {
+          storeDir = storeCFSReader;
+        }
+      } else {
+        fieldsSegment = segment;
+        if (cfsReader != null) {
+          storeDir = cfsReader;
+        }
+      }
+
+      if (fieldsReader != null) {
+        clone.fieldsReader = new FieldsReader(storeDir, fieldsSegment, fieldInfos, readBufferSize,
+                                        si.getDocStoreOffset(), si.docCount);
+      }
+
+
+      if (!deletionsUpToDate) {
+        // load deleted docs
+        clone.deletedDocs = null;
+        clone.loadDeletedDocs();
+      } else {
+        clone.deletedDocs = this.deletedDocs;
+      }
+
+      clone.norms = new HashMap();
+      if (!normsUpToDate) {
+        // load norms
+        for (int32_t i = 0; i < fieldNormsChanged.length; i++) {
+          // copy unchanged norms to the cloned reader and incRef those norms
+          if (!fieldNormsChanged[i]) {
+            String curField = fieldInfos.fieldInfo(i).name;
+            Norm norm = (Norm) this.norms.get(curField);
+            norm.incRef();
+            clone.norms.put(curField, norm);
+          }
+        }
+
+        clone.openNorms(si.getUseCompoundFile() ? cfsReader : directory(), readBufferSize);
+      } else {
+        Iterator it = norms.keySet().iterator();
+        while (it.hasNext()) {
+          String field = (String) it.next();
+          Norm norm = (Norm) norms.get(field);
+          norm.incRef();
+          clone.norms.put(field, norm);
+        }
+      }
+
+      if (clone.singleNormStream == null) {
+        for (int32_t i = 0; i < fieldInfos.size(); i++) {
+          FieldInfo fi = fieldInfos.fieldInfo(i);
+          if (fi.isIndexed && !fi.omitNorms) {
+            Directory d = si.getUseCompoundFile() ? cfsReader : directory();
+            String fileName = si.getNormFileName(fi.number);
+            if (si.hasSeparateNorms(fi.number)) {
+              continue;
+            }
+
+            if (fileName.endsWith("." + IndexFileNames.NORMS_EXTENSION)) {
+              clone.singleNormStream = d.openInput(fileName, readBufferSize);
+              break;
+            }
+          }
+        }
+      }
+
+      success = true;
+    } finally {
+      if (this.referencedSegmentReader != null) {
+        // this reader shares resources with another SegmentReader,
+        // so we increment the other readers refCount. We don't
+        // increment the refCount of the norms because we did
+        // that already for the shared norms
+        clone.referencedSegmentReader = this.referencedSegmentReader;
+        referencedSegmentReader.incRefReaderNotNorms();
+      } else {
+        // this reader wasn't reopened, so we increment this
+        // readers refCount
+        clone.referencedSegmentReader = this;
+        incRefReaderNotNorms();
+      }
+
+      if (!success) {
+        // An exception occured during reopen, we have to decRef the norms
+        // that we incRef'ed already and close singleNormsStream and FieldsReader
+        clone.decRef();
+      }
+    }
+
+    return clone;
+  }
+
+
+
+  /** Returns the field infos of this segment */
+  FieldInfos SegmentReader::fieldInfos() {
+    return fieldInfos;
+  }
+
+  /**
+   * Return the name of the segment this reader is reading.
+   */
+  String SegmentReader::getSegmentName() {
+    return segment;
+  }
+
+  /**
+   * Return the SegmentInfo of the segment this reader is reading.
+   */
+  SegmentInfo SegmentReader::getSegmentInfo() {
+    return si;
+  }
+
+  void SegmentReader::setSegmentInfo(SegmentInfo info) {
+    si = info;
+  }
+
+  void SegmentReader::startCommit() {
+    super.startCommit();
+    rollbackDeletedDocsDirty = deletedDocsDirty;
+    rollbackNormsDirty = normsDirty;
+    rollbackUndeleteAll = undeleteAll;
+    Iterator it = norms.values().iterator();
+    while (it.hasNext()) {
+      Norm norm = (Norm) it.next();
+      norm.rollbackDirty = norm.dirty;
+    }
+  }
+
+  void SegmentReader::rollbackCommit() {
+    super.rollbackCommit();
+    deletedDocsDirty = rollbackDeletedDocsDirty;
+    normsDirty = rollbackNormsDirty;
+    undeleteAll = rollbackUndeleteAll;
+    Iterator it = norms.values().iterator();
+    while (it.hasNext()) {
+      Norm norm = (Norm) it.next();
+      norm.dirty = norm.rollbackDirty;
+    }
+  }
 CL_NS_END

@@ -742,6 +742,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
   //void SegmentInfos::setDefaultGenLookaheadCount(const int32_t count) { defaultGenLookaheadCount = count;}
   int32_t SegmentInfos::getDefaultGenLookahedCount() { return defaultGenLookaheadCount; }
 
+/*
   SegmentInfos::FindSegmentsFile::FindSegmentsFile( CL_NS(store)::Directory* dir ) {
 	  this->directory = dir;
   }
@@ -864,6 +865,8 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 					  _CLDELETE_LARRAY(exc_txt);
 					  throw e;
 					  }*/
+
+/*
 				  }
 			  }
 
@@ -1094,5 +1097,5 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  return version;
 
   }
-
+*/
 CL_NS_END

@@ -37,24 +37,25 @@ CL_NS_DEF(index)
 
   void SegmentTermDocs::seek(TermEnum* termEnum){
     TermInfo* ti=NULL;
-	Term* term = NULL;
-    
-    // use comparison of fieldinfos to verify that termEnum belongs to the same segment as this SegmentTermDocs
-	if ( termEnum->getObjectName() == SegmentTermEnum::getClassName() && ((SegmentTermEnum*)termEnum)->fieldInfos == parent->fieldInfos ){
-		SegmentTermEnum* segmentTermEnum = ((SegmentTermEnum*) termEnum);
-		term = segmentTermEnum->term(false);
-		ti = segmentTermEnum->getTermInfo();
-	}else{
-		term = termEnum->term(false);
-		ti = parent->tis->get(term);
+    Term* term = NULL;
+
+      // use comparison of fieldinfos to verify that termEnum belongs to the same segment as this SegmentTermDocs
+    if ( termEnum->getObjectName() == SegmentTermEnum::getClassName() &&
+        ((SegmentTermEnum*)termEnum)->fieldInfos == parent->_fieldInfos ){
+      SegmentTermEnum* segmentTermEnum = (SegmentTermEnum*) termEnum;
+      term = segmentTermEnum->term(false);
+      ti = segmentTermEnum->getTermInfo();
+    }else{
+      term = termEnum->term(false);
+      ti = parent->tis->get(term);
     }
     
     seek(ti,term);
-	_CLDELETE(ti);
+    _CLDELETE(ti);
   }
   void SegmentTermDocs::seek(const TermInfo* ti,Term* term) {
 	  count = 0;
-	  FieldInfo* fi = parent->fieldInfos->fieldInfo(term->field());
+	  FieldInfo* fi = parent->_fieldInfos->fieldInfo(term->field());
 	  currentFieldStoresPayloads = (fi != NULL) ? fi->storePayloads : false;
 	  if (ti == NULL) {
 		  df = 0;
