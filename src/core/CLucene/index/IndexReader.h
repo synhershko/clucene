@@ -8,29 +8,24 @@
 #define _lucene_index_IndexReader_
 
 
-CL_CLASS_DEF(store,Directory)
-//#include "CLucene/store/FSDirectory.h"
-CL_CLASS_DEF(store,LuceneLock)
-CL_CLASS_DEF(document,Document)
 #include "CLucene/util/Array.h"
-
-//#include "CLucene/index/TermVector.h"
-//#include "SegmentInfos.h"
-//#include "Terms.h"
-CL_CLASS_DEF(index,TermFreqVector)
-CL_CLASS_DEF(index,TermEnum)
-CL_CLASS_DEF(index,Term)
-CL_CLASS_DEF(index,TermDocs)
-CL_CLASS_DEF(index,TermPositions)
-CL_CLASS_DEF(store,Directory)
 #include "CLucene/LuceneThreads.h"
 #include "CLucene/util/VoidMapSetDefinitions.h"
 
+CL_CLASS_DEF(store,Directory)
+CL_CLASS_DEF(store,LuceneLock)
+CL_CLASS_DEF(document,Document)
 
 CL_NS_DEF(index)
-
-// Need this forward declaration as IndexReader and SegmentInfos depend on each other
+class FieldSelector;
 class SegmentInfos;
+class TermFreqVector;
+class TermEnum;
+class Term;
+class TermDocs;
+class TermPositions;
+class IndexDeletionPolicy;
+class TermVectorMapper;
 
 /** IndexReader is an abstract class, providing an interface for accessing an
  index.  Search of an index is done entirely through this abstract interface,
@@ -58,79 +53,71 @@ class SegmentInfos;
 
 */
 class CLUCENE_EXPORT IndexReader :LUCENE_BASE{
-private:
-    static IndexReader open(final Directory directory, final boolean closeDirectory, final IndexDeletionPolicy deletionPolicy);
-
+  bool closed;
+  mutable int refCount;
 protected:
-    /**
-    * Constructor used if IndexReader is not owner of its directory. 
-    * This is used for IndexReaders that are used within other IndexReaders that take care or locking directories.
-    * 
-    * @param directory Directory where IndexReader files reside.
-    */
-    IndexReader(CL_NS(store)::Directory* dir);
+  bool hasChanges;
 
-    /**
-    * Constructor used if IndexReader is owner of its directory.
-    * If IndexReader is owner of its directory, it locks its directory in case of write operations.
-    * 
-    * @param directory Directory where IndexReader files reside.
-    * @param segmentInfos Used for write-l
-    * @param closeDirectory
-    */
-	IndexReader(CL_NS(store)::Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory);
-	
+  /**
+  * Legacy Constructor for backwards compatibility.
+  *
+  * <p>
+  * This Constructor should not be used, it exists for backwards
+  * compatibility only to support legacy subclasses that did not "own"
+  * a specific directory, but needed to specify something to be returned
+  * by the directory() method.  Future subclasses should delegate to the
+  * no arg constructor and implement the directory() method as appropriate.
+  *
+  * @param directory Directory to be returned by the directory() method
+  * @see #directory()
+  * @deprecated - use IndexReader()
+  */
+  IndexReader(CL_NS(store)::Directory* dir);
 
-    /// Implements close.
-    virtual void doClose() = 0;
+  IndexReader();
 
-    /** Implements setNorm in subclass.*/
-    virtual void doSetNorm(int32_t doc, const TCHAR* field, uint8_t value) = 0;
-      
-    /** Implements actual undeleteAll() in subclass. */
-    virtual void doUndeleteAll() = 0;
+  /// Implements close.
+  virtual void doClose() = 0;
 
+  /** Implements setNorm in subclass.*/
+  virtual void doSetNorm(int32_t doc, const TCHAR* field, uint8_t value) = 0;
 
-    /** Implements deletion of the document numbered <code>docNum</code>.
-    * Applications should call {@link #deleteDocument(int32_t)} or {@link #deleteDocuments(Term*)}.
-    */
-    virtual void doDelete(const int32_t docNum) = 0;
-
-    /** Does nothing by default. Subclasses that require a write lock for
-    *  index modifications must implement this method. */
-    void acquireWriteLock(){
-      //SCOPED_MUTEX_LOCK(THIS_LOCK)
-      /* NOOP */
-    }
+  /** Implements actual undeleteAll() in subclass. */
+  virtual void doUndeleteAll() = 0;
 
 
-    /**
-    * Legacy Constructor for backwards compatibility.
-    *
-    * <p>
-    * This Constructor should not be used, it exists for backwards
-    * compatibility only to support legacy subclasses that did not "own"
-    * a specific directory, but needed to specify something to be returned
-    * by the directory() method.  Future subclasses should delegate to the
-    * no arg constructor and implement the directory() method as appropriate.
-    *
-    * @param directory Directory to be returned by the directory() method
-    * @see #directory()
-    * @deprecated - use IndexReader()
-    */
-    IndexReader::IndexReader(Directory* directory) {
-      this();
-      this.directory = directory;
-    }
+  /** Implements deletion of the document numbered <code>docNum</code>.
+  * Applications should call {@link #deleteDocument(int32_t)} or {@link #deleteDocuments(Term*)}.
+  */
+  virtual void doDelete(const int32_t docNum) = 0;
 
-    IndexReader::IndexReader() {
-      refCount = 1;
-    }
+  /** Does nothing by default. Subclasses that require a write lock for
+  *  index modifications must implement this method. */
+  void acquireWriteLock(){
+    //SCOPED_MUTEX_LOCK(THIS_LOCK)
+    /* NOOP */
+  }
 
-    /**
-    * @throws AlreadyClosedException if this IndexReader is closed
-    */
-    void IndexReader::ensureOpen();
+  /**
+  * @throws AlreadyClosedException if this IndexReader is closed
+  */
+  void ensureOpen();
+
+  /**
+   * Increments the refCount of this IndexReader instance. RefCounts are used to determine
+   * when a reader can be closed safely, i. e. as soon as no other IndexReader is referencing
+   * it anymore.
+   */
+  void incRef();
+
+  /**
+   * Decreases the refCount of this IndexReader instance. If the refCount drops
+   * to 0, then pending changes are committed to the index and this reader is closed.
+   *
+   * @throws IOException in case an IOException occurs in commit() or doClose()
+   */
+  void decRef();
+
 public:
 	//Callback for classes that need to know if IndexReader is closing.
 	typedef void (*CloseCallback)(IndexReader*, void*);
@@ -170,54 +157,12 @@ public:
 		STORES_PAYLOADS = 512
 	};
 
-  private boolean closed;
-  protected boolean hasChanges;
-
-  private volatile int refCount;
-
-  // for testing
-  synchronized int getRefCount() {
-    return refCount;
-  }
-
-  /**
-   * Increments the refCount of this IndexReader instance. RefCounts are used to determine
-   * when a reader can be closed safely, i. e. as soon as no other IndexReader is referencing
-   * it anymore.
-   */
-  protected synchronized void incRef() {
-    assert refCount > 0;
-    refCount++;
-  }
-
-  /**
-   * Decreases the refCount of this IndexReader instance. If the refCount drops
-   * to 0, then pending changes are committed to the index and this reader is closed.
-   *
-   * @throws IOException in case an IOException occurs in commit() or doClose()
-   */
-  protected synchronized void decRef() throws IOException {
-    assert refCount > 0;
-    if (refCount == 1) {
-      commit();
-      doClose();
-
-      if(internal->closeDirectory){
-          internal->directory->close();
-        _CLDECDELETE(internal->directory);
-      }
-    }
-    refCount--;
-  }
-
-
-
   /** Returns an IndexReader reading the index in an FSDirectory in the named
    path.
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    * @param path the path to the index directory */
-  static IndexReader* open(const char* path, IndexDeletionPolicy* deletionPolicy=NULL);
+  static IndexReader* open(const char* path, bool closeDirectoryOnCleanup=false, IndexDeletionPolicy* deletionPolicy=NULL);
 
   /** Expert: returns an IndexReader reading the index in the given
    * Directory, with a custom {@link IndexDeletionPolicy}.
@@ -228,7 +173,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  static IndexReader* open(CL_NS(store)::Directory* directory, IndexDeletionPolicy* deletionPolicy=NULL);
+  static IndexReader* open(CL_NS(store)::Directory* directory, bool closeDirectoryOnCleanup=false, IndexDeletionPolicy* deletionPolicy=NULL);
 
 
   /**
@@ -266,9 +211,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  public synchronized IndexReader reopen() throws CorruptIndexException, IOException {
-    throw new UnsupportedOperationException("This reader does not support reopen().");
-  }
+  IndexReader* reopen();
 
   /**
    * Returns the directory associated with this index.  The Default
@@ -277,15 +220,7 @@ public:
    * UnsupportedOperationException if one was not specified.
    * @throws UnsupportedOperationException if no directory
    */
-  public Directory directory() {
-    ensureOpen();
-    if (null != directory) {
-      return directory;
-    } else {
-      throw new UnsupportedOperationException("This reader does not support this method.");
-    }
-  }
-
+  CL_NS(store)::Directory* directory();
 
 	DEFINE_MUTEX(THIS_LOCK)
 
@@ -293,10 +228,7 @@ public:
    *
    * @throws IOException
    */
-  public final synchronized void flush() throws IOException {
-    ensureOpen();
-    commit();
-  }
+  void flush();
 
   /**
    * Commit changes resulting from delete, undeleteAll, or
@@ -307,7 +239,7 @@ public:
    * (transactional semantics).
    * @throws IOException if there is a low-level IO error
    */
-	LUCENE_INTERNAL_DECL virtual void commit();
+	CLUCENE_LOCAL_DECL virtual void commit();
 	
 	
 	/** Undeletes all documents currently marked as deleted in this index.
@@ -433,7 +365,7 @@ public:
    * Version number when this IndexReader was opened. Not implemented in the IndexReader base class.
    * @throws UnsupportedOperationException unless overridden in subclass
    */
-	int64_t getVersion();
+	virtual int64_t getVersion();
 
   /**<p>For IndexReader implementations that use
    * TermInfosReader to read terms, this sets the
@@ -452,17 +384,13 @@ public:
    * an IllegalStateException is thrown.
    * @throws IllegalStateException if the term index has already been loaded into memory
    */
-  public void setTermInfosIndexDivisor(int indexDivisor) throws IllegalStateException {
-    throw new UnsupportedOperationException("This reader does not support this method.");
-  }
+  void setTermInfosIndexDivisor(int indexDivisor);
 
   /** <p>For IndexReader implementations that use
    *  TermInfosReader to read terms, this returns the
    *  current indexDivisor.
    *  @see #setTermInfosIndexDivisor */
-  public int getTermInfosIndexDivisor() {
-    throw new UnsupportedOperationException("This reader does not support this method.");
-  }
+  int getTermInfosIndexDivisor();
 
   /**
    * Check whether this IndexReader is still using the
@@ -482,7 +410,7 @@ public:
    * @throws IOException if there is a low-level IO error
    * @throws UnsupportedOperationException unless overridden in subclass
    */
-	bool isCurrent();
+	virtual bool isCurrent();
 
   /**
    * Checks is the index is optimized (if it has a single segment and
@@ -490,25 +418,7 @@ public:
    * @return <code>true</code> if the index is optimized; <code>false</code> otherwise
    * @throws UnsupportedOperationException unless overridden in subclass
    */
-  public boolean isOptimized() {
-    throw new UnsupportedOperationException("This reader does not support this method.");
-  }
-
-	/**
-	*  Return an array of term frequency vectors for the specified document.
-	*  The array contains a vector for each vectorized field in the document.
-	*  Each vector contains terms and frequencies for all terms in a given vectorized field.
-	*  If no such fields existed, the method returns null. The term vectors that are
-	* returned my either be of type TermFreqVector or of type TermPositionsVector if
-	* positions or offsets have been stored.
-	* 
-	* @param docNumber document for which term frequency vectors are returned
-	* @return array of term frequency vectors. May be null if no term vectors have been
-	*  stored for the specified document.
-	* @throws IOException if index cannot be accessed
-	* @see org.apache.lucene.document.Field.TermVector
-	*/
-	virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber) =0;
+  virtual bool isOptimized();
 
   /**
   *  Return a term frequency vector for the specified document and field. The
@@ -524,7 +434,7 @@ public:
   * @throws IOException if index cannot be accessed
   * @see org.apache.lucene.document.Field.TermVector
   */
-  virtual TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field) = 0;
+  virtual TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field=NULL) = 0;
 
   /**
    * Load the Term Vector into a user-defined data structure instead of relying on the parallel arrays of
@@ -535,7 +445,7 @@ public:
    * @throws IOException if term vectors cannot be accessed or if they do not exist on the field and doc. specified.
    *
    */
-  virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber, String field, TermVectorMapper mapper) =0;
+  virtual void getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper) =0;
 
   /**
    * Map all the term vectors for all fields in a Document
@@ -543,7 +453,24 @@ public:
    * @param mapper The {@link TermVectorMapper} to process the vector.  Must not be null
    * @throws IOException if term vectors cannot be accessed or if they do not exist on the field and doc. specified.
    */
-  virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber, TermVectorMapper mapper) =0;
+  virtual void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper) =0;
+
+
+  /**
+   *  Return an array of term frequency vectors for the specified document.
+   *  The array contains a vector for each vectorized field in the document.
+   *  Each vector contains terms and frequencies for all terms in a given vectorized field.
+   *  If no such fields existed, the method returns null. The term vectors that are
+   * returned my either be of type TermFreqVector or of type TermPositionsVector if
+   * positions or offsets have been stored.
+   *
+   * @param docNumber document for which term frequency vectors are returned
+   * @return array of term frequency vectors. May be null if no term vectors have been
+   *  stored for the specified document.
+   * @throws IOException if index cannot be accessed
+   * @see org.apache.lucene.document.Field.TermVector
+   */
+   virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber, const TCHAR* field=NULL) = 0;
 
 	/**
 	* Returns <code>true</code> if an index exists at the specified directory.
@@ -594,7 +521,7 @@ public:
    * @see org.apache.lucene.document.LoadFirstFieldSelector
    */
   //When we convert to JDK 1.5 make this Set<String>
-	virtual bool document(int32_t n, CL_NS(document)::Document&, const FieldSelector* fieldSelector) =0;
+	virtual bool document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector) =0;
 
   /** Gets the stored fields of the <code>n</code><sup>th</sup>
   * <code>Document</code> in this index.
@@ -603,9 +530,9 @@ public:
   * @throws CorruptIndexException if the index is corrupt
   * @throws IOException if there is a low-level IO error
   */ 
-  bool document(int32_t n, CL_NS(document)::Document&){
+  bool document(int32_t n, CL_NS(document)::Document& doc){
     ensureOpen();
-    return document(n, null);
+    return document(n, doc, NULL);
   }
 
 	_CL_DEPRECATED( document(i, Document&) ) bool document(int32_t n, CL_NS(document)::Document*);

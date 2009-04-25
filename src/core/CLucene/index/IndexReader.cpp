@@ -59,35 +59,45 @@ CL_NS_DEF(index)
 	};
 	    
 	    
-    class IndexReader::Internal: LUCENE_BASE{
-    public:
-        /**
-        * @deprecated will be deleted when IndexReader(Directory) is deleted
-        * @see #directory()
-        */
-        CL_NS(store)::Directory* directory;
-        
-    	typedef CL_NS(util)::CLSet<IndexReader::CloseCallback, void*, 
-    		CloseCallbackCompare,
-    		CloseCallbackCompare> CloseCallbackMap;
-    	CloseCallbackMap closeCallbacks;
-    	
-    	Internal(Directory* dir):
-    		directory(_CL_POINTER(dir))
-    	{
-	      segmentInfos = NULL;
-    	}
-    	Internal(Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory){
-    		this->directory = _CL_POINTER(directory);
-		    writeLock = NULL;
-    	}
-    	~Internal(){
-		  _CLDECDELETE(directory);
-	    }
-    };
+  class IndexReader::Internal: LUCENE_BASE{
+  public:
+    /**
+    * @deprecated will be deleted when IndexReader(Directory) is deleted
+    * @see #directory()
+    */
+    CL_NS(store)::Directory* directory;
+
+    typedef CL_NS(util)::CLSet<IndexReader::CloseCallback, void*,
+      CloseCallbackCompare,
+      CloseCallbackCompare> CloseCallbackMap;
+    CloseCallbackMap closeCallbacks;
+
+    Internal(Directory* directory)
+    {
+      if ( directory != NULL )
+        this->directory = _CL_POINTER(directory);
+      else
+        this->directory = NULL;
+      refCount = 1;
+      closed = false;
+      hasChanges = false;
+    }
+    ~Internal(){
+      _CLDECDELETE(directory);
+    }
+  };
 
   IndexReader::IndexReader(Directory* dir):
-  	internal(_CLNEW Internal(dir)){
+    internal(_CLNEW Internal(dir)){
+  //Constructor.
+  //Func - Creates an instance of IndexReader
+  //Pre  - true
+  //Post - An instance has been created with writeLock = NULL
+
+  }
+
+  IndexReader::IndexReader():
+    internal(_CLNEW Internal(dir)){
   //Constructor.
   //Func - Creates an instance of IndexReader
   //Pre  - true
@@ -137,10 +147,54 @@ CL_NS_DEF(index)
        return DirectoryIndexReader::open(directory, closeDirectory, deletionPolicy);
   }
 
+  IndexReader* IndexReader::reopen(){
+    throw new UnsupportedOperationException("This reader does not support reopen().");
+  }
+  CL_NS(store)::Directory* IndexReader::directory() {
+    ensureOpen();
+    if (null != directory) {
+      return directory;
+    } else {
+      throw new UnsupportedOperationException("This reader does not support this method.");
+    }
+  }
+
   void IndexReader::ensureOpen(){
     if (refCount <= 0) {
       throw new AlreadyClosedException("this IndexReader is closed");
     }
+  }
+
+  /**
+   * Increments the refCount of this IndexReader instance. RefCounts are used to determine
+   * when a reader can be closed safely, i. e. as soon as no other IndexReader is referencing
+   * it anymore.
+   */
+  void IndexReader::incRef() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    refCount++;
+  }
+
+  /**
+   * Decreases the refCount of this IndexReader instance. If the refCount drops
+   * to 0, then pending changes are committed to the index and this reader is closed.
+   *
+   * @throws IOException in case an IOException occurs in commit() or doClose()
+   */
+  void IndexReader::decRef(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    if (refCount == 1) {
+      commit();
+      doClose();
+
+      if(internal->closeDirectory){
+        internal->directory->close();
+        _CLDECDELETE(internal->directory);
+      }
+    }
+    refCount--;
   }
   
   CL_NS(document)::Document* IndexReader::document(const int32_t n){
@@ -180,10 +234,25 @@ CL_NS_DEF(index)
     int64_t IndexReader::getVersion() {
           throw new UnsupportedOperationException("This reader does not support this method.");
     }
+
+  void IndexReader::setTermInfosIndexDivisor(int indexDivisor) {
+    throw new UnsupportedOperationException("This reader does not support this method.");
+  }
+
+  /** <p>For IndexReader implementations that use
+   *  TermInfosReader to read terms, this returns the
+   *  current indexDivisor.
+   *  @see #setTermInfosIndexDivisor */
+  int IndexReader::getTermInfosIndexDivisor() {
+    throw new UnsupportedOperationException("This reader does not support this method.");
+  }
 	
 	bool IndexReader::isCurrent() {
     throw new UnsupportedOperationException("This reader does not support this method.");
 	}
+  bool IndexReader::isOptimized() {
+    throw new UnsupportedOperationException("This reader does not support this method.");
+  }
 
   uint64_t IndexReader::lastModified(const Directory* directory) {
   //Func - Static method
@@ -315,6 +384,12 @@ CL_NS_DEF(index)
 	  //Have the document identified by docNum deleted
     internal->hasChanges = true;
     doDelete(docNum);
+  }
+
+  void IndexReader::flush() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    ensureOpen();
+    commit();
   }
 
   /**

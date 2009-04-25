@@ -8,7 +8,7 @@
 #define _lucene_index_MultiSegmentReader
 
 
-//#include "SegmentHeader.h"
+#include "DirectoryIndexReader.h"
 #include "IndexReader.h"
 CL_CLASS_DEF(document,Document)
 //#include "Terms.h"
@@ -18,29 +18,23 @@ CL_NS_DEF(index)
 
 class MultiSegmentReader:public DirectoryIndexReader{
 private:
-  class Internal;
-  Internal* internal;
 	int32_t readerIndex(const int32_t n, int32_t* starts, int32_t numSubReaders) const;
-  private int readerIndex(int32_t n) const {    // find reader for doc n:
-    return readerIndex(n, this.starts, this.subReaders.length);
-  }
+  int readerIndex(int32_t n) const;
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 
+  void startCommit();
+  void rollbackCommit();
 
-  void startCommit() {
-    super.startCommit();
-    for (int i = 0; i < subReaders.length; i++) {
-      subReaders[i].startCommit();
-    }
-  }
-
-  void rollbackCommit() {
-    super.rollbackCommit();
-    for (int i = 0; i < subReaders.length; i++) {
-      subReaders[i].rollbackCommit();
-    }
-  }
+  bool _hasDeletions;
+  uint8_t* ones;
+  CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
+    CL_NS(util)::Compare::TChar,
+    CL_NS(util)::Equals::TChar,
+    CL_NS(util)::Deletor::tcArray,
+    CL_NS(util)::Deletor::vArray<uint8_t> > normsCache;
+  int32_t _maxDoc;
+  int32_t _numDocs;
 
 protected:
 	CL_NS(util)::ObjectArray<IndexReader>* subReaders;
@@ -54,170 +48,23 @@ protected:
 	
 	// synchronized
 	void doDelete(const int32_t n);
-public:
-  /** Construct reading the named set of readers. */
-   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, boolean closeDirectory){
-    super(directory, sis, closeDirectory);
-    // To reduce the chance of hitting FileNotFound
-    // (and having to retry), we open segments in
-    // reverse because IndexWriter merges & deletes
-    // the newest segments first.
-
-    SegmentReader[] readers = new SegmentReader[sis.size()];
-    for (int i = sis.size()-1; i >= 0; i--) {
-      try {
-        readers[i] = SegmentReader.get(sis.info(i));
-      } catch (IOException e) {
-        // Close all readers we had opened:
-        for(i++;i<sis.size();i++) {
-          try {
-            readers[i].close();
-          } catch (IOException ignore) {
-            // keep going - we want to clean up as much as possible
-          }
-        }
-        throw e;
-      }
-    }
-
-    initialize(readers);
-  }
+  DirectoryIndexReader* doReopen(SegmentInfos infos);
 
   /** This contructor is only used for {@link #reopen()} */
-  MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, ObjectArray<SegmentReader>* subReaders, boolean closeDirectory, SegmentReader[] oldReaders, int[] oldStarts, Map oldNormsCache)  {
-    super(directory, infos, closeDirectory);
+  MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis,
+      CL_NS(util)::ObjectArray<SegmentReader>* subReaders, bool closeDirectory,
+      CL_NS(util)::ObjectArray<SegmentReader>* oldReaders, int32_t* oldStarts,
+      CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
+        CL_NS(util)::Compare::TChar,
+          CL_NS(util)::Equals::TChar,
+        CL_NS(util)::Deletor::tcArray,
+        CL_NS(util)::Deletor::vArray<uint8_t> >* oldNormsCache) ;
 
-    // we put the old SegmentReaders in a map, that allows us
-    // to lookup a reader using its segment name
-    Map segmentReaders = new HashMap();
+  void initialize( CL_NS(util)::ObjectArray<SegmentReader>* subReaders);
 
-    if (oldReaders != null) {
-      // create a Map SegmentName->SegmentReader
-      for (int i = 0; i < oldReaders.length; i++) {
-        segmentReaders.put(oldReaders[i].getSegmentName(), new Integer(i));
-      }
-    }
-
-    SegmentReader[] newReaders = new SegmentReader[infos.size()];
-
-    // remember which readers are shared between the old and the re-opened
-    // MultiSegmentReader - we have to incRef those readers
-    boolean[] readerShared = new boolean[infos.size()];
-
-    for (int i = infos.size() - 1; i>=0; i--) {
-      // find SegmentReader for this segment
-      Integer oldReaderIndex = (Integer) segmentReaders.get(infos.info(i).name);
-      if (oldReaderIndex == null) {
-        // this is a new segment, no old SegmentReader can be reused
-        newReaders[i] = null;
-      } else {
-        // there is an old reader for this segment - we'll try to reopen it
-        newReaders[i] = oldReaders[oldReaderIndex.intValue()];
-      }
-
-      boolean success = false;
-      try {
-        SegmentReader newReader;
-        if (newReaders[i] == null || infos.info(i).getUseCompoundFile() != newReaders[i].getSegmentInfo().getUseCompoundFile()) {
-          // this is a new reader; in case we hit an exception we can close it safely
-          newReader = SegmentReader.get(infos.info(i));
-        } else {
-          newReader = (SegmentReader) newReaders[i].reopenSegment(infos.info(i));
-        }
-        if (newReader == newReaders[i]) {
-          // this reader will be shared between the old and the new one,
-          // so we must incRef it
-          readerShared[i] = true;
-          newReader.incRef();
-        } else {
-          readerShared[i] = false;
-          newReaders[i] = newReader;
-        }
-        success = true;
-      } finally {
-        if (!success) {
-          for (i++; i < infos.size(); i++) {
-            if (newReaders[i] != null) {
-              try {
-                if (!readerShared[i]) {
-                  // this is a new subReader that is not used by the old one,
-                  // we can close it
-                  newReaders[i].close();
-                } else {
-                  // this subReader is also used by the old reader, so instead
-                  // closing we must decRef it
-                  newReaders[i].decRef();
-                }
-              } catch (IOException ignore) {
-                // keep going - we want to clean up as much as possible
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // initialize the readers to calculate maxDoc before we try to reuse the old normsCache
-    initialize(newReaders);
-
-    // try to copy unchanged norms from the old normsCache to the new one
-    if (oldNormsCache != null) {
-      Iterator it = oldNormsCache.keySet().iterator();
-      while (it.hasNext()) {
-        String field = (String) it.next();
-        if (!hasNorms(field)) {
-          continue;
-        }
-
-        byte[] oldBytes = (byte[]) oldNormsCache.get(field);
-
-        byte[] bytes = new byte[maxDoc()];
-
-        for (int i = 0; i < subReaders.length; i++) {
-          Integer oldReaderIndex = ((Integer) segmentReaders.get(subReaders[i].getSegmentName()));
-
-          // this SegmentReader was not re-opened, we can copy all of its norms
-          if (oldReaderIndex != null &&
-               (oldReaders[oldReaderIndex.intValue()] == subReaders[i]
-                 || oldReaders[oldReaderIndex.intValue()].norms.get(field) == subReaders[i].norms.get(field))) {
-            // we don't have to synchronize here: either this constructor is called from a SegmentReader,
-            // in which case no old norms cache is present, or it is called from MultiReader.reopen(),
-            // which is synchronized
-            System.arraycopy(oldBytes, oldStarts[oldReaderIndex.intValue()], bytes, starts[i], starts[i+1] - starts[i]);
-          } else {
-            subReaders[i].norms(field, bytes, starts[i]);
-          }
-        }
-
-        normsCache.put(field, bytes);      // update cache
-      }
-    }
-  }
-
-  private void initialize(SegmentReader[] subReaders) {
-    this.subReaders = subReaders;
-    starts = new int[subReaders.length + 1];    // build starts array
-    for (int i = 0; i < subReaders.length; i++) {
-      starts[i] = maxDoc;
-      maxDoc += subReaders[i].maxDoc();      // compute maxDocs
-
-      if (subReaders[i].hasDeletions())
-        hasDeletions = true;
-    }
-    starts[subReaders.length] = maxDoc;
-  }
-
-  protected synchronized DirectoryIndexReader doReopen(SegmentInfos infos) throws CorruptIndexException, IOException {
-    if (infos.size() == 1) {
-      // The index has only one segment now, so we can't refresh the MultiSegmentReader.
-      // Return a new SegmentReader instead
-      SegmentReader newReader = SegmentReader.get(infos, infos.info(0), false);
-      return newReader;
-    } else {
-      return new MultiSegmentReader(directory, infos, closeDirectory, subReaders, starts, normsCache);
-    }
-  }
-
+  /** Construct reading the named set of readers. */
+   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
+public:
 	~MultiSegmentReader();
 
 	/** Return an array of term frequency vectors for the specified document.
@@ -229,22 +76,9 @@ public:
 	CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t n);
 	TermFreqVector* getTermFreqVector(int32_t n, const TCHAR* field);
 
-  public void getTermFreqVector(int docNumber, String field, TermVectorMapper mapper) throws IOException {
-    ensureOpen();
-    int i = readerIndex(docNumber);        // find segment num
-    subReaders[i].getTermFreqVector(docNumber - starts[i], field, mapper);
-  }
-
-  public void getTermFreqVector(int docNumber, TermVectorMapper mapper) throws IOException {
-    ensureOpen();
-    int i = readerIndex(docNumber);        // find segment num
-    subReaders[i].getTermFreqVector(docNumber - starts[i], mapper);
-  }
-
-  public boolean isOptimized() {
-    return false;
-  }
-  
+  void getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper);
+  void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper);
+  bool isOptimized();
 
 	// synchronized
 	int32_t numDocs();
@@ -268,25 +102,11 @@ public:
 	TermDocs* termDocs() const;
 	TermPositions* termPositions() const;
 
-  public Collection getFieldNames (IndexReader.FieldOption fieldNames) {
-    ensureOpen();
-    return getFieldNames(fieldNames, this.subReaders);
-  }
-	static void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray, ObjectArray<IndexReader>* subReaders);
+  void getFieldNames (FieldOption fldOption, StringArrayWithDeletor& retarray);
+	static void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray, CL_NS(util)::ObjectArray<IndexReader>* subReaders);
 
-
-  public void setTermInfosIndexDivisor(int indexDivisor) throws IllegalStateException {
-    for (int i = 0; i < subReaders.length; i++)
-      subReaders[i].setTermInfosIndexDivisor(indexDivisor);
-  }
-
-  public int getTermInfosIndexDivisor() throws IllegalStateException {
-    if (subReaders.length > 0)
-      return subReaders[0].getTermInfosIndexDivisor();
-    else
-      throw new IllegalStateException("no readers");
-  }
-
+  void setTermInfosIndexDivisor(int32_t indexDivisor);
+  int32_t getTermInfosIndexDivisor();
 };
 
 
@@ -306,7 +126,7 @@ protected:
   virtual TermDocs* termDocs(const IndexReader* reader) const;
 public:
   MultiTermDocs();
-  MultiTermDocs(ObjectArray<SegmentReader>* subReaders, const int32_t* s);
+  MultiTermDocs(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* s);
   virtual ~MultiTermDocs();
 
   int32_t doc() const;
@@ -338,7 +158,7 @@ private:
 public:
   //Constructor
   //Opens all enumerations of all readers
-  MultiTermEnum(ObjectArray<SegmentReader>* subReaders, const int32_t* starts, const Term* t);
+  MultiTermEnum(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* starts, const Term* t);
 
   //Destructor
   ~MultiTermEnum();
@@ -369,7 +189,7 @@ class MultiTermPositions:public MultiTermDocs,public TermPositions {
 protected:
   TermDocs* termDocs(const IndexReader* reader) const;
 public:
-  MultiTermPositions(ObjectArray<SegmentReader>* subReaders, const int32_t* s);
+  MultiTermPositions(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* s);
   ~MultiTermPositions() {};
   int32_t nextPosition();
 

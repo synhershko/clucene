@@ -5,8 +5,6 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "MultiSegmentReader.h"
-#include "_MultiReader.h"
 
 #include "IndexReader.h"
 #include "CLucene/document/Document.h"
@@ -16,73 +14,39 @@
 #include "_SegmentHeader.h"
 #include "_SegmentMergeInfo.h"
 #include "_SegmentMergeQueue.h"
+#include "MultiReader.h"
+#include "_MultiSegmentReader.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
 
-
-class MultiSegmentReader::Internal: LUCENE_BASE{
-public:
-    bool _hasDeletions;
-	uint8_t* ones;
-	MultiSegmentReader* _this;
-
-	CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
-		CL_NS(util)::Compare::TChar,
-			CL_NS(util)::Equals::TChar,
-		CL_NS(util)::Deletor::tcArray,
-		CL_NS(util)::Deletor::vArray<uint8_t> > normsCache;
-	int32_t _maxDoc;
-	int32_t _numDocs;
-	
-	Internal(ObjectArray<SegmentReader>* subReaders, MultiSegmentReader* _this):
-  		normsCache(true, true)
-	{
-		this->_this = _this;
-		_this->subReaders = subReaders;
-
-	  _maxDoc        = 0;
-	  _numDocs       = -1;
-	  ones           = NULL;
-	
-	  _this->starts = _CL_NEWARRAY(int32_t, _this->subReadersLength + 1);    // build starts array
-	  for (int32_t i = 0; i < _this->subReadersLength; i++) {
-	     _this->starts[i] = _maxDoc;
-	
-	     // compute maxDocs
-	     _maxDoc += _this->subReaders[i]->maxDoc();      
-	     if (_this->subReaders[i]->hasDeletions())
-	        _hasDeletions = true;
-	  }
-	  _this->starts[_this->subReadersLength] = _maxDoc;
-	}
-	~Internal(){
-		_CLDELETE_ARRAY(ones);
-		_CLDELETE_ARRAY(_this->starts);
-		
-		//Iterate through the subReaders and destroy each reader
-		if (_this->subReaders && _this->subReadersLength > 0) {
-			for (int32_t i = 0; i < _this->subReadersLength; i++) {
-				_CLDELETE(_this->subReaders[i]);
-			}
-		}
-		//Destroy the subReaders array
-		_CLDELETE_ARRAY(_this->subReaders);
-	}
-};
-
-MultiSegmentReader::MultiSegmentReader(ObjectArray<SegmentReader>* subReaders):
-  IndexReader(subReaders == NULL || subReaders[0] == NULL ? NULL : subReaders[0]->getDirectory())
-{
-	this->internal = _CLNEW Internal(subReaders, this);
-}
-
 MultiSegmentReader::MultiSegmentReader(Directory* directory, SegmentInfos* sis, ObjectArray<SegmentReader>* subReaders):
+      normsCache(true, true)
 	IndexReader(directory, sis, false)
 {
-	this->internal = _CLNEW Internal(subReaders, this);
+	this->internal = _CLNEW Internal(subReaders);
+}
+
+MultiSegmentReader::initialize(){
+    this->_this = _this;
+  subReaders = subReaders;
+
+  _maxDoc        = 0;
+  _numDocs       = -1;
+  ones           = NULL;
+
+  starts = _CL_NEWARRAY(int32_t, subReadersLength + 1);    // build starts array
+  for (int32_t i = 0; i < subReadersLength; i++) {
+      starts[i] = _maxDoc;
+
+      // compute maxDocs
+      _maxDoc += subReaders[i]->maxDoc();
+      if (subReaders[i]->hasDeletions())
+        _hasDeletions = true;
+  }
+  starts[subReadersLength] = _maxDoc;
 }
 
 
@@ -92,7 +56,17 @@ MultiSegmentReader::~MultiSegmentReader() {
 //Post - The instance has been destroyed all IndexReader instances
 //       this instance managed have been destroyed to
 
-	_CLDELETE(internal);
+  _CLDELETE_ARRAY(ones);
+  _CLDELETE_ARRAY(starts);
+
+  //Iterate through the subReaders and destroy each reader
+  if (subReaders && subReadersLength > 0) {
+    for (int32_t i = 0; i < subReadersLength; i++) {
+      _CLDELETE(subReaders[i]);
+    }
+  }
+  //Destroy the subReaders array
+  _CLDELETE_ARRAY(subReaders);
 }
 
 ObjectArray<TermFreqVector>* MultiSegmentReader::getTermFreqVectors(int32_t n){
@@ -219,6 +193,18 @@ TermPositions* MultiSegmentReader::termPositions() const {
     ensureOpen();
 	TermPositions* ret = (TermPositions*)_CLNEW MultiTermPositions(subReaders, starts);
 	return ret;
+}
+
+void MultiSegmentReader::setTermInfosIndexDivisor(int indexDivisor) throws IllegalStateException {
+  for (int i = 0; i < subReaders.length; i++)
+    subReaders[i].setTermInfosIndexDivisor(indexDivisor);
+}
+
+int MultiSegmentReader::getTermInfosIndexDivisor() throws IllegalStateException {
+  if (subReaders.length > 0)
+    return subReaders[0].getTermInfosIndexDivisor();
+  else
+    throw new IllegalStateException("no readers");
 }
 
 void MultiSegmentReader::doDelete(const int32_t n) {

@@ -418,7 +418,7 @@ public:
 #ifdef _CL_DEBUG_INFO
 	  fprintf(_CL_DEBUG_INFO, " %s (%d docs)\n",si->name,si->docCount);
 #endif
-      SegmentReader* reader = _CLNEW SegmentReader(si);
+      SegmentReader* reader = SegmentReader::get(si);
       merger.add(reader);
       if ((reader->getDirectory() == this->directory) || // if we own the directory
 		(reader->getDirectory() == this->ramDirectory)){
@@ -620,7 +620,7 @@ public:
     CLVector<SegmentReader*> segmentsToDelete;
 	SegmentReader* sReader = NULL;
     if (segmentInfos->size() == 1){ // add existing index, if any
-        sReader = _CLNEW SegmentReader(segmentInfos->info(0));
+        sReader = SegmentReader::get(segmentInfos->info(0));
 		merger.add(sReader);
         segmentsToDelete.push_back(sReader);   // queue segment for deletion
     }
