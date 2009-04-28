@@ -511,7 +511,7 @@ CL_NS_DEF(search)
 	}
 
 	BooleanClause::BooleanClause(Query* q, const bool DeleteQuery, Occur o):
-		query(query),
+		query(q),
 		occur(o),
 		deleteQuery(DeleteQuery)
 	{
