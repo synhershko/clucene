@@ -2,11 +2,11 @@
 #ifndef _lucene_index_IndexFileNames_
 #define _lucene_index_IndexFileNames_
 
+#include "CLucene/util/Array.h"
 
 CL_NS_DEF(index)
 
 class IndexFileNames {
-	
 public:
 	
 	static const char* SEGMENTS;
@@ -34,12 +34,12 @@ public:
 	LUCENE_STATIC_CONSTANT(int32_t,VECTOR_EXTENSIONS_LENGTH=3);
 	LUCENE_STATIC_CONSTANT(int32_t,STORE_INDEX_EXTENSIONS_LENGTH=5);
 	
-	static const char* INDEX_EXTENSIONS[];
-	static const char* INDEX_EXTENSIONS_IN_COMPOUND_FILE[];
-	static const char* STORE_INDEX_EXTENSIONS[];
-	static const char* NON_STORE_INDEX_EXTENSIONS[];
-	static const char* COMPOUND_EXTENSIONS[];
-	static const char* VECTOR_EXTENSIONS[];
+	static CL_NS(util)::ValueArray<const char*> INDEX_EXTENSIONS;
+	static CL_NS(util)::ValueArray<const char*> INDEX_EXTENSIONS_IN_COMPOUND_FILE;
+	static CL_NS(util)::ValueArray<const char*> STORE_INDEX_EXTENSIONS;
+	static CL_NS(util)::ValueArray<const char*> NON_STORE_INDEX_EXTENSIONS;
+	static CL_NS(util)::ValueArray<const char*> COMPOUND_EXTENSIONS;
+	static CL_NS(util)::ValueArray<const char*> VECTOR_EXTENSIONS;
 	
 	static char* fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
 	static bool isDocStoreFile( char* fileName );

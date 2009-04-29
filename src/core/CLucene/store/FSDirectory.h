@@ -85,7 +85,7 @@ CL_CLASS_DEF(util,StringBuffer)
 		   @param create if true, create, or erase any existing contents.
 		   @return the FSDirectory for the named file.
         */
-		static FSDirectory* getDirectory(const char* file, const bool create, LockFactory* lockFactory=NULL);
+		static FSDirectory* getDirectory(const char* file, const bool create=false, LockFactory* lockFactory=NULL);
 
 		/// Returns the time the named file was last modified.
 		int64_t fileModified(const char* name) const;

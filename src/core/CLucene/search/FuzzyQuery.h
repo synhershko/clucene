@@ -139,7 +139,7 @@ class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
 		* @throws IOException
 		* @see #FuzzyTermEnum(IndexReader, Term, float_t, int32_t)
 		*/
-		FuzzyTermEnum(const CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
+		FuzzyTermEnum(CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
 		/** Destructor */
 		~FuzzyTermEnum();
 		/** Close the enumeration */

@@ -26,8 +26,9 @@
 #define CL_ERR_ConcurrentModification 15
 #define CL_ERR_CorruptIndex 16
 #define CL_ERR_NumberFormat 17
-
-
+#define CL_ERR_AlreadyClosed 18
+#define CL_ERR_StaleReader 19
+#define CL_ERR_LockObtainFailed 20
 
 ////////////////////////////////////////////////////////
 //error try/throw/catch definitions

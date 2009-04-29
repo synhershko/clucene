@@ -6,7 +6,13 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "DirectoryIndexReader.h"
+#include "_IndexFileDeleter.h"
+#include "IndexDeletionPolicy.h"
+#include "_SegmentInfos.h"
+#include "_SegmentHeader.h"
+#include "IndexWriter.h"
 #include "CLucene/store/Directory.h"
+#include "CLucene/store/Lock.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -15,8 +21,10 @@ CL_NS_DEF(index)
 
 
   void DirectoryIndexReader::doClose() {
-    if(closeDirectory)
+    if(closeDirectory){
       _directory->close();
+      _CLDECDELETE(_directory);
+    }
   }
 
   void DirectoryIndexReader::doCommit() {
@@ -25,7 +33,7 @@ CL_NS_DEF(index)
 
         // Default deleter (for backwards compatibility) is
         // KeepOnlyLastCommitDeleter:
-        IndexFileDeleter* deleter =  _CLNEW IndexFileDeleter(directory,
+        IndexFileDeleter* deleter =  _CLNEW IndexFileDeleter(_directory,
                                                          deletionPolicy == NULL ? _CLNEW KeepOnlyLastCommitDeletionPolicy() : deletionPolicy,
                                                          segmentInfos, NULL, NULL);
 
@@ -36,7 +44,7 @@ CL_NS_DEF(index)
         bool success = false;
         try {
           commitChanges();
-          segmentInfos.write(directory);
+          segmentInfos->write(_directory);
           success = true;
         } _CLFINALLY (
 
@@ -52,16 +60,16 @@ CL_NS_DEF(index)
             // Recompute deletable files & remove them (so
             // partially written .del files, etc, are
             // removed):
-            deleter.refresh();
+            deleter->refresh();
           }
         )
 
         // Have the deleter remove any now unreferenced
         // files due to this commit:
-        deleter.checkpoint(segmentInfos, true);
+        deleter->checkpoint(segmentInfos, true);
 
         if (writeLock != NULL) {
-          writeLock.release();  // release write lock
+          writeLock->release();  // release write lock
           writeLock = NULL;
         }
       }
@@ -75,109 +83,134 @@ CL_NS_DEF(index)
     if (segmentInfos != NULL) {
       ensureOpen();
       if (stale)
-        throw _CLNEW StaleReaderException("IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
+        _CLTHROWA(CL_ERR_StaleReader, "IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
 
       if (writeLock == NULL) {
         LuceneLock* writeLock = _directory->makeLock(IndexWriter::WRITE_LOCK_NAME);
-        if (!writeLock.obtain(IndexWriter::WRITE_LOCK_TIMEOUT)) // obtain write lock
-          throw _CLNEW LockObtainFailedException("Index locked for write: " + writeLock);
-        this.writeLock = writeLock;
+        if (!writeLock->obtain(IndexWriter::WRITE_LOCK_TIMEOUT)) // obtain write lock
+          _CLTHROWA(CL_ERR_LockObtainFailed, (string("Index locked for write: ") + writeLock->getObjectName()).c_str());
+        this->writeLock = writeLock;
 
         // we have to check whether index has changed since this reader was opened.
         // if so, this reader is no longer valid for deletion
-        if (SegmentInfos::readCurrentVersion(directory) > segmentInfos.getVersion()) {
+        if (SegmentInfos::readCurrentVersion(_directory) > segmentInfos->getVersion()) {
           stale = true;
-          this.writeLock.release();
-          this.writeLock = NULL;
-          throw _CLNEW StaleReaderException("IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
+          this->writeLock->release();
+          this->writeLock = NULL;
+          _CLTHROWA(CL_ERR_StaleReader, "IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
         }
       }
     }
   }
 
-  void DirectoryIndexReader::finalize() {
-    try {
-      if (writeLock != NULL) {
-        writeLock.release();                        // release write lock
-        writeLock = NULL;
-      }
-    } _CLFINALLY (
-      super.finalize();
-    )
-  }
-
-  void DirectoryIndexReader::init(Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory) {
-    this.directory = directory;
-    this.segmentInfos = segmentInfos;
-    this.closeDirectory = closeDirectory;
+  void DirectoryIndexReader::init(Directory* __directory, SegmentInfos* segmentInfos, bool closeDirectory) {
+    this->_directory = __directory;
+    this->segmentInfos = segmentInfos;
+    this->closeDirectory = closeDirectory;
   }
 
   DirectoryIndexReader::DirectoryIndexReader(){}
-  DirectoryIndexReader::DirectoryIndexReader(Directory* directory, SegmentInfos* segmentInfos,
-      bool closeDirectory) {
-    super();
-    init(directory, segmentInfos, closeDirectory);
-  }
-
-  DirectoryIndexReader::DirectoryIndexReader open(Directory* directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy) {
-
-    return (DirectoryIndexReader) _CLNEW SegmentInfos::FindSegmentsFile(directory) {
-
-      protected Object doBody(String segmentFileName) {
-
-        SegmentInfos infos = _CLNEW SegmentInfos();
-        infos.read(directory, segmentFileName);
-
-        DirectoryIndexReader reader;
-
-        if (infos.size() == 1) {          // index is optimized
-          reader = SegmentReader.get(infos, infos.info(0), closeDirectory);
-        } else {
-          reader = _CLNEW MultiSegmentReader(directory, infos, closeDirectory);
-        }
-        reader.setDeletionPolicy(deletionPolicy);
-        return reader;
+  DirectoryIndexReader::~DirectoryIndexReader(){
+    try {
+      if (writeLock != NULL) {
+        writeLock->release();                        // release write lock
+        writeLock = NULL;
       }
-    }.run();
+    }catch(...){
+    }
+  }
+  DirectoryIndexReader::DirectoryIndexReader(Directory* __directory, SegmentInfos* segmentInfos, bool closeDirectory):
+    IndexReader()
+  {
+    init(__directory, segmentInfos, closeDirectory);
   }
 
+  class DirectoryIndexReader_FindSegmentsFile_Open: public SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>{
+    bool closeDirectory;
+    IndexDeletionPolicy* deletionPolicy;
+	protected:
+    DirectoryIndexReader* doBody(const char* segmentFileName) {
+
+      SegmentInfos* infos = _CLNEW SegmentInfos;
+      infos->read(directory, segmentFileName);
+
+      DirectoryIndexReader* reader;
+
+      if (infos->size() == 1) {          // index is optimized
+        reader = SegmentReader::get(infos, infos->info(0), closeDirectory);
+      } else {
+        reader = _CLNEW MultiSegmentReader(directory, infos, closeDirectory);
+      }
+      reader->setDeletionPolicy(deletionPolicy);
+      return reader;
+    }
+  public:
+    DirectoryIndexReader_FindSegmentsFile_Open( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
+        CL_NS(store)::Directory* dir ):
+      SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>(dir)
+    {
+      this->closeDirectory = closeDirectory;
+      this->deletionPolicy = deletionPolicy;
+    }
+  };
+
+  DirectoryIndexReader* DirectoryIndexReader::open(Directory* __directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy) {
+    DirectoryIndexReader_FindSegmentsFile_Open runner(closeDirectory, deletionPolicy, __directory);
+    return runner.run();
+  }
+
+
+  class DirectoryIndexReader::FindSegmentsFile_Reopen: public SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>{
+    bool closeDirectory;
+    IndexDeletionPolicy* deletionPolicy;
+    DirectoryIndexReader* _this;
+	protected:
+    DirectoryIndexReader* doBody(const char* segmentFileName) {
+      SegmentInfos* infos = _CLNEW SegmentInfos();
+      infos->read(directory, segmentFileName);
+
+      DirectoryIndexReader* newReader = _this->doReopen(infos);
+
+      if (_this != newReader) {
+        newReader->init(directory, infos, closeDirectory);
+        newReader->deletionPolicy = deletionPolicy;
+      }
+
+      return newReader;
+    }
+  public:
+    FindSegmentsFile_Reopen( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
+        CL_NS(store)::Directory* dir, DirectoryIndexReader* _this ):
+      SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>(dir)
+    {
+      this->closeDirectory = closeDirectory;
+      this->deletionPolicy = deletionPolicy;
+      this->_this = _this;
+    }
+  };
 
   IndexReader* DirectoryIndexReader::reopen(){
-    LUCENE_SCOPED_LOCK(THIS_LOCK)
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 
-    if (this.hasChanges || this.isCurrent()) {
+_CLNEW MultiSegmentReader(NULL, NULL, true);
+    if (this->hasChanges || this->isCurrent()) {
       // the index hasn't changed - nothing to do here
       return this;
     }
-
-    return (DirectoryIndexReader*) _CLNEW SegmentInfos::FindSegmentsFile(directory) {
-
-      protected Object doBody(String segmentFileName){
-        SegmentInfos infos = _CLNEW SegmentInfos();
-        infos.read(directory, segmentFileName);
-
-        DirectoryIndexReader _CLNEWReader = doReopen(infos);
-
-        if (DirectoryIndexReader.this != _CLNEWReader) {
-          _CLNEWReader.init(directory, infos, closeDirectory);
-          _CLNEWReader.deletionPolicy = deletionPolicy;
-        }
-
-        return _CLNEWReader;
-      }
-    }.run();
+    FindSegmentsFile_Reopen runner(closeDirectory, deletionPolicy, _directory, this); 
+    return runner.run();
   }
 
   void DirectoryIndexReader::setDeletionPolicy(IndexDeletionPolicy* deletionPolicy) {
-    this.deletionPolicy = deletionPolicy;
+    this->deletionPolicy = deletionPolicy;
   }
 
   /** Returns the directory this index resides in.
    */
   Directory* DirectoryIndexReader::directory() {
     ensureOpen();
-    return directory;
+    return _directory;
   }
 
   /**
@@ -185,7 +218,7 @@ CL_NS_DEF(index)
    */
   int64_t DirectoryIndexReader::getVersion() {
     ensureOpen();
-    return segmentInfos.getVersion();
+    return segmentInfos->getVersion();
   }
 
   /**
@@ -204,7 +237,7 @@ CL_NS_DEF(index)
    */
   bool DirectoryIndexReader::isCurrent(){
     ensureOpen();
-    return SegmentInfos::readCurrentVersion(directory) == segmentInfos.getVersion();
+    return SegmentInfos::readCurrentVersion(_directory) == segmentInfos->getVersion();
   }
 
   /**
@@ -213,7 +246,7 @@ CL_NS_DEF(index)
    */
   bool DirectoryIndexReader::isOptimized() {
     ensureOpen();
-    return segmentInfos.size() == 1 && hasDeletions() == false;
+    return segmentInfos->size() == 1 && hasDeletions() == false;
   }
 
   /**
@@ -222,7 +255,7 @@ CL_NS_DEF(index)
    */
   void DirectoryIndexReader::startCommit() {
     if (segmentInfos != NULL) {
-      rollbackSegmentInfos = segmentInfos.clone();
+      rollbackSegmentInfos = segmentInfos->clone();
     }
     rollbackHasChanges = hasChanges;
   }
@@ -234,12 +267,12 @@ CL_NS_DEF(index)
    */
   void DirectoryIndexReader::rollbackCommit() {
     if (segmentInfos != NULL) {
-      for(int32_t i=0;i<segmentInfos.size();i++) {
+      for(int32_t i=0;i<segmentInfos->size();i++) {
         // Rollback each segmentInfo.  Because the
         // SegmentReader holds a reference to the
         // SegmentInfo we can't [easily] just replace
         // segmentInfos, so we reset it in place instead:
-        segmentInfos.info(i).reset(rollbackSegmentInfos::info(i));
+        segmentInfos->info(i)->reset(rollbackSegmentInfos->info(i));
       }
       rollbackSegmentInfos = NULL;
     }

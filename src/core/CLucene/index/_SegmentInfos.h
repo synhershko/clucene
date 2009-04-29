@@ -10,6 +10,7 @@
 
 //#include "IndexReader.h"
 //#include "CLucene/util/VoidList.h"
+#include "_IndexFileNames.h"
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,IndexInput)
 CL_CLASS_DEF(store,IndexOutput)
@@ -289,7 +290,7 @@ CL_NS_DEF(index)
 		*
 		* @param files -- array of file names to check
 		*/
-		static int64_t getCurrentSegmentGeneration( char** files );
+    static int64_t getCurrentSegmentGeneration( std::vector<std::string>& files );
 
 		/**
 		* Get the generation (N) of the current segments_N file
@@ -297,7 +298,7 @@ CL_NS_DEF(index)
 		*
 		* @param directory -- directory to search for the latest segments_N file
 		*/
-		static int64_t getCurrentSegmentGeneration( CL_NS(store)::Directory* directory );
+		static int64_t getCurrentSegmentGeneration( const CL_NS(store)::Directory* directory );
 
 		/**
 		* Get the filename of the current segments_N file
@@ -305,7 +306,7 @@ CL_NS_DEF(index)
 		*
 		* @param files -- array of file names to check
 		*/
-		static const char* getCurrentSegmentFileName( char** files );
+    static const char* getCurrentSegmentFileName( std::vector<std::string>& files );
 
 		/**
 		* Get the filename of the current segments_N file
@@ -440,38 +441,287 @@ CL_NS_DEF(index)
 		* time, etc., it could have been deleted due to a writer
 		* commit finishing.
 		*/
+    template<typename RET>
 		class FindSegmentsFile: LUCENE_BASE {
     	protected:
     		CL_NS(store)::Directory* directory;
-
+        const char* fileDirectory;
     	public:
-    		FindSegmentsFile( CL_NS(store)::Directory* dir );
-    		~FindSegmentsFile();
+    		FindSegmentsFile( CL_NS(store)::Directory* dir ){
+	        this->directory = dir;
+          this->fileDirectory = NULL;
+        }
+    		FindSegmentsFile( const char* dir ){
+	        this->directory = NULL;
+          this->fileDirectory = dir;
+        }
+        ~FindSegmentsFile(){
+        }
 
-    		void* run();
-    		virtual void* doBody( const char* segmentFileName ) = 0;
+    		RET run(){
+	        char* segmentFileName = NULL;
+	        int64_t lastGen = -1;
+	        int64_t gen = 0;
+	        int32_t genLookaheadCount = 0;
+	        bool retry = false;
 
+	        int32_t exc_num = 0;
+	        TCHAR* exc_txt = NULL;
+
+	        int32_t method = 0;
+
+	        // Loop until we succeed in calling doBody() without
+	        // hitting an IOException.  An IOException most likely
+	        // means a commit was in process and has finished, in
+	        // the time it took us to load the now-old infos files
+	        // (and segments files).  It's also possible it's a
+	        // true error (corrupt index).  To distinguish these,
+	        // on each retry we must see "forward progress" on
+	        // which generation we are trying to load.  If we
+	        // don't, then the original error is real and we throw
+	        // it.
+
+	        // We have three methods for determining the current
+	        // generation.  We try the first two in parallel, and
+	        // fall back to the third when necessary. 
+
+	        while( true ) {
+
+		        if ( 0 == method ) {
+			        // Method 1: list the directory and use the highest
+			        // segments_N file.  This method works well as long
+			        // as there is no stale caching on the directory
+			        // contents (NOTE: NFS clients often have such stale
+			        // caching):
+			        vector<string> files;
+
+			        int64_t genA = -1;
+
+			        if (directory != NULL)
+				        directory->list(&files);
+			        //else
+			        //todo: files = fileDirectory.list();
+
+			        if (!files.empty()) {
+				        genA = getCurrentSegmentGeneration( files );
+                files.clear();
+			        }
+
+              if ( infoStream ){
+                (*infoStream) << "[SIS]: directory listing genA=" << genA << "\n";
+              }
+
+			        // Method 2: open segments.gen and read its
+			        // contents.  Then we take the larger of the two
+			        // gen's.  This way, if either approach is hitting
+			        // a stale cache (NFS) we have a better chance of
+			        // getting the right generation.
+			        int64_t genB = -1;
+			        if (directory != NULL) {
+				        CLuceneError e;
+				        for(int32_t i=0;i<defaultGenFileRetryCount;i++) {
+					        IndexInput* genInput = NULL;
+					        if ( ! directory->openInput(IndexFileNames::SEGMENTS_GEN, genInput, e) ){
+                    if (e.number() == CL_ERR_IO ) {
+							        if ( infoStream ){
+                        (*infoStream) << "[SIS]: segments.gen open: IOException " << e.what() << "\n";
+                      }
+                      break;
+						        } else {
+							        _CLLDELETE(genInput);
+							        _CLDELETE_LARRAY(exc_txt);
+							        throw e;
+						        }
+					        }
+
+					        if (genInput != NULL) {
+						        try {
+							        int32_t version = genInput->readInt();
+							        if (version == FORMAT_LOCKLESS) {
+								        int64_t gen0 = genInput->readLong();
+								        int64_t gen1 = genInput->readLong();
+								        //CL_TRACE("fallback check: %d; %d", gen0, gen1);
+								        if (gen0 == gen1) {
+									        // The file is consistent.
+									        genB = gen0;
+									        _CLDELETE(genInput);
+									        break;
+								        }
+							        }
+						        } catch (CLuceneError &err2) {
+							        if (err2.number() != CL_ERR_IO) {
+								        _CLLDELETE(genInput);
+								        _CLDELETE_LARRAY(exc_txt);
+								        throw err2; // retry only for IOException
+							        }
+						        } _CLFINALLY({
+							        genInput->close();
+							        _CLDELETE(genInput);
+						        });
+					        }
+
+					        _LUCENE_SLEEP(defaultGenFileRetryPauseMsec);
+					        /*
+					        //todo: Wrap the LUCENE_SLEEP call above with the following try/catch block if
+					        //	  InterruptedException is implemented
+					        try {
+					        } catch (CLuceneError &e) {
+					        //if (err2.number != CL_ERR_Interrupted) // retry only for InterruptedException
+					        // todo: see if CL_ERR_Interrupted needs to be added...
+					        _CLDELETE_LARRAY(exc_txt);
+					        throw e;
+					        }*/
+
+				        }
+			        }
+
+			        //CL_TRACE("%s check: genB=%d", IndexFileNames::SEGMENTS_GEN, genB);
+
+			        // Pick the larger of the two gen's:
+			        if (genA > genB)
+				        gen = genA;
+			        else
+				        gen = genB;
+
+			        if (gen == -1) {
+				        // Neither approach found a generation
+				        _CLDELETE_LARRAY(exc_txt);
+				        _CLTHROWA(CL_ERR_IO, "No segments* file found"); //todo: add folder name (directory->toString())
+			        } 
+		        }
+
+		        // Third method (fallback if first & second methods
+		        // are not reliable): since both directory cache and
+		        // file contents cache seem to be stale, just
+		        // advance the generation.
+		        if ( 1 == method || ( 0 == method && lastGen == gen && retry )) {
+
+			        method = 1;
+
+			        if (genLookaheadCount < defaultGenLookaheadCount) {
+				        gen++;
+				        genLookaheadCount++;
+				        //CL_TRACE("look ahead increment gen to %d", gen);
+			        }
+		        }
+
+		        if (lastGen == gen) {
+
+			        // This means we're about to try the same
+			        // segments_N last tried.  This is allowed,
+			        // exactly once, because writer could have been in
+			        // the process of writing segments_N last time.
+
+			        if (retry) {
+				        // OK, we've tried the same segments_N file
+				        // twice in a row, so this must be a real
+				        // error.  We throw the original exception we
+				        // got.
+				        _CLTHROWT_DEL(exc_num, exc_txt);
+			        } else {
+				        retry = true;
+			        }
+
+		        } else {
+			        // Segment file has advanced since our last loop, so
+			        // reset retry:
+			        retry = false;
+		        }
+
+		        lastGen = gen;
+
+		        segmentFileName = IndexFileNames::fileNameFromGeneration(IndexFileNames::SEGMENTS, "", gen);
+
+		        try {
+			        RET v = doBody(segmentFileName);
+			        _CLDELETE_LARRAY( segmentFileName );
+			        _CLDELETE_LARRAY(exc_txt);
+			        //if (exc != NULL) {
+			        //CL_TRACE("success on %s", segmentFileName);
+			        //}
+			        return v;
+		        } catch (CLuceneError& err) {
+
+			        _CLDELETE_LARRAY( segmentFileName );
+
+			        if (err.number() != CL_ERR_IO) {
+				        _CLDELETE_LARRAY(exc_txt);
+				        throw err;
+			        }
+
+			        // Save the original root cause:
+			        if (exc_num == 0) {
+				        exc_num = err.number();
+				        CND_CONDITION( exc_num > 0, _T("Unsupported error code"));
+				        exc_txt = STRDUP_TtoT(err.twhat());
+			        }
+
+			        //CL_TRACE("primary Exception on '" + segmentFileName + "': " + err + "'; will retry: retry=" + retry + "; gen = " + gen);
+
+			        if (!retry && gen > 1) {
+
+				        // This is our first time trying this segments
+				        // file (because retry is false), and, there is
+				        // possibly a segments_(N-1) (because gen > 1).
+				        // So, check if the segments_(N-1) exists and
+				        // try it if so:
+				        const char* prevSegmentFileName = IndexFileNames::fileNameFromGeneration( IndexFileNames::SEGMENTS, "", gen-1 );
+
+				        bool prevExists=false;
+				        if (directory != NULL)
+					        prevExists = directory->fileExists(prevSegmentFileName);
+				        //todo: File implementation below
+				        //else
+				        //  prevExists = new File(fileDirectory, prevSegmentFileName).exists();
+
+				        if (prevExists) {
+					        //CL_TRACE("fallback to prior segment file '%s'", prevSegmentFileName);
+					        try {
+						        RET v = doBody(prevSegmentFileName);
+						        _CLDELETE_CaARRAY( prevSegmentFileName );
+						        _CLDELETE_CARRAY(exc_txt);
+						        //if (exc != NULL) {
+						        //CL_TRACE("success on fallback %s", prevSegmentFileName);
+						        //}
+						        return v;
+					        } catch (CLuceneError& err2) {
+						        _CLDELETE_CaARRAY( prevSegmentFileName );
+						        if (err2.number()!=CL_ERR_IO) {
+							        _CLDELETE_LARRAY(exc_txt);
+							        throw err2;
+						        }
+						        //CL_TRACE("secondary Exception on '" + prevSegmentFileName + "': " + err2 + "'; will retry");
+					        }
+				        }
+			        }
+		        }
+	        }
+        }
+    		virtual RET doBody( const char* segmentFileName ) = 0;
     	};
-    	friend class SegmentInfos::FindSegmentsFile;
+    	//friend class SegmentInfos::FindSegmentsFile;
 
-    	class FindSegmentsReader: public FindSegmentsFile {
+    	class FindSegmentsReader: public FindSegmentsFile<IndexReader*> {
     	public:
     		FindSegmentsReader( CL_NS(store)::Directory* dir );
-    		void* doBody( const char* segmentFileName );
+    		FindSegmentsReader( const char* dir );
+    		IndexReader* doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsReader;
 
-    	class FindSegmentsVersion: public FindSegmentsFile {
+    	class FindSegmentsVersion: public FindSegmentsFile<int64_t> {
     	public:
     		FindSegmentsVersion( CL_NS(store)::Directory* dir );
-    		void* doBody( const char* segmentFileName );
+    		FindSegmentsVersion( const char* dir );
+    		int64_t doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsVersion;
 
-		class FindSegmentsRead: public FindSegmentsFile {
+		class FindSegmentsRead: public FindSegmentsFile<bool> {
     	public:
-			FindSegmentsRead( CL_NS(store)::Directory* dir );
-    		void* doBody( const char* segmentFileName );
+			  FindSegmentsRead( CL_NS(store)::Directory* dir );
+    	  FindSegmentsRead( const char* dir );
+    		bool doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsRead;
   };

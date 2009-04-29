@@ -12,14 +12,15 @@
 #include "IndexReader.h"
 CL_CLASS_DEF(document,Document)
 //#include "Terms.h"
-//#include "SegmentMergeQueue.h"
+#include "_SegmentHeader.h"
 
 CL_NS_DEF(index)
+class SegmentMergeQueue;
 
 class MultiSegmentReader:public DirectoryIndexReader{
+  static int32_t readerIndex(const int32_t n, int32_t* starts, int32_t numSubReaders);
 private:
-	int32_t readerIndex(const int32_t n, int32_t* starts, int32_t numSubReaders) const;
-  int readerIndex(int32_t n) const;
+	int readerIndex(int32_t n) const;
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 
@@ -60,12 +61,13 @@ protected:
         CL_NS(util)::Deletor::tcArray,
         CL_NS(util)::Deletor::vArray<uint8_t> >* oldNormsCache) ;
 
-  void initialize( CL_NS(util)::ObjectArray<SegmentReader>* subReaders);
+  void initialize( CL_NS(util)::ObjectArray<IndexReader>* subReaders);
 
-  /** Construct reading the named set of readers. */
-   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
 public:
-	~MultiSegmentReader();
+  /** Construct reading the named set of readers. */
+  CLUCENE_LOCAL_DECL MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
+
+	virtual ~MultiSegmentReader();
 
 	/** Return an array of term frequency vectors for the specified document.
 	*  The array contains a vector for each vectorized field in the document.
@@ -94,19 +96,21 @@ public:
 	uint8_t* norms(const TCHAR* field);
 	void norms(const TCHAR* field, uint8_t* result);
 
-	TermEnum* terms() const;
-	TermEnum* terms(const Term* term) const;
+	TermEnum* terms();
+	TermEnum* terms(const Term* term);
 	
 	//Returns the document frequency of the current term in the set
-	int32_t docFreq(const Term* t=NULL) const;
-	TermDocs* termDocs() const;
-	TermPositions* termPositions() const;
+	int32_t docFreq(const Term* t=NULL);
+	TermDocs* termDocs();
+	TermPositions* termPositions();
 
   void getFieldNames (FieldOption fldOption, StringArrayWithDeletor& retarray);
 	static void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray, CL_NS(util)::ObjectArray<IndexReader>* subReaders);
 
   void setTermInfosIndexDivisor(int32_t indexDivisor);
   int32_t getTermInfosIndexDivisor();
+
+  friend class MultiReader;
 };
 
 
@@ -114,25 +118,26 @@ class MultiTermDocs:public virtual TermDocs {
 protected:
   CL_NS(util)::ObjectArray<TermDocs>* readerTermDocs;
 
-  CL_NS(util)::ObjectArray<SegmentReader>* subReaders;
+  CL_NS(util)::ObjectArray<IndexReader>* subReaders;
   const int32_t* starts;
   Term* term;
 
   int32_t base;
-  int32_t pointer;
+  size_t pointer;
 
   TermDocs* current;              // == segTermDocs[pointer]
-  TermDocs* termDocs(const int32_t i) const; //< internal use only
-  virtual TermDocs* termDocs(const IndexReader* reader) const;
+  TermDocs* termDocs(const int32_t i); //< internal use only
+  virtual TermDocs* termDocs(IndexReader* reader);
+  void init(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* starts);
 public:
   MultiTermDocs();
-  MultiTermDocs(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* s);
+  MultiTermDocs(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* s);
   virtual ~MultiTermDocs();
 
   int32_t doc() const;
   int32_t freq() const;
 
-    void seek(TermEnum* termEnum);
+  void seek(TermEnum* termEnum);
   void seek(Term* tterm);
   bool next();
 
@@ -158,7 +163,7 @@ private:
 public:
   //Constructor
   //Opens all enumerations of all readers
-  MultiTermEnum(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* starts, const Term* t);
+  MultiTermEnum(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* starts, const Term* t);
 
   //Destructor
   ~MultiTermEnum();
@@ -187,9 +192,9 @@ public:
 #endif
 class MultiTermPositions:public MultiTermDocs,public TermPositions {
 protected:
-  TermDocs* termDocs(const IndexReader* reader) const;
+  TermDocs* termDocs(IndexReader* reader);
 public:
-  MultiTermPositions(CL_NS(util)::ObjectArray<SegmentReader>* subReaders, const int32_t* s);
+  MultiTermPositions(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* s);
   ~MultiTermPositions() {};
   int32_t nextPosition();
 

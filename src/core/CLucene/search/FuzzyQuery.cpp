@@ -33,7 +33,7 @@ CL_NS_DEF(search)
      * @param prefixLength Length of required common prefix. Default value is 0.
      * @throws IOException
      */
-	 FuzzyTermEnum::FuzzyTermEnum(const IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
+	 FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
         distance(0),
         _endEnum(false),
 		prefix(STRDUP_TtoT(LUCENE_BLANK_STRING)),

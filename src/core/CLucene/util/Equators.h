@@ -60,13 +60,18 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
-/** @internal */
-class CLUCENE_INLINE_EXPORT Comparable:LUCENE_BASE{
+class CLUCENE_EXPORT NamedObject:LUCENE_BASE{
+public:
+  virtual ~NamedObject(){
+  }
+	virtual const char* getObjectName() = 0;
+};
+class CLUCENE_INLINE_EXPORT Comparable:public NamedObject{
 public:
    virtual ~Comparable(){
    }
    
-	virtual int32_t compareTo(void* o) = 0;
+	virtual int32_t compareTo(NamedObject* o) = 0;
 };
 
 /** @internal */
@@ -92,9 +97,11 @@ public:
 		int32_t getValue() const;
 		Int32(int32_t val);
 		Int32();
-		int32_t compareTo(void* o);
+		int32_t compareTo(NamedObject* o);
 		bool operator()( int32_t t1, int32_t t2 ) const;
 		size_t operator()( int32_t t ) const;
+		static const char* getClassName();
+		const char* getObjectName();
 	};
 
 	
@@ -103,7 +110,9 @@ public:
 	public:
 		float_t getValue() const;
 		Float(float_t val);
-		int32_t compareTo(void* o);
+		int32_t compareTo(NamedObject* o);
+		static const char* getClassName();
+		const char* getObjectName();
 	};
 
 
@@ -114,10 +123,12 @@ public:
     	const char* getValue() const;
     	Char();
     	Char(const char* str);
-    	int32_t compareTo(void* o);
+    	int32_t compareTo(NamedObject* o);
 
 		bool operator()( const char* val1, const char* val2 ) const;
 		size_t operator()( const char* val1) const;
+		static const char* getClassName();
+		const char* getObjectName();
 	};
 
 #ifdef _UCS2
@@ -128,10 +139,12 @@ public:
     	const wchar_t* getValue() const;
     	WChar();
     	WChar(const wchar_t* str);
-    	int32_t compareTo(void* o);
+    	int32_t compareTo(NamedObject* o);
 
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
 		size_t operator()( const wchar_t* val1) const;
+		static const char* getClassName();
+		const char* getObjectName();
 	};
 	typedef WChar TChar;
 #else

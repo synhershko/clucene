@@ -33,6 +33,9 @@ private:
   bool rollbackHasChanges;
   SegmentInfos* rollbackSegmentInfos;
 
+  class FindSegmentsFile_Reopen;
+  friend class FindSegmentsFile_Reopen;
+
 protected:
   CL_NS(store)::Directory* _directory;
   bool closeDirectory;
@@ -77,12 +80,11 @@ protected:
   void finalize();
 
 public:
+  virtual ~DirectoryIndexReader();
   void init(CL_NS(store)::Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory);
 
   CLUCENE_LOCAL_DECL DirectoryIndexReader(CL_NS(store)::Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory);
-
   CLUCENE_LOCAL_DECL static DirectoryIndexReader* open(CL_NS(store)::Directory* directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy);
-
 
   IndexReader* reopen();
 

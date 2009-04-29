@@ -1,4 +1,16 @@
 
+#ifndef _lucene_index_IndexFileDeleter_
+#define _lucene_index_IndexFileDeleter_
+
+#include "CLucene/util/Equators.h"
+#include "IndexDeletionPolicy.h"
+
+CL_CLASS_DEF(store,Directory)
+CL_NS_DEF(index)
+class SegmentInfos;
+class DocumentsWriter;
+class IndexDeletionPolicy;
+
 /*
  * This class keeps track of each SegmentInfos instance that
  * is still "live", either because it corresponds to a 
@@ -37,40 +49,89 @@
  */
 class IndexFileDeleter {
 private:
+  /**
+  * Tracks the reference count for a single index file:
+  */
+  class RefCount {
+  public:
+	int count;
+	int IncRef() {
+		return ++count;
+	}
+	int DecRef() {
+		return --count;
+	}
+  };
+	
+  /**
+   * Holds details for each commit point.  This class is
+   * also passed to the deletion policy.  Note: this class
+   * has a natural ordering that is inconsistent with
+   * equals.
+   */
+  class CommitPoint: public CL_NS(util)::Comparable, public IndexCommitPoint {
+    int64_t gen;
+		std::vector<std::string> files;
+    const char* segmentsFileName;
+    bool deleted;
+  public:
+    CommitPoint(SegmentInfos* segmentInfos);
+
+    /**
+     * Get the segments_N file for this commit point.
+     */
+	std::string getSegmentsFileName();
+
+    void getFileNames(std::vector<std::string>& ret);
+
+    /**
+     * Called only be the deletion policy, to remove this
+     * commit point from the index.
+     */
+    void deleteCommitPoint();
+
+    int compareTo(NamedObject* obj);
+  };
+	
   /* Files that we tried to delete but failed (likely
    * because they are open and we are running on Windows),
    * so we will retry them again later: */
-  List deletable;
+  std::vector<std::string> deletable;
 
+  typedef CL_NS(util)::CLHashMap<char*, RefCount*,
+	CL_NS(util)::Compare::Char,
+	CL_NS(util)::Equals::Char,
+	CL_NS(util)::Deletor::acArray,
+	CL_NS(util)::Deletor::Object<RefCount> > RefCountsType;
   /* Reference count for all files in the index.  
    * Counts how many existing commits reference a file.
    * Maps String to RefCount (class below) instances: */
-  Map refCounts = new HashMap();
+  RefCountsType refCounts;
 
   /* Holds all commits (segments_N) currently in the index.
    * This will have just 1 commit if you are using the
    * default delete policy (KeepOnlyLastCommitDeletionPolicy).
    * Other policies may leave commit points live for longer
    * in which case this list would be longer than 1: */
-  List commits = new ArrayList();
+  CL_NS(util)::CLArrayList<CommitPoint*> commits;
 
   /* Holds files we had incref'd from the previous
    * non-commit checkpoint: */
-  List lastFiles = new ArrayList();
+  std::vector<std::string> lastFiles;
 
   /* Commits that the IndexDeletionPolicy have decided to delete: */ 
-  List commitsToDelete = new ArrayList();
+  CL_NS(util)::CLArrayList<CommitPoint*> commitsToDelete;
 
-  PrintStream infoStream;
-  Directory directory;
-  IndexDeletionPolicy policy;
-  DocumentsWriter docWriter;
+  std::ostream* infoStream;
+  CL_NS(store)::Directory* directory;
+  IndexDeletionPolicy* policy;
+  DocumentsWriter* docWriter;
   void deletePendingFiles();
 
-  void setInfoStream(PrintStream infoStream);
-  void message(String message);
-  void decRef(String fileName);
-  RefCount getRefCount(String fileName);
+  void setInfoStream(std::ostream* infoStream);
+  void message(const char* message);
+  void decRef(const char* fileName);
+  RefCount getRefCount(const char* fileName);
 
   /**
    * Remove the CommitPoints in the commitsToDelete List by
@@ -78,70 +139,10 @@ private:
    */
   void deleteCommits();
 
-  /**
-   * Holds details for each commit point.  This class is
-   * also passed to the deletion policy.  Note: this class
-   * has a natural ordering that is inconsistent with
-   * equals.
-   */
-
-  final class CommitPoint implements Comparable, IndexCommitPoint {
-    long gen;
-    List files;
-    String segmentsFileName;
-    boolean deleted;
-
-    public CommitPoint(SegmentInfos segmentInfos) throws IOException {
-      segmentsFileName = segmentInfos.getCurrentSegmentFileName();
-      int size = segmentInfos.size();
-      files = new ArrayList(size);
-      files.add(segmentsFileName);
-      gen = segmentInfos.getGeneration();
-      for(int i=0;i<size;i++) {
-        SegmentInfo segmentInfo = segmentInfos.info(i);
-        if (segmentInfo.dir == directory) {
-          files.addAll(segmentInfo.files());
-        }
-      }
-    }
-
-    /**
-     * Get the segments_N file for this commit point.
-     */
-    public String getSegmentsFileName() {
-      return segmentsFileName;
-    }
-
-    public Collection getFileNames() throws IOException {
-      return Collections.unmodifiableCollection(files);
-    }
-
-    /**
-     * Called only be the deletion policy, to remove this
-     * commit point from the index.
-     */
-    public void delete() {
-      if (!deleted) {
-        deleted = true;
-        commitsToDelete.add(this);
-      }
-    }
-
-    public int compareTo(Object obj) {
-      CommitPoint commit = (CommitPoint) obj;
-      if (gen < commit.gen) {
-        return -1;
-      } else if (gen > commit.gen) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-  }
 public:
   /** Change to true to see details of reference counts when
    *  infoStream != null */
-  static boolean VERBOSE_REF_COUNTS = false;
+  static bool VERBOSE_REF_COUNTS;
 
   /**
    * Initialize the deleter: find all previous commits in
@@ -153,7 +154,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  IndexFileDeleter(Directory directory, IndexDeletionPolicy policy, SegmentInfos segmentInfos, PrintStream infoStream, DocumentsWriter docWriter);
+  IndexFileDeleter(CL_NS(store)::Directory* directory, IndexDeletionPolicy* policy, SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter);
 
   /**
    * Writer calls this when it has hit an error and had to
@@ -163,7 +164,7 @@ public:
    * is non-null, we will only delete files corresponding to
    * that segment.
    */
-  void refresh(String segmentName);
+  void refresh(const char* segmentName);
   void refresh();
   void close();
 
@@ -187,17 +188,20 @@ public:
    * a chance to remove other commits.  If any commits are
    * removed, we decref their files as well.
    */
-  void checkpoint(SegmentInfos segmentInfos, boolean isCommit);
+  void checkpoint(SegmentInfos* segmentInfos, bool isCommit);
 
 
-  void CLUCENE_LOCAL_DECL incRef(SegmentInfos segmentInfos, boolean isCommit);
-  void CLUCENE_LOCAL_DECL incRef(List files);
-  void CLUCENE_LOCAL_DECL decRef(List files) ;
-  void CLUCENE_LOCAL_DECL decRef(SegmentInfos segmentInfos);
-  void CLUCENE_LOCAL_DECL deleteFiles(List files);
+  void CLUCENE_LOCAL_DECL incRef(SegmentInfos* segmentInfos, bool isCommit);
+  void CLUCENE_LOCAL_DECL incRef(std::vector<std::string>& files);
+  void CLUCENE_LOCAL_DECL decRef(std::vector<std::string>& files) ;
+  void CLUCENE_LOCAL_DECL decRef(SegmentInfos* segmentInfos);
+  void CLUCENE_LOCAL_DECL deleteFiles(std::vector<std::string>& files);
 
   /** Delets the specified files, but only if they are new
    *  (have not yet been incref'd). */
-  void CLUCENE_LOCAL_DECL deleteNewFiles(List files);
-  void CLUCENE_LOCAL_DECL deleteFile(String fileName);
-}
+  void CLUCENE_LOCAL_DECL deleteNewFiles(std::vector<std::string>& files);
+  void CLUCENE_LOCAL_DECL deleteFile(const char* fileName);
+};
+
+CL_NS_END
+#endif

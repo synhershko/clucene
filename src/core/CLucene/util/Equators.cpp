@@ -42,16 +42,20 @@ Compare::Int32::Int32(int32_t val){
 Compare::Int32::Int32(){
 	value = 0;
 }
-int32_t Compare::Int32::compareTo(void* o){
-	try{
-		Int32* other = (Int32*)o;
-		if (value == other->value)
-			return 0;
-		// Returns just -1 or 1 on inequality; doing math might overflow.
-		return value > other->value ? 1 : -1;
-	}catch(...){
-		_CLTHROWA(CL_ERR_Runtime, "Couldnt compare types");
-	}  
+const char* Compare::Int32::getClassName(){
+	return "Compare::Int32::getClassName";
+}
+const char* Compare::Int32::getObjectName(){
+	return getClassName();
+}
+int32_t Compare::Int32::compareTo(NamedObject* o){
+	if ( o->getObjectName() != Int32::getClassName() ) return -1;
+
+	Int32* other = (Int32*)o;
+	if (value == other->value)
+		return 0;
+	// Returns just -1 or 1 on inequality; doing math might overflow.
+	return value > other->value ? 1 : -1;
 }
 
 bool Compare::Int32::operator()( int32_t t1, int32_t t2 ) const{
@@ -68,16 +72,19 @@ float_t Compare::Float::getValue() const{
 Compare::Float::Float(float_t val){
 	value = val;
 }
-int32_t Compare::Float::compareTo(void* o){
-	try{
-		Float* other = (Float*)o;
-		if (value == other->value)
-			return 0;
-		// Returns just -1 or 1 on inequality; doing math might overflow.
-		return value > other->value ? 1 : -1;
-	}catch(...){
-		_CLTHROWA(CL_ERR_Runtime,"Couldnt compare types");
-	}  
+const char* Compare::Float::getClassName(){
+	return "Compare::Float::getClassName";
+}
+const char* Compare::Float::getObjectName(){
+	return getClassName();
+}
+int32_t Compare::Float::compareTo(NamedObject* o){
+	if ( o->getObjectName() != Float::getClassName() ) return -1;
+	Float* other = (Float*)o;
+	if (value == other->value)
+		return 0;
+	// Returns just -1 or 1 on inequality; doing math might overflow.
+	return value > other->value ? 1 : -1;
 }
 
 
@@ -97,13 +104,16 @@ Compare::Char::Char(){
  Compare::Char::Char(const char* str){
 	this->s = str;
 }
-int32_t Compare::Char::compareTo(void* o){
-	try{
-		Char* os = (Char*)o;
-		return strcmp(s,os->s);
-	}catch(...){
-		_CLTHROWA(CL_ERR_Runtime,"Couldnt compare types");
-	}
+const char* Compare::Char::getClassName(){
+	return "Compare::Char::getClassName";
+}
+const char* Compare::Char::getObjectName(){
+	return getClassName();
+}
+int32_t Compare::Char::compareTo(NamedObject* o){
+	if ( o->getObjectName() != Char::getClassName() ) return -1;
+	Char* os = (Char*)o;
+	return strcmp(s,os->s);
 }
 
 #ifdef _UCS2
@@ -125,14 +135,16 @@ Compare::WChar::WChar(){
  Compare::WChar::WChar(const wchar_t* str){
 	this->s = str;
 }
-int32_t Compare::WChar::compareTo(void* o){
-	try{
-		TChar* os = (TChar*)o;
-		return _tcscmp(s,os->s);
-	}catch(...){
-		_CLTHROWA(CL_ERR_Runtime,"Couldnt compare types");
-	}  
-
+const char* Compare::WChar::getClassName(){
+	return "Compare::WChar::getClassName";
+}
+const char* Compare::WChar::getObjectName(){
+	return getClassName();
+}
+int32_t Compare::WChar::compareTo(NamedObject* o){
+	if ( o->getObjectName() != WChar::getClassName() ) return -1;
+	TChar* os = (TChar*)o;
+	return _tcscmp(s,os->s);
 }
 
 #endif

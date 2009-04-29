@@ -29,7 +29,7 @@ TCHAR* lucene_i64tot(
 	*pos = '\0';
 
 	do {
-		digit = val % radix;
+		digit = (int)(val % radix);
 		val = val / radix;
 		if (digit < 10) {
 			*--pos = '0' + digit;
