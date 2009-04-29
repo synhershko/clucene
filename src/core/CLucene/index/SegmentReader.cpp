@@ -15,6 +15,7 @@
 #include "Terms.h"
 #include "CLucene/search/Similarity.h"
 #include "CLucene/store/FSDirectory.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_USE(store)
@@ -55,21 +56,21 @@ CL_NS_DEF(index)
   }
 
   void SegmentReader::Norm::close(){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    SCOPED_LOCK_MUTEX(reader->_norms_LOCK)
     if (in != NULL && !useSingleNormStream) {
       in->close();
     }
-    in = null;
+    in = NULL;
   }
 
   void SegmentReader::Norm::incRef() {
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    SCOPED_LOCK_MUTEX(reader->_norms_LOCK)
     assert (refCount > 0);
     refCount++;
   }
 
   void SegmentReader::Norm::decRef(){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    SCOPED_LOCK_MUTEX(reader->_norms_LOCK)
     assert (refCount > 0);
     if (refCount == 1) {
       close();
@@ -78,8 +79,8 @@ CL_NS_DEF(index)
   }
   void SegmentReader::Norm::reWrite(SegmentInfo* si){
       // NOTE: norms are re-written in regular directory, not cfs
-      si.advanceNormGen(this.number);
-      IndexOutput* out = reader->getDirectory()->createOutput(si.getNormFileName(this.number));
+      si->advanceNormGen(this->number);
+      IndexOutput* out = reader->getDirectory()->createOutput(si->getNormFileName(this->number));
       try {
         out->writeBytes(bytes, reader->maxDoc());
       }_CLFINALLY(
@@ -88,22 +89,6 @@ CL_NS_DEF(index)
       );
       this->dirty = false;
     }
-
-  SegmentReader::SegmentReader(SegmentInfo* si) : 
-      //Init the superclass IndexReader
-      IndexReader(si->getDir()),
-	  _norms(false,false)
-  { 
-      initialize(si);
-  }
-
-  SegmentReader::SegmentReader(SegmentInfos* sis, SegmentInfo* si) : 
-      //Init the superclass IndexReader
-      IndexReader(si->getDir(),sis,false),
-	  _norms(false,false)
-  { 
-      initialize(si);
-  }
 
   void SegmentReader::initialize(SegmentInfo* si){
       //Pre  - si-> is a valid reference to SegmentInfo instance
@@ -133,16 +118,16 @@ CL_NS_DEF(index)
       storeCFSReader = NULL;
       referencedSegmentReader = NULL
 
-    segment = si.name;
-    this.si = si;
-    this.readBufferSize = readBufferSize;
+    segment = si->name;
+    this->si = si;
+    this->readBufferSize = readBufferSize;
 
     boolean success = false;
 
     try {
       // Use compound file directory for some files, if it exists
       Directory cfsDir = directory();
-      if (si.getUseCompoundFile()) {
+      if (si->getUseCompoundFile()) {
         cfsReader = new CompoundFileReader(directory(), segment + "." + IndexFileNames.COMPOUND_FILE_EXTENSION, readBufferSize);
         cfsDir = cfsReader;
       }
@@ -150,9 +135,9 @@ CL_NS_DEF(index)
       final Directory storeDir;
 
       if (doOpenStores) {
-        if (si.getDocStoreOffset() != -1) {
-          if (si.getDocStoreIsCompoundFile()) {
-            storeCFSReader = new CompoundFileReader(directory(), si.getDocStoreSegment() + "." + IndexFileNames.COMPOUND_FILE_STORE_EXTENSION, readBufferSize);
+        if (si->getDocStoreOffset() != -1) {
+          if (si->getDocStoreIsCompoundFile()) {
+            storeCFSReader = new CompoundFileReader(directory(), si->getDocStoreSegment() + "." + IndexFileNames.COMPOUND_FILE_STORE_EXTENSION, readBufferSize);
             storeDir = storeCFSReader;
           } else {
             storeDir = directory();
@@ -168,18 +153,18 @@ CL_NS_DEF(index)
 
       final String fieldsSegment;
 
-      if (si.getDocStoreOffset() != -1)
-        fieldsSegment = si.getDocStoreSegment();
+      if (si->getDocStoreOffset() != -1)
+        fieldsSegment = si->getDocStoreSegment();
       else
         fieldsSegment = segment;
 
       if (doOpenStores) {
         fieldsReader = new FieldsReader(storeDir, fieldsSegment, fieldInfos, readBufferSize,
-                                        si.getDocStoreOffset(), si.docCount);
+                                        si->getDocStoreOffset(), si->docCount);
 
         // Verify two sources of "maxDoc" agree:
-        if (si.getDocStoreOffset() == -1 && fieldsReader.size() != si.docCount) {
-          throw new CorruptIndexException("doc counts differ for segment " + si.name + ": fieldsReader shows " + fieldsReader.size() + " but segmentInfo shows " + si.docCount);
+        if (si->getDocStoreOffset() == -1 && fieldsReader.size() != si->docCount) {
+          throw new CorruptIndexException("doc counts differ for segment " + si->name + ": fieldsReader shows " + fieldsReader.size() + " but segmentInfo shows " + si->docCount);
         }
       }
 
@@ -195,11 +180,11 @@ CL_NS_DEF(index)
 
       if (doOpenStores && fieldInfos.hasVectors()) { // open term vector files only as needed
         final String vectorsSegment;
-        if (si.getDocStoreOffset() != -1)
-          vectorsSegment = si.getDocStoreSegment();
+        if (si->getDocStoreOffset() != -1)
+          vectorsSegment = si->getDocStoreSegment();
         else
           vectorsSegment = segment;
-        termVectorsReaderOrig = new TermVectorsReader(storeDir, vectorsSegment, fieldInfos, readBufferSize, si.getDocStoreOffset(), si.docCount);
+        termVectorsReaderOrig = new TermVectorsReader(storeDir, vectorsSegment, fieldInfos, readBufferSize, si->getDocStoreOffset(), si->docCount);
       }
       success = true;
     } finally {
@@ -216,7 +201,7 @@ CL_NS_DEF(index)
   }
 
   public static SegmentReader SegmentReader::get(SegmentInfo si) throws CorruptIndexException, IOException {
-    return get(si.dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, true);
+    return get(si->dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, true);
   }
 
   /**
@@ -224,7 +209,7 @@ CL_NS_DEF(index)
    * @throws IOException if there is a low-level IO error
    */
   static SegmentReader SegmentReader::get(SegmentInfo si, boolean doOpenStores) throws CorruptIndexException, IOException {
-    return get(si.dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, doOpenStores);
+    return get(si->dir, si, null, false, false, BufferedIndexInput.BUFFER_SIZE, doOpenStores);
   }
 
   /**
@@ -232,7 +217,7 @@ CL_NS_DEF(index)
    * @throws IOException if there is a low-level IO error
    */
   public static SegmentReader SegmentReader::get(SegmentInfo si, int readBufferSize) throws CorruptIndexException, IOException {
-    return get(si.dir, si, null, false, false, readBufferSize, true);
+    return get(si->dir, si, null, false, false, readBufferSize, true);
   }
 
   /**
@@ -240,7 +225,7 @@ CL_NS_DEF(index)
    * @throws IOException if there is a low-level IO error
    */
   static SegmentReader SegmentReader::get(SegmentInfo si, int readBufferSize, boolean doOpenStores) throws CorruptIndexException, IOException {
-    return get(si.dir, si, null, false, false, readBufferSize, doOpenStores);
+    return get(si->dir, si, null, false, false, readBufferSize, doOpenStores);
   }
 
   /**
@@ -249,7 +234,7 @@ CL_NS_DEF(index)
    */
   public static SegmentReader SegmentReader::get(SegmentInfos sis, SegmentInfo si,
                                   boolean closeDir) throws CorruptIndexException, IOException {
-    return get(si.dir, si, sis, closeDir, true, BufferedIndexInput.BUFFER_SIZE, true);
+    return get(si->dir, si, sis, closeDir, true, BufferedIndexInput.BUFFER_SIZE, true);
   }
 
   /**
@@ -307,18 +292,18 @@ CL_NS_DEF(index)
 
   void SegmentReader::commitChanges(){
     if (deletedDocsDirty) {               // re-write deleted
-      si.advanceDelGen();
+      si->advanceDelGen();
 
       // We can write directly to the actual name (vs to a
       // .tmp & renaming it) because the file is not live
       // until segments file is written:
-      deletedDocs.write(directory(), si.getDelFileName());
+      deletedDocs.write(directory(), si->getDelFileName());
     }
-    if (undeleteAll && si.hasDeletions()) {
-      si.clearDelGen();
+    if (undeleteAll && si->hasDeletions()) {
+      si->clearDelGen();
     }
     if (normsDirty) {               // re-write norms
-      si.setNumFields(fieldInfos.size());
+      si->setNumFields(fieldInfos.size());
       Iterator it = norms.values().iterator();
       while (it.hasNext()) {
         Norm norm = (Norm) it.next();
@@ -400,12 +385,12 @@ CL_NS_DEF(index)
 
   //static 
   bool SegmentReader::usesCompoundFile(SegmentInfo* si) {
-    return si.getUseCompoundFile();
+    return si->getUseCompoundFile();
   }
   
   //static
   bool SegmentReader::hasSeparateNorms(SegmentInfo* si) {
-    return si.hasSeparateNorms();
+    return si->hasSeparateNorms();
   }
 
   bool SegmentReader::hasDeletions(const SegmentInfo* si) {
@@ -415,7 +400,7 @@ CL_NS_DEF(index)
   //Post - if the segement contains deleteions true is returned otherwise flas
 
     // Don't call ensureOpen() here (it could affect performance)
-    return si.hasDeletions();
+    return si->hasDeletions();
   }
 
 	//synchronized
@@ -457,7 +442,7 @@ CL_NS_DEF(index)
   //Pre  - segment != NULL
   //Post - All filenames managed by this SegmentRead have been returned
 
-    return new Vector(si.files());
+    return new Vector(si->files());
   }
 
   TermEnum* SegmentReader::terms() const {
@@ -590,7 +575,7 @@ CL_NS_DEF(index)
 
     // Don't call ensureOpen() here (it could affect performance)
 
-      return si.docCount;
+      return si->docCount;
   }
 
 
@@ -746,7 +731,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
     if (infos.size() == 1) {
       SegmentInfo si = infos.info(0);
-      if (segment.equals(si.name) && si.getUseCompoundFile() == SegmentReader.this.si.getUseCompoundFile()) {
+      if (segment.equals(si->name) && si->getUseCompoundFile() == SegmentReader.this->si->getUseCompoundFile()) {
         newReader = reopenSegment(si);
       } else {
         // segment not referenced anymore, reopen not possible
@@ -838,8 +823,8 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
       }
       if (fi.isIndexed && !fi.omitNorms) {
         Directory d = directory();
-        String fileName = si.getNormFileName(fi.number);
-        if (!si.hasSeparateNorms(fi.number)) {
+        String fileName = si->getNormFileName(fi.number);
+        if (!si->hasSeparateNorms(fi.number)) {
           d = cfsDir;
         }
 
@@ -958,26 +943,26 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
   void SegmentReader::loadDeletedDocs(){
     // NOTE: the bitvector is stored using the regular directory, not cfs
     if (hasDeletions(si)) {
-      deletedDocs = new BitVector(directory(), si.getDelFileName());
+      deletedDocs = new BitVector(directory(), si->getDelFileName());
 
       // Verify # deletes does not exceed maxDoc for this segment:
       if (deletedDocs.count() > maxDoc()) {
-        throw new CorruptIndexException("number of deletes (" + deletedDocs.count() + ") exceeds max doc (" + maxDoc() + ") for segment " + si.name);
+        throw new CorruptIndexException("number of deletes (" + deletedDocs.count() + ") exceeds max doc (" + maxDoc() + ") for segment " + si->name);
       }
     }
   }
 
   SegmentReader* SegmentReader::reopenSegment(SegmentInfo* si){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-    bool deletionsUpToDate = (this.si.hasDeletions() == si.hasDeletions())
-                                  && (!si.hasDeletions() || this.si.getDelFileName().equals(si.getDelFileName()));
+    bool deletionsUpToDate = (this->si->hasDeletions() == si->hasDeletions())
+                                  && (!si->hasDeletions() || this->si->getDelFileName().equals(si->getDelFileName()));
     bool normsUpToDate = true;
 
 
     bool[] fieldNormsChanged = new bool[fieldInfos.size()];
     if (normsUpToDate) {
       for (int32_t i = 0; i < fieldInfos.size(); i++) {
-        if (!this.si.getNormFileName(i).equals(si.getNormFileName(i))) {
+        if (!this->si->getNormFileName(i).equals(si->getNormFileName(i))) {
           normsUpToDate = false;
           fieldNormsChanged[i] = true;
         }
@@ -1014,8 +999,8 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
       Directory storeDir = directory();
 
-      if (si.getDocStoreOffset() != -1) {
-        fieldsSegment = si.getDocStoreSegment();
+      if (si->getDocStoreOffset() != -1) {
+        fieldsSegment = si->getDocStoreSegment();
         if (storeCFSReader != null) {
           storeDir = storeCFSReader;
         }
@@ -1028,7 +1013,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
       if (fieldsReader != null) {
         clone.fieldsReader = new FieldsReader(storeDir, fieldsSegment, fieldInfos, readBufferSize,
-                                        si.getDocStoreOffset(), si.docCount);
+                                        si->getDocStoreOffset(), si->docCount);
       }
 
 
@@ -1037,7 +1022,7 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
         clone.deletedDocs = null;
         clone.loadDeletedDocs();
       } else {
-        clone.deletedDocs = this.deletedDocs;
+        clone.deletedDocs = this->deletedDocs;
       }
 
       clone.norms = new HashMap();
@@ -1047,13 +1032,13 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
           // copy unchanged norms to the cloned reader and incRef those norms
           if (!fieldNormsChanged[i]) {
             String curField = fieldInfos.fieldInfo(i).name;
-            Norm norm = (Norm) this.norms.get(curField);
+            Norm norm = (Norm) this->norms.get(curField);
             norm.incRef();
             clone.norms.put(curField, norm);
           }
         }
 
-        clone.openNorms(si.getUseCompoundFile() ? cfsReader : directory(), readBufferSize);
+        clone.openNorms(si->getUseCompoundFile() ? cfsReader : directory(), readBufferSize);
       } else {
         Iterator it = norms.keySet().iterator();
         while (it.hasNext()) {
@@ -1068,9 +1053,9 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
         for (int32_t i = 0; i < fieldInfos.size(); i++) {
           FieldInfo fi = fieldInfos.fieldInfo(i);
           if (fi.isIndexed && !fi.omitNorms) {
-            Directory d = si.getUseCompoundFile() ? cfsReader : directory();
-            String fileName = si.getNormFileName(fi.number);
-            if (si.hasSeparateNorms(fi.number)) {
+            Directory d = si->getUseCompoundFile() ? cfsReader : directory();
+            String fileName = si->getNormFileName(fi.number);
+            if (si->hasSeparateNorms(fi.number)) {
               continue;
             }
 
@@ -1084,12 +1069,12 @@ bool SegmentReader::hasNorms(const TCHAR* field) const{
 
       success = true;
     } finally {
-      if (this.referencedSegmentReader != null) {
+      if (this->referencedSegmentReader != null) {
         // this reader shares resources with another SegmentReader,
         // so we increment the other readers refCount. We don't
         // increment the refCount of the norms because we did
         // that already for the shared norms
-        clone.referencedSegmentReader = this.referencedSegmentReader;
+        clone.referencedSegmentReader = this->referencedSegmentReader;
         referencedSegmentReader.incRefReaderNotNorms();
       } else {
         // this reader wasn't reopened, so we increment this

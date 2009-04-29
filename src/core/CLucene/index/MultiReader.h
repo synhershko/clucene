@@ -21,15 +21,10 @@ CL_NS_DEF(index)
 class CLUCENE_EXPORT MultiReader:public IndexReader{
 private:
   class Internal;
-  Internal* internal;
+  Internal* _internal;
 	int32_t readerIndex(const int32_t n) const;
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
-  bool* decrefOnClose; //remember which subreaders to decRef on close
-  bool _hasDeletions;
-  uint8_t* ones;
-  int32_t _maxDoc;
-  int32_t _numDocs;
 
   void init(CL_NS(util)::ObjectArray<IndexReader>* subReaders, bool closeSubReaders);
 protected:
@@ -98,13 +93,13 @@ public:
 	bool hasDeletions() const;
 	uint8_t* norms(const TCHAR* field);
 	void norms(const TCHAR* field, uint8_t* result);
-	TermEnum* terms() const;
-	TermEnum* terms(const Term* term) const;
+	TermEnum* terms();
+	TermEnum* terms(const Term* term);
 	
 	//Returns the document frequency of the current term in the set
-	int32_t docFreq(const Term* t=NULL) const;
-	TermDocs* termDocs() const;
-	TermPositions* termPositions() const;
+	int32_t docFreq(const Term* t=NULL);
+	TermDocs* termDocs();
+	TermPositions* termPositions();
 	
 	/**
 	* @see IndexReader#getFieldNames(IndexReader.FieldOption fldOption)

@@ -7,6 +7,8 @@
 #ifndef _lucene_util_Misc_H
 #define _lucene_util_Misc_H
 
+#include <vector>
+
 CL_NS_DEF(util)
   /** A class containing various functions. 
   */
@@ -15,21 +17,21 @@ CL_NS_DEF(util)
     static uint64_t currentTimeMillis();
     static const TCHAR* replace_all( const TCHAR* val, const TCHAR* srch, const TCHAR* repl );
     static bool dir_Exists(const char* path);
-	static int64_t file_Size(const char* path);
+		static int64_t file_Size(const char* path);
     static int64_t filelength(int handle);
     static void sleep(const int ms);
 
     static size_t ahashCode(const char* str);
-	static size_t ahashCode(const char* str, size_t len);
+		static size_t ahashCode(const char* str, size_t len);
 
     static TCHAR* join ( const TCHAR* a, const TCHAR* b, const TCHAR* c=NULL, const TCHAR* d=NULL,const TCHAR* e=NULL,const TCHAR* f=NULL );
     static char* ajoin ( const char* a, const char* b, const char* c=NULL, const char* d=NULL,const char* e=NULL,const char* f=NULL );
 
     static bool priv_isDotDir( const TCHAR* name );
-	//Creates a filename by concatenating Segment with ext and x
-	static char* segmentname(const char* segment, const char* ext, const int32_t x=-1 );
-	//Creates a filename in buffer by concatenating Segment with ext and x
-	static void segmentname(char* buffer,int32_t bufferLen, const char* Segment, const char* ext, const int32_t x=-1);
+		//Creates a filename by concatenating Segment with ext and x
+		static char* segmentname(const char* segment, const char* ext, const int32_t x=-1 );
+		//Creates a filename in buffer by concatenating Segment with ext and x
+		static void segmentname(char* buffer,int32_t bufferLen, const char* Segment, const char* ext, const int32_t x=-1);
 
    /**
    * Compares two strings, character by character, and returns the
@@ -49,22 +51,27 @@ CL_NS_DEF(util)
 	static TCHAR* stringTrim(TCHAR* s);
 	static TCHAR* wordTrim(TCHAR* s);
 	
-	_CL_DEPRECATED(_i64tot) static char* longToBase( int64_t value, int32_t base );
-	_CL_DEPRECATED(_tcstoi64) static int64_t base36ToLong( const char* value );	
+	static char* longToBase( int64_t value, int32_t base );
+	static int64_t base36ToLong( const char* value );	
 
-#ifdef _UCS2
+	#ifdef _UCS2
     static size_t whashCode(const wchar_t* str);
-	static size_t whashCode(const wchar_t* str, size_t len);
-	#define thashCode whashCode
+		static size_t whashCode(const wchar_t* str, size_t len);
+		#define thashCode whashCode
 
     static char* _wideToChar(const wchar_t* s);
     static wchar_t* _charToWide(const char* s);
 
     static void _cpycharToWide(const char* s, wchar_t* d, size_t len);
     static void _cpywideToChar(const wchar_t* s, char* d, size_t len);
-#else
-	#define thashCode ahashCode
-#endif
+	#else
+		#define thashCode ahashCode
+	#endif
+		
+		/** List all files in dir. 
+		* @param bool fullPath True to return entire path
+		*/
+		static void listFiles(const char* dir, std::vector<std::string>& files, bool fullPath=false);
   };
 
 CL_NS_END

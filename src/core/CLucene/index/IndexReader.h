@@ -85,18 +85,10 @@ protected:
   /** Implements actual undeleteAll() in subclass. */
   virtual void doUndeleteAll() = 0;
 
-
   /** Implements deletion of the document numbered <code>docNum</code>.
   * Applications should call {@link #deleteDocument(int32_t)} or {@link #deleteDocuments(Term*)}.
   */
   virtual void doDelete(const int32_t docNum) = 0;
-
-  /** Does nothing by default. Subclasses that require a write lock for
-  *  index modifications must implement this method. */
-  void acquireWriteLock(){
-    //SCOPED_MUTEX_LOCK(THIS_LOCK)
-    /* NOOP */
-  }
 
   /**
   * @throws AlreadyClosedException if this IndexReader is closed
@@ -118,6 +110,10 @@ protected:
    */
   void decRef();
 
+  /** Does nothing by default. Subclasses that require a write lock for
+   *  index modifications must implement this method. */
+  virtual void acquireWriteLock();
+
 public:
 	//Callback for classes that need to know if IndexReader is closing.
 	typedef void (*CloseCallback)(IndexReader*, void*);
@@ -127,7 +123,7 @@ public:
   /** Internal use. */
 	class Internal;
   /** Internal use. */
-	Internal* internal;
+	Internal* _internal;
 	
 
   /**
@@ -162,7 +158,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    * @param path the path to the index directory */
-  static IndexReader* open(const char* path, bool closeDirectoryOnCleanup=false, IndexDeletionPolicy* deletionPolicy=NULL);
+  static IndexReader* open(const char* path, bool closeDirectoryOnCleanup=true, IndexDeletionPolicy* deletionPolicy=NULL);
 
   /** Expert: returns an IndexReader reading the index in the given
    * Directory, with a custom {@link IndexDeletionPolicy}.
@@ -334,7 +330,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
 	*/
-	static uint64_t lastModified(const CL_NS(store)::Directory* directory);
+	static uint64_t lastModified(CL_NS(store)::Directory* directory);
 
 	
 	/**
@@ -384,13 +380,13 @@ public:
    * an IllegalStateException is thrown.
    * @throws IllegalStateException if the term index has already been loaded into memory
    */
-  void setTermInfosIndexDivisor(int indexDivisor);
+  void setTermInfosIndexDivisor(int32_t indexDivisor);
 
   /** <p>For IndexReader implementations that use
    *  TermInfosReader to read terms, this returns the
    *  current indexDivisor.
    *  @see #setTermInfosIndexDivisor */
-  int getTermInfosIndexDivisor();
+  int32_t getTermInfosIndexDivisor();
 
   /**
    * Check whether this IndexReader is still using the
@@ -557,7 +553,7 @@ public:
   * @throws IOException if there is a low-level IO error
 	* @memory Caller must clean up
 	*/
-	virtual TermEnum* terms() const =0;
+	virtual TermEnum* terms() = 0;
 
 /** Returns an enumeration of all terms starting at a given term. If
   * the given term does not exist, the enumeration is positioned at the
@@ -567,18 +563,18 @@ public:
   * @throws IOException if there is a low-level IO error
 	* @memory Caller must clean up
 	*/
-	virtual TermEnum* terms(const Term* t) const = 0;
+	virtual TermEnum* terms(const Term* t) = 0;
 
   /** Returns the number of documents containing the term <code>t</code>.
    * @throws IOException if there is a low-level IO error
    */
-	virtual int32_t docFreq(const Term* t) const = 0;
+	virtual int32_t docFreq(const Term* t) = 0;
 
 	/* Returns an unpositioned TermPositions enumerator.
    * @throws IOException if there is a low-level IO error
 	 * @memory Caller must clean up
 	 */
-	virtual TermPositions* termPositions() const = 0;
+	virtual TermPositions* termPositions() = 0;
 	
     /** Returns an enumeration of all the documents which contain
 	* <code>term</code>.  For each document, in addition to the document number
@@ -598,13 +594,13 @@ public:
   * @throws IOException if there is a low-level IO error
   * @memory Caller must clean up
 	*/
-	TermPositions* termPositions(Term* term) const;
+	TermPositions* termPositions(Term* term);
 
 	/** Returns an unpositioned {@link TermDocs} enumerator.
    * @throws IOException if there is a low-level IO error
 	 * @memory Caller must clean up
 	 */
-	virtual TermDocs* termDocs() const = 0;
+	virtual TermDocs* termDocs() = 0;
 
 	/** Returns an enumeration of all the documents which contain
 	* <code>term</code>. For each document, the document number, the frequency of
@@ -616,7 +612,7 @@ public:
   * @throws IOException if there is a low-level IO error
   * @memory Caller must clean up
 	*/
-	TermDocs* termDocs(Term* term) const;
+	TermDocs* termDocs(Term* term);
 
 	/** Deletes the document numbered <code>docNum</code>.  Once a document is
 	* deleted it will not appear in TermDocs or TermPostitions enumerations.
@@ -701,6 +697,9 @@ public:
 	*/
 	void addCloseCallback(CloseCallback callback, void* parameter);
 
+  friend class SegmentReader;
+  friend class MultiReader;
+  friend class MultiSegmentReader;
 };
 
 CL_NS_END

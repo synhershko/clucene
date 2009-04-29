@@ -28,6 +28,7 @@
 
 #include <cctype>
 #include <limits.h>
+#include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
 #ifdef _CL_HAVE_FUNCTION_SLEEP
 	//don't ignore windows.h... breaks mingw32 in some cases. Define Sleep instead
@@ -379,6 +380,29 @@ int64_t Misc::base36ToLong( const char* value ) {
 	}
 	
 	return lval;
+}
+
+void Misc::listFiles(const char* directory, std::vector<std::string>& files, bool fullPath){
+  //clear old files
+  DIR* dir = opendir(directory);
+  struct dirent* fl = readdir(dir);
+  struct cl_stat_t buf;
+	string path;
+  while ( fl != NULL ){
+  	path = string(directory) + "/" + fl->d_name;
+		int32_t ret = fileStat(path.c_str(),&buf);
+		if ( ret==0 && !(buf.st_mode & S_IFDIR) ) {
+			if ( (strcmp(fl->d_name, ".")) && (strcmp(fl->d_name, "..")) ) {
+				if ( fullPath ){
+					files.push_back(path);
+				}else{
+					files.push_back(fl->d_name);
+				}
+			}
+		}
+	  fl = readdir(dir);
+  }
+  closedir(dir);
 }
 
 CL_NS_END

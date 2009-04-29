@@ -52,6 +52,7 @@ public:
 	ArrayBase(size_t length){
 		this->values = _CL_NEWARRAY(T,length);
 		this->length = length;
+    memset(this->values,0,sizeof(T));
 	}
 	virtual ~ArrayBase(){
 	}

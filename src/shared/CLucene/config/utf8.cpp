@@ -156,7 +156,7 @@ size_t	lucene_wctoutf8(char * outbuf, const wchar_t ch)
 		outbuf[i] = (char)((c & 0x3f) | 0x80);
 		c >>= 6;
 	}
-	outbuf[0] = c | first;
+	outbuf[0] = (char)(c | first);
   }
 
   return len;

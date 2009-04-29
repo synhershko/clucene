@@ -37,6 +37,9 @@ public:
 	  void release();
 	  bool isLocked();
 	  TCHAR* toString();
+    
+    static const char* getClassName();
+    const char* getObjectName();
   };
 
 
@@ -46,6 +49,9 @@ public:
 	  void release();
 	  bool isLocked();
 	  TCHAR* toString();
+
+    static const char* getClassName();
+    const char* getObjectName();
   };
   
   class FSLock: public LuceneLock {
@@ -60,7 +66,10 @@ public:
 	  bool obtain();
 	  void release();
 	  bool isLocked();
-	  TCHAR* toString();	  	  	  
+	  TCHAR* toString();
+
+    static const char* getClassName();
+    const char* getObjectName();
   };
   
   // Utility class for executing code with exclusive access.

@@ -27,7 +27,6 @@
 #include "CLucene/index/IndexWriter.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/_MD5Digester.h"
-#include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
 #ifdef LUCENE_FS_MMAP
     #include "_MMap.h"
@@ -411,28 +410,17 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		}
 
 	  //clear old files
-    DIR* dir = opendir(directory);
-    struct dirent* fl = readdir(dir);
-    struct cl_stat_t buf;
-
-    char path[CL_MAX_DIR];
-    while ( fl != NULL ){
-		  if ( CL_NS(index)::IndexReader::isLuceneFile(fl->d_name) ){
-				_snprintf(path,CL_MAX_DIR,"%s/%s",directory,fl->d_name);
-				int32_t ret = fileStat(path,&buf);
-				if ( ret==0 && !(buf.st_mode & S_IFDIR) ) {
-					if ( (strcmp(fl->d_name, ".")) && (strcmp(fl->d_name, "..")) ) {
-						if ( _unlink( path ) == -1 ) {
-						  closedir(dir);
-						  _CLTHROWA(CL_ERR_IO, "Couldn't delete file "); //todo: make richer error
-						}
-					}
+	  vector<string> files;
+	  Misc::listFiles(directory, files, false);
+	  vector<string>::iterator itr = files.begin();
+	  while ( itr != files.end() ){
+	  	if ( CL_NS(index)::IndexReader::isLuceneFile(itr->c_str()) ){
+	  		if ( _unlink( itr->c_str() ) == -1 ) {
+				  _CLTHROWA(CL_ERR_IO, "Couldn't delete file "); //todo: make richer error
 				}
-		  }
-		  fl = readdir(dir);
-    }
-    closedir(dir);
-
+	  	}
+	  	itr++;
+	  }
     lockFactory->clearLock( CL_NS(index)::IndexWriter::WRITE_LOCK_NAME );
     
   }
@@ -461,25 +449,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
   void FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
     CND_PRECONDITION(directory[0]!=0,"directory is not open");
-    DIR* dir = opendir(directory);
-    
-    struct dirent* fl = readdir(dir);
-    struct cl_stat_t buf;
-
-    char path[CL_MAX_DIR];
-	strncpy(path,directory,CL_MAX_DIR);
-    strcat(path,PATH_DELIMITERA);
-    char* pathP = path + strlen(path);
-
-    while ( fl != NULL ){
-      strcpy(pathP,fl->d_name);
-      fileStat(path,&buf);
-      if ( !(buf.st_mode & S_IFDIR) ) {
-        names->push_back( fl->d_name );
-      }
-      fl = readdir(dir);
-    }
-    closedir(dir);
+    Misc::listFiles(directory, *names, false);
   }
 
   bool FSDirectory::fileExists(const char* name) const {

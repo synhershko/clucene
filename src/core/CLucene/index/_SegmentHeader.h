@@ -190,7 +190,7 @@ class SegmentReader: public DirectoryIndexReader {
 		uint8_t* bytes;
 		bool dirty;
 		//Constructor
-		Norm(CL_NS(store)::IndexInput* instrm, bool useSingleNormStream, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
+		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
 		//Destructor
 		~Norm();
 
@@ -303,7 +303,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  static SegmentReader* get(SegmentInfos* sis, SegmentInfo si,
+  static SegmentReader* get(SegmentInfos* sis, SegmentInfo* si,
                                   bool closeDir);
 
   /**
@@ -341,9 +341,9 @@ public:
 	///Returns all file names managed by this SegmentReader
 	void files(AStringArrayWithDeletor& retarray);
 	///Returns an enumeration of all the Terms and TermInfos in the set.
-	TermEnum* terms() const;
+	TermEnum* terms();
 	///Returns an enumeration of terms starting at or after the named term t
-	TermEnum* terms(const Term* t) const;
+	TermEnum* terms(const Term* t);
 
 	///Gets the document identified by n
 	bool document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector);
@@ -352,12 +352,12 @@ public:
 	bool isDeleted(const int32_t n);
 
 	///Returns an unpositioned TermDocs enumerator.
-	TermDocs* termDocs() const;
+	TermDocs* termDocs();
 	///Returns an unpositioned TermPositions enumerator.
-	TermPositions* termPositions() const;
+	TermPositions* termPositions();
 
 	///Returns the number of documents which contain the term t
-	int32_t docFreq(const Term* t) const;
+	int32_t docFreq(const Term* t);
 
 	///Returns the actual number of documents in the segment
 	int32_t numDocs();
@@ -466,6 +466,7 @@ private:
   friend class SegmentTermDocs;
   friend class SegmentTermPositions;
   friend class MultiReader;
+  friend class MultiSegmentReader;
 };
 
 CL_NS_END

@@ -71,6 +71,9 @@ public:
 	
 	LuceneLock* makeLock( const char* lockName );
 	void clearLock( const char* lockName );
+
+  static const char* getClassName();
+  const char* getObjectName();
 };
 
 CL_NS_END

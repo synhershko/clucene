@@ -75,7 +75,7 @@ CL_NS_DEF(store)
 			  int32_t pieceLength;
 			  while (pos < length) {
 				  if ( length - pos < bytesLeft )
-					pieceLength =  length - pos;
+					pieceLength = (int32_t)(length - pos);
 				  else
 					pieceLength = bytesLeft;
 				  memcpy(buffer + bufferPosition, b + pos, pieceLength);
