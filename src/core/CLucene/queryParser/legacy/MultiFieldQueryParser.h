@@ -4,17 +4,13 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#ifndef _lucene_queryParser_MultiFieldQueryParser_
-#define _lucene_queryParser_MultiFieldQueryParser_
+#ifndef _lucene_queryParser_legacy_MultiFieldQueryParser
+#define _lucene_queryParser_legacy_MultiFieldQueryParser
 
-
-//#include "CLucene/analysis/AnalysisHeader.h"
-//#include "CLucene/search/SearchHeader.h"
 #include "QueryParser.h"
 #include "CLucene/util/VoidMapSetDefinitions.h"
 
-
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
 
 typedef CL_NS(util)::CLHashMap<const TCHAR*,
                                float_t,
@@ -131,5 +127,5 @@ typedef CL_NS(util)::CLHashMap<const TCHAR*,
 		*/
 		virtual CL_NS(search)::Query* QueryAddedCallback(const TCHAR* field, CL_NS(search)::Query* query){ return query; }
     };
-CL_NS_END
+CL_NS_END2
 #endif

@@ -24,11 +24,12 @@ public:
 	{
 	}
 
-	bool next(Token* token) {
+	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token*& token) {
 		if (inPhrase) {
+			if (token == NULL) token = _CLNEW CL_NS(analysis)::Token();
 			inPhrase = false;
 			token->set( _T("phrase2"), savedStart, savedEnd);
-			return true;
+			return token;
 		}else{
 			while( input->next(token) ){
 				if ( _tcscmp(token->termBuffer(), _T("phrase")) == 0 ) {
@@ -36,13 +37,15 @@ public:
 					savedStart = token->startOffset();
 					savedEnd = token->endOffset();
 					token->set( _T("phrase1"), savedStart, savedEnd);
-					return true;
+					return token;
 				}else if ( _tcscmp(token->termBuffer(), _T("stop") ) !=0 ){
-					return true;
+					return token;
+				} else {
+					_CLDELETE(token);
 				}
 			}
 		}
-		return false;
+		return NULL;
 	}
 };
 
@@ -57,23 +60,39 @@ public:
 	}
 };
 
-Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a) {
+ QueryParser* getParser(Analyzer* a) {
+    if (a == NULL)
+      return NULL;
+    QueryParser* qp = _CLNEW QueryParser(_T("field"), a);
+	qp->setDefaultOperator(QueryParser::OR_OPERATOR);
+    return qp;
+  }
+
+Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a, int ignoreCLError=0) {
+	bool del = (a==NULL);
+	QueryParser* qp = NULL;
 	try{
-		bool del = (a==NULL);
 		if (a == NULL)
 			a = _CLNEW SimpleAnalyzer();
 
-		QueryParser qp(_T("field"), a);
-		Query* ret = qp.parse(query);
+		qp = getParser(a);
+		Query* ret = qp->parse(query);
 		
+		_CLLDELETE(qp);
 		if ( del )
-			_CLDELETE(a);
+			_CLLDELETE(a);
 		return ret;
 	}catch(CLuceneError& e){
-		CuFail(tc,_T("/%s/ threw an error: %s - "),query, e.twhat());
-		CuFail(tc,_T("%s\n"),e.twhat());
+		_CLLDELETE(qp);
+		if ( del ) _CLLDELETE(a);
+		if (ignoreCLError != e.number())
+			CuFail(tc,e);
+		else
+			throw e;
 		return NULL;
 	}catch(...){
+		_CLLDELETE(qp);
+		if ( del ) _CLLDELETE(a);
 		CuFail(tc,_T("/%s/ threw an error.\n"),query);
 		return NULL;
 	}
@@ -82,18 +101,40 @@ Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a) {
 void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* result)  {
 	
 	Query* q = getQuery(tc,query, a);
-	if ( q == NULL )
+	if ( q == NULL ){
+		CuFail(tc, _T("getQuery returned NULL unexpectedly for query /%s/\n"), query);
 		return;
+	}
 
 	const TCHAR* s = q->toString(_T("field"));
 	int ret = _tcscmp(s,result);
-	_CLDELETE_CARRAY(s);
 	_CLDELETE(q);
 	if ( ret != 0 ) {
-		CuFail(tc, _T("FAILED Query /%s/ yielded /%s/, expecting /%s/\n"), query, s,
-			result);
+		TCHAR str[CL_MAX_PATH];
+		_tcscpy(str,s);
+		_CLDELETE_CARRAY(s);
+		CuFail(tc, _T("FAILED Query /%s/ yielded /%s/, expecting /%s/\n"), query, str, result);
 	}
-		
+	_CLDELETE_CARRAY(s);
+}
+
+void assertWildcardQueryEquals(CuTest *tc,TCHAR* query, bool lowercase, TCHAR* result, bool allowLeadingWildcard=false){
+	SimpleAnalyzer a;
+	QueryParser* qp = getParser(&a);
+	qp->setLowercaseExpandedTerms(lowercase);
+	qp->setAllowLeadingWildcard(allowLeadingWildcard);
+	Query* q = qp->parse(query);
+	_CLLDELETE(qp);
+
+	TCHAR* s = q->toString(_T("field"));
+	_CLLDELETE(q);
+	if (_tcscmp(s,result) != 0) {
+		TCHAR str[CL_MAX_PATH];
+		_tcscpy(str,s);
+		_CLDELETE_CARRAY(s);
+		CuFail(tc,_T("WildcardQuery /%s/ yielded /%s/, expecting /%s/"),query, str, result);
+	}
+	_CLDELETE_CARRAY(s);
 }
 
 void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const char* inst, const TCHAR* msg){
@@ -120,8 +161,8 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,tmp1, &a, tmp1);
 #endif
 
-	//assertQueryEquals(tc, _T("\"\""), &b, _T("")); // -- new test, crashes CLucene
-    //assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:")); // -- new test, crashes CLucene
+	//assertQueryEquals(tc, _T("\"\""), &b, _T(""));
+    //assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
@@ -150,6 +191,8 @@ void testSimple(CuTest *tc) {
 	assertTrue(tc, _T("\"hello there\""), NULL,"PhraseQuery", _T("\"hello there\""));
 
 	assertQueryEquals(tc,_T("germ term^2.0"), NULL, _T("germ term^2.0"));
+    assertQueryEquals(tc,_T("(term)^2.0"), NULL, _T("term^2.0"));
+	assertQueryEquals(tc,_T("(germ term)^2.0"), NULL, _T("(germ term)^2.0"));
 	assertQueryEquals(tc,_T("term^2.0"), NULL, _T("term^2.0"));
 	assertQueryEquals(tc,_T("term^2"), NULL, _T("term^2.0"));
 	assertQueryEquals(tc,_T("term^2.3"), NULL, _T("term^2.3"));
@@ -165,11 +208,6 @@ void testSimple(CuTest *tc) {
 					_T("+(apple \"steve jobs\") -(foo bar baz)") );
 	assertQueryEquals(tc,_T("+title:(dog OR cat) -author:\"bob dole\""), NULL, 
 					_T("+(title:dog title:cat) -author:\"bob dole\"") );
-
-    //test string buffer
-    StringBuffer sb;
-    sb.appendFloat(0.02f,2);
-    CuAssertStrEquals(tc, _T("appendFloat failed"), _T("0.02"), sb.getBuffer());
 
     // make sure OR is the default:
 	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
@@ -190,6 +228,12 @@ void testSimple(CuTest *tc) {
 	qp->setDefaultOperator(QueryParser::OR_OPERATOR);
 	CLUCENE_ASSERT(QueryParser::OR_OPERATOR == qp->getDefaultOperator());
 	_CLDELETE(qp);
+
+    //test string buffer
+	// TODO: Move this somewhere else
+    StringBuffer sb;
+    sb.appendFloat(0.02f,2);
+    CuAssertStrEquals(tc, _T("appendFloat failed"), _T("0.02"), sb.getBuffer());
 }
 
 void testPunct(CuTest *tc) {
@@ -203,9 +247,12 @@ void testSlop(CuTest *tc) {
 	assertQueryEquals(tc,_T("\"term germ\"~2"), NULL, _T("\"term germ\"~2") );
 	assertQueryEquals(tc,_T("\"term germ\"~2 flork"), NULL, _T("\"term germ\"~2 flork") );
 	assertQueryEquals(tc,_T("\"term\"~2"), NULL, _T("term"));
+	/*
+	###  These do not work anymore with the new QP, and they do not exist in the official Java tests
 	assertQueryEquals(tc,_T("term~2"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~0.6"), NULL, _T("term"));
+	*/
 	assertQueryEquals(tc,_T("\" \"~2 germ"), NULL, _T("germ"));
 	assertQueryEquals(tc,_T("\"term germ\"~2^2"), NULL, _T("\"term germ\"~2^2.0") );
 }
@@ -226,20 +273,89 @@ void testWildcard(CuTest *tc) {
 
 	assertQueryEquals(tc,_T("term*"), NULL, _T("term*"));
 	assertQueryEquals(tc,_T("term*^2"), NULL, _T("term*^2.0"));
-
 	assertQueryEquals(tc,_T("term~"), NULL, _T("term~0.5"));
-	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
-	assertQueryEquals(tc,_T("term~^2"), NULL, _T("term^2.0~0.5"));
-	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term^2.0~0.5"));
-	assertTrue(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
-
+	// ### not in the Java tests
+	// assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
+	assertQueryEquals(tc,_T("term~0.7"), NULL, _T("term~0.7"));
+	assertQueryEquals(tc,_T("term~^2"), NULL, _T("term~0.5^2.0"));
+	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term~0.5^2.0"));
 	assertQueryEquals(tc,_T("term*germ"), NULL, _T("term*germ"));
 	assertQueryEquals(tc,_T("term*germ^3"), NULL, _T("term*germ^3.0"));
-
+	
 	assertTrue(tc, _T("term*"), NULL,"PrefixQuery", _T("term*"));
 	assertTrue(tc, _T("term*^2"), NULL,"PrefixQuery", _T("term*^2.0"));
+	assertTrue(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
+	assertTrue(tc, _T("term~0.7"), NULL,"FuzzyQuery", _T("term~0.7"));
 	assertTrue(tc, _T("t*"), NULL,"PrefixQuery", _T("t*"));
+
+	FuzzyQuery* fq = (FuzzyQuery*)getQuery(tc,_T("term~0.7"), NULL);
+	CuAssertTrue(tc, 0.7 == fq->getMinSimilarity()/*, 0.1*/);
+	CuAssertTrue(tc, FuzzyQuery::defaultPrefixLength == fq->getPrefixLength());
+	_CLLDELETE(fq);
+	fq = (FuzzyQuery*)getQuery(tc, _T("term~"), NULL);
+	CuAssertTrue(tc, 0.5 == fq->getMinSimilarity()/*, 0.1*/);
+	CuAssertTrue(tc, FuzzyQuery::defaultPrefixLength == fq->getPrefixLength());
+	_CLDELETE(fq);
+
+	try {
+		Query *q = getQuery(tc, _T("term~1.1"), NULL, CL_ERR_Parse); // value > 1, throws exception
+		CuFail(tc,_T("Expected a parse exception for query /term~1.1/"));
+	} catch (CLuceneError& e){
+	}
+
 	assertTrue(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
+
+	/* Tests to see that wild card terms are (or are not) properly
+	* lower-cased with propery parser configuration
+	*/
+	// First prefix queries:
+	// by default, convert to lowercase:
+	assertWildcardQueryEquals(tc,_T("Term*"), true, _T("term*"));
+	// explicitly set lowercase:
+	assertWildcardQueryEquals(tc,_T("term*"), true, _T("term*"));
+	assertWildcardQueryEquals(tc,_T("Term*"), true, _T("term*"));
+	assertWildcardQueryEquals(tc,_T("TERM*"), true, _T("term*"));
+	// explicitly disable lowercase conversion:
+	assertWildcardQueryEquals(tc,_T("term*"), false, _T("term*"));
+	assertWildcardQueryEquals(tc,_T("Term*"), false, _T("Term*"));
+	assertWildcardQueryEquals(tc,_T("TERM*"), false, _T("TERM*"));
+	// Then 'full' wildcard queries:
+	// by default, convert to lowercase:
+	assertQueryEquals(tc,_T("Te?m"), NULL,_T("te?m"));
+	// explicitly set lowercase:
+	assertWildcardQueryEquals(tc,_T("te?m"), true, _T("te?m"));
+	assertWildcardQueryEquals(tc,_T("Te?m"), true, _T("te?m"));
+	assertWildcardQueryEquals(tc,_T("TE?M"), true, _T("te?m"));
+	assertWildcardQueryEquals(tc,_T("Te?m*gerM"), true, _T("te?m*germ"));
+	// explicitly disable lowercase conversion:
+	assertWildcardQueryEquals(tc,_T("te?m"), false, _T("te?m"));
+	assertWildcardQueryEquals(tc,_T("Te?m"), false, _T("Te?m"));
+	assertWildcardQueryEquals(tc,_T("TE?M"), false, _T("TE?M"));
+	assertWildcardQueryEquals(tc,_T("Te?m*gerM"), false, _T("Te?m*gerM"));
+	//  Fuzzy queries:
+	assertQueryEquals(tc,_T("Term~"), NULL,_T("term~0.5"));
+	assertWildcardQueryEquals(tc,_T("Term~"), true, _T("term~0.5"));
+	assertWildcardQueryEquals(tc,_T("Term~"), false, _T("Term~0.5"));
+	//  Range queries:
+	assertQueryEquals(tc,_T("[A TO C]"), NULL,_T("[a TO c]"));
+	assertWildcardQueryEquals(tc,_T("[A TO C]"), true, _T("[a TO c]"));
+	assertWildcardQueryEquals(tc,_T("[A TO C]"), false, _T("[A TO C]"));
+	// Test suffix queries: first disallow
+	try {
+		getQuery(tc,_T("*Term"), NULL, CL_ERR_Parse);
+		CuFail(tc,_T("Expected an exception for query /*Term/"));
+	} catch (CLuceneError& e){
+	}
+
+	try {
+		getQuery(tc,_T("?Term"), NULL, CL_ERR_Parse);
+		CuFail(tc,_T("Expected an exception for query /?Term/"));
+	} catch (CLuceneError& e){
+	}
+
+	// Test suffix queries: then allow
+	assertWildcardQueryEquals(tc,_T("*Term"), true, _T("*term"), true);
+	assertWildcardQueryEquals(tc,_T("?Term"), true, _T("?term"), true);
 }
 
 void testQPA(CuTest *tc) {
@@ -260,6 +376,26 @@ void testQPA(CuTest *tc) {
 void testRange(CuTest *tc) {
 	StandardAnalyzer a;
 
+    assertQueryEquals(tc, _T("[ a TO z]"), NULL, _T("[a TO z]"));
+	/*
+	TODO: Complete RangeQuery portion in QP and enable this
+    assertTrue(getQuery("[ a TO z]", null) instanceof ConstantScoreRangeQuery);
+
+    QueryParser qp = new QueryParser("field", new SimpleAnalyzer());
+	qp.setUseOldRangeQuery(true);
+    assertTrue(qp.parse("[ a TO z]") instanceof RangeQuery);
+    */
+	assertQueryEquals(tc, _T("[ a TO z ]"), NULL, _T("[a TO z]"));
+	assertQueryEquals(tc, _T("{ a TO z}"), NULL, _T("{a TO z}"));
+	assertQueryEquals(tc, _T("{ a TO z }"), NULL, _T("{a TO z}"));
+	assertQueryEquals(tc, _T("{ a TO z }^2.0"), NULL, _T("{a TO z}^2.0"));
+	assertQueryEquals(tc, _T("[ a TO z] OR bar"), NULL, _T("[a TO z] bar"));
+	assertQueryEquals(tc, _T("[ a TO z] AND bar"), NULL, _T("+[a TO z] +bar"));
+	assertQueryEquals(tc, _T("( bar blar { a TO z}) "), NULL, _T("bar blar {a TO z}"));
+	assertQueryEquals(tc, _T("gack ( bar blar { a TO z}) "), NULL, _T("gack (bar blar {a TO z})"));
+
+
+	// Old CLucene tests - check this is working without TO as well
 	assertQueryEquals(tc,_T("[ a z]"), NULL, _T("[a TO z]"));
 	assertTrue(tc, _T("[ a z]"), NULL, "RangeQuery", _T("[ a z]") );
 	assertQueryEquals(tc,_T("[ a z ]"), NULL, _T("[a TO z]"));
@@ -271,7 +407,9 @@ void testRange(CuTest *tc) {
 	assertQueryEquals(tc,_T("( bar blar { a z}) "), NULL, _T("bar blar {a TO z}"));
 	assertQueryEquals(tc,_T("gack ( bar blar { a z}) "), NULL, _T("gack (bar blar {a TO z})"));
 
-	assertQueryEquals(tc,_T("[050-070]"), &a, _T("[050 TO -070]"));
+	// ### Incompatiable with new QP, and does not appear in the Java tests; use the format below instead
+	// assertQueryEquals(tc,_T("[050-070]"), &a, _T("[050 TO -070]"));
+	assertQueryEquals(tc,_T("[050 -070]"), &a, _T("[050 TO -070]"));
 }
 
 void testEscaped(CuTest *tc) {
@@ -279,6 +417,8 @@ void testEscaped(CuTest *tc) {
 	assertQueryEquals(tc, _T("\\[brackets"), &a, _T("[brackets") );
 	assertQueryEquals(tc, _T("\\\\\\[brackets"), &a, _T("\\[brackets") );
     assertQueryEquals(tc,_T("\\[brackets"), NULL, _T("brackets") );
+
+	assertQueryEquals(tc,_T("\\a"), &a, _T("a") );
 
     assertQueryEquals(tc,_T("a\\-b:c"), &a, _T("a-b:c") );
     assertQueryEquals(tc,_T("a\\+b:c"), &a, _T("a+b:c") );
@@ -317,13 +457,13 @@ CuSuite *testQueryParser(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Query Parser Test"));
 
-    SUITE_ADD_TEST(suite, testSimple);
+	SUITE_ADD_TEST(suite, testSimple);
     SUITE_ADD_TEST(suite, testQPA);
     SUITE_ADD_TEST(suite, testEscaped);
     SUITE_ADD_TEST(suite, testNumber);
     SUITE_ADD_TEST(suite, testPunct);
 
-    SUITE_ADD_TEST(suite, testSlop);
+	SUITE_ADD_TEST(suite, testSlop);
     SUITE_ADD_TEST(suite, testRange);
     SUITE_ADD_TEST(suite, testWildcard);
 

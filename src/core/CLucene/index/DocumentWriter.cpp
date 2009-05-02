@@ -287,21 +287,21 @@ void DocumentWriter::invertDocument(const Document* doc) {
 			          // Tokenize field and add to postingTable.
 			          CL_NS(analysis)::TokenStream* stream = analyzer->tokenStream(fieldName, reader);
 			
+					  CL_NS(analysis)::Token* t = NULL;
 			          try {
-			            CL_NS(analysis)::Token t;
 			            int32_t lastTokenEndOffset = -1;
-			            while (stream->next(&t)) {
-			                position += (t.getPositionIncrement() - 1);
+			            while (stream->next(t)) {
+			                position += (t->getPositionIncrement() - 1);
 			                
 			                if(field->isStoreOffsetWithTermVector()){
 			                	TermVectorOffsetInfo tio;
-			                	tio.setStartOffset(offset + t.startOffset());
-			                	tio.setEndOffset(offset + t.endOffset());
-								addPosition(fieldName, t.termBuffer(), position++, &tio);
+			                	tio.setStartOffset(offset + t->startOffset());
+			                	tio.setEndOffset(offset + t->endOffset());
+								addPosition(fieldName, t->termBuffer(), position++, &tio);
 							}else
-								addPosition(fieldName, t.termBuffer(), position++, NULL);
+								addPosition(fieldName, t->termBuffer(), position++, NULL);
 							
-							lastTokenEndOffset = t.endOffset();
+							lastTokenEndOffset = t->endOffset();
 			                length++;
 			                // Apply field truncation policy.
 							if (maxFieldLength != IndexWriter::FIELD_TRUNC_POLICY__WARN) {
@@ -342,7 +342,8 @@ void DocumentWriter::invertDocument(const Document* doc) {
               				offset += lastTokenEndOffset + 1;
 			          } _CLFINALLY (
 			            stream->close();
-			            _CLDELETE(stream);
+			            _CLLDELETE(stream);
+						_CLLDELETE(t);
 			          );
 			        } _CLFINALLY (
 			          if (delReader) {

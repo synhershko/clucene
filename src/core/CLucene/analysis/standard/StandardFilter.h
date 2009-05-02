@@ -29,7 +29,7 @@ CL_NS_DEF2(analysis,standard)
 	  * <p>Removes <tt>'s</tt> from the end of words.
 	  * <p>Removes dots from acronyms.
 	  */
-		bool next(Token* token);
+		Token* next(Token*& token);
 	};
 CL_NS_END2
 #endif

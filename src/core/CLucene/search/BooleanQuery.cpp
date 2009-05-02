@@ -179,9 +179,10 @@ CL_NS_DEF(search)
 
   TCHAR* BooleanQuery::toString(const TCHAR* field) const{
     StringBuffer buffer;
-    if (getBoost() != 1.0) {
-      buffer.append(_T("("));
-    }
+	bool needParens=(getBoost() != 1.0) /* TODO: || (getMinimumNumberShouldMatch()>0)*/ ;
+	if (needParens) {
+		buffer.append(_T("("));
+	}
 
     for (uint32_t i = 0 ; i < clauses->size(); i++) {
       BooleanClause* c = (*clauses)[i];
@@ -205,12 +206,16 @@ CL_NS_DEF(search)
       }
       if (i != clauses->size()-1)
         buffer.append(_T(" "));
+	}
+	
+	if (needParens) {
+		buffer.append(_T(")"));
+	}
 
-      if (getBoost() != 1.0) {
-         buffer.append(_T(")^"));
-         buffer.appendFloat(getBoost(),1);
-      }
-    }
+	if (getBoost() != 1.0) {
+		buffer.appendChar(_T('^'));
+		buffer.appendFloat(getBoost(),1);
+	}
     return buffer.toString();
   }
 

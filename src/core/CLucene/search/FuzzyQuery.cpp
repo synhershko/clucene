@@ -269,22 +269,21 @@ CL_NS_DEF(search)
     }
 
     TCHAR* FuzzyQuery::toString(const TCHAR* field) const{
-	//Func - Returns the query string
-	//Pre  - field != NULL
-	//Post - The query string has been returned
-
-        CND_PRECONDITION(field != NULL,"field is NULL");
-
-        StringBuffer buffer;
-        const TCHAR* b = MultiTermQuery::toString(field);
-    
-        buffer.append ( b );
-       _CLDELETE_CARRAY(b);
+        StringBuffer buffer(100, false); // TODO: Have a better estimation for the initial buffer length
+		Term* term = getTerm(false); // no need to increase ref count
+        if ( field==NULL || _tcscmp(term->field(),field)!=0 ) {
+            buffer.append(term->field());
+            buffer.append( _T(":"));
+        }
+        buffer.append(term->text());
         buffer.append( _T("~") );
-
 		buffer.appendFloat(minimumSimilarity,1);
-
-        return buffer.toString();
+		// todo: use ToStringUtils.boost()
+        if (getBoost() != 1.0f) {
+            buffer.appendChar ( '^' );
+            buffer.appendFloat( getBoost(),1);
+        }
+        return buffer.getBuffer();
     }
 
   const char* FuzzyQuery::getQueryName() const{

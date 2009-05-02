@@ -16,7 +16,7 @@
 
 CL_NS_USE(util)
 
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
 Lexer::Lexer(QueryParserBase* queryparser, const TCHAR* query) {
    //Func - Constructor
    //Pre  - query != NULL and contains the query string
@@ -368,4 +368,4 @@ bool Lexer::ReadEscape(TCHAR prev, TCHAR* buf) {
 }
 
 
-CL_NS_END
+CL_NS_END2

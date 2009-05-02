@@ -16,7 +16,7 @@ unittest tests[] = {
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
     {"queryparser", testQueryParser},
-	{"mfqueryparser", testMultiFieldQueryParser},
+	//{"mfqueryparser", testMultiFieldQueryParser},
     {"search", testsearch},
 	{"queries", testqueries},
     {"termvector",testtermvector},

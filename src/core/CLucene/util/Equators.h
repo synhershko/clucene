@@ -205,7 +205,7 @@ public:
 			doDelete((_kt*)obj);
 		}
 		static void doDelete(_kt* obj){
-			_CLLDELETE(obj);
+			_CLDELETE(obj);
 		}
 	};
 	template<typename _kt>

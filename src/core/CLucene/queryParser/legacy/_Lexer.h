@@ -4,8 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#ifndef _lucene_queryParser_Lexer_
-#define _lucene_queryParser_Lexer_
+#ifndef _lucene_queryParser_legacy_Lexer_
+#define _lucene_queryParser_legacy_Lexer_
 
 
 CL_CLASS_DEF(util,FastCharStream)
@@ -17,7 +17,7 @@ class QueryToken;
 class TokenList;
 class QueryParserBase;
 
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
 
 	// A simple Lexer that is used by QueryParser.
 	class Lexer:LUCENE_BASE
@@ -61,5 +61,5 @@ CL_NS_DEF(queryParser)
         //reads an escaped character into the buf. Buf requires at least 3 characters
 		bool ReadEscape(const TCHAR prev, TCHAR* buf);
 	};
-CL_NS_END
+CL_NS_END2
 #endif

@@ -14,6 +14,7 @@ class CLUCENE_EXPORT DateTools :LUCENE_BASE {
 public:
 
 	enum Resolution {
+		NO_RESOLUTION = NULL,
 		YEAR_FORMAT,		// yyyy
 		MONTH_FORMAT,		// yyyyMM
 		DAY_FORMAT,			// yyyyMMdd

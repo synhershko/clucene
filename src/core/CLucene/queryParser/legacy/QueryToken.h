@@ -4,13 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#ifndef _lucene_queryParser_QueryToken_
-#define _lucene_queryParser_QueryToken_
+#ifndef _lucene_queryParser_legacy_QueryToken_
+#define _lucene_queryParser_legacy_QueryToken_
 
-
-//#include "QueryParserBase.h"
-
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
 	
 	// Token class that used by QueryParser.
 	class CLUCENE_EXPORT QueryToken:LUCENE_BASE
@@ -69,5 +66,5 @@ CL_NS_DEF(queryParser)
 		void set(const TCHAR* value, const Types type);
 		void set(Types type);
 	};
-CL_NS_END
+CL_NS_END2
 #endif

@@ -60,6 +60,7 @@ void CuTestInit(CuTest* t, const TCHAR* name, TestFunction function);
 CuTest* CuTestNew(const TCHAR* name, TestFunction function);
 void CuTestDelete(CuTest* tst);
 void CuFail(CuTest* tc, const TCHAR* format, ...);
+void CuFail(CuTest* tc, CLuceneError& e);
 void CuMessage(CuTest* tc, const TCHAR* message,...);
 void CuMessageV(CuTest* tc, const TCHAR* format, va_list& argp);
 void CuMessageA(CuTest* tc, const char* format, ...);

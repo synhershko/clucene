@@ -5,18 +5,30 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
+#include "_CharStream.h"
+#include "_FastCharStream.h"
+#include "QueryParserConstants.h"
+#include "QueryParserTokenManager.h"
 #include "QueryParser.h"
 
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/util/CLStreams.h"
-#include "CLucene/search/SearchHeader.h"
-#include "CLucene/search/BooleanClause.h"
-#include "CLucene/search/Query.h"
-#include "CLucene/index/Term.h"
-#include "QueryToken.h"
 
-#include "_TokenList.h"
-#include "_Lexer.h"
+#include "CLucene/search/SearchHeader.h"
+
+#include "CLucene/search/Query.h"
+#include "CLucene/search/TermQuery.h"
+#include "CLucene/search/BooleanQuery.h"
+#include "CLucene/search/FuzzyQuery.h"
+#include "CLucene/search/PhraseQuery.h"
+#include "CLucene/search/WildcardQuery.h"
+#include "CLucene/search/PrefixQuery.h"
+#include "CLucene/search/RangeQuery.h"
+
+#include "CLucene/index/Term.h"
+#include "Token.h"
+
+#include "CLucene/util/CLStreams.h"
+#include "CLucene/util/StringBuffer.h"
 
 CL_NS_USE(util)
 CL_NS_USE(index)
@@ -25,484 +37,1424 @@ CL_NS_USE(search)
 
 CL_NS_DEF(queryParser)
 
-    QueryParser::QueryParser(const TCHAR* _field, Analyzer* _analyzer) : QueryParserBase(_analyzer){
-    //Func - Constructor.
-	//       Instantiates a QueryParser for the named field _field
-	//Pre  - _field != NULL
-	//Post - An instance has been created
+const TCHAR* QueryParserConstants::tokenImage[] = {
+		_T("<EOF>"),
+		_T("<_NUM_CHAR>"),
+		_T("<_ESCAPED_CHAR>"),
+		_T("<_TERM_START_CHAR>"),
+		_T("<_TERM_CHAR>"),
+		_T("<_WHITESPACE>"),
+		_T("<token of kind 6>"),
+		_T("<AND>"),
+		_T("<OR>"),
+		_T("<NOT>"),
+		_T("\"+\""),
+		_T("\"-\""),
+		_T("\"(\""),
+		_T("\")\""),
+		_T("\":\""),
+		_T("\"*\""),
+		_T("\"^\""),
+		_T("<QUOTED>"),
+		_T("<TERM>"),
+		_T("<FUZZY_SLOP>"),
+		_T("<PREFIXTERM>"),
+		_T("<WILDTERM>"),
+		_T("\"[\""),
+		_T("\"{\""),
+		_T("<NUMBER>"),
+		_T("\"TO\""),
+		_T("\"]\""),
+		_T("<RANGEIN_QUOTED>"),
+		_T("<RANGEIN_GOOP>"),
+		_T("\"TO\""),
+		_T("\"}\""),
+		_T("<RANGEEX_QUOTED>"),
+		_T("<RANGEEX_GOOP>")
+};
 
-		if ( _field )
-			field = STRDUP_TtoT(_field);
+const int32_t QueryParser::jj_la1_0[] = {0x180,0x180,0xe00,0xe00,0x1f69f80,0x48000,0x10000,0x1f69000,0x1348000,0x80000,0x80000,0x10000,0x18000000,0x2000000,0x18000000,0x10000,0x80000000,0x20000000,0x80000000,0x10000,0x80000,0x10000,0x1f68000};
+const int32_t QueryParser::jj_la1_1[] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0};
+
+QueryParser::QueryParser(const TCHAR* f, Analyzer* a) : _operator(OR_OPERATOR),
+	lowercaseExpandedTerms(true),useOldRangeQuery(false),allowLeadingWildcard(false),enablePositionIncrements(false),
+	analyzer(a),field(NULL),phraseSlop(0),fuzzyMinSim(FuzzyQuery::defaultMinSimilarity),
+	fuzzyPrefixLength(FuzzyQuery::defaultPrefixLength),/*locale(NULL),*/
+	dateResolution(CL_NS(document)::DateTools::NO_RESOLUTION),fieldToDateResolution(NULL),
+	token_source(NULL),token(NULL),jj_nt(NULL),_firstToken(NULL),jj_ntk(-1),jj_scanpos(NULL),jj_lastpos(NULL),jj_la(0),
+	lookingAhead(false),jj_gen(0),jj_2_rtns(NULL),jj_rescan(false),jj_gc(0),jj_expentries(NULL),jj_expentry(NULL),
+	jj_kind(-1),jj_endpos(0)
+{
+	StringReader* rdr = _CLNEW StringReader(_T(""));
+	_init(_CLNEW FastCharStream(rdr, true));
+
+	if ( f )
+		field = STRDUP_TtoT(f);
+}
+
+void QueryParser::_deleteTokens(){
+	Token* t = _firstToken;
+	while (true){
+		if (_firstToken == NULL) break;
+		t = _firstToken->next;
+		_CLLDELETE(_firstToken);
+		_firstToken = t;
+	}
+}
+
+QueryParser::~QueryParser(){
+	_CLLDELETE(fieldToDateResolution);
+	_CLLDELETE(token_source);
+
+	_deleteTokens();
+
+	_CLLDELETE(jj_expentries);
+	_CLLDELETE(jj_expentry);
+	_CLLDELETE(jj_2_rtns);
+
+	_CLLDELETE(field);
+}
+
+Query* QueryParser::parse(const TCHAR* _query)
+{
+	StringReader* rdr = _CLNEW StringReader(_query);
+	ReInit(_CLNEW FastCharStream(rdr, true));
+	try {
+		// TopLevelQuery is a Query followed by the end-of-input (EOF)
+		Query* res = TopLevelQuery(field);
+		return (res!=NULL) ? res : _CLNEW BooleanQuery();
+	}
+	catch (CLuceneError& e) {
+		// rethrow to include the original query:
+		if (e.number()==CL_ERR_Parse || e.number()==CL_ERR_TokenMgr) {
+			TCHAR* _twhat = e.twhat();
+			const size_t errLen = _tcslen(_twhat) + _tcslen(_query) + 20;  // make sure we have enough room for our error message
+			TCHAR *err = _CL_NEWARRAY(TCHAR,errLen);
+			cl_stprintf(err, errLen, _T("Cannot parse '%s': %s"), _query,_twhat);
+			_CLTHROWT_DEL(CL_ERR_Parse, err);
+		} else if (e.number()==CL_ERR_TooManyClauses) {
+			const size_t errLen = _tcslen(_query) + 25; // make sure we have enough room for our error message
+			TCHAR *err = _CL_NEWARRAY(TCHAR,errLen);
+			cl_stprintf(err, errLen, _T("Cannot parse '%s': too many boolean clauses"), _query);
+			_CLTHROWT_DEL(CL_ERR_Parse, err);
+		} else
+			throw e;
+	}
+}
+
+Analyzer* QueryParser::getAnalyzer() const {
+	return analyzer;
+}
+
+TCHAR* QueryParser::getField() const {
+	return field;
+}
+
+float_t QueryParser::getFuzzyMinSim() const {
+	return fuzzyMinSim;
+}
+
+void QueryParser::setFuzzyMinSim(const float_t _fuzzyMinSim) {
+	fuzzyMinSim = _fuzzyMinSim;
+}
+
+int32_t QueryParser::getFuzzyPrefixLength() const {
+	return fuzzyPrefixLength;
+}
+
+void QueryParser::setFuzzyPrefixLength(const int32_t _fuzzyPrefixLength) {
+	fuzzyPrefixLength = _fuzzyPrefixLength;
+}
+
+void QueryParser::setPhraseSlop(const int32_t _phraseSlop) {
+	phraseSlop = _phraseSlop;
+}
+int32_t QueryParser::getPhraseSlop() const {
+	return phraseSlop;
+}
+void QueryParser::setAllowLeadingWildcard(const bool _allowLeadingWildcard) {
+	allowLeadingWildcard = _allowLeadingWildcard;
+}
+bool QueryParser::getAllowLeadingWildcard() const {
+	return allowLeadingWildcard;
+}
+void QueryParser::setEnablePositionIncrements(const bool _enable) {
+	enablePositionIncrements = _enable;
+}
+bool QueryParser::getEnablePositionIncrements() const {
+	return enablePositionIncrements;
+}
+void QueryParser::setDefaultOperator(Operator _op) {
+	_operator = _op;
+}
+QueryParser::Operator QueryParser::getDefaultOperator() const {
+	return _operator;
+}
+void QueryParser::setLowercaseExpandedTerms(const bool _lowercaseExpandedTerms) {
+	lowercaseExpandedTerms = _lowercaseExpandedTerms;
+}
+bool QueryParser::getLowercaseExpandedTerms() const {
+	return lowercaseExpandedTerms;
+}
+void QueryParser::setUseOldRangeQuery(const bool _useOldRangeQuery) {
+	useOldRangeQuery = _useOldRangeQuery;
+}
+bool QueryParser::getUseOldRangeQuery() const {
+	return useOldRangeQuery;
+}
+void QueryParser::setDateResolution(const CL_NS(document)::DateTools::Resolution _dateResolution) {
+	dateResolution = _dateResolution;
+}
+void QueryParser::setDateResolution(const TCHAR* fieldName, const CL_NS(document)::DateTools::Resolution _dateResolution) {
+	if (fieldName == NULL)
+		_CLTHROWA(CL_ERR_IllegalArgument, "Field cannot be null.");
+
+	if (fieldToDateResolution == NULL) {
+		// lazily initialize HashMap
+		fieldToDateResolution = _CLNEW CL_NS(util)::CLHashMap<const TCHAR*,
+							CL_NS(document)::DateTools::Resolution,
+							CL_NS(util)::Compare::TChar,
+							CL_NS(util)::Equals::TChar,
+							CL_NS(util)::Deletor::tcArray,
+							CL_NS(util)::Deletor::DummyInt32
+							>();
+	}
+
+	fieldToDateResolution->put(fieldName, _dateResolution);
+}
+CL_NS(document)::DateTools::Resolution QueryParser::getDateResolution(const TCHAR* fieldName) const {
+	if (fieldName == NULL)
+		_CLTHROWA(CL_ERR_IllegalArgument,"Field cannot be null.");
+
+	if (fieldToDateResolution == NULL) {
+		// no field specific date resolutions set; return default date resolution instead
+		return dateResolution;
+	}
+
+	CL_NS(document)::DateTools::Resolution resolution = fieldToDateResolution->get(fieldName);
+	if (resolution == NULL) {
+		// no date resolutions set for the given field; return default date resolution instead
+		resolution = dateResolution;
+	}
+
+	return resolution;
+}
+
+void QueryParser::addClause(std::vector<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
+	bool required, prohibited;
+
+	// If this term is introduced by AND, make the preceding term required,
+	// unless it's already prohibited
+	const uint32_t nPreviousClauses = clauses.size();
+	if (nPreviousClauses > 0 && conj == CONJ_AND) {
+		BooleanClause* c = clauses[nPreviousClauses-1];
+		if (!c->isProhibited())
+			c->setOccur(BooleanClause::MUST);
+	}
+
+	if (nPreviousClauses > 0 && _operator == AND_OPERATOR && conj == CONJ_OR) {
+		// If this term is introduced by OR, make the preceding term optional,
+		// unless it's prohibited (that means we leave -a OR b but +a OR b-->a OR b)
+		// notice if the input is a OR b, first term is parsed as required; without
+		// this modification a OR b would parsed as +a OR b
+		BooleanClause* c = clauses[nPreviousClauses-1];
+		if (!c->isProhibited())
+			c->setOccur(BooleanClause::SHOULD);
+	}
+
+	// We might have been passed a null query; the term might have been
+	// filtered away by the analyzer.
+	if (q == NULL)
+		return;
+
+	if (_operator == OR_OPERATOR) {
+		// We set REQUIRED if we're introduced by AND or +; PROHIBITED if
+		// introduced by NOT or -; make sure not to set both.
+		prohibited = (mods == MOD_NOT);
+		required = (mods == MOD_REQ);
+		if (conj == CONJ_AND && !prohibited) {
+			required = true;
+		}
+	} else {
+		// We set PROHIBITED if we're introduced by NOT or -; We set REQUIRED
+		// if not PROHIBITED and not introduced by OR
+		prohibited = (mods == MOD_NOT);
+		required   = (!prohibited && conj != CONJ_OR);
+	}
+	if (required && !prohibited)
+		clauses.push_back(_CLNEW BooleanClause(q,true, BooleanClause::MUST));
+	else if (!required && !prohibited)
+		clauses.push_back(_CLNEW BooleanClause(q,true, BooleanClause::SHOULD));
+	else if (!required && prohibited)
+		clauses.push_back(_CLNEW BooleanClause(q,true, BooleanClause::MUST_NOT));
+	else {
+		_CLTHROWA(CL_ERR_Runtime, "Clause cannot be both required and prohibited");
+	}
+}
+
+Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* queryText) {
+	// Use the analyzer to get all the tokens, and then build a TermQuery,
+	// PhraseQuery, or nothing based on the term count
+
+	StringReader reader(queryText);
+	TokenStream* source = analyzer->tokenStream(_field, &reader);
+
+	CLVector<CL_NS(analysis)::Token*, Deletor::Object<CL_NS(analysis)::Token> > v;
+	CL_NS(analysis)::Token* t = NULL;
+	int32_t positionCount = 0;
+	bool severalTokensAtSamePosition = false;
+
+	while (true) {
+		t = NULL;
+		try {
+			t = source->next(t);
+		}
+		_CLCATCH_ERR(CL_ERR_IO, _CLLDELETE(source);_CLLDELETE(t);_CLDELETE_LCARRAY(queryText);,{
+			t = NULL;
+		});
+		if (t == NULL)
+			break;
+		v.push_back(t);
+		if (t->getPositionIncrement() != 0)
+			positionCount += t->getPositionIncrement();
 		else
-			field = NULL;
-		tokens = NULL;
-		lowercaseExpandedTerms = true;
+			severalTokensAtSamePosition = true;
 	}
-
-	QueryParser::~QueryParser() {
-	//Func - Destructor
-	//Pre  - true
-	//Post - The instance has been destroyed
-
-        _CLDELETE_CARRAY(field);
+	try {
+		source->close();
 	}
+	_CLCATCH_ERR(CL_ERR_IO, {_CLLDELETE(source);_CLLDELETE(t);_CLDELETE_LCARRAY(queryText);},/*ignore CL_ERR_IO */);
+	_CLLDELETE(source);
 
-    //static
-    Query* QueryParser::parse(const TCHAR* query, const TCHAR* field, Analyzer* analyzer){
-    //Func - Returns a new instance of the Query class with a specified query, field and
-    //       analyzer values.
-    //Pre  - query != NULL and holds the query to parse
-	//       field != NULL and holds the default field for query terms
-	//       analyzer holds a valid reference to an Analyzer and is used to
-	//       find terms in the query text
-	//Post - query has been parsed and an instance of Query has been returned
-
-		CND_PRECONDITION(query != NULL, "query is NULL");
-        CND_PRECONDITION(field != NULL, "field is NULL");
-
-		QueryParser parser(field, analyzer);
-		return parser.parse(query);
-	}
-
-    Query* QueryParser::parse(const TCHAR* query){
-	//Func - Returns a parsed Query instance
-	//Pre  - query != NULL and contains the query value to be parsed
-	//Post - Returns a parsed Query Instance
-
-        CND_PRECONDITION(query != NULL, "query is NULL");
-
-		//Instantie a Stringer that can read the query string
-        BufferedReader* r = _CLNEW StringReader(query);
-
-		//Check to see if r has been created properly
-		CND_CONDITION(r != NULL, "Could not allocate memory for StringReader r");
-
-		//Pointer for the return value
-		Query* ret = NULL;
-
-		try{
-			//Parse the query managed by the StringReader R and return a parsed Query instance
-			//into ret
-			ret = parse(r);
-		}_CLFINALLY (
-			_CLDELETE(r);
-		);
-
+	if (v.size() == 0)
+		return NULL;
+	else if (v.size() == 1) {
+		Term* tm = _CLNEW Term(_field, v.at(0)->termBuffer());
+		Query* ret = _CLNEW TermQuery( tm );
+		_CLDECDELETE(tm);
 		return ret;
-	}
-
-	Query* QueryParser::parse(BufferedReader* reader){
-	//Func - Returns a parsed Query instance
-	//Pre  - reader contains a valid reference to a Reader and manages the query string
-	//Post - A parsed Query instance has been returned or
-
-		//instantiate the TokenList tokens
-		TokenList _tokens;
-		this->tokens = &_tokens;
-
-		//Instantiate a lexer
-		Lexer lexer(this, reader);
-
-		//tokens = lexer.Lex();
-		//Lex the tokens
-		lexer.Lex(tokens);
-
-		//Peek to the first token and check if is an EOF
-		if (tokens->peek()->Type == QueryToken::EOF_){
-			// The query string failed to yield any tokens.  We discard the
-			// TokenList tokens and raise an exceptioin.
-			QueryToken* token = this->tokens->extract();
-			_CLDELETE(token);
-		   _CLTHROWA(CL_ERR_Parse, "No query given.");
+	} else {
+		if (severalTokensAtSamePosition) {
+			if (positionCount == 1) {
+				// no phrase query:
+				BooleanQuery* q = _CLNEW BooleanQuery(true);
+				for(size_t i=0; i<v.size(); i++ ){
+					Term* tm = _CLNEW Term(_field, v.at(i)->termBuffer());
+					q->add(_CLNEW TermQuery(tm),BooleanClause::SHOULD);
+					_CLDECDELETE(tm);
+				}
+				return q;
+			}
+			else {
+				_CLDELETE_LCARRAY(queryText);
+				_CLTHROWA(CL_ERR_UnsupportedOperation, "MultiPhraseQuery NOT Implemented");
+				/*
+				// TODO: phrase query:
+				MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
+				mpq.setSlop(phraseSlop);
+				List multiTerms = new ArrayList();
+				int32_t position = -1;
+				for (int32_t i = 0; i < v.size(); i++) {
+				t = (org.apache.lucene.analysis.Token) v.elementAt(i);
+				if (t.getPositionIncrement() > 0 && multiTerms.size() > 0) {
+				if (enablePositionIncrements) {
+				mpq.add((Term[])multiTerms.toArray(new Term[0]),position);
+				} else {
+				mpq.add((Term[])multiTerms.toArray(new Term[0]));
+				}
+				multiTerms.clear();
+				}
+				position += t.getPositionIncrement();
+				multiTerms.add(_CLNEW Term(field, t.termText()));
+				}
+				if (enablePositionIncrements) {
+				mpq.add((Term[])multiTerms.toArray(new Term[0]),position);
+				} else {
+				mpq.add((Term[])multiTerms.toArray(new Term[0]));
+				}
+				return mpq;
+				*/
+			}
 		}
+		else {
+			PhraseQuery* pq = _CLNEW PhraseQuery();
+			pq->setSlop(phraseSlop);
+			int32_t position = -1;
 
-		//Return the parsed Query instance
-		Query* ret = MatchQuery(field);
-		this->tokens = NULL;
-		return ret;
-	}
-
-	int32_t QueryParser::MatchConjunction(){
-	//Func - matches for CONJUNCTION
-	//       CONJUNCTION ::= <AND> | <OR>
-	//Pre  - tokens != NULL
-	//Post - if the first token is an AND or an OR then
-	//       the token is extracted and deleted and CONJ_AND or CONJ_OR is returned
-	//       otherwise CONJ_NONE is returned
-
-        CND_PRECONDITION(tokens != NULL, "tokens is NULL");
-
-		switch(tokens->peek()->Type){
-			case QueryToken::AND_ :
-				//Delete the first token of tokenlist
-				ExtractAndDeleteToken();
-				return CONJ_AND;
-			case QueryToken::OR   :
-				//Delete the first token of tokenlist
-				ExtractAndDeleteToken();
-				return CONJ_OR;
-			default :
-				return CONJ_NONE;
-		}
-	}
-
-	int32_t QueryParser::MatchModifier(){
-	//Func - matches for MODIFIER
-	//       MODIFIER ::= <PLUS> | <MINUS> | <NOT>
-	//Pre  - tokens != NULL
-	//Post - if the first token is a PLUS the token is extracted and deleted and MOD_REQ is returned
-	//       if the first token is a MINUS or NOT the token is extracted and deleted and MOD_NOT is returned
-	//       otherwise MOD_NONE is returned
-		CND_PRECONDITION(tokens != NULL, "tokens is NULL");
-
-		switch(tokens->peek()->Type){
-			case QueryToken::PLUS :
-				//Delete the first token of tokenlist
-				ExtractAndDeleteToken();
-				return MOD_REQ;
-			case QueryToken::MINUS :
-			case QueryToken::NOT   :
-				//Delete the first token of tokenlist
-				ExtractAndDeleteToken();
-				return MOD_NOT;
-			default :
-				return MOD_NONE;
+			for (size_t i = 0; i < v.size(); i++) {
+				t = v.at(i);
+				Term* tm = _CLNEW Term(_field, t->termBuffer());
+				if (enablePositionIncrements) {
+					position += t->getPositionIncrement();
+					pq->add(tm,position);
+				} else {
+					pq->add(tm);
+				}
+				_CLDECDELETE(tm);
+			}
+			return pq;
 		}
 	}
+}
 
-	Query* QueryParser::MatchQuery(const TCHAR* field){
-	//Func - matches for QUERY
-	//       QUERY ::= [MODIFIER] QueryParser::CLAUSE (<CONJUNCTION> [MODIFIER] CLAUSE)*
-	//Pre  - field != NULL
-	//Post -
+Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop) {
+	Query* query = getFieldQuery(_field, queryText);
 
-		CND_PRECONDITION(tokens != NULL, "tokens is NULL");
+	if ( query && strcmp(query->getQueryName(),PhraseQuery::getClassName()) == 0) {
+		static_cast<PhraseQuery*>(query)->setSlop(slop);
+	}
+	/*
+	// TODO: Add MultiPhraseQuery support
+	if (query instanceof MultiPhraseQuery) {
+	((MultiPhraseQuery) query).setSlop(slop);
+	}
+	*/
+	return query;
+}
 
-		vector<BooleanClause*> clauses;
+Query* QueryParser::getRangeQuery(const TCHAR* _field, TCHAR* part1, TCHAR* part2, const bool inclusive)
+{
+	if (lowercaseExpandedTerms) {
+		_tcslwr(part1);
+		_tcslwr(part2);
+	}
+	/*
+	// TODO: Complete porting of the code below
+	try {
+	DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+	df.setLenient(true);
+	Date d1 = df.parse(part1);
+	Date d2 = df.parse(part2);
+	if (inclusive) {
+	// The user can only specify the date, not the time, so make sure
+	// the time is set to the latest possible time of that date to really
+	// include all documents:
+	Calendar cal = Calendar.getInstance(locale);
+	cal.setTime(d2);
+	cal.set(Calendar.HOUR_OF_DAY, 23);
+	cal.set(Calendar.MINUTE, 59);
+	cal.set(Calendar.SECOND, 59);
+	cal.set(Calendar.MILLISECOND, 999);
+	d2 = cal.getTime();
+	}
+	CL_NS(document)::DateTools::Resolution resolution = getDateResolution(_field);
+	if (resolution == NULL) {
+	// no default or field specific date resolution has been set,
+	// use deprecated DateField to maintain compatibilty with
+	// pre-1.9 Lucene versions.
+	part1 = DateField.dateToString(d1);
+	part2 = DateField.dateToString(d2);
+	} else {
+	part1 = CL_NS(document)::DateTools::dateToString(d1, resolution);
+	part2 = CL_NS(document)::DateTools::dateToString(d2, resolution);
+	}
+	}
+	catch (...) { }
+	*/
 
-		Query* q = NULL;
+	//if(useOldRangeQuery)
+	//{
+	Term* t1 = _CLNEW Term(_field,part1);
+	Term* t2 = _CLNEW Term(_field,part2);
+	Query* ret = _CLNEW RangeQuery(t1, t2, inclusive);
+	_CLDECDELETE(t1);
+	_CLDECDELETE(t2);
+	return ret;
+	/*}
+	else
+	{
+	// TODO: Port ConstantScoreRangeQuery and enable this section
+	return _CLNEW ConstantScoreRangeQuery(_field,part1,part2,inclusive,inclusive);
+	}*/
+}
 
-		int32_t mods = MOD_NONE;
-		int32_t conj = CONJ_NONE;
+Query* QueryParser::getBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord)
+{
+	if (clauses.size()==0) {
+		return NULL; // all clause words were filtered away by the analyzer.
+	}
+	BooleanQuery* query = _CLNEW BooleanQuery(disableCoord);
 
-		//match for MODIFIER
-		mods = MatchModifier();
+	for (size_t i = 0; i < clauses.size(); i++) {
+		query->add(clauses[i]);
+	}
+	return query;
+}
 
-		//match for CLAUSE
-		q = MatchClause(field);
-		AddClause(clauses, CONJ_NONE, mods, q);
+Query* QueryParser::getWildcardQuery(const TCHAR* _field, TCHAR* termStr)
+{
+	if (_tcscmp(_T("*"), _field) == 0) {
+		if (_tcscmp(_T("*"), termStr) == 0) return NULL;
+		// TODO: Implement MatchAllDocsQuery
+		//return _CLNEW MatchAllDocsQuery();
+	}
+	if (!allowLeadingWildcard && (termStr[0]==_T('*') || termStr[0]==_T('?'))){
+		_CLDELETE_LCARRAY(termStr);
+		_CLTHROWT(CL_ERR_Parse,_T("'*' or '?' not allowed as first character in WildcardQuery"));
+	}
+	if (lowercaseExpandedTerms) {
+		_tcslwr(termStr);
+	}
 
-		// match for CLAUSE*
-		while(true){
-			QueryToken* p = tokens->peek();
-			if(p->Type == QueryToken::EOF_){
-				QueryToken* qt = MatchQueryToken(QueryToken::EOF_);
-				_CLDELETE(qt);
+	Term* t = _CLNEW Term(_field, termStr);
+	Query* q = _CLNEW WildcardQuery(t);
+	_CLDECDELETE(t);
+
+	return q;
+}
+
+Query* QueryParser::getPrefixQuery(const TCHAR* _field, TCHAR* _termStr)
+{
+	if (!allowLeadingWildcard && _termStr[0] == _T('*')){
+		_CLDELETE_LCARRAY(_termStr);
+		_CLTHROWT(CL_ERR_Parse,_T("'*' not allowed as first character in PrefixQuery"));
+	}
+	if (lowercaseExpandedTerms) {
+		_tcslwr(_termStr);
+	}
+	Term* t = _CLNEW Term(_field, _termStr);
+	Query *q = _CLNEW PrefixQuery(t);
+	_CLDECDELETE(t);
+	return q;
+}
+
+Query* QueryParser::getFuzzyQuery(const TCHAR* _field, TCHAR* termStr, const float_t minSimilarity)
+{
+	if (lowercaseExpandedTerms) {
+		_tcslwr(termStr);
+	}
+
+	Term* t = _CLNEW Term(_field, termStr);
+	Query *q = _CLNEW FuzzyQuery(t, minSimilarity, fuzzyPrefixLength);
+	_CLDECDELETE(t);
+	return q;
+}
+
+TCHAR* QueryParser::discardEscapeChar(TCHAR* input, TCHAR* output) {
+	// Create char array to hold unescaped char sequence
+	const size_t inputLen = _tcslen(input);
+	bool outputOwned=false;
+	if (output == NULL){
+		output = _CL_NEWARRAY(TCHAR, inputLen + 1);
+		outputOwned=true;
+	}
+
+	// The length of the output can be less than the input
+	// due to discarded escape chars. This variable holds
+	// the actual length of the output
+	int32_t length = 0;
+
+	// We remember whether the last processed character was 
+	// an escape character
+	bool lastCharWasEscapeChar = false;
+
+	// The multiplier the current unicode digit must be multiplied with.
+	// E. g. the first digit must be multiplied with 16^3, the second with 16^2...
+	uint32_t codePointMultiplier = 0;
+
+	// Used to calculate the codepoint of the escaped unicode character
+	int32_t codePoint = 0;
+
+	for (size_t i = 0; i < inputLen; i++) {
+		TCHAR curChar = input[i];
+		if (codePointMultiplier > 0) {
+			codePoint += hexToInt(curChar) * codePointMultiplier;
+			codePointMultiplier = codePointMultiplier >> 4;
+			if (codePointMultiplier == 0) {
+				output[length++] = (TCHAR)codePoint;
+				codePoint = 0;
+			}
+		} else if (lastCharWasEscapeChar) {
+			if (curChar == _T('u')) {
+				// found an escaped unicode character
+				codePointMultiplier = 16 * 16 * 16;
+			} else {
+				// this character was escaped
+				output[length] = curChar;
+				length++;
+			}
+			lastCharWasEscapeChar = false;
+		} else {
+			if (curChar == _T('\\')) {
+				lastCharWasEscapeChar = true;
+			} else {
+				output[length] = curChar;
+				length++;
+			}
+		}
+	}
+
+	if (codePointMultiplier > 0) {
+		if (outputOwned)_CLDELETE_LCARRAY(output);
+		_CLTHROWT(CL_ERR_Parse, _T("Truncated unicode escape sequence."));
+	}
+
+	if (lastCharWasEscapeChar) {
+		if (outputOwned)_CLDELETE_LCARRAY(output);
+		_CLTHROWT(CL_ERR_Parse,_T("Term can not end with escape character."));
+	}
+
+	output[length]=0;
+	return output;
+}
+
+//static
+int32_t QueryParser::hexToInt(TCHAR c) {
+	if (_T('0') <= c && c <= _T('9')) {
+		return c - _T('0');
+	} else if (_T('a') <= c && c <= _T('f')){
+		return c - _T('a') + 10;
+	} else if (_T('A') <= c && c <= _T('F')) {
+		return c - _T('A') + 10;
+	} else {
+		TCHAR err[48];
+		cl_stprintf(err,48,_T("None-hex character in unicode escape sequence: %c"));
+		_CLTHROWT(CL_ERR_Parse,err);
+	}
+}
+
+//static
+TCHAR* QueryParser::escape(TCHAR* s) {
+	size_t len = _tcslen(s);
+	// Create a StringBuffer object a bit longer from the length of the query (to prevent some reallocations),
+	// and declare we are the owners of the buffer (to save on a copy)
+	// TODO: 1. Test to see what is the optimal initial length
+	//		 2. Allow re-using the provided string buffer (argument s) instead of creating another one?
+	StringBuffer sb(len+5,false);
+	for (size_t i = 0; i < len; i++) {
+		const TCHAR c = s[i];
+		// These characters are part of the query syntax and must be escaped
+		if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')' || c == ':'
+			|| c == '^' || c == '[' || c == ']' || c == '"' || c == '{' || c == '}' || c == '~'
+			|| c == '*' || c == '?' || c == '|' || c == '&') {
+				sb.appendChar(_T('\\'));
+		}
+		sb.appendChar(c);
+	}
+	return sb.getBuffer();
+}
+
+int32_t QueryParser::Conjunction() {
+	int32_t ret = CONJ_NONE;
+	switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+	{
+	case AND:
+	case OR:
+		switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+		{
+		case AND:
+			jj_consume_token(AND);
+			ret = CONJ_AND;
+			break;
+		case OR:
+			jj_consume_token(OR);
+			ret = CONJ_OR;
+			break;
+		default:
+			jj_la1[0] = jj_gen;
+			jj_consume_token(-1);
+			_CLTHROWT(CL_ERR_Parse,_T(""));
+		}
+		break;
+	default:
+		jj_la1[1] = jj_gen;
+	}
+	return ret;
+}
+
+int32_t QueryParser::Modifiers() {
+	int32_t ret = MOD_NONE;
+	switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+	{
+	case NOT:
+	case PLUS:
+	case MINUS:
+		switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+		{
+		case PLUS:
+			jj_consume_token(PLUS);
+			ret = MOD_REQ;
+			break;
+		case MINUS:
+			jj_consume_token(MINUS);
+			ret = MOD_NOT;
+			break;
+		case NOT:
+			jj_consume_token(NOT);
+			ret = MOD_NOT;
+			break;
+		default:
+			jj_la1[2] = jj_gen;
+			jj_consume_token(-1);
+			_CLTHROWT(CL_ERR_Parse,_T(""));
+		}
+		break;
+	default:
+		jj_la1[3] = jj_gen;
+	}
+	return ret;
+}
+
+Query* QueryParser::TopLevelQuery(TCHAR* _field) {
+	Query* q;
+	try {
+		q = fQuery(_field);
+	} catch (CLuceneError& e) {
+		if (_field!=field)_CLDELETE_LCARRAY(_field);
+		throw e;
+	}
+	if (_field!=field)_CLDELETE_LCARRAY(_field);
+	jj_consume_token(0);
+	return q;
+}
+
+Query* QueryParser::fQuery(TCHAR*& _field) {
+	CLVector<CL_NS(search)::BooleanClause*, Deletor::Object<CL_NS(search)::BooleanClause> > clauses;
+	Query *q, *firstQuery=NULL;
+	int32_t conj, mods;
+	mods = Modifiers();
+	q = fClause(_field);
+	addClause(clauses, CONJ_NONE, mods, q);
+	if (mods == MOD_NONE)
+		firstQuery=q;
+	while (true) {
+		switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+		{
+		case AND:
+		case OR:
+		case NOT:
+		case PLUS:
+		case MINUS:
+		case LPAREN:
+		case STAR:
+		case QUOTED:
+		case TERM:
+		case PREFIXTERM:
+		case WILDTERM:
+		case RANGEIN_START:
+		case RANGEEX_START:
+		case NUMBER:
+			break;
+		default:
+			jj_la1[4] = jj_gen;
+			goto label_1_brk;
+		}
+
+		conj = Conjunction();
+		mods = Modifiers();
+		q = fClause(_field);
+		addClause(clauses, conj, mods, q);
+	}
+
+label_1_brk:
+	if (clauses.size() == 1 && firstQuery != NULL){
+		clauses[0]->deleteQuery = false;
+		return firstQuery;
+	}else{
+		clauses.setDoDelete(false);
+		return getBooleanQuery(clauses);
+	}
+}
+
+Query* QueryParser::fClause(TCHAR*& _field) {
+	Query* q=NULL;
+	Token *fieldToken=NULL, *boost=NULL;
+	if (jj_2_1(2)) {
+		switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+		{
+		case TERM:
+			{
+				fieldToken = jj_consume_token(TERM);
+				jj_consume_token(COLON);
+				// make sure to delete _field only if it's not contained already by the QP
+				if (_field != field) _CLLDELETE(_field);
+				_field=discardEscapeChar(fieldToken->image);
 				break;
 			}
+		case STAR:
+			jj_consume_token(STAR);
+			jj_consume_token(COLON);
+			cl_stprintf(_field,1,_T("*"));
+			break;
+		default:
+			jj_la1[5] = jj_gen;
+			jj_consume_token(-1);
+			_CLTHROWT(CL_ERR_Parse,_T(""));
+		}
+	}
+	switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+	{
+	case STAR:
+	case QUOTED:
+	case TERM:
+	case PREFIXTERM:
+	case WILDTERM:
+	case RANGEIN_START:
+	case RANGEEX_START:
+	case NUMBER:
+		{
+			q = fTerm(_field);
+			break;
+		}
+	case LPAREN:
+		{
+			jj_consume_token(LPAREN);
+			q = fQuery(_field);
+			jj_consume_token(RPAREN);
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
+			{
+				jj_consume_token(CARAT);
+				boost = jj_consume_token(NUMBER);
+			}
+			else
+				jj_la1[6] = jj_gen;
+			break;
+		}
+	default:
+		{
+			jj_la1[7] = jj_gen;
+			jj_consume_token(-1);
+			_CLTHROWT(CL_ERR_Parse,_T(""));
+		}
+	}
+	if (boost != NULL) {
+		float_t f = 1.0;
+		try {
+			f = static_cast<float_t>(_tstof(boost->image));
+			q->setBoost(f);
+		} catch (...) { /* ignore errors */ }
+	}
+	return q;
+}
 
-			if(p->Type == QueryToken::RPAREN){
-				//MatchQueryToken(QueryToken::RPAREN);
+Query* QueryParser::fTerm(const TCHAR* _field) {
+	Token *term, *boost=NULL, *fuzzySlop=NULL, *goop1, *goop2;
+	bool prefix = false;
+	bool wildcard = false;
+	bool fuzzy = false;
+	bool rangein = false;
+	Query* q = NULL;
+	switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+	{
+	case STAR:
+	case TERM:
+	case PREFIXTERM:
+	case WILDTERM:
+	case NUMBER:
+		{
+			switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+			{
+			case TERM:
+				term = jj_consume_token(TERM);
 				break;
+			case STAR:
+				term = jj_consume_token(STAR);
+				wildcard=true;
+				break;
+			case PREFIXTERM:
+				term = jj_consume_token(PREFIXTERM);
+				prefix=true;
+				break;
+			case WILDTERM:
+				term = jj_consume_token(WILDTERM);
+				wildcard=true;
+				break;
+			case NUMBER:
+				term = jj_consume_token(NUMBER);
+				break;
+			default:
+				jj_la1[8] = jj_gen;
+				jj_consume_token(-1);
+				_CLTHROWT(CL_ERR_Parse,_T(""));
 			}
 
-			//match for a conjuction (AND OR NOT)
-			conj = MatchConjunction();
-			//match for a modifier
-			mods = MatchModifier();
-
-			q = MatchClause(field);
-			if ( q != NULL )
-				AddClause(clauses, conj, mods, q);
-		}
-
-		// finalize query
-		if(clauses.size() == 1){ //bvk: removed this && firstQuery != NULL
-			BooleanClause* c = clauses[0];
-			Query* q = c->getQuery();
-
-			//Condition check to be sure clauses[0] is valid
-			CND_CONDITION(c != NULL, "c is NULL");
-
-			//Tell the boolean clause not to delete its query
-			c->deleteQuery=false;
-			//Clear the clauses list
-			clauses.clear();
-			_CLDELETE(c);
-
-			return q;
-		}else{
-			return GetBooleanQuery(clauses);
-		}
-	}
-
-	Query* QueryParser::MatchClause(const TCHAR* field){
-	//Func - matches for CLAUSE
-	//       CLAUSE ::= [TERM <COLONQueryParser::>] ( TERM | (<LPAREN> QUERY <RPAREN>))
-	//Pre  - field != NULL
-	//Post -
-
-		Query* q = NULL;
-		const TCHAR* sfield = field;
-		bool delField = false;
-
-		QueryToken *DelToken = NULL;
-
-		//match for [TERM <COLON>]
-		QueryToken* term = tokens->extract();
-		if(term->Type == QueryToken::TERM && tokens->peek()->Type == QueryToken::COLON){
-			DelToken = MatchQueryToken(QueryToken::COLON);
-
-			CND_CONDITION(DelToken != NULL,"DelToken is NULL");
-			_CLDELETE(DelToken);
-
-			TCHAR* tmp = STRDUP_TtoT(term->Value);
-			discardEscapeChar(tmp);
-			delField = true;
-			sfield = tmp;
-			_CLDELETE(term);
-		}else{
-			tokens->push(term);
-			term = NULL;
-		}
-
-		// match for
-		// TERM | (<LPAREN> QUERY <RPAREN>)
-		if(tokens->peek()->Type == QueryToken::LPAREN){
-			DelToken = MatchQueryToken(QueryToken::LPAREN);
-
-			CND_CONDITION(DelToken != NULL,"DelToken is NULL");
-			_CLDELETE(DelToken);
-
-			q = MatchQuery(sfield);
-			//DSR:2004.11.01:
-			//If exception is thrown while trying to match trailing parenthesis,
-			//need to prevent q from leaking.
-
-			try{
-			   DelToken = MatchQueryToken(QueryToken::RPAREN);
-
-			   CND_CONDITION(DelToken != NULL,"DelToken is NULL");
-			   _CLDELETE(DelToken);
-
-			}catch(...) {
-				_CLDELETE(q);
-				throw;
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == FUZZY_SLOP)
+			{
+				fuzzySlop = jj_consume_token(FUZZY_SLOP);
+				fuzzy=true;
 			}
-		}else{
-			q = MatchTerm(sfield);
+			else
+				jj_la1[9] = jj_gen;
+
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
+			{
+				jj_consume_token(CARAT);
+				boost = jj_consume_token(NUMBER);
+				if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == FUZZY_SLOP)
+				{
+					fuzzySlop = jj_consume_token(FUZZY_SLOP);
+					fuzzy=true;
+				}
+				else
+					jj_la1[10] = jj_gen;
+			}
+			else
+				jj_la1[11] = jj_gen;
+
+			TCHAR* termImage=NULL;
+			if (wildcard) {
+				termImage=discardEscapeChar(term->image);
+				q = getWildcardQuery(_field, termImage);
+			} else if (prefix) {
+				termImage = STRDUP_TtoT(term->image);
+				size_t tiLen = _tcslen(termImage);
+				termImage[tiLen-1]=0;
+				q = getPrefixQuery(_field,discardEscapeChar(termImage, termImage));
+			} else if (fuzzy) {
+				float_t fms = fuzzyMinSim;
+				try {
+					if (fuzzySlop->image[1] != 0)
+						fms = static_cast<float_t>(_tstof(fuzzySlop->image + 1));
+				} catch (...) { /* ignore exceptions */ }
+				if(fms < 0.0f || fms > 1.0f){
+					_CLTHROWT(CL_ERR_Parse, _T("Minimum similarity for a FuzzyQuery has to be between 0.0f and 1.0f !"));
+				}
+				termImage=discardEscapeChar(term->image);
+				q = getFuzzyQuery(_field, termImage,fms);
+			} else {
+				termImage=discardEscapeChar(term->image);
+				q = getFieldQuery(_field, termImage);
+			}
+			_CLDELETE_LCARRAY(termImage);
+			break;
+		}
+	case RANGEIN_START:
+		{
+			jj_consume_token(RANGEIN_START);
+			switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+			{
+			case RANGEIN_GOOP:
+				goop1 = jj_consume_token(RANGEIN_GOOP);
+				break;
+			case RANGEIN_QUOTED:
+				goop1 = jj_consume_token(RANGEIN_QUOTED);
+				break;
+			default:
+				jj_la1[12] = jj_gen;
+				jj_consume_token(-1);
+				_CLTHROWT(CL_ERR_Parse,_T(""));
+			}
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == RANGEIN_TO)
+				jj_consume_token(RANGEIN_TO);
+			else
+				jj_la1[13] = jj_gen;
+
+			switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+			{
+			case RANGEIN_GOOP:
+				goop2 = jj_consume_token(RANGEIN_GOOP);
+				break;
+			case RANGEIN_QUOTED:
+				goop2 = jj_consume_token(RANGEIN_QUOTED);
+				break;
+			default:
+				jj_la1[14] = jj_gen;
+				jj_consume_token(-1);
+				_CLTHROWT(CL_ERR_Parse,_T(""));
+			}
+			jj_consume_token(RANGEIN_END);
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
+			{
+				jj_consume_token(CARAT);
+				boost = jj_consume_token(NUMBER);
+			}
+			else
+				jj_la1[15] = jj_gen;
+
+			if (goop1->kind == RANGEIN_QUOTED) {
+				_tcscpy(goop1->image, goop1->image+1);
+			}
+			if (goop2->kind == RANGEIN_QUOTED) {
+				_tcscpy(goop2->image, goop2->image+1);
+			}
+			TCHAR* t1 = discardEscapeChar(goop1->image);
+			TCHAR* t2 = discardEscapeChar(goop2->image);
+			q = getRangeQuery(_field, t1, t2, true);
+			_CLDELETE_LCARRAY(t1);
+			_CLDELETE_LCARRAY(t2);
+			break;
+		}
+	case RANGEEX_START:
+		{
+			jj_consume_token(RANGEEX_START);
+			switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+			{
+			case RANGEEX_GOOP:
+				goop1 = jj_consume_token(RANGEEX_GOOP);
+				break;
+			case RANGEEX_QUOTED:
+				goop1 = jj_consume_token(RANGEEX_QUOTED);
+				break;
+			default:
+				jj_la1[16] = jj_gen;
+				jj_consume_token(-1);
+				_CLTHROWT(CL_ERR_Parse,_T(""));
+			}
+
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == RANGEEX_TO)
+				jj_consume_token(RANGEEX_TO);
+			else
+				jj_la1[17] = jj_gen;
+
+			switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
+			{
+			case RANGEEX_GOOP:
+				goop2 = jj_consume_token(RANGEEX_GOOP);
+				break;
+			case RANGEEX_QUOTED:
+				goop2 = jj_consume_token(RANGEEX_QUOTED);
+				break;
+			default:
+				jj_la1[18] = jj_gen;
+				jj_consume_token(-1);
+				_CLTHROWT(CL_ERR_Parse,_T(""));
+			}
+			jj_consume_token(RANGEEX_END);
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
+			{
+				jj_consume_token(CARAT);
+				boost = jj_consume_token(NUMBER);
+			}
+			else
+				jj_la1[19] = jj_gen;
+
+			if (goop1->kind == RANGEEX_QUOTED)
+				goop1->image = goop1->image + 1;
+
+			if (goop2->kind == RANGEEX_QUOTED)
+				goop2->image = goop2->image + 1;
+
+			TCHAR* t1 = discardEscapeChar(goop1->image);
+			TCHAR* t2 = discardEscapeChar(goop2->image);
+			q = getRangeQuery(_field, t1, t2, false);
+			_CLDELETE_LCARRAY(t1);
+			_CLDELETE_LCARRAY(t2);
+			break;
+		}
+	case QUOTED:
+		{
+			term = jj_consume_token(QUOTED);
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == FUZZY_SLOP)
+				fuzzySlop = jj_consume_token(FUZZY_SLOP);
+			else
+				jj_la1[20] = jj_gen;
+
+			if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
+			{
+				jj_consume_token(CARAT);
+				boost = jj_consume_token(NUMBER);
+			}
+			else
+				jj_la1[21] = jj_gen;
+
+			int32_t s = phraseSlop;
+
+			if (fuzzySlop != NULL) {
+				try {
+					s = _ttoi(fuzzySlop->image + 1);
+				}
+				catch (...) { /* ignore exceptions */ }
+			}
+			// TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
+			TCHAR* tmp = discardEscapeChar(term->image+1);
+			q = getFieldQuery(_field, tmp, s);
+			_CLDELETE_LCARRAY(tmp);
+			break;
+		}
+	default:
+		{
+			jj_la1[22] = jj_gen;
+			jj_consume_token(-1);
+			_CLTHROWT(CL_ERR_Parse,_T(""));
+		}
+	}
+	if (boost != NULL) {
+		float_t f = 1.0;
+		try {
+			f = static_cast<float_t>(_tstof(boost->image));
+		}
+		catch (...) {
+			/* Should this be handled somehow? (defaults to "no boost", if
+			* boost number is invalid)
+			*/
 		}
 
-	  if ( delField )
-		  _CLDELETE_CARRAY(sfield);
-	  return q;
+		// avoid boosting null queries, such as those caused by stop words
+		if (q != NULL) {
+			q->setBoost(f);
+		}
 	}
+	return q;
+}
 
+bool QueryParser::jj_2_1(const int32_t xla) {
+	jj_la = xla; jj_lastpos = jj_scanpos = token;
+	try { return !jj_3_1(); }
+	catch(CLuceneError& e) {
+		// TODO: Improve this handling
+		if (e.number()==CL_ERR_Parse && _tcscmp(e.twhat(),_T("LookaheadSuccess"))==0)
+			return true;
+		else
+			throw e;
+	}
+	_CLFINALLY( jj_save(0, xla); );
+}
 
-	Query* QueryParser::MatchTerm(const TCHAR* field){
-	//Func - matches for TERM
-	//       TERM ::= TERM | PREFIXTERM | WILDTERM | NUMBER
-	//                [ <FUZZY> ] [ <CARAT> <NUMBER> [<FUZZY>]]
-	//			      | (<RANGEIN> | <RANGEEX>) [<CARAT> <NUMBER>]
-	//			      | <QUOTED> [SLOP] [<CARAT> <NUMBER>]
-	//Pre  - field != NULL
-	//Post -
+bool QueryParser::jj_3R_2() {
+	if (jj_scan_token(TERM)) return true;
+	if (jj_scan_token(COLON)) return true;
+	return false;
+}
 
-		QueryToken* term = NULL;
-		QueryToken* slop = NULL;
-		QueryToken* boost = NULL;
+bool QueryParser::jj_3_1() {
+	Token* xsp = jj_scanpos;
+	if (jj_3R_2()) {
+		jj_scanpos = xsp;
+		if (jj_3R_3()) return true;
+	}
+	return false;
+}
 
-		bool prefix = false;
-		bool wildcard = false;
-		bool fuzzy = false;
-		bool rangein = false;
-		Query* q = NULL;
+bool QueryParser::jj_3R_3() {
+	if (jj_scan_token(STAR)) return true;
+	if (jj_scan_token(COLON)) return true;
+	return false;
+}
 
-		term = tokens->extract();
-		QueryToken* DelToken = NULL; //Token that is about to be deleted
+QueryParser::QueryParser(CharStream* stream):_operator(OR_OPERATOR),
+	lowercaseExpandedTerms(true),useOldRangeQuery(false),allowLeadingWildcard(false),enablePositionIncrements(false),
+	analyzer(NULL),field(NULL),phraseSlop(0),fuzzyMinSim(FuzzyQuery::defaultMinSimilarity),
+	fuzzyPrefixLength(FuzzyQuery::defaultPrefixLength),/*locale(NULL),*/
+	dateResolution(CL_NS(document)::DateTools::NO_RESOLUTION),fieldToDateResolution(NULL),
+	token_source(NULL),token(NULL),jj_nt(NULL),_firstToken(NULL),jj_ntk(-1),jj_scanpos(NULL),jj_lastpos(NULL),jj_la(0),
+	lookingAhead(false),jj_gen(0),jj_2_rtns(NULL),jj_rescan(false),jj_gc(0),jj_expentries(NULL),jj_expentry(NULL),
+	jj_kind(-1),jj_endpos(0)
+{
+	_init(stream);
+}
 
-		switch(term->Type){
-			case QueryToken::TERM:
-			case QueryToken::NUMBER:
-			case QueryToken::PREFIXTERM:
-			case QueryToken::WILDTERM:
-			{ //start case
-				//Check if type of QueryToken term is a prefix term
-				if(term->Type == QueryToken::PREFIXTERM){
-					prefix = true;
-				}
-				//Check if type of QueryToken term is a wildcard term
-				if(term->Type == QueryToken::WILDTERM){
-					wildcard = true;
-				}
-				//Peek to see if the type of the next token is fuzzy term
-				if(tokens->peek()->Type == QueryToken::FUZZY){
-					DelToken = MatchQueryToken(QueryToken::FUZZY);
+void QueryParser::_init(CharStream* stream){
+	if (token_source == NULL)
+		token_source = _CLNEW QueryParserTokenManager(stream);
+	_firstToken = token = _CLNEW Token();
+	jj_ntk = -1;
+	jj_gen = 0;
+	for (int32_t i = 0; i < 23; i++) jj_la1[i] = -1;
+	jj_2_rtns = new JJCalls();
+}
 
-					CND_CONDITION(DelToken !=NULL, "DelToken is NULL");
-					_CLDELETE(DelToken);
+Token* QueryParser::jj_consume_token(const int32_t kind)
+{
+	Token* oldToken = token;
+	if (token->next != NULL)
+		token = token->next;
+	else
+		token = token->next = token_source->getNextToken();
+	jj_ntk = -1;
+	if (token->kind == kind) {
+		jj_gen++;
+		if (++jj_gc > 100) {
+			jj_gc = 0;
+			JJCalls* c = jj_2_rtns;
+			while (c != NULL) {
+				if (c->gen < jj_gen) c->first = NULL;
+				c = c->next;
+			}
+		}
+		return token;
+	}
+	token = oldToken;
+	jj_kind = kind;
+	generateParseException();
+	return NULL;
+}
 
-					fuzzy = true;
-				}
-				if(tokens->peek()->Type == QueryToken::CARAT){
-					DelToken = MatchQueryToken(QueryToken::CARAT);
+bool QueryParser::jj_scan_token(const int32_t kind) {
+	if (jj_scanpos == jj_lastpos) {
+		jj_la--;
+		if (jj_scanpos->next == NULL) {
+			jj_lastpos = jj_scanpos = jj_scanpos->next = token_source->getNextToken();
+		} else {
+			jj_lastpos = jj_scanpos = jj_scanpos->next;
+		}
+	} else {
+		jj_scanpos = jj_scanpos->next;
+	}
+	if (jj_rescan) {
+		int32_t i = 0; Token* tok = token;
+		while (tok != NULL && tok != jj_scanpos) { i++; tok = tok->next; }
+		if (tok != NULL) jj_add_error_token(kind, i);
+	}
+	if (jj_scanpos->kind != kind) return true;
+	if (jj_la == 0 && jj_scanpos == jj_lastpos) _CLTHROWT(CL_ERR_Parse, _T("LookaheadSuccess"));
+	return false;
+}
 
-					CND_CONDITION(DelToken !=NULL, "DelToken is NULL");
-					_CLDELETE(DelToken);
+void QueryParser::ReInit(CharStream* stream) {
+	token_source->ReInit(stream);
+	delete jj_2_rtns;
+	_deleteTokens();
+	_init(NULL);
+}
 
-					boost = MatchQueryToken(QueryToken::NUMBER);
+QueryParser::QueryParser(QueryParserTokenManager* tm):_operator(OR_OPERATOR),
+	lowercaseExpandedTerms(true),useOldRangeQuery(false),allowLeadingWildcard(false),enablePositionIncrements(false),
+	analyzer(NULL),field(NULL),phraseSlop(0),fuzzyMinSim(FuzzyQuery::defaultMinSimilarity),
+	fuzzyPrefixLength(FuzzyQuery::defaultPrefixLength),/*locale(NULL),*/
+	dateResolution(CL_NS(document)::DateTools::NO_RESOLUTION),fieldToDateResolution(NULL),
+	token_source(NULL),token(NULL),jj_nt(NULL),_firstToken(NULL),jj_ntk(-1),jj_scanpos(NULL),jj_lastpos(NULL),jj_la(0),
+	lookingAhead(false),jj_gen(0),jj_2_rtns(NULL),jj_rescan(false),jj_gc(0),jj_expentries(NULL),jj_expentry(NULL),
+	jj_kind(-1),jj_endpos(0)
+{
+	ReInit(tm);
+}
 
-					if(tokens->peek()->Type == QueryToken::FUZZY){
-					   DelToken = MatchQueryToken(QueryToken::FUZZY);
+void QueryParser::ReInit(QueryParserTokenManager* tm){
+	_CLLDELETE(token_source);
+	token_source = tm;
+	_deleteTokens();
+	_firstToken = token = _CLNEW Token();
+	jj_ntk = -1;
+	jj_gen = 0;
+	for (int32_t i = 0; i < 23; i++) jj_la1[i] = -1;
+	delete jj_2_rtns;
+	jj_2_rtns = new JJCalls();
+}
 
-					   CND_CONDITION(DelToken !=NULL, "DelToken is NULL");
-					   _CLDELETE(DelToken);
+Token* QueryParser::getNextToken() {
+	if (token->next != NULL) token = token->next;
+	else token = token->next = token_source->getNextToken();
+	jj_ntk = -1;
+	jj_gen++;
+	return token;
+}
 
-					   fuzzy = true;
-				   }
-				} //end if type==CARAT
+Token* QueryParser::getToken(int32_t index) {
+	Token* t = lookingAhead ? jj_scanpos : token;
+	for (int32_t i = 0; i < index; i++) {
+		if (t->next != NULL) t = t->next;
+		else t = t->next = token_source->getNextToken();
+	}
+	return t;
+}
 
-				discardEscapeChar(term->Value); //clean up
-				if(wildcard){
-					q = GetWildcardQuery(field,term->Value);
-					break;
-				}else if(prefix){
-					//Create a PrefixQuery
-					term->Value[_tcslen(term->Value)-1] = 0; //discard the *
-					q = GetPrefixQuery(field,term->Value);
-					break;
-				}else if(fuzzy){
-					//Create a FuzzyQuery
+int32_t QueryParser::f_jj_ntk() {
+	if ((jj_nt=token->next) == NULL){
+		token->next=token_source->getNextToken();
+		jj_ntk = token->next->kind;
+		return jj_ntk;
+	}
+	else{
+		jj_ntk = jj_nt->kind;
+		return jj_ntk;
+	}
+}
 
-					//Check if the last char is a ~
-					if(term->Value[_tcslen(term->Value)-1] == '~'){
-						//remove the ~
-						term->Value[_tcslen(term->Value)-1] = '\0';
+void QueryParser::jj_add_error_token(const int32_t kind, int32_t pos) {
+	if (pos >= 100) return;
+	if (pos == jj_endpos + 1) {
+		jj_lasttokens[jj_endpos++] = kind;
+	} else if (jj_endpos != 0) {
+		_CLLDELETE(jj_expentry);
+		jj_expentry = _CLNEW ValueArray<int32_t>(jj_endpos);
+		for (int32_t i = 0; i < jj_endpos; i++) {
+			jj_expentry->values[i] = jj_lasttokens[i];
+		}
+		bool exists = false;
+		if (!jj_expentries) jj_expentries = _CLNEW CL_NS(util)::CLVector<CL_NS(util)::ValueArray<int32_t>*, CL_NS(util)::Deletor::Object< CL_NS(util)::ValueArray<int32_t> > >();
+		for (size_t i=0;i<jj_expentries->size();i++){
+			const ValueArray<int32_t>* oldentry = jj_expentries->at(i);
+			if (oldentry->length == jj_expentry->length) {
+				exists = true;
+				for (size_t i = 0; i < jj_expentry->length; i++) {
+					if (oldentry->values[i] != jj_expentry->values[i]) {
+						exists = false;
+						break;
 					}
-
-					q = GetFuzzyQuery(field,term->Value);
-					break;
-				}else{
-					q = GetFieldQuery(field, term->Value);
-					break;
 				}
+				if (exists) break;
 			}
-
-
-			case QueryToken::RANGEIN:
-			case QueryToken::RANGEEX:{
-				if(term->Type == QueryToken::RANGEIN){
-					rangein = true;
-				}
-
-				if(tokens->peek()->Type == QueryToken::CARAT){
-					DelToken = MatchQueryToken(QueryToken::CARAT);
-
-					CND_CONDITION(DelToken !=NULL, "DelToken is NULL");
-					_CLDELETE(DelToken);
-
-					boost = MatchQueryToken(QueryToken::NUMBER);
-				}
-
-				TCHAR* noBrackets = term->Value + 1;
-				noBrackets[_tcslen(noBrackets)-1] = 0;
-				q = ParseRangeQuery(field, noBrackets, rangein);
-				break;
-			}
-
-
-			case QueryToken::QUOTED:{
-				if(tokens->peek()->Type == QueryToken::SLOP){
-					slop = MatchQueryToken(QueryToken::SLOP);
-				}
-
-				if(tokens->peek()->Type == QueryToken::CARAT){
-					DelToken = MatchQueryToken(QueryToken::CARAT);
-
-					CND_CONDITION(DelToken !=NULL, "DelToken is NULL");
-					_CLDELETE(DelToken);
-
-					boost = MatchQueryToken(QueryToken::NUMBER);
-				}
-
-				//remove the quotes
-				TCHAR* quotedValue = term->Value+1;
-				quotedValue[_tcslen(quotedValue)-1] = '\0';
-
-				int32_t islop = phraseSlop;
-				if(slop != NULL ){
-				   try {
-                       TCHAR* end; //todo: should parse using float...
-					   islop = (int32_t)_tcstoi64(slop->Value+1, &end, 10);
-				   }catch(...){
-					   //ignored
-				   }
-				}
-
-				q = GetFieldQuery(field, quotedValue, islop);
-   				_CLDELETE(slop);
-			}
-		} // end of switch
-
-		_CLDELETE(term);
-
-
-		if( q!=NULL && boost != NULL ){
-			float_t f = 1.0F;
-			try {
-				TCHAR* tmp;
-				f = _tcstod(boost->Value, &tmp);
-			}catch(...){
-				//ignored
-			}
-			_CLDELETE(boost);
-
-			q->setBoost( f);
 		}
+		if (!exists) {jj_expentries->push_back(jj_expentry); jj_expentry=NULL;}
+		if (pos != 0) jj_lasttokens[(jj_endpos = pos) - 1] = kind;
+	}
+}
 
-		return q;
+void QueryParser::generateParseException() {
+	// lazily create the vectors required for this operation
+	if (!jj_expentries)
+		jj_expentries = _CLNEW CL_NS(util)::CLVector<CL_NS(util)::ValueArray<int32_t>*, CL_NS(util)::Deletor::Object< CL_NS(util)::ValueArray<int32_t> > >();
+	else
+		jj_expentries->clear();
+	bool la1tokens[33];
+	for (int32_t i = 0; i < 33; i++) {
+		la1tokens[i] = false;
+	}
+	if (jj_kind >= 0) {
+		la1tokens[jj_kind] = true;
+		jj_kind = -1;
+	}
+	for (int32_t i = 0; i < 23; i++) {
+		if (jj_la1[i] == jj_gen) {
+			for (int32_t j = 0; j < 32; j++) {
+				if ((jj_la1_0[i] & (1<<j)) != 0) {
+					la1tokens[j] = true;
+				}
+				if ((jj_la1_1[i] & (1<<j)) != 0) {
+					la1tokens[32+j] = true;
+				}
+			}
+		}
+	}
+	for (int32_t i = 0; i < 33; i++) {
+		if (la1tokens[i]) {
+			_CLLDELETE(jj_expentry);
+			jj_expentry = _CLNEW ValueArray<int32_t>(1);
+			jj_expentry->values[0] = i;
+			jj_expentries->push_back(jj_expentry);
+			jj_expentry=NULL;
+		}
+	}
+	jj_endpos = 0;
+	jj_rescan_token();
+	jj_add_error_token(0, 0);
+
+	TCHAR* err = getParseExceptionMessage(token, jj_expentries, tokenImage);
+	_CLTHROWT_DEL(CL_ERR_Parse, err);
+}
+
+void QueryParser::jj_rescan_token() {
+	jj_rescan = true;
+	JJCalls* p = jj_2_rtns;
+	do {
+		if (p->gen > jj_gen) {
+			jj_la = p->arg; jj_lastpos = jj_scanpos = p->first;
+			jj_3_1();
+		}
+		p = p->next;
+	} while (p != NULL);
+	jj_rescan = false;
+}
+
+void QueryParser::jj_save(const int32_t index, int32_t xla) {
+	JJCalls* p = jj_2_rtns;
+	while (p->gen > jj_gen) {
+		if (p->next == NULL) { p = p->next = new JJCalls(); break; }
+		p = p->next;
+	}
+	p->gen = jj_gen + xla - jj_la;
+	p->first = token;
+	p->arg = xla;
+}
+
+TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
+	const size_t len = _tcslen(str);
+	StringBuffer retval(len * 2, false);
+	TCHAR ch;
+	for (size_t i = 0; i < len; i++) {
+		switch (str[i])
+		{
+		case 0 :
+			continue;
+		case _T('\b'):
+			retval.append(_T("\\b"));
+			continue;
+		case _T('\t'):
+			retval.append(_T("\\t"));
+			continue;
+		case _T('\n'):
+			retval.append(_T("\\n"));
+			continue;
+		case _T('\f'):
+			retval.append(_T("\\f"));
+			continue;
+		case _T('\r'):
+			retval.append(_T("\\r"));
+			continue;
+		case _T('"'):
+			retval.append(_T("\\\""));
+			continue;
+		case _T('\''):
+			retval.append(_T("\\'"));
+			continue;
+		case _T('\\'):
+			retval.append(_T("\\\\"));
+			continue;
+		default:
+			if ((ch = str[i]) < 0x20 || ch > 0x7e) {
+				TCHAR* buf = new TCHAR[4];
+				_sntprintf(buf, 4, _T("%012X"), static_cast<unsigned int>(ch));
+				retval.append(_T("\\u"));
+				retval.append(buf);
+				delete[] buf;
+			} else {
+				retval.appendChar(ch);
+			}
+			continue;
+		}
+	}
+	return retval.getBuffer();
+}
+
+TCHAR* QueryParser::getParseExceptionMessage(Token* currentToken,
+											 CL_NS(util)::CLVector<	CL_NS(util)::ValueArray<int32_t>*, CL_NS(util)::Deletor::Object< CL_NS(util)::ValueArray<int32_t> > >* expectedTokenSequences,
+											 const TCHAR* tokenImage[])
+{
+	// TODO: Check to see what's a realistic initial value for the buffers here
+	// TODO: Make eol configurable (will be useful for PrintStream implementation as well later)?
+	const TCHAR* eol = _T("\n");
+
+	StringBuffer expected(CL_MAX_PATH);
+	size_t maxSize = 0;
+	for (size_t i = 0; i < expectedTokenSequences->size(); i++) {
+		if (maxSize < expectedTokenSequences->at(i)->length) {
+			maxSize = expectedTokenSequences->at(i)->length;
+		}
+		for (size_t j = 0; j < expectedTokenSequences->at(i)->length; j++) {
+			expected.append(tokenImage[expectedTokenSequences->at(i)->values[j]]);
+			expected.appendChar(_T(' '));
+		}
+		if (expectedTokenSequences->at(i)->values[expectedTokenSequences->at(i)->length - 1] != 0) {
+			expected.append(_T("..."));
+		}
+		expected.append(eol);
+		expected.append(_T("    "));
 	}
 
-	QueryToken* QueryParser::MatchQueryToken(QueryToken::Types expectedType){
-	//Func - matches for QueryToken of the specified type and returns it
-	//       otherwise Exception throws
-	//Pre  - tokens != NULL
-	//Post -
-
-		CND_PRECONDITION(tokens != NULL,"tokens is NULL");
-
-		if(tokens->count() == 0){
-			throwParserException(_T("Error: Unexpected end of program"),' ',0,0);
+	StringBuffer retval(CL_MAX_PATH, false);
+	retval.append(_T("Encountered \""));
+	Token* tok = currentToken->next;
+	for (size_t i = 0; i < maxSize; i++) {
+		if (i != 0) retval.appendChar(' ');
+		if (tok->kind == 0) {
+			retval.append(tokenImage[0]);
+			break;
 		}
-
-	  //Extract a token form the TokenList tokens
-	  QueryToken* t = tokens->extract();
-	  //Check if the type of the token t matches the expectedType
-	  if (expectedType != t->Type){
-		  TCHAR buf[200];
-		  _sntprintf(buf,200,_T("Error: Unexpected QueryToken: %d, expected: %d"),t->Type,expectedType);
-		  _CLDELETE(t);
-		  throwParserException(buf,' ',0,0);
+		if (tok->image){
+			const TCHAR* buf = addEscapes(tok->image);
+			retval.append(buf);
+			_CLLDELETE(buf);
 		}
-
-	  //Return the matched token
-	  return t;
+		tok = tok->next;
 	}
-
-	void QueryParser::ExtractAndDeleteToken(void){
-	//Func - Extracts the first token from the Tokenlist tokenlist
-	//       and destroys it
-	//Pre  - true
-	//Post - The first token has been extracted and destroyed
-
-		CND_PRECONDITION(tokens != NULL, "tokens is NULL");
-
-		//Extract the token from the TokenList tokens
-		QueryToken* t = tokens->extract();
-		//Condition Check Token may not be NULL
-		CND_CONDITION(t != NULL, "Token is NULL");
-		//Delete Token
-		_CLDELETE(t);
+	retval.append(_T("\" at line "));
+	retval.appendInt(currentToken->next->beginLine);
+	retval.append(_T(", column "));
+	retval.appendInt(currentToken->next->beginColumn);
+	retval.appendChar(_T('.'));
+	retval.append(eol);
+	if (expectedTokenSequences->size() == 1) {
+		retval.append(_T("Was expecting:"));
+		retval.append(eol);
+		retval.append(_T("    "));
+	} else {
+		retval.append(_T("Was expecting one of:"));
+		retval.append(eol);
+		retval.append(_T("    "));
 	}
+	retval.append(expected.getBuffer());
+
+	return retval.getBuffer();
+}
 
 CL_NS_END

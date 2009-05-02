@@ -13,6 +13,7 @@ SOURCE_GROUP("document" ./CLucene/document/*)
 SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("index" ./CLucene/index/*)
 SOURCE_GROUP("queryParser" ./CLucene/queryParser/*)
+SOURCE_GROUP("queryParser-legacy" ./CLucene/queryParser/legacy/*)
 SOURCE_GROUP("search" ./CLucene/search/*)
 SOURCE_GROUP("store" ./CLucene/store/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
@@ -27,12 +28,17 @@ SET(clucene_core_Files
 	./CLucene/util/MD5Digester.cpp
 	./CLucene/util/StringIntern.cpp
 	./CLucene/util/BitSet.cpp
-	./CLucene/queryParser/Lexer.cpp
-	./CLucene/queryParser/MultiFieldQueryParser.cpp
+	./CLucene/queryParser/FastCharStream.cpp
+	#./CLucene/queryParser/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/QueryParser.cpp
-	./CLucene/queryParser/QueryParserBase.cpp
-	./CLucene/queryParser/QueryToken.cpp
-	./CLucene/queryParser/TokenList.cpp
+	./CLucene/queryParser/QueryParserTokenManager.cpp
+	./CLucene/queryParser/Token.cpp
+	./CLucene/queryParser/legacy/Lexer.cpp
+	./CLucene/queryParser/legacy/MultiFieldQueryParser.cpp
+	./CLucene/queryParser/legacy/QueryParser.cpp
+	./CLucene/queryParser/legacy/QueryParserBase.cpp
+	./CLucene/queryParser/legacy/QueryToken.cpp
+	./CLucene/queryParser/legacy/TokenList.cpp
 	./CLucene/analysis/standard/StandardAnalyzer.cpp
 	./CLucene/analysis/standard/StandardFilter.cpp
 	./CLucene/analysis/standard/StandardTokenizer.cpp

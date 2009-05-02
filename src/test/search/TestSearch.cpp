@@ -148,7 +148,7 @@
 		_TestSearchesRun(&a,s, _T("[ j m ]") );
 		_TestSearchesRun(&a,s, _T("{ j m}") );
 		_TestSearchesRun(&a,s, _T("{ j m }") );
-		_TestSearchesRun(&a,s, _T("{a - b}") );
+		_TestSearchesRun(&a,s, _T("{a TO b}") );
 		_TestSearchesRun(&a,s, _T("{ j m }^2.0") );
 		_TestSearchesRun(&a,s, _T("[ j m] OR bar") );
 		_TestSearchesRun(&a,s, _T("[ j m] AND bar") );

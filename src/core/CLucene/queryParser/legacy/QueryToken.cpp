@@ -7,8 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "QueryToken.h"
 
-CL_NS_DEF(queryParser)
-
+CL_NS_DEF2(queryParser,legacy)
 
 QueryToken::QueryToken():
 	Value(NULL)
@@ -70,4 +69,4 @@ void QueryToken::set(Types type){
     set(LUCENE_BLANK_STRING,0,0,type);
 }
 
-CL_NS_END
+CL_NS_END2

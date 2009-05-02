@@ -28,7 +28,7 @@ TCHAR CharTokenizer::normalize(const TCHAR c) const
 { 
 	return c; 
 }
-bool CharTokenizer::next(Token* token){
+Token* CharTokenizer::next(Token*& token){
 	int32_t length = 0;
 	int32_t start = offset;
 	while (true) {
@@ -36,15 +36,13 @@ bool CharTokenizer::next(Token* token){
 		offset++;
 		if (bufferIndex >= dataLen) {
 			dataLen = input->read(ioBuffer, 1, LUCENE_IO_BUFFER_SIZE );
-			if (dataLen == -1)
-				dataLen = 0;
 			bufferIndex = 0;
 		}
 		if (dataLen <= 0 ) {
 			if (length > 0)
 				break;
 			else
-				return false;
+				return NULL;
 		}else
 			c = ioBuffer[bufferIndex++];
 		if (isTokenChar(c)) {                       // if it's a token TCHAR
@@ -62,8 +60,11 @@ bool CharTokenizer::next(Token* token){
 
 	}
 	buffer[length]=0;
-	token->set( buffer, start, start+length);
-	return true;
+	if (token != NULL)
+		token->set( buffer, start, start+length);
+	else
+		token = _CLNEW Token( buffer, start, start+length );
+	return token;
 }
 void CharTokenizer::reset(CL_NS(util)::Reader* input)
 {
@@ -147,11 +148,11 @@ LowerCaseFilter::LowerCaseFilter(TokenStream* in, bool deleteTokenStream):
 LowerCaseFilter::~LowerCaseFilter(){
 }
 
-bool LowerCaseFilter::next(Token* t){
-	if (!input->next(t))
-		return false;
+Token* LowerCaseFilter::next(Token*& t){
+	if (input->next(t) == NULL)
+		return NULL;
  	stringCaseFold( t->_termText );
-	return true;
+	return t;
 }
 
 bool StopFilter::ENABLE_POSITION_INCREMENTS_DEFAULT = false;
@@ -206,7 +207,7 @@ void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
 			stopTable->insert( stopWords[i] );
 }
 
-bool StopFilter::next(Token* token) {
+Token* StopFilter::next(Token*& token) {
 	// return the first non-stop word found
 	int32_t skippedPositions = 0;
 	while (input->next(token)){
@@ -215,13 +216,13 @@ bool StopFilter::next(Token* token) {
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
 			}
-			return true;
+			return token;
 		}
 		skippedPositions += token->getPositionIncrement();
 	}
 
 	// reached EOS -- return nothing
-	return false;
+	return NULL;
 }
 
 StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
@@ -312,7 +313,7 @@ ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
 }
 ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
-bool ISOLatin1AccentFilter::next(Token* token){
+Token* ISOLatin1AccentFilter::next(Token*& token){
 	if ( input->next(token) ){
 		int32_t l = token->termLength();
 		const TCHAR* chars = token->termBuffer();
@@ -329,7 +330,7 @@ bool ISOLatin1AccentFilter::next(Token* token){
 			
 		}
 		if ( !doProcess ) {
-			return true;
+			return token;
 		}
 
 		StringBuffer output(l*2);
@@ -466,9 +467,9 @@ bool ISOLatin1AccentFilter::next(Token* token){
 			}
 		}
 		token->setText(output.getBuffer());
-		return true;
+		return token;
 	}
-	return false;
+	return NULL;
 }
 
 
@@ -498,8 +499,10 @@ KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 KeywordTokenizer::~KeywordTokenizer(){
 }
 
-bool KeywordTokenizer::next(Token* token){
+Token* KeywordTokenizer::next(Token*& token){
     if (!done) {
+	  if (token==NULL)
+		  token = _CLNEW Token();
       done = true;
 	  int32_t rd;
 	  const TCHAR* buffer=0;
@@ -517,9 +520,9 @@ bool KeywordTokenizer::next(Token* token){
       }
 	  token->_termText[token->_termTextLen]=0;
 	  token->set(token->_termText,0,token->_termTextLen);
-	  return true;
+	  return token;
     }
-    return false;
+    return NULL;
 }
 void KeywordTokenizer::reset(CL_NS(util)::Reader* input)
 {
@@ -535,18 +538,18 @@ LengthFilter::LengthFilter(TokenStream* in, const size_t _min, const size_t _max
     this->_max = _max;
 }
 
-bool LengthFilter::next(Token* token)
+Token* LengthFilter::next(Token*& token)
 {
     // return the first non-stop word found
     while ( input->next(token) )
     {
         size_t len = token->termLength();
         if (len >= _min && len <= _max)
-            return true;
+            return token;
         // note: else we ignore it but should we index each part of it?
     }
     // reached EOS -- return null
-    return false;
+    return NULL;
 }
 
 

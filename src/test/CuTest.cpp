@@ -189,6 +189,12 @@ void CuFail(CuTest* tc, const TCHAR* format, ...)
 	_CLTHROWT(CL_ERR_Runtime, buf);
 }
 
+void CuFail(CuTest* tc, CLuceneError& e)
+{
+	tc->failed = 1;
+	throw e;
+}
+
 void CuMessageV(CuTest* tc, const TCHAR* format, va_list& argp){
 	TCHAR buf[HUGE_STRING_LEN];
 	_vsntprintf(buf, HUGE_STRING_LEN, format, argp);

@@ -224,60 +224,51 @@ CL_NS_DEF(search)
   }
 
   TCHAR* PhraseQuery::toString(const TCHAR* f) const{
-  //Func - Prints a user-readable version of this query. 
-  //Pre  - f != NULL
-  //Post - The query string has been returned
+	  //Func - Prints a user-readable version of this query. 
+	  //Pre  - f != NULL
+	  //Post - The query string has been returned
 
-      if ( terms->size()== 0 )
+	  if ( terms->size()== 0 )
 		  return NULL;
 
-      StringBuffer buffer;
-      if ( f==NULL || _tcscmp(field,f)!=0) {
-          buffer.append(field);
-          buffer.append( _T(":"));
-      }
+	  StringBuffer buffer(30,false);
+	  if ( f==NULL || _tcscmp(field,f)!=0) {
+		  buffer.append(field);
+		  buffer.appendChar(_T(':'));
+	  }
 
-      buffer.append( _T("\"") );
+	  buffer.appendChar( _T('"') );
 
-      Term *T = NULL;
+	  Term *T = NULL;
 
 	  //iterate through all terms
-      for (uint32_t i = 0; i < terms->size(); i++) {
+	  for (size_t i = 0; i < terms->size(); i++) {
 		  //Get the i-th term
 		  T = (*terms)[i];
 
-		  //Ensure T is a valid Term
-          CND_CONDITION(T !=NULL,"T is NULL");
-
-          buffer.append( T->text() );
+		  buffer.append( T->text() );
 		  //Check if i is at the end of terms
 		  if (i != terms->size()-1){
-              buffer.append(_T(" "));
-              }
-          }
+			  buffer.appendChar(_T(' '));
+		  }
+	  }
 
-      buffer.append( _T("\"") );
+	  buffer.appendChar( _T('"') );
 
-      if (slop != 0) {
-          buffer.append(_T("~"));
-          buffer.appendFloat(slop,0);
-          }
+	  if (slop != 0) {
+		  buffer.appendChar(_T('~'));
+		  buffer.appendFloat(slop,0);
+	  }
 
 	  //Check if there is an other boost factor than 1.0
-      if (getBoost() != 1.0f) {
-          buffer.append(_T("^"));
-          buffer.appendFloat( getBoost(),1 );
-          }
+	  if (getBoost() != 1.0f) {
+		  buffer.appendChar(_T('^'));
+		  buffer.appendFloat( getBoost(),1 );
+	  }
 
 	  //return the query string
-	  return buffer.toString();
+	  return buffer.getBuffer();
   }
-
-
-
-
-
-
 
   
  PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _this) {

@@ -131,8 +131,13 @@ CL_NS_DEF2(analysis,standard)
 	return true;
   }
 
-  bool StandardTokenizer::next(Token* t) {
+  Token* StandardTokenizer::next(Token*& t) {
     int ch=0;
+	
+	bool bOwnsToken = (t==NULL);
+	if (bOwnsToken)
+		t = _CLNEW Token();
+
 	while (!EOS) {
       ch = readChar();
 
@@ -142,19 +147,20 @@ CL_NS_DEF2(analysis,standard)
         continue;
       } else if (ALPHA || UNDERSCORE) {
         tokenStart = rdPos;
-        return ReadAlphaNum(ch,t);
+        if(ReadAlphaNum(ch,t))return t;
       } else if (DIGIT || NEGATIVE_SIGN_ || DECIMAL) {
         tokenStart = rdPos;
         /* ReadNumber returns NULL if it fails to extract a valid number; in
         ** that case, we just continue. */
         if (ReadNumber(NULL, ch,t))
-          return true;
+          return t;
 	  } else if ( _CJK ){
       	if ( ReadCJK(ch,t) )
-      		return true;
+      		return t;
       }
     }
-    return false;
+	if (bOwnsToken) _CLDELETE(t);
+    return NULL;
   }
 
   bool StandardTokenizer::ReadNumber(const TCHAR* previousNumber, const TCHAR prev,Token* t) {

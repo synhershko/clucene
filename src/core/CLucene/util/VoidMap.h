@@ -99,7 +99,7 @@ public:
 	_vt get( _kt k) const {
 		const_iterator itr = base::find(k);
 		if ( itr==base::end() ) 
-			return NULL;
+			return (_vt)NULL;
 		else 
 			return itr->second;
 	}

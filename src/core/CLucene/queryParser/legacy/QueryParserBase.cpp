@@ -31,7 +31,7 @@ CL_NS_USE(util)
 CL_NS_USE(analysis)
 CL_NS_USE(index)
 
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
 
 QueryParserBase::QueryParserBase(Analyzer* analyzer){
 //Func - Constructor
@@ -148,25 +148,29 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 
 	StringArrayConstWithDeletor v;
 
-	Token t;
+	Token* t = NULL;
 	int positionCount = 0;
 	bool severalTokensAtSamePosition = false;
 
 	//Get the tokens from the source
 	try{
-		while (source->next(&t)){
-			v.push_back(STRDUP_TtoT(t.termBuffer()));
+		while (source->next(t)){
+			v.push_back(STRDUP_TtoT(t->termBuffer()));
 
-			if (t.getPositionIncrement() != 0)
-				positionCount += t.getPositionIncrement();
+			if (t->getPositionIncrement() != 0)
+				positionCount += t->getPositionIncrement();
 			else
 				severalTokensAtSamePosition = true;
 		}
 	}catch(CLuceneError& err){
-		if ( err.number() != CL_ERR_IO )
+		if ( err.number() != CL_ERR_IO ) {
+			_CLDELETE(t);
+			_CLLDELETE(source);
 			throw err;
+		}
 	}
 	_CLDELETE(source);
+	_CLDELETE(t);
 
 	//Check if there are any tokens retrieved
 	if (v.size() == 0){
@@ -236,13 +240,13 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
 
   TCHAR* terms[2];
   terms[0]=NULL;terms[1]=NULL;
-  Token t;
+  Token* t = NULL;
   bool tret=true;
   bool from=true;
   while(tret)
   {
 		try{
-		  tret = source->next(&t);
+		  tret = (source->next(t) != NULL);
 		}catch (CLuceneError& err){
 			if ( err.number() == CL_ERR_IO )
 				tret=false;
@@ -251,11 +255,11 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
 		}
 		if (tret)
 		{
-			if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
+			if ( !from && _tcscmp(t->termBuffer(),_T("TO"))==0 )
 				continue;
 	
 			
-			TCHAR* tmp = STRDUP_TtoT(t.termBuffer());
+			TCHAR* tmp = STRDUP_TtoT(t->termBuffer());
 			discardEscapeChar(tmp);
 			terms[from? 0 : 1] = tmp;
 	
@@ -272,6 +276,7 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   _CLDELETE_CARRAY(terms[0]);
   _CLDELETE_CARRAY(terms[1]);
   _CLDELETE(source);
+  _CLDELETE(t);
 
   return ret;
 }
@@ -352,7 +357,7 @@ Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause
 
 	//iterate through all the clauses
 	for( uint32_t i=0;i<clauses.size();i++ ){
-		//Condition check to see if clauses[i] is valdid
+		//Condition check to see if clauses[i] is valid
 		CND_CONDITION(clauses[i] != NULL, "clauses[i] is NULL");
 		//Add it to query
 		query->add(clauses[i]);
@@ -379,6 +384,4 @@ CL_NS(search)::Query* QueryParserBase::GetRangeQuery(const TCHAR* field, TCHAR* 
   return ret;
 }
 
-
-
-CL_NS_END
+CL_NS_END2

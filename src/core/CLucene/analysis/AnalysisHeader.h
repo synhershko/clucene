@@ -186,8 +186,29 @@ NOTE: subclasses must override at least one of {@link
 */
 class CLUCENE_EXPORT TokenStream:LUCENE_BASE {
 public:
-	/** Sets token to the next token in the stream, returns false at the EOS. */
-	virtual bool next(Token* token) = 0;
+	/** Returns the next token in the stream, or null at EOS.
+	*  When possible, the input Token should be used as the
+	*  returned Token (this gives fastest tokenization
+	*  performance), but this is not required and a new Token
+	*  may be returned (pass NULL for this).
+	*  Callers may re-use a single Token instance for successive
+	*  calls to this method.
+	*  <p>
+	*  This implicitly defines a "contract" between 
+	*  consumers (callers of this method) and 
+	*  producers (implementations of this method 
+	*  that are the source for tokens):
+	*  <ul>
+	*   <li>A consumer must fully consume the previously 
+	*       returned Token before calling this method again.</li>
+	*   <li>A producer must call {@link Token#clear()}
+	*       before setting the fields in it & returning it</li>
+	*  </ul>
+	*  Note that a {@link TokenFilter} is considered a consumer.
+	*  @param result a Token that may or may not be used to return
+	*  @return next token in the stream or null if end-of-stream was hit
+	*/
+	virtual Token* next(Token*& token) = 0;
 
 	/** This is for backwards compatibility only. You should pass the token you want to fill
 	 * to next(), this will save a lot of object construction and destructions.
@@ -205,7 +226,7 @@ public:
 	*  of a TokenStream are intended to be consumed more than 
 	*  once, it is necessary to implement reset(). 
 	*/
-	//virtual void reset(CL_NS(util)::Reader* _input=NULL) = 0;
+	//virtual void reset(CL_NS(util)::Reader* _input=NULL){}
 
 	virtual ~TokenStream();
 };

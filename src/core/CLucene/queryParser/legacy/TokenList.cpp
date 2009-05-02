@@ -11,7 +11,7 @@
 #include "CLucene/util/VoidList.h"
 #include "QueryToken.h"
 
-CL_NS_DEF(queryParser)
+CL_NS_DEF2(queryParser,legacy)
   
     TokenList::TokenList(){
     //Func - Constructor
@@ -76,4 +76,4 @@ CL_NS_DEF(queryParser)
     {
       return tokens.size();
     }
-CL_NS_END
+CL_NS_END2

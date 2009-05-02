@@ -13,14 +13,14 @@
 	 uint64_t start = Misc::currentTimeMillis();
 
     int32_t count = 0;
-	Token t;
-    for (; stream->next(&t);) {
+	CL_NS(analysis)::Token* t = NULL;
+	while (stream->next(t)) {
       if (verbose) {
-				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t.termBuffer(), t.startOffset(), t.endOffset() );
+				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t->termBuffer(), t->startOffset(), t->endOffset() );
       }
-	  // _CLDELETE(t);
       count++;
     }
+	_CLDELETE(t);
 
     uint64_t end = Misc::currentTimeMillis();
     int64_t time = end - start;

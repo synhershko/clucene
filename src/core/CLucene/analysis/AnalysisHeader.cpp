@@ -240,7 +240,6 @@ Token* TokenStream::next(){
 TokenStream::~TokenStream(){
 }
 
-
 TokenFilter::TokenFilter(TokenStream* in, bool deleteTS):
 	input(in),
 	deleteTokenStream(deleteTS)

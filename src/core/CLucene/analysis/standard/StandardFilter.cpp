@@ -23,9 +23,9 @@ CL_NS_DEF2(analysis,standard)
   StandardFilter::~StandardFilter(){
   }
 
-  bool StandardFilter::next(Token* t) {
-    if (!input->next(t))
-      return false;
+  Token* StandardFilter::next(Token*& t) {
+    if (input->next(t) == NULL)
+      return NULL;
 
     TCHAR* text = t->_termText;
     const int32_t textLength = t->termLength();
@@ -38,7 +38,7 @@ CL_NS_DEF2(analysis,standard)
       text[textLength-2]=0; 
 	  t->resetTermTextLen();
 
-      return true;
+      return t;
 
     } else if ( type == tokenImage[ACRONYM] ) {		  // remove dots
 		int32_t j = 0;
@@ -47,10 +47,10 @@ CL_NS_DEF2(analysis,standard)
 				text[j++]=text[i];
 		}
 		text[j]=0;
-      return true;
+      return t;
 
     } else {
-      return true;
+      return t;
     }
   }
 
