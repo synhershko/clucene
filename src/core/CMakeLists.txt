@@ -73,8 +73,8 @@ SET(clucene_core_Files
 	./CLucene/index/FieldInfos.cpp
 	./CLucene/index/CompoundFile.cpp
 	./CLucene/index/DefaultSkipListReader.cpp
-	#./CLucene/index/IndexFileDeleter.cpp
-	#./CLucene/index/SegmentReader.cpp
+	./CLucene/index/IndexFileDeleter.cpp
+	./CLucene/index/SegmentReader.cpp
   ./CLucene/index/DirectoryIndexReader.cpp
 	./CLucene/index/TermVectorWriter.cpp
 	./CLucene/index/IndexReader.cpp

@@ -368,9 +368,9 @@ private:
 	* single segment. */
 	void mergeSegments(const uint32_t minSegment, const uint32_t end);
 
-	void deleteFiles(AStringArrayWithDeletor& files);
-	void readDeleteableFiles(AStringArrayWithDeletor& files);
-	void writeDeleteableFiles(AStringArrayWithDeletor& files);
+  void deleteFiles(std::vector<std::string>& files);
+	void readDeleteableFiles(std::vector<std::string>& files);
+	void writeDeleteableFiles(std::vector<std::string>& files);
     
 	/*
 	* Some operating systems (e.g. Windows) don't permit a file to be deleted
@@ -379,8 +379,8 @@ private:
 	* process, and queue the file for subsequent deletion.
 	*/
 	void deleteSegments(CL_NS(util)::CLVector<SegmentReader*>* segments);
-	void deleteFiles(AStringArrayWithDeletor& files, CL_NS(store)::Directory* directory);
-	void deleteFiles(AStringArrayWithDeletor& files, AStringArrayWithDeletor& deletable);
+	void deleteFiles(std::vector<std::string>& files, CL_NS(store)::Directory* directory);
+	void deleteFiles(std::vector<std::string>& files, std::vector<std::string>& deletable);
 
 
 	// synchronized

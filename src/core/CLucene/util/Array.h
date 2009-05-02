@@ -127,13 +127,13 @@ public:
 template<typename T>
 class CLUCENE_EXPORT ValueArray: public ArrayBase<T>{
 public:
-    ValueArray():ArrayBase<T>(){}
+  ValueArray():ArrayBase<T>(){}
 	ValueArray(T* values, size_t length):ArrayBase<T>(values,length){}
 	ValueArray(size_t length):ArrayBase<T>(length){}
 
     void deleteValues(){
-        if ( this->values == NULL )
-            return;
+      if ( this->values == NULL )
+          return;
 	    this->deleteArray();
 	}
 	virtual ~ValueArray(){
@@ -152,10 +152,10 @@ public:
 	TCharArray(size_t length):ArrayBase<TCHAR*>(length){}
 
     void deleteValues(){
-        if ( this->values == NULL )
-            return;
-		for (size_t i=0;i<this->length;i++)
-			_CLDELETE_CARRAY(this->values[i]);
+      if ( this->values == NULL )
+          return;
+		  for (size_t i=0;i<this->length;i++)
+			  _CLDELETE_CARRAY(this->values[i]);
 	    this->deleteArray();
 	}
 	virtual ~TCharArray(){

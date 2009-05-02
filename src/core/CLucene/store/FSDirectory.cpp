@@ -80,7 +80,9 @@ CL_NS_USE(util)
 		void close();
 		int64_t length() const { return handle->_length; }
 		
-		const char* getDirectoryType() const{ return FSDirectory::DirectoryType(); }
+		const char* getDirectoryType() const{ return FSDirectory::getClassName(); }
+    const char* getObjectName() const{ return getClassName(); }
+    static const char* getClassName() { return "FSIndexInput"; }
 	protected:
 		// Random-access methods 
 		void seekInternal(const int64_t position);
@@ -441,8 +443,13 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
     void FSDirectory::setUseMMap(bool value){ useMMap = value; }
     bool FSDirectory::getUseMMap() const{ return useMMap; }
-    const char* FSDirectory::DirectoryType(){ return "FS"; }
-    const char* FSDirectory::getDirectoryType() const{ return "FS"; }
+    const char* FSDirectory::getClassName(){
+      return "FSDirectory";
+    }
+    const char* FSDirectory::getObjectName() const{
+      return getClassName();
+    }
+
     void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
     bool FSDirectory::getDisableLocks() { return disableLocks; }
 

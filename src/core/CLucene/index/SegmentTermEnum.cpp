@@ -150,6 +150,9 @@ CL_NS_DEF(index)
 			}
 	}
 
+	const char* SegmentTermEnum::getObjectName() const{ return getClassName(); }
+	const char* SegmentTermEnum::getClassName(){ return "SegmentTermEnum"; }
+
 	bool SegmentTermEnum::next(){
 	//Func - Moves the current of the set to the next in the set
 	//Pre  - true

@@ -118,8 +118,8 @@ public:
 	 */
 	SegmentTermEnum* clone() const;
 
-	const char* getObjectName(){ return SegmentTermEnum::getClassName(); }
-	static const char* getClassName(){ return "SegmentTermEnum"; }
+	const char* getObjectName() const;
+	static const char* getClassName();
 
 private:
 	/**

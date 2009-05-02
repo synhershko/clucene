@@ -16,7 +16,7 @@ FieldSelector::~FieldSelector(){
 LoadFirstFieldSelector::~LoadFirstFieldSelector(){
 }
 
-FieldSelector::FieldSelectorResult LoadFirstFieldSelector::accept(const TCHAR* fieldName) {
+FieldSelector::FieldSelectorResult LoadFirstFieldSelector::accept(const TCHAR* fieldName) const{
 	return LOAD_AND_BREAK;
 }
 CL_NS_END

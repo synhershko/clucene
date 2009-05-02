@@ -45,7 +45,7 @@ Compare::Int32::Int32(){
 const char* Compare::Int32::getClassName(){
 	return "Compare::Int32::getClassName";
 }
-const char* Compare::Int32::getObjectName(){
+const char* Compare::Int32::getObjectName() const{
 	return getClassName();
 }
 int32_t Compare::Int32::compareTo(NamedObject* o){
@@ -75,7 +75,7 @@ Compare::Float::Float(float_t val){
 const char* Compare::Float::getClassName(){
 	return "Compare::Float::getClassName";
 }
-const char* Compare::Float::getObjectName(){
+const char* Compare::Float::getObjectName() const{
 	return getClassName();
 }
 int32_t Compare::Float::compareTo(NamedObject* o){
@@ -107,7 +107,7 @@ Compare::Char::Char(){
 const char* Compare::Char::getClassName(){
 	return "Compare::Char::getClassName";
 }
-const char* Compare::Char::getObjectName(){
+const char* Compare::Char::getObjectName() const{
 	return getClassName();
 }
 int32_t Compare::Char::compareTo(NamedObject* o){
@@ -138,7 +138,7 @@ Compare::WChar::WChar(){
 const char* Compare::WChar::getClassName(){
 	return "Compare::WChar::getClassName";
 }
-const char* Compare::WChar::getObjectName(){
+const char* Compare::WChar::getObjectName() const{
 	return getClassName();
 }
 int32_t Compare::WChar::compareTo(NamedObject* o){

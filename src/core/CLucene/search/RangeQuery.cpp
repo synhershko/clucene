@@ -75,7 +75,7 @@ CL_NS_DEF(search)
 	            (this->inclusive ? 1 : 0);
     }
 
-    const char* RangeQuery::getQueryName() const{
+    const char* RangeQuery::getObjectName() const{
       return getClassName();
     }
 	const char* RangeQuery::getClassName(){

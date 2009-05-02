@@ -40,7 +40,7 @@ CL_NS_DEF(store)
       virtual bool isLocked() = 0;
 
       virtual ~LuceneLock();
-      
+
       virtual TCHAR* toString() = 0;
   };
   

@@ -93,8 +93,8 @@ CL_NS_DEF(store)
 		
 		TCHAR* toString() const;
 
-		static const char* DirectoryType();
-	    const char* getDirectoryType() const;
+		static const char* getClassName();
+		const char* getObjectName() const;
 	};
 CL_NS_END
 #endif

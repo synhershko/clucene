@@ -287,8 +287,10 @@ CL_NS_DEF(store)
   }
   
   const char* RAMIndexInput::getDirectoryType() const{ 
-	  return RAMDirectory::DirectoryType(); 
+    return RAMDirectory::getClassName(); 
   }
+	const char* RAMIndexInput::getObjectName() const{ return getClassName(); }
+	const char* RAMIndexInput::getClassName(){ return "RAMIndexInput"; }
   
   uint8_t RAMIndexInput::readByte()
   {
@@ -541,7 +543,11 @@ CL_NS_DEF(store)
 	  return ret;
   }
 
-  const char* RAMDirectory::DirectoryType() { return "RAM"; }
-  const char* RAMDirectory::getDirectoryType() const{ return DirectoryType(); }
+  const char* RAMDirectory::getClassName(){
+	  return "RAMDirectory";
+  }
+  const char* RAMDirectory::getObjectName() const{
+	  return getClassName();
+  }
 
 CL_NS_END

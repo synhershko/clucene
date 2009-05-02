@@ -96,14 +96,10 @@ FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, in
 	bool success = false;
 
 	try {
-		const char* buf = Misc::segmentname(segment,".fdt");
-		cloneableFieldsStream = d->openInput( buf, _readBufferSize );
+		cloneableFieldsStream = d->openInput( Misc::segmentname(segment,".fdt").c_str(), _readBufferSize );
 		fieldsStream = cloneableFieldsStream->clone();
-		_CLDELETE_LCaARRAY( buf );
 
-		buf = Misc::segmentname(segment,".fdx");
-		indexStream = d->openInput( buf, _readBufferSize );
-		_CLDELETE_LCaARRAY( buf );
+		indexStream = d->openInput( Misc::segmentname(segment,".fdx").c_str(), _readBufferSize );
 
 		if (_docStoreOffset != -1) {
 			// We read only a slice out of this shared fields file
@@ -177,7 +173,7 @@ int32_t FieldsReader::size() const{
 	return _size;
 }
 
-bool FieldsReader::doc(int32_t n, Document& doc, CL_NS(document)::FieldSelector* fieldSelector) {
+bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSelector* fieldSelector) {
     if ( (n + docStoreOffset) * 8L > indexStream->length() )
         return false;
 	indexStream->seek((n + docStoreOffset) * 8L);

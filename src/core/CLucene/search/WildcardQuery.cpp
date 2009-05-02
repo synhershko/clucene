@@ -34,7 +34,7 @@ WildcardQuery::~WildcardQuery(){
 
 }
 
-const char* WildcardQuery::getQueryName() const{
+const char* WildcardQuery::getObjectName() const{
 	//Func - Returns the string "WildcardQuery"
 	//Pre  - true
 	//Post - The string "WildcardQuery" has been returned

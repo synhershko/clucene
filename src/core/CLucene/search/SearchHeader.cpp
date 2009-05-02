@@ -82,7 +82,7 @@ Similarity* Query::getSimilarity(Searcher* searcher) {
    return searcher->getSimilarity();
 }
 bool Query::instanceOf(const char* other) const{
-   const char* t = getQueryName();
+  const char* t = getObjectName();
 	if ( t==other || strcmp( t, other )==0 )
 		return true;
 	else
@@ -188,7 +188,7 @@ const char* Searcher::getClassName(){
 	return "Searcher";
 }
 
-const char* Searcher::getObjectName(){
+const char* Searcher::getObjectName() const{
 	return Searcher::getClassName();
 }
 

@@ -106,7 +106,7 @@ CL_NS_DEF(search)
 		return ret;
 	}
 
-    const char* BooleanQuery::getQueryName() const{
+    const char* BooleanQuery::getObjectName() const{
       return getClassName();
     }
 	const char* BooleanQuery::getClassName(){

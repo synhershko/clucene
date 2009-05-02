@@ -123,7 +123,7 @@ void QueryParserBase::throwParserException(const TCHAR* message, TCHAR ch, int32
 
 Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText, int32_t slop){
 	Query* ret = GetFieldQuery(field,queryText);
-	if ( ret && ret->getQueryName() == PhraseQuery::getClassName() )
+	if ( ret && ret->getObjectName() == PhraseQuery::getClassName() )
 		((PhraseQuery*)ret)->setSlop(slop);
 
 	return ret;

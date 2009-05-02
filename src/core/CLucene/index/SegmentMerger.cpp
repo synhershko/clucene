@@ -22,6 +22,9 @@ CL_NS_USE(document)
 CL_NS_USE(store)
 CL_NS_DEF(index)
 
+const uint8_t SegmentMerger::NORMS_HEADER[] = {'N','R','M',-1}; 
+const int SegmentMerger::NORMS_HEADER_length = 4;
+
 SegmentMerger::SegmentMerger(IndexWriter* writer, const char* name){
 //Func - Constructor
 //Pre  - dir holds a valid reference to a Directory
@@ -128,13 +131,13 @@ for (uint32_t i = 0; i < readers.size(); i++) {  // close readers
 }
 }
 
-void SegmentMerger::createCompoundFile(const char* filename, AStringArrayWithDeletor& files){
+void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::string>& files){
     CompoundFileWriter* cfsWriter = _CLNEW CompoundFileWriter(directory, filename);
 
 	{ //msvc6 scope fix
 		// Basic files
 		for (int32_t i = 0; i < IndexFileNames::COMPOUND_EXTENSIONS_LENGTH; i++) {
-			files.push_back (Misc::ajoin(segment,".",IndexFileNames::COMPOUND_EXTENSIONS[i]) );
+			files.push_back ( string(segment) + "." + IndexFileNames::COMPOUND_EXTENSIONS[i] );
 		}
 	}
 
@@ -163,7 +166,7 @@ void SegmentMerger::createCompoundFile(const char* filename, AStringArrayWithDel
 	{ //msvc6 scope fix
 		// Now merge all added files
 		for ( size_t i=0;i<files.size();i++ ){
-			cfsWriter->addFile(files[i]);
+			cfsWriter->addFile(files[i].c_str());
 		}
 	}
 
@@ -203,52 +206,48 @@ int32_t SegmentMerger::mergeFields() {
 
     //Iterate through all readers
     for (uint32_t i = 0; i < readers.size(); i++){
-		//get the i-th reader
-		reader = readers[i];
-		//Condition check to see if reader points to a valid instance
-		CND_CONDITION(reader != NULL,"No IndexReader found");
+		  //get the i-th reader
+		  reader = readers[i];
+		  //Condition check to see if reader points to a valid instance
+		  CND_CONDITION(reader != NULL,"No IndexReader found");
 
-		StringArrayWithDeletor tmp;
+		  StringArrayWithDeletor tmp;
 
-		tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_POSITION_OFFSET, tmp);
-		addIndexed(reader, fieldInfos, tmp, true, true, true);
+		  tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_POSITION_OFFSET, tmp);
+		  addIndexed(reader, fieldInfos, tmp, true, true, true);
 
-		tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_POSITION, tmp);
-		addIndexed(reader, fieldInfos, tmp, true, true, false);
+		  tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_POSITION, tmp);
+		  addIndexed(reader, fieldInfos, tmp, true, true, false);
 
-		tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_OFFSET, tmp);
-		addIndexed(reader, fieldInfos, tmp, true, false, true);
+		  tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR_WITH_OFFSET, tmp);
+		  addIndexed(reader, fieldInfos, tmp, true, false, true);
 
-		tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR, tmp);
-		addIndexed(reader, fieldInfos, tmp, true, false, false);
+		  tmp.clear(); reader->getFieldNames(IndexReader::TERMVECTOR, tmp);
+		  addIndexed(reader, fieldInfos, tmp, true, false, false);
 
-		tmp.clear(); reader->getFieldNames(IndexReader::INDEXED, tmp);
-		addIndexed(reader, fieldInfos, tmp, false, false, false);
+		  tmp.clear(); reader->getFieldNames(IndexReader::INDEXED, tmp);
+		  addIndexed(reader, fieldInfos, tmp, false, false, false);
 
-		tmp.clear(); reader->getFieldNames(IndexReader::UNINDEXED, tmp);
-		if ( tmp.size() > 0 ){
-			TCHAR** arr = _CL_NEWARRAY(TCHAR*,tmp.size()+1);
-			tmp.toArray(arr);
-			fieldInfos->add((const TCHAR**)arr, false);
-			_CLDELETE_ARRAY(arr); //no need to delete the contents, since tmp is responsible for it
-		}
+		  tmp.clear(); reader->getFieldNames(IndexReader::UNINDEXED, tmp);
+		  if ( tmp.size() > 0 ){
+			  TCHAR** arr = _CL_NEWARRAY(TCHAR*,tmp.size()+1);
+			  tmp.toArray(arr);
+			  fieldInfos->add((const TCHAR**)arr, false);
+			  _CLDELETE_ARRAY(arr); //no need to delete the contents, since tmp is responsible for it
+		  }
     }
 	
-	//Create the filename of the new FieldInfos file
-	const char* buf = Misc::segmentname(segment,".fnm");
-	//Write the new FieldInfos file to the directory
-    fieldInfos->write(directory, buf );
-	//Destroy the buffer of the filename
-    _CLDELETE_CaARRAY(buf);
+	  //Write the new FieldInfos file to the directory
+    fieldInfos->write(directory, Misc::segmentname(segment,".fnm").c_str() );
 	
-	// merge field values
+	  // merge field values
 
 
-	//Instantiate Fieldswriter which will write in directory for the segment name segment
+	  //Instantiate Fieldswriter which will write in directory for the segment name segment
     //Using the new merged fieldInfos
     FieldsWriter* fieldsWriter = _CLNEW FieldsWriter(directory, segment, fieldInfos);
     
-	//Condition check to see if fieldsWriter points to a valid instance
+	  //Condition check to see if fieldsWriter points to a valid instance
     CND_CONDITION(fieldsWriter != NULL,"Memory allocation for fieldsWriter failed");
 
     try {  
@@ -326,32 +325,24 @@ void SegmentMerger::mergeTerms() {
 	CND_PRECONDITION(fieldInfos != NULL, "fieldInfos is NULL");
 
     try{
-		//create a filename for the new Frequency File for segment
-        const char* buf = Misc::segmentname(segment,".frq");
-		//Open an IndexOutput to the new Frequency File
-        freqOutput = directory->createOutput( buf );
-        //Destroy the buffer of the filename
-        _CLDELETE_CaARRAY(buf);
-	
-		//create a filename for the new Prox File for segment
-        buf = Misc::segmentname(segment,".prx");
-		//Open an IndexOutput to the new Prox File
-        proxOutput = directory->createOutput( buf );
-		//delete buffer
-        _CLDELETE_CaARRAY( buf );
-	
-		//Instantiate  a new termInfosWriter which will write in directory
-		//for the segment name segment using the new merged fieldInfos
-        termInfosWriter = _CLNEW TermInfosWriter(directory, segment, fieldInfos, termIndexInterval);  
-        
-        //Condition check to see if termInfosWriter points to a valid instance
-        CND_CONDITION(termInfosWriter != NULL,"Memory allocation for termInfosWriter failed")	;
-        
-		skipInterval = termInfosWriter->skipInterval;
-        queue = _CLNEW SegmentMergeQueue(readers.size());
+      //Open an IndexOutput to the new Frequency File
+      freqOutput = directory->createOutput( Misc::segmentname(segment,".frq").c_str() );
 
-		//And merge the Term Infos
-        mergeTermInfos();	      
+      //Open an IndexOutput to the new Prox File
+      proxOutput = directory->createOutput( Misc::segmentname(segment,".prx").c_str() );
+      
+      //Instantiate  a new termInfosWriter which will write in directory
+      //for the segment name segment using the new merged fieldInfos
+      termInfosWriter = _CLNEW TermInfosWriter(directory, segment, fieldInfos, termIndexInterval);  
+      
+      //Condition check to see if termInfosWriter points to a valid instance
+      CND_CONDITION(termInfosWriter != NULL,"Memory allocation for termInfosWriter failed")	;
+      
+      skipInterval = termInfosWriter->skipInterval;
+      queue = _CLNEW SegmentMergeQueue(readers.size());
+
+      //And merge the Term Infos
+      mergeTermInfos();	      
     }_CLFINALLY(
 		//Close and destroy the IndexOutput to the Frequency File
         if (freqOutput != NULL) 		{ freqOutput->close(); _CLDELETE(freqOutput); }
@@ -634,23 +625,18 @@ void SegmentMerger::mergeNorms() {
 
 	//iterate through all the Field Infos instances
     for (size_t i = 0; i < fieldInfos->size(); i++) {
-		//Get the i-th FieldInfo
-        FieldInfo* fi = fieldInfos->fieldInfo(i);
-		//Is this Field indexed?
-        if (fi->isIndexed && !fi->omitNorms){
-			//Create an new filename for the norm file
-            const char* buf = Misc::segmentname(segment,".f", i);
-			//Instantiate  an IndexOutput to that norm file
-            output = directory->createOutput( buf );
+      //Get the i-th FieldInfo
+      FieldInfo* fi = fieldInfos->fieldInfo(i);
+      //Is this Field indexed?
+      if (fi->isIndexed && !fi->omitNorms){
+      //Instantiate  an IndexOutput to that norm file
+      output = directory->createOutput( Misc::segmentname(segment,".f", i).c_str() );
 
-			//Condition check to see if output points to a valid instance
-            CND_CONDITION(output != NULL, "No Outputstream retrieved");
+      //Condition check to see if output points to a valid instance
+      CND_CONDITION(output != NULL, "No Outputstream retrieved");
 
-            //Destroy the buffer of the filename
-            _CLDELETE_CaARRAY( buf );
-            
-			int32_t inputLen = 0;
-			uint8_t* input = NULL;
+      int32_t inputLen = 0;
+      uint8_t* input = NULL;
 
 			try{
 				//Iterate through all IndexReaders

@@ -34,7 +34,7 @@ CL_NS_DEF(search)
 		~PrefixQuery();
 
 		//Returns the name "PrefixQuery"
-		const char* getQueryName() const;
+		const char* getObjectName() const;
 		static const char* getClassName();
 
 		/** Returns the prefix of this query. */

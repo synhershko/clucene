@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "IndexInput.h"
 #include "IndexOutput.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_DEF(store)
 CL_NS_USE(util)
@@ -67,17 +68,29 @@ CL_NS_USE(util)
 	}
 }
 
+	#ifdef _UCS2
+  int32_t IndexInput::readString(char* buffer, const int32_t maxLength){
+  	TCHAR* buf = _CL_NEWARRAY(TCHAR,maxLength);
+    int32_t ret = -1;
+  	try{
+	  	ret = readString(buf,maxLength);
+	  	STRCPY_TtoA(buffer,buf,ret+1);
+  	}_CLFINALLY ( _CLDELETE_CARRAY(buf); )
+  	return ret;
+  }
+  #endif
+	
   int32_t IndexInput::readString(TCHAR* buffer, const int32_t maxLength){
     int32_t len = readVInt();
-	int32_t ml=maxLength-1;
+		int32_t ml=maxLength-1;
     if ( len >= ml ){
       readChars(buffer, 0, ml);
       buffer[ml] = 0;
       //we have to finish reading all the data for this string!
       if ( len-ml > 0 ){
-		//seek(getFilePointer()+(len-ml)); <- that was the wrong way to "finish reading"
-		skipChars(len-ml);
-	  }
+				//seek(getFilePointer()+(len-ml)); <- that was the wrong way to "finish reading"
+				skipChars(len-ml);
+		  }
       return ml;
     }else{
       readChars(buffer, 0, len);

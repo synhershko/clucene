@@ -20,6 +20,13 @@ CL_NS_USE(util)
   }
   TransactionalRAMDirectory::~TransactionalRAMDirectory(){
   }
+    
+  const char* TransactionalRAMDirectory::getClassName(){
+	  return "TransactionalRAMDirectory";
+  }
+  const char* TransactionalRAMDirectory::getObjectName() const{
+	  return getClassName();
+  }
 
   bool TransactionalRAMDirectory::archiveOrigFileIfNecessary(const char* name) {
     // If a file named $name was present when the transaction started and the

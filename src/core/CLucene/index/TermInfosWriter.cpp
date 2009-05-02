@@ -71,9 +71,7 @@ CL_NS_DEF(index)
 		indexInterval = interval;
 		skipInterval = LUCENE_DEFAULT_TERMDOCS_SKIP_INTERVAL;
 
-	    const char* buf = Misc::segmentname(segment, (isIndex ? ".tii" : ".tis"));
-	    output = directory->createOutput( buf );
-	    _CLDELETE_CaARRAY(buf);
+	  output = directory->createOutput( Misc::segmentname(segment, (isIndex ? ".tii" : ".tis")).c_str() );
 
 		output->writeInt(FORMAT);                      // write format
 		output->writeLong(0);                          // leave space for size

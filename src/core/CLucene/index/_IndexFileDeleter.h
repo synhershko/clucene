@@ -54,13 +54,13 @@ private:
   */
   class RefCount {
   public:
-	int count;
-	int IncRef() {
-		return ++count;
-	}
-	int DecRef() {
-		return --count;
-	}
+	  int count;
+	  int IncRef() {
+		  return ++count;
+	  }
+	  int DecRef() {
+		  return --count;
+	  }
   };
 	
   /**
@@ -71,18 +71,20 @@ private:
    */
   class CommitPoint: public CL_NS(util)::Comparable, public IndexCommitPoint {
     int64_t gen;
-		std::vector<std::string> files;
-    const char* segmentsFileName;
-    bool deleted;
+    std::string segmentsFileName;
+    IndexFileDeleter* _this;
   public:
-    CommitPoint(SegmentInfos* segmentInfos);
+		std::vector<std::string> files;
+    bool deleted;
+
+    CommitPoint(IndexFileDeleter* _this, SegmentInfos* segmentInfos);
 
     /**
      * Get the segments_N file for this commit point.
      */
-	std::string getSegmentsFileName();
+    std::string getSegmentsFileName();
 
-    void getFileNames(std::vector<std::string>& ret);
+    const std::vector<std::string>& getFileNames();
 
     /**
      * Called only be the deletion policy, to remove this
@@ -91,18 +93,30 @@ private:
     void deleteCommitPoint();
 
     int compareTo(NamedObject* obj);
+
+		static const char* getClassName();
+		const char* getObjectName() const;
+
+    bool operator < (CommitPoint& v)
+    {
+      return this->compareTo(&v) < 0;
+    }
+    bool operator < (CommitPoint* v)
+    {
+      return this->compareTo(v) < 0;
+    }
   };
-	
+
   /* Files that we tried to delete but failed (likely
    * because they are open and we are running on Windows),
    * so we will retry them again later: */
   std::vector<std::string> deletable;
 
   typedef CL_NS(util)::CLHashMap<char*, RefCount*,
-	CL_NS(util)::Compare::Char,
-	CL_NS(util)::Equals::Char,
-	CL_NS(util)::Deletor::acArray,
-	CL_NS(util)::Deletor::Object<RefCount> > RefCountsType;
+	  CL_NS(util)::Compare::Char,
+	  CL_NS(util)::Equals::Char,
+	  CL_NS(util)::Deletor::acArray,
+	  CL_NS(util)::Deletor::Object<RefCount> > RefCountsType;
   /* Reference count for all files in the index.  
    * Counts how many existing commits reference a file.
    * Maps String to RefCount (class below) instances: */
@@ -113,7 +127,7 @@ private:
    * default delete policy (KeepOnlyLastCommitDeletionPolicy).
    * Other policies may leave commit points live for longer
    * in which case this list would be longer than 1: */
-  CL_NS(util)::CLArrayList<CommitPoint*> commits;
+  CL_NS(util)::CLArrayList<IndexCommitPoint*> commits;
 
   /* Holds files we had incref'd from the previous
    * non-commit checkpoint: */
@@ -129,9 +143,9 @@ private:
   void deletePendingFiles();
 
   void setInfoStream(std::ostream* infoStream);
-  void message(const char* message);
-  void decRef(const char* fileName);
-  RefCount getRefCount(const char* fileName);
+  void message(std::string& message);
+  void decRef(const std::string& fileName);
+  RefCount* getRefCount(const char* fileName);
 
   /**
    * Remove the CommitPoints in the commitsToDelete List by
@@ -192,8 +206,8 @@ public:
 
 
   void CLUCENE_LOCAL_DECL incRef(SegmentInfos* segmentInfos, bool isCommit);
-  void CLUCENE_LOCAL_DECL incRef(std::vector<std::string>& files);
-  void CLUCENE_LOCAL_DECL decRef(std::vector<std::string>& files) ;
+  void CLUCENE_LOCAL_DECL incRef(const std::vector<std::string>& files);
+  void CLUCENE_LOCAL_DECL decRef(const std::vector<std::string>& files) ;
   void CLUCENE_LOCAL_DECL decRef(SegmentInfos* segmentInfos);
   void CLUCENE_LOCAL_DECL deleteFiles(std::vector<std::string>& files);
 

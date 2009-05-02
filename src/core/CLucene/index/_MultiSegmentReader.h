@@ -29,11 +29,12 @@ private:
 
   bool _hasDeletions;
   uint8_t* ones;
-  CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
+  typedef CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
     CL_NS(util)::Compare::TChar,
     CL_NS(util)::Equals::TChar,
     CL_NS(util)::Deletor::tcArray,
-    CL_NS(util)::Deletor::vArray<uint8_t> > normsCache;
+    CL_NS(util)::Deletor::vArray<uint8_t> > NormsCacheType;
+  NormsCacheType normsCache;
   int32_t _maxDoc;
   int32_t _numDocs;
 
@@ -49,24 +50,23 @@ protected:
 	
 	// synchronized
 	void doDelete(const int32_t n);
-  DirectoryIndexReader* doReopen(SegmentInfos infos);
+  DirectoryIndexReader* doReopen(SegmentInfos* infos);
+  
+  /** Construct reading the named set of readers. */
+  MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
 
   /** This contructor is only used for {@link #reopen()} */
-  MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis,
-      CL_NS(util)::ObjectArray<SegmentReader>* subReaders, bool closeDirectory,
-      CL_NS(util)::ObjectArray<SegmentReader>* oldReaders, int32_t* oldStarts,
-      CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
-        CL_NS(util)::Compare::TChar,
-          CL_NS(util)::Equals::TChar,
-        CL_NS(util)::Deletor::tcArray,
-        CL_NS(util)::Deletor::vArray<uint8_t> >* oldNormsCache) ;
+  MultiSegmentReader(
+      CL_NS(store)::Directory* directory, 
+      SegmentInfos* sis,
+      bool closeDirectory,
+      CL_NS(util)::ObjectArray<IndexReader>* oldReaders, 
+      int32_t* oldStarts,
+      NormsCacheType* oldNormsCache);
 
   void initialize( CL_NS(util)::ObjectArray<IndexReader>* subReaders);
 
 public:
-  /** Construct reading the named set of readers. */
-  CLUCENE_LOCAL_DECL MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
-
 	virtual ~MultiSegmentReader();
 
 	/** Return an array of term frequency vectors for the specified document.
@@ -75,9 +75,8 @@ public:
 	*  in a given vectorized field.
 	*  If no such fields existed, the method returns null.
 	*/
-	CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t n);
-	TermFreqVector* getTermFreqVector(int32_t n, const TCHAR* field);
-
+  TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field=NULL);
+  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
   void getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper);
   void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper);
   bool isOptimized();
@@ -87,7 +86,7 @@ public:
 
 	int32_t maxDoc() const;
 
-	bool document(int32_t n, CL_NS(document)::Document& doc, FieldSelector* fieldSelector);
+  bool document(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector);
 
 	bool isDeleted(const int32_t n);
 	bool hasDeletions() const;
@@ -111,6 +110,8 @@ public:
   int32_t getTermInfosIndexDivisor();
 
   friend class MultiReader;
+  friend class SegmentReader;
+  friend class DirectoryIndexReader;
 };
 
 
@@ -182,8 +183,8 @@ public:
   void close();
 
 
-  const char* getObjectName(){ return MultiTermEnum::getClassName(); }
-  static const char* getClassName(){ return "MultiTermEnum"; }
+  const char* getObjectName() const;
+  static const char* getClassName();
 };
 
 

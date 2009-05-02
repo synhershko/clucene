@@ -84,7 +84,7 @@ public:
 	* @return an instance of {@link FieldSelectorResult}
 	* if the {@link Field} named <code>fieldName</code> should be loaded.
 	*/
-	virtual FieldSelectorResult accept(const TCHAR* fieldName) = 0;
+	virtual FieldSelectorResult accept(const TCHAR* fieldName) const = 0;
 
 };
 
@@ -97,7 +97,7 @@ class LoadFirstFieldSelector :FieldSelector {
 public:
 	~LoadFirstFieldSelector();
 
-	FieldSelectorResult accept(const TCHAR* fieldName);
+	FieldSelectorResult accept(const TCHAR* fieldName) const;
 };
 
 CL_NS_END

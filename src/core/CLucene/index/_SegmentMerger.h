@@ -63,10 +63,13 @@ class SegmentMerger:LUCENE_BASE {
 	TermInfosWriter* termInfosWriter;
 	TermInfo termInfo; //(new) minimize consing
 
-    int32_t termIndexInterval;
+  int32_t termIndexInterval;
 	int32_t skipInterval;
 
 public:
+  static const uint8_t NORMS_HEADER[]; 
+  static const int NORMS_HEADER_length;
+
 	/**
 	* 
 	* @param dir The Directory to merge the other segments into
@@ -149,7 +152,7 @@ private:
 	//Merges the norms for all fields 
 	void mergeNorms();
 	
-	void createCompoundFile(const char* filename, AStringArrayWithDeletor& files);
+	void createCompoundFile(const char* filename, std::vector<std::string>& files);
 	friend class IndexWriter; //allow IndexWriter to use createCompoundFile
 };
 CL_NS_END

@@ -6,7 +6,7 @@
 CL_NS_DEF(index)
 class FilenameFilter{
 public:
-	virtual bool accept(const char* dir, const char* name) = 0;
+	virtual bool accept(const char* dir, const char* name) const = 0;
 };
 
 /**
@@ -25,7 +25,7 @@ public:
   /* (non-Javadoc)
    * @see java.io.FilenameFilter#accept(java.io.File, java.lang.String)
    */
-  bool accept(const char* dir, const char* name);
+  bool accept(const char* dir, const char* name) const;
 
   /**
    * Returns true if this is a file that would be contained
@@ -33,7 +33,7 @@ public:
    * files that pass the above "accept" (ie, are already
    * known to be a Lucene index file).
    */
-  bool isCFSFile(const char* name);
+  bool isCFSFile(const char* name) const;
   static const IndexFileNameFilter* getFilter();
 };
 

@@ -71,7 +71,7 @@ CL_NS_DEF(index)
 		int32_t size() const;
 		
 		/** Loads the fields from n'th document into doc. returns true on success. */
-		bool doc(int32_t n, CL_NS(document)::Document& doc, CL_NS(document)::FieldSelector* fieldSelector = NULL);
+		bool doc(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector = NULL);
 
 	protected:
 		/** Returns the length in bytes of each raw document in a

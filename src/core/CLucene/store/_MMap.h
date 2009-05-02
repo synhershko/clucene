@@ -28,10 +28,7 @@ CL_NS_DEF(store)
 		int64_t getFilePointer() const;
 		void seek(const int64_t pos);
 		int64_t length() const;
-		
-		static const char* DirectoryType(){ return "MMAP"; }
-		const char* getDirectoryType() const{ return DirectoryType(); }
-		
+
 		const char* getObjectName(){ return MMapIndexInput::getClassName(); }
 		static const char* getClassName(){ return "MMapIndexInput"; }			
 	};

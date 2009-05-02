@@ -32,7 +32,7 @@ CL_NS_DEF(store)
    * </ul>
    *
    */
-	class CLUCENE_EXPORT Directory: LUCENE_REFBASE {
+class CLUCENE_EXPORT Directory: LUCENE_REFBASE, public CL_NS(util)::NamedObject {
 	protected:
 		LockFactory* lockFactory;
 		
@@ -46,7 +46,8 @@ CL_NS_DEF(store)
 
 		// Returns an null terminated array of strings, one for each file in the directory. 
 		char** list() const;
-		virtual void list(std::vector<std::string>* names) const = 0;
+		virtual void list(std::vector<std::string>* names) const = 0; //todo: deprecate this...
+		void list(std::vector<std::string>& names) const;
 		       
 		// Returns true iff a file with the given name exists. 
 		virtual bool fileExists(const char* name) const = 0;
@@ -89,8 +90,6 @@ CL_NS_DEF(store)
 		
 		virtual TCHAR* toString() const = 0;
 
-		virtual const char* getDirectoryType() const = 0;
-		
 		void setLockFactory( LockFactory* lockFactory );
 		
 		LockFactory* getLockFactory();
