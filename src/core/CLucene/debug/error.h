@@ -78,7 +78,7 @@ public:
 	
  //#define _THROWS //does nothing
  #define _TRY try
- #define _CLCATCH_ERR(err_num, cleanup, x) catch(CLuceneError& err){if (err.number!=err_num){cleanup;throw err;}else {x;}}
+ #define _CLCATCH_ERR(err_num, cleanup, x) catch(CLuceneError& err){if (err.number()!=err_num){cleanup;throw err;}else {x;}}
  #define _CLFINALLY(x) catch(...){ x; throw; } x //note: code x is not run if return is called
  #define _CLTHROWA(number, str) throw CLuceneError(number, str,false)
  #define _CLTHROWT(number, str) throw CLuceneError(number, str,false)
