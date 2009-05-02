@@ -45,7 +45,7 @@ protected:
 	bool doDeleteFile(const char* name);
 
 public:
-	CompoundFileReader(CL_NS(store)::Directory* dir, char* name, int32_t _readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
+	CompoundFileReader(CL_NS(store)::Directory* dir, const char* name, int32_t _readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 	~CompoundFileReader();
 	CL_NS(store)::Directory* getDirectory();
 	const char* getName() const;
@@ -77,8 +77,8 @@ public:
 
 	TCHAR* toString() const;
 	
-	static const char* DirectoryType(){ return "CFS"; }
-	const char* getDirectoryType() const{ return DirectoryType(); }
+	static const char* getClassName();
+	const char* getObjectName() const;
 };
 
 

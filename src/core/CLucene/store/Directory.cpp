@@ -62,7 +62,7 @@ IndexInput* Directory::openInput(const char* name, int32_t bufferSize){
 		throw err;
 	return ret;
 }
-char** Directory:: list() const{
+char** Directory::list() const{
 	vector<string> names;
 	
 	list(&names);
@@ -73,5 +73,8 @@ char** Directory:: list() const{
       ret[i] = STRDUP_AtoA(names[i].c_str());
     ret[size]=NULL;
     return ret;	
+}
+void Directory::list(std::vector<std::string>& names) const{
+  return list(&names);
 }
 CL_NS_END

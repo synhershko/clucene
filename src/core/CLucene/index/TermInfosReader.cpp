@@ -42,16 +42,16 @@ CL_NS_DEF(index)
       segment    =  seg;
 
       //Create a filname fo a Term Info File
-	  char* tisFile = Misc::segmentname(segment,".tis");
-	  char* tiiFile = Misc::segmentname(segment,".tii");
+	  string tisFile = Misc::segmentname(segment,".tis");
+	  string tiiFile = Misc::segmentname(segment,".tii");
 	  bool success = false;
 
 	  try {
 		  //Create an SegmentTermEnum for storing all the terms read of the segment
-		  origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile, readBufferSize ), fieldInfos, false);
+		  origEnum = _CLNEW SegmentTermEnum( directory->openInput( tisFile.c_str(), readBufferSize ), fieldInfos, false);
 		  _size =  origEnum->size;
 		  totalIndexInterval = origEnum->indexInterval;
-		  indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile, readBufferSize ), fieldInfos, true);
+		  indexEnum = _CLNEW SegmentTermEnum( directory->openInput( tiiFile.c_str(), readBufferSize ), fieldInfos, true);
 
 		  //Check if enumerator points to a valid instance
 		  CND_CONDITION(origEnum != NULL, "No memory could be allocated for orig enumerator");
@@ -59,9 +59,6 @@ CL_NS_DEF(index)
 
 		  success = true;
 	  } _CLFINALLY({
-		  _CLDELETE_CaARRAY(tisFile);
-		  _CLDELETE_CaARRAY(tiiFile);
-
 		  // With lock-less commits, it's entirely possible (and
 		  // fine) to hit a FileNotFound exception above. In
 		  // this case, we want to explicitly close any subset

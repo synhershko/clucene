@@ -18,6 +18,7 @@
 #include "_SegmentMergeQueue.h"
 
 CL_NS_USE(store)
+CL_NS_USE(document)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
@@ -25,11 +26,7 @@ CL_NS_DEF(index)
 
 class MultiReader::Internal: LUCENE_BASE{
 public:
-	CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
-		CL_NS(util)::Compare::TChar,
-			CL_NS(util)::Equals::TChar,
-		CL_NS(util)::Deletor::tcArray,
-		CL_NS(util)::Deletor::vArray<uint8_t> > normsCache;
+  MultiSegmentReader::NormsCacheType normsCache;
 	
   bool* decrefOnClose; //remember which subreaders to decRef on close
   bool _hasDeletions;

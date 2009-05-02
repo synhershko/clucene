@@ -72,5 +72,7 @@ public:
 	int32_t count();
 	BitSet *clone() const;
 };
+typedef BitSet BitVector; //Lucene now calls the BitSet a BitVector...
+
 CL_NS_END
 #endif

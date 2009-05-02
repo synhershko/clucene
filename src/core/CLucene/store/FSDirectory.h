@@ -71,20 +71,20 @@ CL_CLASS_DEF(util,StringBuffer)
 		const char* getDirName() const; ///<returns reference
 		
 
-		/**
-         Returns the directory instance for the named location.
-		   
-         Do not delete this instance, only use close, otherwise other instances
-         will lose this instance.
+    /**
+    Returns the directory instance for the named location.
 
-		   <p>Directories are cached, so that, for a given canonical path, the same
-		   FSDirectory instance will always be returned.  This permits
-		   synchronization on directories.
-		   
-		   @param file the path to the directory.
-		   @param create if true, create, or erase any existing contents.
-		   @return the FSDirectory for the named file.
-        */
+    Do not delete this instance, only use close, otherwise other instances
+    will lose this instance.
+
+    <p>Directories are cached, so that, for a given canonical path, the same
+    FSDirectory instance will always be returned.  This permits
+    synchronization on directories.
+
+    @param file the path to the directory.
+    @param create if true, create, or erase any existing contents.
+    @return the FSDirectory for the named file.
+    */
 		static FSDirectory* getDirectory(const char* file, const bool create=false, LockFactory* lockFactory=NULL);
 
 		/// Returns the time the named file was last modified.
@@ -130,21 +130,21 @@ CL_CLASS_DEF(util,StringBuffer)
 
 	  TCHAR* toString() const;
 
-	  static const char* DirectoryType();
-	  const char* getDirectoryType() const;
-	
-	/**
-	* Set whether Lucene's use of lock files is disabled. By default, 
-	* lock files are enabled. They should only be disabled if the index
-	* is on a read-only medium like a CD-ROM.
-	*/
-	static void setDisableLocks(bool doDisableLocks);
-	
-	/**
-	* Returns whether Lucene's use of lock files is disabled.
-	* @return true if locks are disabled, false if locks are enabled.
-	*/
-	static bool getDisableLocks();
+		static const char* getClassName();
+		const char* getObjectName() const;
+  	
+	  /**
+	  * Set whether Lucene's use of lock files is disabled. By default, 
+	  * lock files are enabled. They should only be disabled if the index
+	  * is on a read-only medium like a CD-ROM.
+	  */
+	  static void setDisableLocks(bool doDisableLocks);
+  	
+	  /**
+	  * Returns whether Lucene's use of lock files is disabled.
+	  * @return true if locks are disabled, false if locks are enabled.
+	  */
+	  static bool getDisableLocks();
 
   };
 

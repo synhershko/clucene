@@ -16,12 +16,12 @@ public:
    * Get the segments file (<code>segments_N</code>) associated 
    * with this commit point.
    */
-  std::string getSegmentsFileName();
+  virtual std::string getSegmentsFileName() = 0;
 
   /**
    * Returns all index files referenced by this commit point.
    */
-  std::vector<std::string> getFileNames();
+  virtual const std::vector<std::string>& getFileNames() = 0;
   
   /**
    * Delete this commit point.
@@ -33,7 +33,7 @@ public:
    * and therefore this should only be called by its {@link IndexDeletionPolicy#onInit onInit()} or 
    * {@link IndexDeletionPolicy#onCommit onCommit()} methods.
   */
-  void deleteCommitPoint();
+  virtual void deleteCommitPoint() = 0;
 };
 
 /**
@@ -63,7 +63,7 @@ public:
  * href="http://issues.apache.org/jira/browse/LUCENE-710">LUCENE-710</a>
  * for details.</p>
  */
-class IndexDeletionPolicy {
+class IndexDeletionPolicy: public CL_NS(util)::NamedObject{
 public:
   /**
    * <p>This is called once when a writer is first
@@ -85,7 +85,7 @@ public:
    * {@link IndexCommitPoint point-in-time commits},
    *  sorted by age (the 0th one is the oldest commit).
    */
-  void onInit(std::vector<IndexCommitPoint*>& commits);
+  virtual void onInit(std::vector<IndexCommitPoint*>& commits) = 0;
 
   /**
    * <p>This is called each time the writer completed a commit.
@@ -112,7 +112,7 @@ public:
    * @param commits List of {@link IndexCommitPoint},
    *  sorted by age (the 0th one is the oldest commit).
    */
-  void onCommit(std::vector<IndexCommitPoint*>& commits);
+  virtual void onCommit(std::vector<IndexCommitPoint*>& commits) = 0;
 };
 
 
@@ -146,6 +146,13 @@ public:
       commits[i]->deleteCommitPoint();
     }
   }
+
+	static const char* getClassName(){
+		return "KeepOnlyLastCommitDeletionPolicy";
+	}
+	const char* getObjectName() const{
+		return getClassName();
+	}
 };
 
 CL_NS_END

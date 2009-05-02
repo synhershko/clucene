@@ -86,6 +86,9 @@ CL_NS_DEF(search)
 	  close();
   }
 
+	const char* FuzzyTermEnum::getObjectName() const{ return getClassName(); }
+	const char* FuzzyTermEnum::getClassName(){ return "FuzzyTermEnum"; }
+
   bool FuzzyTermEnum::endEnum() {
   //Func - Returns the fact if the current term in the enumeration has reached the end
   //Pre  - true
@@ -286,7 +289,7 @@ CL_NS_DEF(search)
         return buffer.getBuffer();
     }
 
-  const char* FuzzyQuery::getQueryName() const{
+  const char* FuzzyQuery::getObjectName() const{
   //Func - Returns the name of the query
   //Pre  - true
   //post - The string FuzzyQuery has been returned

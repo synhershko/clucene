@@ -67,7 +67,9 @@ public:
 
 	int64_t length() const { return _length; }
 	
-	const char* getDirectoryType() const{ return CompoundFileReader::DirectoryType(); }
+	const char* getDirectoryType() const{ return CompoundFileReader::getClassName(); }
+  const char* getObjectName() const{ return getClassName(); }
+  static const char* getClassName() { return "CSIndexInput"; }
 };
 
 class ReaderFileEntry:LUCENE_BASE {
@@ -116,7 +118,7 @@ void CSIndexInput::close(){
 
 
 
-CompoundFileReader::CompoundFileReader(Directory* dir, char* name, int32_t _readBufferSize):
+CompoundFileReader::CompoundFileReader(Directory* dir, const char* name, int32_t _readBufferSize):
 	entries(_CLNEW EntriesType(true,true))
 {
    directory = dir;
@@ -180,6 +182,12 @@ Directory* CompoundFileReader::getDirectory(){
 
 const char* CompoundFileReader::getName() const{
    return fileName;
+}
+const char* CompoundFileReader::getClassName(){
+  return "CompoundFileReader";
+}
+const char* CompoundFileReader::getObjectName() const{
+  return getClassName();
 }
 
 void CompoundFileReader::close(){

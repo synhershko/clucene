@@ -108,12 +108,12 @@ CL_NS_DEF(store)
     	
     	int64_t getFilePointer() const;
     	
-		const char* getObjectName(){ return RAMIndexOutput::getClassName(); }
+		const char* getObjectName(){ return getClassName(); }
 		static const char* getClassName(){ return "RAMIndexOutput"; }    	
     	
 	};
 
-	class RAMIndexInput:public IndexInput {				
+  class RAMIndexInput:public IndexInput{				
 	private:
 		RAMFile* file;
 		int64_t _length;
@@ -140,7 +140,6 @@ CL_NS_DEF(store)
 
 		void close();
 		int64_t length() const;
-		const char* getDirectoryType() const;
 		
 		inline uint8_t readByte();
 		void readBytes( uint8_t* dest, const int32_t len );
@@ -149,9 +148,9 @@ CL_NS_DEF(store)
 		
 		void seek(const int64_t pos);
 		
-		const char* getObjectName(){ return RAMIndexInput::getClassName(); }
-		static const char* getClassName(){ return "RAMIndexInput"; }
-		
+		const char* getDirectoryType() const;
+		const char* getObjectName() const;
+		static const char* getClassName();
 	};
 
 CL_NS_END

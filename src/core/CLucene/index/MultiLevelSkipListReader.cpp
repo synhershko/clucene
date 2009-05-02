@@ -149,7 +149,7 @@ void MultiLevelSkipListReader::loadSkipLevels() {
 		skipPointer[i] = skipStream[0]->getFilePointer();
 		if (toBuffer > 0) {
 			// buffer this level
-			skipStream[i] = static_cast<IndexInput*>(_CLNEW SkipBuffer(skipStream[0], (int32_t) length));
+			skipStream[i] = _CLNEW SkipBuffer(skipStream[0], (int32_t) length);
 			toBuffer--;
 		} else {
 			// clone this stream, it is already at the start of the current level
@@ -210,9 +210,13 @@ void MultiLevelSkipListReader::SkipBuffer::seek(const int64_t _pos) {
 	this->pos = static_cast<int32_t>(_pos - pointer);
 }
 
-const char* MultiLevelSkipListReader::SkipBuffer::getObjectName(){ return "SkipBuffer"; }
+const char* MultiLevelSkipListReader::SkipBuffer::getObjectName() const{ return getClassName(); }
+const char* MultiLevelSkipListReader::SkipBuffer::getClassName(){ return "MultiLevelSkipListReader::SkipBuffer"; }
+
 const char* MultiLevelSkipListReader::SkipBuffer::getDirectoryType() const{ return "SKIP"; }
-MultiLevelSkipListReader::SkipBuffer::SkipBuffer(const SkipBuffer& other): IndexInput(other){
+MultiLevelSkipListReader::SkipBuffer::SkipBuffer(const SkipBuffer& other): 
+    IndexInput(other)
+{
 	data = _CL_NEWARRAY(uint8_t,other._datalength);
 	memcpy(data,other.data,other._datalength * sizeof(uint8_t));
 	this->_datalength = other._datalength;

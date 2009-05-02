@@ -58,8 +58,8 @@ CL_NS_DEF(search)
 
         void close();
 
-		const char* getObjectName();
-		static const char* getClassName();
+		    const char* getObjectName() const;
+		    static const char* getClassName();
     };
 CL_NS_END
 #endif

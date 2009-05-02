@@ -370,7 +370,7 @@ CL_NS_DEF(search)
 	const char* IndexSearcher::getClassName(){
 		return "IndexSearcher";
 	}
-	const char* IndexSearcher::getObjectName(){
+	const char* IndexSearcher::getObjectName() const{
 		return IndexSearcher::getClassName();
 	}
 	

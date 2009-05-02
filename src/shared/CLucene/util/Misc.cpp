@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "Misc.h"
+#include <assert.h>
 
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
@@ -205,19 +206,19 @@ return buf;
 }
 
 char* Misc::ajoin ( const char* a, const char* b, const char* c, const char* d,const char* e,const char* f ) {
-#define aLEN(x) (x == NULL ? 0 : strlen(x))
-const size_t totalLen =
+  #define aLEN(x) (x == NULL ? 0 : strlen(x))
+  const size_t totalLen =
     aLEN(a) + aLEN(b) + aLEN(c) + aLEN(d) + aLEN(e) + aLEN(f)
     + sizeof(char); /* Space for terminator. */
 
-char* buf = _CL_NEWARRAY(char,totalLen);
-buf[0]=0;
-if ( a != NULL) strcat(buf,a);
-if ( b != NULL) strcat(buf,b);
-if ( c != NULL) strcat(buf,c);
-if ( d != NULL) strcat(buf,d);
-if ( e != NULL) strcat(buf,e);
-if ( f != NULL) strcat(buf,f);
+  char* buf = _CL_NEWARRAY(char,totalLen);
+  buf[0]=0;
+  if ( a != NULL) strcat(buf,a);
+  if ( b != NULL) strcat(buf,b);
+  if ( c != NULL) strcat(buf,c);
+  if ( d != NULL) strcat(buf,d);
+  if ( e != NULL) strcat(buf,e);
+  if ( f != NULL) strcat(buf,f);
 return buf;
 }
 
@@ -241,7 +242,7 @@ return (false);
 }
 
 //internal static function shared for clucene
-char* Misc::segmentname( const char* segment, const char* ext, const int32_t x ){
+string Misc::segmentname( const char* segment, const char* ext, const int32_t x ){
 //Func -  Returns an allocated buffer in which it creates a filename by 
 //       concatenating segment with ext and x
 //Pre    ext != NULL and holds the extension
@@ -251,14 +252,11 @@ char* Misc::segmentname( const char* segment, const char* ext, const int32_t x )
 
 	CND_PRECONDITION(ext != NULL, "ext is NULL");
 
-	//Allocate a new buffer to hold the concatenated filename
-	char* buf = _CL_NEWARRAY(char,CL_MAX_PATH);
-	//Concatenate segment and ext and store result in buf
-	if ( x==-1 )
-		_snprintf(buf,CL_MAX_PATH,"%s%s", segment,ext );
-	else
-		_snprintf(buf,CL_MAX_PATH,"%s%s%d", segment,ext,x );
-	return buf;
+  string ret = segment;
+  ret += ext;
+  if ( x!=-1 ) ret += x;
+
+  return ret;
 }
 void Misc::segmentname(char* buffer,int32_t bufferLen, const char* Segment, const char* ext, const int32_t x){
 //Func - Static Method
@@ -350,24 +348,28 @@ TCHAR* Misc::wordTrim(TCHAR* text) {
 }
 
 char* Misc::longToBase( int64_t value, int32_t base ) {
+  char buf[(sizeof(unsigned long) << 3) + 1];
+  size_t len = longToBase(value,base,buf);
 
-    static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-    char buf[(sizeof(unsigned long) << 3) + 1];
-    char *ptr, *end, *retval;
+  char* retval = (char*)malloc( len + 1 );
+  memcpy( retval, buf, len+1 );
+  
+  return retval;
+}
+size_t Misc::longToBase( int64_t value, int32_t base, char* buf ) {
+  static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+  char *ptr, *end;
+assert(false); //test me!
+  ptr = end = buf + sizeof(buf) - 1;
 
-    ptr = end = buf + sizeof(buf) - 1;
+  *ptr = '\0';
+  do {
+          *--ptr = digits[ value % base ];
+          value /= base;
+  } while ( ptr > buf && value );
 
-    *ptr = '\0';
-    do {
-            *--ptr = digits[ value % base ];
-            value /= base;
-    } while ( ptr > buf && value );
-
-    retval = (char*)malloc( end - ptr + 1 );
-    memcpy( retval, ptr, end - ptr );
-    retval[end-ptr] = 0;
-    
-    return retval;
+  buf[end-ptr] = 0;
+  return end - ptr;
 }
 
 int64_t Misc::base36ToLong( const char* value ) {

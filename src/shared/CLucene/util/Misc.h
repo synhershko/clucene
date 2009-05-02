@@ -29,7 +29,7 @@ CL_NS_DEF(util)
 
     static bool priv_isDotDir( const TCHAR* name );
 		//Creates a filename by concatenating Segment with ext and x
-		static char* segmentname(const char* segment, const char* ext, const int32_t x=-1 );
+    static std::string segmentname(const char* segment, const char* ext, const int32_t x=-1 );
 		//Creates a filename in buffer by concatenating Segment with ext and x
 		static void segmentname(char* buffer,int32_t bufferLen, const char* Segment, const char* ext, const int32_t x=-1);
 
@@ -52,6 +52,7 @@ CL_NS_DEF(util)
 	static TCHAR* wordTrim(TCHAR* s);
 	
 	static char* longToBase( int64_t value, int32_t base );
+	static size_t longToBase( int64_t value, int32_t base, char* to ); //< length of to should be at least ((sizeof(unsigned long) << 3) + 1). returns actual length used
 	static int64_t base36ToLong( const char* value );	
 
 	#ifdef _UCS2

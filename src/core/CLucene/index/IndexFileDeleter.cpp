@@ -1,21 +1,29 @@
 #include "CLucene/_ApiHeader.h"
 #include "_IndexFileDeleter.h"
+#include "IndexFileNameFilter.h"
+#include "_DocumentWriter.h"
 #include "_SegmentHeader.h"
+#include "CLucene/store/Directory.h"
+#include "CLucene/LuceneThreads.h"
+#include <algorithm>
+#include <assert.h>
 
+CL_NS_USE(store)
 CL_NS_DEF(index)
 
 bool IndexFileDeleter::VERBOSE_REF_COUNTS = false;
 
-IndexFileDeleter::CommitPoint32_t::CommitPoint32_t(SegmentInfos* segmentInfos){
+IndexFileDeleter::CommitPoint::CommitPoint(IndexFileDeleter* _this, SegmentInfos* segmentInfos){
+  this->_this = _this;
 	segmentsFileName = segmentInfos->getCurrentSegmentFileName();
-	int32_t size = segmentInfos.size();
-	files = new ArrayList(size);
-	files.add(segmentsFileName);
-	gen = segmentInfos.getGeneration();
+	int32_t size = segmentInfos->size();
+	files.push_back(segmentsFileName);
+	gen = segmentInfos->getGeneration();
 	for(int32_t i=0;i<size;i++) {
-	  SegmentInfo segmentInfo = segmentInfos.info(i);
-	  if (segmentInfo.dir == directory) {
-	    files.addAll(segmentInfo.files());
+	  SegmentInfo* segmentInfo = segmentInfos->info(i);
+	  if (segmentInfo->dir == _this->directory) {
+      const vector<string>& ff = segmentInfo->files();
+      files.insert(files.end(),ff.begin(), ff.end());
 	  }
 	}
 }
@@ -23,30 +31,39 @@ IndexFileDeleter::CommitPoint32_t::CommitPoint32_t(SegmentInfos* segmentInfos){
 /**
 * Get the segments_N file for this commit point32_t.
 */
-std::string IndexFileDeleter::CommitPoint32_t::getSegmentsFileName() {
+std::string IndexFileDeleter::CommitPoint::getSegmentsFileName() {
 	return segmentsFileName;
 }
 
-Collection IndexFileDeleter::CommitPoint32_t::getFileNames() throws IOException {
-	return Collections.unmodifiableCollection(files);
+const std::vector<std::string>& IndexFileDeleter::CommitPoint::getFileNames() {
+	return files;
 }
 
 /**
 * Called only be the deletion policy, to remove this
 * commit point32_t from the index.
 */
-void delete() {
+void IndexFileDeleter::CommitPoint::deleteCommitPoint() {
 	if (!deleted) {
 	  deleted = true;
-	  commitsToDelete.add(this);
+	  _this->commitsToDelete.push_back(this);
 	}
 }
 
-int32_t IndexFileDeleter::CommitPoint32_t::compareTo(Object obj) {
-	CommitPoint32_t commit = (CommitPoint32_t) obj;
-	if (gen < commit.gen) {
+const char* IndexFileDeleter::CommitPoint::getClassName(){
+  return "IndexFileDeleter::CommitPoint";
+}
+const char* IndexFileDeleter::CommitPoint::getObjectName() const{
+  return getClassName();
+}
+int32_t IndexFileDeleter::CommitPoint::compareTo(NamedObject* obj) {
+  if ( obj->getObjectName() != CommitPoint::getClassName() )
+    return -1;
+
+	CommitPoint* commit = (CommitPoint*) obj;
+	if (gen < commit->gen) {
 	  return -1;
-	} else if (gen > commit.gen) {
+	} else if (gen > commit->gen) {
 	  return 1;
 	} else {
 	  return 0;
@@ -56,11 +73,11 @@ int32_t IndexFileDeleter::CommitPoint32_t::compareTo(Object obj) {
 void IndexFileDeleter::setInfoStream(std::ostream* infoStream) {
 	this->infoStream = infoStream;
 	if (infoStream != NULL)
-	  message("setInfoStream deletionPolicy=" + policy);
+	  message( string("setInfoStream deletionPolicy=") + policy->getObjectName() );
 }
 
-void IndexFileDeleter::message(std::string message) {
-	infoStream << "IFD [" << Thread.currentThread().getName() << "]: " << message << "\n";
+void IndexFileDeleter::message(string& message) {
+	(*infoStream) << "IFD [" << _LUCENE_CURRTHREADID << "]: " << message << "\n";
 }
 
 
@@ -69,44 +86,49 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	this->infoStream = infoStream;
 	
 	if (infoStream != NULL)
-	  message("init: current segments file is \"" + segmentInfos->getCurrentSegmentFileName() + "\"; deletionPolicy=" + policy);
+	  message( string("init: current segments file is \"") + segmentInfos->getCurrentSegmentFileName() + "\"; deletionPolicy=" + policy->getObjectName());
 	
 	this->policy = policy;
 	this->directory = directory;
 	
 	// First pass: walk the files and initialize our ref
 	// counts:
-	int32_t64_t currentGen = segmentInfos.getGeneration();
-	IndexFileNameFilter filter = IndexFileNameFilter::getFilter();
+	int64_t currentGen = segmentInfos->getGeneration();
+	const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
 	
-	String[] files = directory.list();
-	if (files == NULL)
-	  throw new IOException("cannot read directory " + directory + ": list() returned NULL");
+	vector<string> files;
+  directory->list(&files);
+  if (files.empty() )
+	  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str());
 	
-	CommitPoint32_t currentCommitPoint32_t = NULL;
+	CommitPoint* currentCommitPoint = NULL;
 	
-	for(int32_t32_t i=0;i<files.length;i++) {
+	for(size_t i=0;i<files.size();i++) {
 	
-	  String fileName = files[i];
+	  string& fileName = files[i];
 	
-	  if (filter.accept(NULL, fileName) && !fileName.equals(IndexFileNames.SEGMENTS_GEN)) {
+    if (filter->accept(NULL, fileName.c_str()) && !fileName.compare(IndexFileNames::SEGMENTS_GEN) == 0) {
 	
 	    // Add this file to refCounts with initial count 0:
-	    getRefCount(fileName);
+	    getRefCount(fileName.c_str());
 	
-	    if (fileName.startsWith(IndexFileNames.SEGMENTS)) {
+	    if ( strncmp(fileName.c_str(), IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS)) == 0 ) {
 	
 	      // This is a commit (segments or segments_N), and
 	      // it's valid (<= the max gen).  Load it, then
 	      // incref all files it refers to:
-	      if (SegmentInfos.generationFromSegmentsFileName(fileName) <= currentGen) {
+	      if (SegmentInfos::generationFromSegmentsFileName(fileName.c_str()) <= currentGen) {
 	        if (infoStream != NULL) {
 	          message("init: load commit \"" + fileName + "\"");
 	        }
-	        SegmentInfos sis = new SegmentInfos();
+	        SegmentInfos sis;
+          bool failed = false;
 	        try {
-	          sis.read(directory, fileName);
-	        } catch (FileNotFoundException e) {
+	          sis.read(directory, fileName.c_str());
+	        } catch (CLuceneError& e) {
+            if ( e.number() != CL_ERR_IO ){
+              throw e;
+            }
 	          // LUCENE-948: on NFS (and maybe others), if
 	          // you have writers switching back and forth
 	          // between machines, it's very likely that the
@@ -117,22 +139,22 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	          if (infoStream != NULL) {
 	            message("init: hit FileNotFoundException when loading commit \"" + fileName + "\"; skipping this commit point32_t");
 	          }
-	          sis = NULL;
+	          failed = true;
 	        }
-	        if (sis != NULL) {
-	          CommitPoint32_t commitPoint32_t = new CommitPoint32_t(sis);
-	          if (sis.getGeneration() == segmentInfos.getGeneration()) {
-	            currentCommitPoint32_t = commitPoint32_t;
+	        if (!failed) {
+	          CommitPoint* commitPoint = _CLNEW CommitPoint(this,&sis);
+	          if (sis.getGeneration() == segmentInfos->getGeneration()) {
+	            currentCommitPoint = commitPoint;
 	          }
-	          commits.add(commitPoint32_t);
-	          incRef(sis, true);
+	          commits.push_back(commitPoint);
+	          incRef(&sis, true);
 	        }
 	      }
 	    }
 	  }
 	}
 	
-	if (currentCommitPoint32_t == NULL) {
+	if (currentCommitPoint == NULL) {
 	  // We did not in fact see the segments_N file
 	  // corresponding to the segmentInfos that was passed
 	  // in.  Yet, it must exist, because our caller holds
@@ -140,95 +162,100 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	  // listing was stale (eg when index accessed via NFS
 	  // client with stale directory listing cache).  So we
 	  // try now to explicitly open this commit point32_t:
-	  SegmentInfos sis = new SegmentInfos();
+	  SegmentInfos sis;
 	  try {
-	    sis.read(directory, segmentInfos.getCurrentSegmentFileName());
-	  } catch (IOException e) {
-	    throw new CorruptIndexException("failed to locate current segments_N file");
+	    sis.read(directory, segmentInfos->getCurrentSegmentFileName().c_str());
+	  } catch (CLuceneError& e) {
+      if ( e.number() == CL_ERR_IO ){
+	      _CLTHROWA(CL_ERR_CorruptIndex, "failed to locate current segments_N file");
+      }
 	  }
 	  if (infoStream != NULL)
-	    message("forced open of current segments file " + segmentInfos.getCurrentSegmentFileName());
-	  currentCommitPoint32_t = new CommitPoint32_t(sis);
-	  commits.add(currentCommitPoint32_t);
-	  incRef(sis, true);
+	    message("forced open of current segments file " + segmentInfos->getCurrentSegmentFileName());
+	  currentCommitPoint = _CLNEW CommitPoint(this,&sis);
+    commits.push_back(currentCommitPoint);
+	  incRef(&sis, true);
 	}
 	
 	// We keep commits list in sorted order (oldest to newest):
-	Collections.sort(commits);
+  assert(false);//test this...
+  std::sort(commits.begin(), commits.end());
 	
 	// Now delete anything with ref count at 0.  These are
 	// presumably abandoned files eg due to crash of
 	// IndexWriter.
-	Iterator it = refCounts.keySet().iterator();
-	while(it.hasNext()) {
-	  String fileName = (String) it.next();
-	  RefCount rc = (RefCount) refCounts.get(fileName);
-	  if (0 == rc.count) {
+  RefCountsType::iterator it = refCounts.begin();
+	while(it != refCounts.end()) {
+    char* fileName = it->first;
+    RefCount* rc = it->second;
+	  if (0 == rc->count) {
 	    if (infoStream != NULL) {
-	      message("init: removing unreferenced file \"" + fileName + "\"");
+	      message( string("init: removing unreferenced file \"") + fileName + "\"");
 	    }
 	    deleteFile(fileName);
 	  }
+    it++;
 	}
 	
 	// Finally, give policy a chance to remove things on
 	// startup:
-	policy.onInit(commits);
+	policy->onInit(commits);
 	
 	// It's OK for the onInit to remove the current commit
-	// point32_t; we just have to checkpoint32_t our in-memory
+	// point32_t; we just have to checkpoint our in-memory
 	// SegmentInfos to protect those files that it uses:
-	if (currentCommitPoint32_t.deleted) {
-	  checkpoint32_t(segmentInfos, false);
+	if (currentCommitPoint->deleted) {
+	  checkpoint(segmentInfos, false);
 	}
 	
 	deleteCommits();
 }
 
 /**
-* Remove the CommitPoint32_ts in the commitsToDelete List by
+* Remove the CommitPoints in the commitsToDelete List by
 * DecRef'ing all files from each segmentInfos->
 */
 void IndexFileDeleter::deleteCommits() {
 
-int32_t32_t size = commitsToDelete.size();
+  int32_t size = commitsToDelete.size();
 
-if (size > 0) {
+  if (size > 0) {
 
-  // First decref all files that had been referred to by
-  // the now-deleted commits:
-  for(int32_t32_t i=0;i<size;i++) {
-    CommitPoint32_t commit = (CommitPoint32_t) commitsToDelete.get(i);
-    if (infoStream != NULL) {
-      message("deleteCommits: now remove commit \"" + commit.getSegmentsFileName() + "\"");
-    }
-    int32_t32_t size2 = commit.files.size();
-    for(int32_t32_t j=0;j<size2;j++) {
-      decRef((String) commit.files.get(j));
-    }
-  }
-  commitsToDelete.clear();
-
-  // Now compact commits to remove deleted ones (preserving the sort):
-  size = commits.size();
-  int32_t32_t readFrom = 0;
-  int32_t32_t writeTo = 0;
-  while(readFrom < size) {
-    CommitPoint32_t commit = (CommitPoint32_t) commits.get(readFrom);
-    if (!commit.deleted) {
-      if (writeTo != readFrom) {
-        commits.set(writeTo, commits.get(readFrom));
+    // First decref all files that had been referred to by
+    // the now-deleted commits:
+    for(int32_t i=0;i<size;i++) {
+      CommitPoint* commit = commitsToDelete[i];
+      if (infoStream != NULL) {
+        message("deleteCommits: now remove commit \"" + commit->getSegmentsFileName() + "\"");
       }
-      writeTo++;
+      int32_t size2 = commit->files.size();
+      for(int32_t j=0;j<size2;j++) {
+        decRef(commit->files[j]);
+      }
     }
-    readFrom++;
-  }
+    commitsToDelete.clear();
 
-  while(size > writeTo) {
-    commits.remove(size-1);
-    size--;
+    // Now compact commits to remove deleted ones (preserving the sort):
+    size = commits.size();
+    int32_t readFrom = 0;
+    int32_t writeTo = 0;
+    while(readFrom < size) {
+      CommitPoint* commit = (CommitPoint*)commits[readFrom];
+      if (!commit->deleted) {
+        if (writeTo != readFrom) {
+          commits[readFrom] = NULL;
+          commits[writeTo] = commit;
+        }
+        writeTo++;
+      }
+      readFrom++;
+    }
+
+    while(size > writeTo) {
+      commits.pop_back();
+      size--;
+    }
   }
-}
 }
 
 /**
@@ -240,54 +267,54 @@ if (size > 0) {
 * that segment.
 */
 void IndexFileDeleter::refresh(const char* segmentName) {
-String[] files = directory.list();
-if (files == NULL)
-  throw new IOException("cannot read directory " + directory + ": list() returned NULL");
-IndexFileNameFilter filter = IndexFileNameFilter.getFilter();
-String segmentPrefix1;
-String segmentPrefix2;
-if (segmentName != NULL) {
-  segmentPrefix1 = segmentName + ".";
-  segmentPrefix2 = segmentName + "_";
-} else {
-  segmentPrefix1 = NULL;
-  segmentPrefix2 = NULL;
-}
-
-for(int32_t32_t i=0;i<files.length;i++) {
-  String fileName = files[i];
-  if (filter.accept(NULL, fileName) &&
-      (segmentName == NULL || fileName.startsWith(segmentPrefix1) || fileName.startsWith(segmentPrefix2)) &&
-      !refCounts.containsKey(fileName) &&
-      !fileName.equals(IndexFileNames.SEGMENTS_GEN)) {
-    // Unreferenced file, so remove it
-    if (infoStream != NULL) {
-      message("refresh [prefix=" + segmentName + "]: removing newly created unreferenced file \"" + fileName + "\"");
-    }
-    deleteFile(fileName);
+  vector<string> files;
+  directory->list(files);
+  if (files.empty())
+    _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str() );
+  const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
+  string segmentPrefix1;
+  string segmentPrefix2;
+  if (segmentName != NULL) {
+    segmentPrefix1 = string(segmentName) + ".";
+    segmentPrefix2 = string(segmentName) + "_";
   }
-}
+
+  for(size_t i=0;i<files.size();i++) {
+    string& fileName = files[i];
+    if (filter->accept(NULL, fileName.c_str()) &&
+        (segmentName==NULL || fileName.compare(0,segmentPrefix1.length(),segmentPrefix1) == 0 || fileName.compare(0,segmentPrefix2.length(),segmentPrefix2)==0 &&
+        refCounts.find((char*)fileName.c_str())== refCounts.end() &&
+        fileName.compare(IndexFileNames::SEGMENTS_GEN)!=0) ){
+      // Unreferenced file, so remove it
+      if (infoStream != NULL) {
+        message( string("refresh [prefix=") + segmentName + "]: removing newly created unreferenced file \"" + fileName + "\"");
+      }
+      deleteFile(fileName.c_str());
+    }
+  }
 }
 
 void IndexFileDeleter::refresh() {
-refresh(NULL);
+  refresh(NULL);
 }
 
 void IndexFileDeleter::close() {
-deletePendingFiles();
+  deletePendingFiles();
 }
 
 void IndexFileDeleter::deletePendingFiles() {
-if (deletable != NULL) {
-  List oldDeletable = deletable;
-  deletable = NULL;
-  int32_t32_t size = oldDeletable.size();
-  for(int32_t32_t i=0;i<size;i++) {
-    if (infoStream != NULL)
-      message("delete pending file " + oldDeletable.get(i));
-    deleteFile(oldDeletable.get(i));
+  if (!deletable.empty()) {
+    vector<string> oldDeletable;
+    oldDeletable.insert(oldDeletable.end(),deletable.begin(),deletable.end());
+    deletable.clear();
+
+    int32_t size = oldDeletable.size();
+    for(int32_t i=0;i<size;i++) {
+      if (infoStream != NULL)
+        message("delete pending file " + oldDeletable[i]);
+      deleteFile(oldDeletable[i].c_str());
+    }
   }
-}
 }
 
 /**
@@ -310,153 +337,169 @@ if (deletable != NULL) {
 * a chance to remove other commits.  If any commits are
 * removed, we decref their files as well.
 */
-void IndexFileDeleter::checkpoint32_t(SegmentInfos* segmentInfos, bool isCommit) {
+void IndexFileDeleter::checkpoint(SegmentInfos* segmentInfos, bool isCommit) {
 
-if (infoStream != NULL) {
-  message("now checkpoint32_t \"" + segmentInfos.getCurrentSegmentFileName() + "\" [" + segmentInfos.size() + " segments " + "; isCommit = " + isCommit + "]");
+  if (infoStream != NULL) {
+    string msg = "now checkpoint \"";
+    msg += segmentInfos->getCurrentSegmentFileName();
+    msg += "\" [";
+    msg += segmentInfos->size();
+    msg += " segments ; isCommit = ";
+    msg += isCommit;
+    msg += "]";
+    message( msg );
+  }
+
+  // Try again now to delete any previously un-deletable
+  // files (because they were in use, on Windows):
+  deletePendingFiles();
+
+  // Incref the files:
+  incRef(segmentInfos, isCommit);
+  vector<string> docWriterFiles;
+  if (docWriter != NULL) {
+    docWriter->files(docWriterFiles);
+    if (!docWriterFiles.empty())
+      incRef(docWriterFiles);
+  }
+
+  if (isCommit) {
+    // Append to our commits list:
+    commits.push_back(_CLNEW CommitPoint(this, segmentInfos));
+
+    // Tell policy so it can remove commits:
+    policy->onCommit(commits);
+
+    // Decref files for commits that were deleted by the policy:
+    deleteCommits();
+  }
+
+  // DecRef old files from the last checkpoint, if any:
+  int32_t size = lastFiles.size();
+  if (size > 0) {
+    for(int32_t i=0;i<size;i++)
+      decRef(lastFiles[i]);
+    lastFiles.clear();
+  }
+
+  if (!isCommit) {
+    // Save files so we can decr on next checkpoint/commit:
+    size = segmentInfos->size();
+    for(int32_t i=0;i<size;i++) {
+      SegmentInfo* segmentInfo = segmentInfos->info(i);
+      if (segmentInfo->dir == directory) {
+        const vector<string>& files = segmentInfo->files();
+        lastFiles.insert(lastFiles.end(), files.begin(), files.end());
+      }
+    }
+  }
+  if (!docWriterFiles.empty())
+    lastFiles.insert(lastFiles.end(), docWriterFiles.begin(),docWriterFiles.end());
+  }
+
+  void IndexFileDeleter::incRef(SegmentInfos* segmentInfos, bool isCommit) {
+  int32_t size = segmentInfos->size();
+  for(int32_t i=0;i<size;i++) {
+    SegmentInfo* segmentInfo = segmentInfos->info(i);
+    if (segmentInfo->dir == directory) {
+      incRef(segmentInfo->files());
+    }
+  }
+
+  if (isCommit) {
+    // Since this is a commit point32_t, also incref its
+    // segments_N file:
+    getRefCount(segmentInfos->getCurrentSegmentFileName().c_str())->IncRef();
+  }
 }
 
-// Try again now to delete any previously un-deletable
-// files (because they were in use, on Windows):
-deletePendingFiles();
-
-// Incref the files:
-incRef(segmentInfos, isCommit);
-final List docWriterFiles;
-if (docWriter != NULL) {
-  docWriterFiles = docWriter.files();
-  if (docWriterFiles != NULL)
-    incRef(docWriterFiles);
-} else
-  docWriterFiles = NULL;
-
-if (isCommit) {
-  // Append to our commits list:
-  commits.add(new CommitPoint32_t(segmentInfos));
-
-  // Tell policy so it can remove commits:
-  policy.onCommit(commits);
-
-  // Decref files for commits that were deleted by the policy:
-  deleteCommits();
+void IndexFileDeleter::incRef(const vector<string>& files) {
+  int32_t size = files.size();
+  for(int32_t i=0;i<size;i++) {
+    const string& fileName = files[i];
+    RefCount* rc = getRefCount(fileName.c_str());
+    if (infoStream != NULL && VERBOSE_REF_COUNTS) {
+      string msg = string("  IncRef \"") + fileName + "\": pre-incr count is ";
+      msg += rc->count;
+      message(msg);
+    }
+    rc->IncRef();
+  }
 }
 
-// DecRef old files from the last checkpoint32_t, if any:
-int32_t32_t size = lastFiles.size();
-if (size > 0) {
-  for(int32_t32_t i=0;i<size;i++)
-    decRef((List) lastFiles.get(i));
-  lastFiles.clear();
+void IndexFileDeleter::decRef(const vector<string>& files) {
+  int32_t size = files.size();
+  for(int32_t i=0;i<size;i++) {
+    decRef(files[i]);
+  }
 }
 
-if (!isCommit) {
-  // Save files so we can decr on next checkpoint32_t/commit:
-  size = segmentInfos.size();
-  for(int32_t32_t i=0;i<size;i++) {
-    SegmentInfo segmentInfo = segmentInfos.info(i);
-    if (segmentInfo.dir == directory) {
-      lastFiles.add(segmentInfo.files());
+void IndexFileDeleter::decRef(const string& fileName) {
+  RefCount* rc = getRefCount(fileName.c_str());
+  if (infoStream != NULL && VERBOSE_REF_COUNTS) {
+    string msg = "  DecRef \"";
+    msg += fileName;
+    msg += "\": pre-decr count is ";
+    msg += rc->count;
+    message(msg);
+  }
+  if (0 == rc->DecRef()) {
+    // This file is no int32_t64_ter referenced by any past
+    // commit point32_ts nor by the in-memory SegmentInfos:
+    deleteFile(fileName.c_str());
+    refCounts.remove((char*)fileName.c_str());
+  }
+}
+
+void IndexFileDeleter::decRef(SegmentInfos* segmentInfos) {
+  int32_t size = segmentInfos->size();
+  for(int32_t i=0;i<size;i++) {
+    SegmentInfo* segmentInfo = segmentInfos->info(i);
+    if (segmentInfo->dir == directory) {
+      decRef(segmentInfo->files());
     }
   }
 }
-if (docWriterFiles != NULL)
-  lastFiles.add(docWriterFiles);
-}
 
-void IndexFileDeleter::incRef(SegmentInfos* segmentInfos, bool isCommit) {
-int32_t32_t size = segmentInfos.size();
-for(int32_t32_t i=0;i<size;i++) {
-  SegmentInfo segmentInfo = segmentInfos.info(i);
-  if (segmentInfo.dir == directory) {
-    incRef(segmentInfo.files());
+IndexFileDeleter::RefCount* IndexFileDeleter::getRefCount(const char* fileName) {
+  RefCount* rc;
+  RefCountsType::iterator itr = refCounts.find((char*)fileName);
+  if (itr == refCounts.end()) {
+    rc = _CLNEW RefCount();
+    refCounts.put( STRDUP_AtoA(fileName), rc);
+  } else {
+    rc = itr->second;
   }
+  return rc;
 }
 
-if (isCommit) {
-  // Since this is a commit point32_t, also incref its
-  // segments_N file:
-  getRefCount(segmentInfos.getCurrentSegmentFileName()).IncRef();
-}
-}
-
-void IndexFileDeleter::incRef(List files) {
-int32_t32_t size = files.size();
-for(int32_t32_t i=0;i<size;i++) {
-  String fileName = (String) files.get(i);
-  RefCount rc = getRefCount(fileName);
-  if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-    message("  IncRef \"" + fileName + "\": pre-incr count is " + rc.count);
-  }
-  rc.IncRef();
-}
-}
-
-void IndexFileDeleter::decRef(List files) {
-int32_t32_t size = files.size();
-for(int32_t32_t i=0;i<size;i++) {
-  decRef((String) files.get(i));
-}
-}
-
-void IndexFileDeleter::decRef(String fileName) {
-RefCount rc = getRefCount(fileName);
-if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-  message("  DecRef \"" + fileName + "\": pre-decr count is " + rc.count);
-}
-if (0 == rc.DecRef()) {
-  // This file is no int32_t64_ter referenced by any past
-  // commit point32_ts nor by the in-memory SegmentInfos:
-  deleteFile(fileName);
-  refCounts.remove(fileName);
-}
-}
-
-void IndexFileDeleter::decRef(SegmentInfos segmentInfos) {
-final int32_t32_t size = segmentInfos.size();
-for(int32_t32_t i=0;i<size;i++) {
-  SegmentInfo segmentInfo = segmentInfos.info(i);
-  if (segmentInfo.dir == directory) {
-    decRef(segmentInfo.files());
-  }
-}
-}
-
-RefCount IndexFileDeleter::getRefCount(const char* fileName) {
-RefCount* rc;
-
-if (!refCounts.containsKey(fileName)) {
-  rc = new RefCount();
-  refCounts.put(fileName, rc);
-} else {
-  rc = (RefCount) refCounts.get(fileName);
-}
-return rc;
-}
-
-void IndexFileDeleter::deleteFiles(List files) {
-final int32_t32_t size = files.size();
-for(int32_t32_t i=0;i<size;i++)
-  deleteFile((String) files.get(i));
+void IndexFileDeleter::deleteFiles(vector<string>& files) {
+  int32_t size = files.size();
+  for(int32_t i=0;i<size;i++)
+    deleteFile(files[i].c_str());
 }
 
 /** Delets the specified files, but only if they are new
 *  (have not yet been incref'd). */
 void IndexFileDeleter::deleteNewFiles(std::vector<std::string>& files) {
-	final int32_t32_t size = files.size();
-	for(int32_t32_t i=0;i<size;i++)
-	  if (!refCounts.containsKey(files.get(i)))
-	    deleteFile((String) files.get(i));
+	int32_t size = files.size();
+	for(int32_t i=0;i<size;i++)
+	  if (refCounts.find((char*)files[i].c_str()) == refCounts.end())
+	    deleteFile(files[i].c_str());
 }
 
 void IndexFileDeleter::deleteFile(const char* fileName)
 {
 	try {
 	  if (infoStream != NULL) {
-	    message("delete \"" + fileName + "\"");
+	    message(string("delete \"") + fileName + "\"");
 	  }
-	  directory.deleteFile(fileName);
-	} catch (IOException e) {       // if delete fails
-	  if (directory.fileExists(fileName)) {
+	  directory->deleteFile(fileName);
+	} catch (CLuceneError& e) {       // if delete fails
+    if ( e.number() != CL_ERR_IO ){
+      throw e;
+    }
+	  if (directory->fileExists(fileName)) {
 	
 	    // Some operating systems (e.g. Windows) don't
 	    // permit a file to be deleted while it is opened
@@ -466,12 +509,9 @@ void IndexFileDeleter::deleteFile(const char* fileName)
 	    // the file for subsequent deletion.
 	
 	    if (infoStream != NULL) {
-	      message("IndexFileDeleter: unable to remove file \"" + fileName + "\": " + e.toString() + "; Will re-try later.");
+	      message(string("IndexFileDeleter: unable to remove file \"") + fileName + "\": " + e.what() + "; Will re-try later.");
 	    }
-	    if (deletable == NULL) {
-	      deletable = new ArrayList();
-	    }
-	    deletable.add(fileName);                  // add to deletable
+	    deletable.push_back(fileName);                  // add to deletable
 	  }
 	}
 }

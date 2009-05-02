@@ -53,13 +53,13 @@ public:
 	CL_NS(store)::Directory* directory;
 	IndexWriter* writer;
 	const char* segName;
-	AStringArrayWithDeletor* filesToDelete;
+	std::vector<std::string>& filesToDelete;
 	void doBody();
 	LockWithCFS(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout, 
 			CL_NS(store)::Directory* dir, 
 			IndexWriter* wr, 
 			const char* segName, 
-			AStringArrayWithDeletor* ftd);
+			std::vector<std::string>& ftd);
 	~LockWithCFS(){
 	}
 };
@@ -110,7 +110,7 @@ public:
 	similarity = CL_NS(search)::Similarity::getDefault();
 
 	useCompoundFile = true;
-	if ( directory->getDirectoryType() == RAMDirectory::DirectoryType() )
+	if ( directory->getObjectName() == RAMDirectory::getClassName() )
 	    useCompoundFile = false;
 
 	//Create a ramDirectory
@@ -420,10 +420,10 @@ public:
 #endif
       SegmentReader* reader = SegmentReader::get(si);
       merger.add(reader);
-      if ((reader->getDirectory() == this->directory) || // if we own the directory
-		(reader->getDirectory() == this->ramDirectory)){
-        segmentsToDelete.push_back(reader);	  // queue segment for deletion
-	  }
+      if ((reader->directory() == this->directory) || // if we own the directory
+		     (reader->directory() == this->ramDirectory)){
+          segmentsToDelete.push_back(reader);	  // queue segment for deletion
+	    }
     }
 
     int32_t mergedDocCount = merger.merge();
@@ -454,11 +454,11 @@ public:
 		strcpy(cmpdTmpName,mergedName);
 		strcat(cmpdTmpName,".tmp");
 
-		AStringArrayWithDeletor filesToDelete;
+		std::vector<std::string> filesToDelete;
 		merger.createCompoundFile(cmpdTmpName, filesToDelete);
 
 		LuceneLock* lock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-		LockWithCFS with ( lock,commitLockTimeout,directory, this, mergedName, &filesToDelete);
+		LockWithCFS with ( lock,commitLockTimeout,directory, this, mergedName, filesToDelete);
 		{
 			SCOPED_LOCK_MUTEX(directory->THIS_LOCK) // in- & inter-process sync
 			with.run();
@@ -470,54 +470,56 @@ public:
   }
 
   void IndexWriter::deleteSegments(CLVector<SegmentReader*>* segments) {
-    AStringArrayWithDeletor deletable;
+    std::vector<std::string> deletable;
 
 	{//scope delete deleteArray object
-		AStringArrayWithDeletor deleteArray;
+		std::vector<std::string> deleteArray;
 		readDeleteableFiles(deleteArray);
 		deleteFiles(deleteArray, deletable); // try to delete deleteable
 	}
 
-	AStringArrayWithDeletor files;
+	vector<string> files;
     for (uint32_t i = 0; i < segments->size(); i++) {
       SegmentReader* reader = (*segments)[i];
       files.clear();
-	  reader->files(files);
-      if (reader->getDirectory() == this->directory)
+	    reader->files(files);
+      if ( reader->directory() == this->directory)
         deleteFiles(files, deletable);	  // try to delete our files
       else
-        deleteFiles(files, reader->getDirectory()); // delete, eg, RAM files
+        deleteFiles(files, reader->directory()); // delete, eg, RAM files
     }
 
     writeDeleteableFiles(deletable);		  // note files we can't delete
   }
 
-  void IndexWriter::readDeleteableFiles(AStringArrayWithDeletor& result) {
+  void IndexWriter::readDeleteableFiles(std::vector<std::string>& result) {
     if (!directory->fileExists("deletable"))
       return;
 
     IndexInput* input = directory->openInput("deletable");
     try {
-		TCHAR tname[CL_MAX_PATH];
-		for (int32_t i = input->readInt(); i > 0; i--){	  // read file names
-			input->readString(tname,CL_MAX_PATH);
-			result.push_back(STRDUP_TtoA(tname));
-		}
+		  TCHAR tname[CL_MAX_PATH];
+		  char aname[CL_MAX_PATH];
+		  for (int32_t i = input->readInt(); i > 0; i--){	  // read file names
+			  input->readString(tname,CL_MAX_PATH);
+        STRCPY_TtoA(aname,tname,CL_MAX_PATH);
+			  result.push_back(aname);
+		  }
     } _CLFINALLY(
         input->close();
         _CLDELETE(input);
     );
   }
 
-  void IndexWriter::writeDeleteableFiles(AStringArrayWithDeletor& files) {
+  void IndexWriter::writeDeleteableFiles(std::vector<std::string>& files) {
     IndexOutput* output = directory->createOutput("deleteable.new");
     try {
       output->writeInt(files.size());
-	  TCHAR tfile[CL_MAX_PATH]; //temporary space for tchar file name
-	  for (uint32_t i = 0; i < files.size(); i++){
-		STRCPY_AtoT(tfile,files[i],CL_MAX_PATH);
+	    TCHAR tfile[CL_MAX_PATH]; //temporary space for tchar file name
+	    for (uint32_t i = 0; i < files.size(); i++){
+		    STRCPY_AtoT(tfile,files[i].c_str(),CL_MAX_PATH);
         output->writeString( tfile, _tcslen(tfile) );
-	  }
+	    }
     } _CLFINALLY(
         output->close();
         _CLDELETE(output);
@@ -526,39 +528,39 @@ public:
     directory->renameFile("deleteable.new", "deletable");
   }
 
-  void IndexWriter::deleteFiles(AStringArrayWithDeletor& files){
-	AStringArrayWithDeletor deletable;
-	AStringArrayWithDeletor currDeletable;
-	readDeleteableFiles(currDeletable);
-	deleteFiles(currDeletable, deletable); // try to delete deleteable
-	deleteFiles(files, deletable);     // try to delete our files
-	writeDeleteableFiles(deletable);        // note files we can't delete
+  void IndexWriter::deleteFiles(std::vector<std::string>& files){
+	  std::vector<std::string> deletable;
+	  std::vector<std::string> currDeletable;
+	  readDeleteableFiles(currDeletable);
+	  deleteFiles(currDeletable, deletable); // try to delete deleteable
+	  deleteFiles(files, deletable);     // try to delete our files
+	  writeDeleteableFiles(deletable);        // note files we can't delete
   }
 
-  void IndexWriter::deleteFiles(AStringArrayWithDeletor& files, Directory* directory) {
-	AStringArrayWithDeletor::iterator itr = files.begin();
-	while ( itr != files.end() ){
-		directory->deleteFile( *itr, true );
-		++itr;
-	}
-  }
-
-  void IndexWriter::deleteFiles(AStringArrayWithDeletor& files, AStringArrayWithDeletor& deletable) {
-	  AStringArrayWithDeletor::iterator itr=files.begin();
+  void IndexWriter::deleteFiles(std::vector<std::string>& files, Directory* directory) {
+	  std::vector<std::string>::iterator itr = files.begin();
 	  while ( itr != files.end() ){
-		const char* file = *itr;
-		if ( getDirectory()->fileExists(file) ){
-			if ( !getDirectory()->deleteFile(file, false) ){
-				if (directory->fileExists(file)) {
-					#ifdef _CL_DEBUG_INFO
-					fprintf(_CL_DEBUG_INFO,"%s; Will re-try later.\n", err.what());
-					#endif
-					deletable.push_back(STRDUP_AtoA(file));		  // add to deletable
-				}
-			}
-		}
-		++itr;
-	 }
+		  directory->deleteFile( itr->c_str(), true );
+		  ++itr;
+	  }
+  }
+
+  void IndexWriter::deleteFiles(std::vector<std::string>& files, std::vector<std::string>& deletable) {
+	  std::vector<std::string>::iterator itr=files.begin();
+	  while ( itr != files.end() ){
+		  const char* file = itr->c_str();
+		  if ( getDirectory()->fileExists(file) ){
+			  if ( !getDirectory()->deleteFile(file, false) ){
+				  if (directory->fileExists(file)) {
+					  #ifdef _CL_DEBUG_INFO
+					  fprintf(_CL_DEBUG_INFO,"%s; Will re-try later.\n", err.what());
+					  #endif
+					  deletable.push_back(STRDUP_AtoA(file));		  // add to deletable
+				  }
+			  }
+		  }
+		  ++itr;
+	  }
   }
 
 
@@ -653,11 +655,11 @@ public:
 		strcpy(cmpdTmpName,mergedName);
 		strcat(cmpdTmpName,".tmp");
 
-		AStringArrayWithDeletor filesToDelete;
+		std::vector<std::string> filesToDelete;
 		merger.createCompoundFile(cmpdTmpName, filesToDelete);
 
 		LuceneLock* cfslock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-		LockWithCFS with ( lock,commitLockTimeout,directory, this, mergedName, &filesToDelete);
+		LockWithCFS with ( lock,commitLockTimeout,directory, this, mergedName, filesToDelete);
 		{
 			SCOPED_LOCK_MUTEX(directory->THIS_LOCK) // in- & inter-process sync
 			with.run();
@@ -699,13 +701,13 @@ public:
             CL_NS(store)::Directory* dir, 
             IndexWriter* wr, 
             const char* segName, 
-            AStringArrayWithDeletor* ftd):
-        CL_NS(store)::LuceneLockWith<void>(lock,lockWaitTimeout)
+            std::vector<std::string>& ftd):
+        CL_NS(store)::LuceneLockWith<void>(lock,lockWaitTimeout),
+        filesToDelete(ftd)
     {
         this->segName = segName;
         this->directory = dir;
         this->writer = wr;
-        this->filesToDelete = ftd;
     }
   void IndexWriter::LockWithCFS::doBody() {
   //Func - Writes segmentInfos to or reads  segmentInfos from disk
@@ -727,7 +729,7 @@ public:
 		// make compound file visible for SegmentReaders
 		directory->renameFile(from, nu);
 		// delete now unused files of segment 
-		writer->deleteFiles(*filesToDelete);   
+		writer->deleteFiles(filesToDelete);   
   }
   
   

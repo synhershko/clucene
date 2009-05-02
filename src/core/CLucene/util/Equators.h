@@ -60,11 +60,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
-class CLUCENE_EXPORT NamedObject:LUCENE_BASE{
+class CLUCENE_EXPORT NamedObject{
 public:
   virtual ~NamedObject(){
   }
-	virtual const char* getObjectName() = 0;
+	virtual const char* getObjectName() const = 0;
 };
 class CLUCENE_INLINE_EXPORT Comparable:public NamedObject{
 public:
@@ -101,7 +101,7 @@ public:
 		bool operator()( int32_t t1, int32_t t2 ) const;
 		size_t operator()( int32_t t ) const;
 		static const char* getClassName();
-		const char* getObjectName();
+		const char* getObjectName() const;
 	};
 
 	
@@ -112,7 +112,7 @@ public:
 		Float(float_t val);
 		int32_t compareTo(NamedObject* o);
 		static const char* getClassName();
-		const char* getObjectName();
+		const char* getObjectName() const;
 	};
 
 
@@ -128,7 +128,7 @@ public:
 		bool operator()( const char* val1, const char* val2 ) const;
 		size_t operator()( const char* val1) const;
 		static const char* getClassName();
-		const char* getObjectName();
+		const char* getObjectName() const;
 	};
 
 #ifdef _UCS2
@@ -144,7 +144,7 @@ public:
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
 		size_t operator()( const wchar_t* val1) const;
 		static const char* getClassName();
-		const char* getObjectName();
+		const char* getObjectName() const;
 	};
 	typedef WChar TChar;
 #else

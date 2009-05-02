@@ -32,8 +32,7 @@ CL_NS_DEF(search)
 		WildcardQuery(CL_NS(index)::Term* term);
 		~WildcardQuery();
     
-	    //Returns the string "WildcardQuery"
-    	const char* getQueryName() const;
+	  const char* getObjectName() const;
 		static const char* getClassName();
 		
 		size_t hashCode() const;

@@ -14,6 +14,7 @@ CL_CLASS_DEF(analysis,Analyzer)
 CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(search,Similarity)
 #include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/Array.h"
 
 CL_NS_DEF(index)
 class FieldInfos;
@@ -88,6 +89,12 @@ private:
 	void writeNorms(const char* segment);
 
 	void clearPostingTable();
+};
+class DocumentsWriter: public DocumentWriter{ //forwards compatibility only...
+public:
+  void files(std::vector<std::string>& ret){
+    return;
+  }
 };
 
 CL_NS_END

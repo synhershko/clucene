@@ -141,10 +141,8 @@ void DocumentWriter::addDocument(const char* segment, Document* doc) {
 	// write field names
 	fieldInfos = _CLNEW FieldInfos();
 	fieldInfos->add(doc);
-	
-	const char* buf = Misc::segmentname(segment, ".fnm");
-	fieldInfos->write(directory, buf);
-	_CLDELETE_CaARRAY(buf);
+
+	fieldInfos->write(directory, Misc::segmentname(segment, ".fnm").c_str());
 
 	// write field values
 	FieldsWriter fieldsWriter(directory, segment, fieldInfos);
@@ -456,14 +454,8 @@ void DocumentWriter::writePostings(Posting** postings, const int32_t postingsLen
 	TermInfosWriter* tis = NULL;
 	TermVectorsWriter* termVectorWriter = NULL;
 	try {
-		//open files for inverse index storage
-	   	const char* buf = Misc::segmentname( segment, ".frq");
-		freq = directory->createOutput( buf );
-		_CLDELETE_CaARRAY( buf );
-		
-		buf = Misc::segmentname( segment, ".prx");
-		prox = directory->createOutput( buf );
-		_CLDELETE_CaARRAY( buf );
+		freq = directory->createOutput( Misc::segmentname( segment, ".frq").c_str() );
+		prox = directory->createOutput( Misc::segmentname( segment, ".prx").c_str() );
 
 		tis = _CLNEW TermInfosWriter(directory, segment, fieldInfos,
 			termIndexInterval);

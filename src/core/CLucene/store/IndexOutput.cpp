@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "IndexOutput.h"
 #include "IndexInput.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -122,6 +123,17 @@ CL_NS_DEF(store)
     writeByte((uint8_t)i);
   }
 
+  void IndexOutput::writeString(const string& s ) {
+    writeString(s.c_str(),s.length());
+  }
+  void IndexOutput::writeString(const char* s, const int32_t length ) {
+  	TCHAR* buf = _CL_NEWARRAY(TCHAR,length+1);
+  	STRCPY_AtoT(buf,s,length);
+  	try{
+  		writeString(buf,length);
+  	}_CLFINALLY ( _CLDELETE_CARRAY(buf); )
+  }
+  
   void IndexOutput::writeString(const TCHAR* s, const int32_t length ) {
     writeVInt(length);
     writeChars(s, 0, length);
@@ -135,14 +147,14 @@ CL_NS_DEF(store)
     for (int32_t i = start; i < end; ++i) {
         const int32_t code = (int32_t)s[i];
         if (code >= 0x01 && code <= 0x7F)
-			writeByte((uint8_t)code);
+					writeByte((uint8_t)code);
         else if (((code >= 0x80) && (code <= 0x7FF)) || code == 0) {
-			writeByte((uint8_t)(0xC0 | (code >> 6)));
-			writeByte((uint8_t)(0x80 | (code & 0x3F)));
+					writeByte((uint8_t)(0xC0 | (code >> 6)));
+					writeByte((uint8_t)(0x80 | (code & 0x3F)));
         } else {
-			writeByte((uint8_t)(0xE0 | (((uint32_t)code) >> 12))); //unsigned shift
-			writeByte((uint8_t)(0x80 | ((code >> 6) & 0x3F)));
-			writeByte((uint8_t)(0x80 | (code & 0x3F)));
+					writeByte((uint8_t)(0xE0 | (((uint32_t)code) >> 12))); //unsigned shift
+					writeByte((uint8_t)(0x80 | ((code >> 6) & 0x3F)));
+					writeByte((uint8_t)(0x80 | (code & 0x3F)));
         }
     }
   }

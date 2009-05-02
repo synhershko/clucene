@@ -101,26 +101,21 @@ CL_NS_DEF(index)
 	};
 	CL_NS(util)::ValueArray<const char*> IndexFileNames::VECTOR_EXTENSIONS(IndexFileNames_VECTOR_EXTENSIONS_s, 3 );
 
-	char* IndexFileNames::fileNameFromGeneration( const char* base, const char* extension, int64_t gen ) {
-		
-		char fileName[CL_MAX_PATH];
-		
+	string IndexFileNames::fileNameFromGeneration( const char* base, const char* extension, int64_t gen ) {
 		if ( gen == SegmentInfo::NO ) {
-			return NULL;
+			return "";
 		} else if ( gen == SegmentInfo::WITHOUT_GEN ) {
-			cl_sprintf( fileName, CL_MAX_PATH, "%s%s", base, extension );
+			return string(base) + extension;
 		} else {
-			char *genStr = CL_NS(util)::Misc::longToBase( gen, 36 );
-			cl_sprintf( fileName, CL_MAX_PATH, "%s_%s%s", base, genStr, extension );
-			free( genStr );
+      char buf[(sizeof(unsigned long) << 3) + 1];
+      CL_NS(util)::Misc::longToBase( gen, 36, buf );
+      return string(base) + buf + extension;
 		}
-
-		return STRDUP_AtoA( fileName );
 	}
 	
-	bool IndexFileNames::isDocStoreFile( char* fileName ) {
+	bool IndexFileNames::isDocStoreFile( const char* fileName ) {
 		
-		char* p = strchr( fileName, (int)'.' );
+		const char* p = strchr( fileName, (int)'.' );
 		
 		if ( p != NULL && strcmp( p+1, COMPOUND_FILE_STORE_EXTENSION ) == 0 ) {
 			return true;

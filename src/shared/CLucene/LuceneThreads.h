@@ -51,7 +51,7 @@ class CLuceneThreadIdCompare;
     	#elif defined(_CL_HAVE_WIN32_THREADS)
         	#define _LUCENE_THREADID_TYPE uint64_t
     	    #define _LUCENE_THREAD_FUNC(name, argName) void __stdcall name(void* argName) //< use this macro to correctly define the thread start routine
-			#define _LUCENE_THREAD_FUNC_RETURN(val) mutex_thread::_exitThread(val)
+			#define _LUCENE_THREAD_FUNC_RETURN(val) CL_NS(util)::mutex_thread::_exitThread(val)
             typedef void (__stdcall luceneThreadStartRoutine)(void* lpThreadParameter );
             class CLUCENE_SHARED_EXPORT mutex_thread
         	{
@@ -75,9 +75,9 @@ class CLuceneThreadIdCompare;
     	#endif //mutex types
     	
     	
-    	#define _LUCENE_THREAD_CREATE(func, arg) mutex_thread::CreateThread(func,arg)
-    	#define _LUCENE_THREAD_JOIN(id) mutex_thread::JoinThread(id)
-        #define _LUCENE_CURRTHREADID mutex_thread::_GetCurrentThreadId()
+    	#define _LUCENE_THREAD_CREATE(func, arg) CL_NS(util)::mutex_thread::CreateThread(func,arg)
+    	#define _LUCENE_THREAD_JOIN(id) CL_NS(util)::mutex_thread::JoinThread(id)
+        #define _LUCENE_CURRTHREADID CL_NS(util)::mutex_thread::_GetCurrentThreadId()
         #define _LUCENE_THREADMUTEX CL_NS(util)::mutex_thread
     #endif //don't implement
 	

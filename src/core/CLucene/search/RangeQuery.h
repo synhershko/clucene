@@ -43,7 +43,7 @@ CL_NS_DEF(search)
 		RangeQuery(CL_NS(index)::Term* LowerTerm, CL_NS(index)::Term* UpperTerm, const bool Inclusive);
 		~RangeQuery();
 
-		const char* getQueryName() const;
+		const char* getObjectName() const;
 		static const char* getClassName();
 
 		Query* rewrite(CL_NS(index)::IndexReader* reader);

@@ -33,7 +33,9 @@ private:
   bool rollbackHasChanges;
   SegmentInfos* rollbackSegmentInfos;
 
+  class FindSegmentsFile_Open;
   class FindSegmentsFile_Reopen;
+  friend class FindSegmentsFile_Open;
   friend class FindSegmentsFile_Reopen;
 
 protected:

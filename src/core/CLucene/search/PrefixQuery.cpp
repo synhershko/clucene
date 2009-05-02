@@ -59,7 +59,7 @@ CL_NS_DEF(search)
 		return Similarity::floatToByte(getBoost()) ^ prefix->hashCode();
 	}
 
-  const char* PrefixQuery::getQueryName()const{
+  const char* PrefixQuery::getObjectName()const{
   //Func - Returns the name "PrefixQuery" 
   //Pre  - true
   //Post - The string "PrefixQuery" has been returned

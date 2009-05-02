@@ -16,7 +16,7 @@ CL_NS_DEF(store)
    * @see Directory
    * @see IndexOutput
    */
-	class CLUCENE_EXPORT IndexInput: LUCENE_BASE {
+	class CLUCENE_EXPORT IndexInput: LUCENE_BASE, public CL_NS(util)::NamedObject {
 	protected:
 		IndexInput();
 		IndexInput(const IndexInput& clone);
@@ -61,12 +61,21 @@ CL_NS_DEF(store)
 		* supported. */
 		int64_t readVLong();
 		
-		/** Reads a string.
+		/** Reads a string
 		* @see IndexOutput#writeString(String)
 		* maxLength is the amount read into the buffer, the whole string is still read from the stream
 		* returns the amount read
 		*/
 		int32_t readString(TCHAR* buffer, const int32_t maxlength);
+		
+		#ifdef _UCS2
+		/** Reads a string and converts to ascii.
+		* @see IndexOutput#writeString(String)
+		* maxLength is the amount read into the buffer, the whole string is still read from the stream
+		* returns the amount read
+		*/
+		int32_t readString(char* buffer, const int32_t maxlength);
+		#endif
 		
 		/** Reads a string.
 		* @see IndexOutput#writeString(String)
@@ -101,8 +110,7 @@ CL_NS_DEF(store)
 		virtual int64_t length() const = 0;
 		
 		virtual const char* getDirectoryType() const = 0;
-		
-		virtual const char* getObjectName() = 0;
+		virtual const char* getObjectName() const = 0;
 	};
 	
    /** Abstract base class for input from a file in a {@link Directory}.  A
@@ -149,7 +157,7 @@ CL_NS_DEF(store)
 
 		void setBufferSize( int32_t newSize );
 		
-		const char* getObjectName(){ return BufferedIndexInput::getClassName(); }
+		const char* getObjectName(){ return getClassName(); }
 		static const char* getClassName(){ return "BufferedIndexInput"; }
 
 	protected:

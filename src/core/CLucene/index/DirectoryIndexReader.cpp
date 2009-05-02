@@ -8,11 +8,12 @@
 #include "DirectoryIndexReader.h"
 #include "_IndexFileDeleter.h"
 #include "IndexDeletionPolicy.h"
-#include "_SegmentInfos.h"
+#include "_MultiSegmentReader.h"
 #include "_SegmentHeader.h"
 #include "IndexWriter.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/Lock.h"
+#include "_SegmentInfos.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
@@ -104,6 +105,9 @@ CL_NS_DEF(index)
   }
 
   void DirectoryIndexReader::init(Directory* __directory, SegmentInfos* segmentInfos, bool closeDirectory) {
+    this->deletionPolicy = NULL;
+    this->writeLock = NULL;
+    this->rollbackSegmentInfos = NULL;
     this->_directory = __directory;
     this->segmentInfos = segmentInfos;
     this->closeDirectory = closeDirectory;
@@ -125,7 +129,7 @@ CL_NS_DEF(index)
     init(__directory, segmentInfos, closeDirectory);
   }
 
-  class DirectoryIndexReader_FindSegmentsFile_Open: public SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>{
+  class DirectoryIndexReader::FindSegmentsFile_Open: public SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>{
     bool closeDirectory;
     IndexDeletionPolicy* deletionPolicy;
 	protected:
@@ -145,7 +149,7 @@ CL_NS_DEF(index)
       return reader;
     }
   public:
-    DirectoryIndexReader_FindSegmentsFile_Open( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
+    FindSegmentsFile_Open( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
         CL_NS(store)::Directory* dir ):
       SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>(dir)
     {
@@ -155,7 +159,7 @@ CL_NS_DEF(index)
   };
 
   DirectoryIndexReader* DirectoryIndexReader::open(Directory* __directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy) {
-    DirectoryIndexReader_FindSegmentsFile_Open runner(closeDirectory, deletionPolicy, __directory);
+    DirectoryIndexReader::FindSegmentsFile_Open runner(closeDirectory, deletionPolicy, __directory);
     return runner.run();
   }
 
@@ -193,7 +197,6 @@ CL_NS_DEF(index)
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 
-_CLNEW MultiSegmentReader(NULL, NULL, true);
     if (this->hasChanges || this->isCurrent()) {
       // the index hasn't changed - nothing to do here
       return this;

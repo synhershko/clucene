@@ -39,7 +39,7 @@ public:
 	  TCHAR* toString();
     
     static const char* getClassName();
-    const char* getObjectName();
+    const char* getObjectName() const;
   };
 
 
@@ -51,7 +51,7 @@ public:
 	  TCHAR* toString();
 
     static const char* getClassName();
-    const char* getObjectName();
+    const char* getObjectName() const;
   };
   
   class FSLock: public LuceneLock {
@@ -69,7 +69,7 @@ public:
 	  TCHAR* toString();
 
     static const char* getClassName();
-    const char* getObjectName();
+    const char* getObjectName() const;
   };
   
   // Utility class for executing code with exclusive access.

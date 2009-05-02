@@ -172,7 +172,7 @@ CL_NS_DEF(search)
 		*/
 		Similarity* getSimilarity();
 
-		virtual const char* getObjectName();
+		virtual const char* getObjectName() const;
 		static const char* getClassName();
 
 	    virtual void _search(Query* query, Filter* filter, HitCollector* results) = 0;

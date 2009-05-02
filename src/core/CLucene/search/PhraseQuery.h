@@ -49,7 +49,7 @@ CL_NS_DEF(search)
 		~PhraseQuery();
 
         //Returns the string "PhraseQuery"
-        const char* getQueryName() const;
+        const char* getObjectName() const;
         static const char* getClassName();
        
 		/** Sets the number of other words permitted between words in query phrase.

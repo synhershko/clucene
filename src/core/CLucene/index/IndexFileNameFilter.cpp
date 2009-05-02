@@ -17,7 +17,7 @@ IndexFileNameFilter::IndexFileNameFilter() {
 	}
 }
 
-bool IndexFileNameFilter::accept(const char* dir, const char* name) {
+bool IndexFileNameFilter::accept(const char* dir, const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
 	if (i != -1) {
@@ -42,7 +42,7 @@ bool IndexFileNameFilter::accept(const char* dir, const char* name) {
 	return false;
 }
 
-bool IndexFileNameFilter::isCFSFile(const char* name) {
+bool IndexFileNameFilter::isCFSFile(const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
 	if (i != -1) {

@@ -49,14 +49,20 @@ CL_NS_DEF(store)
       
       return locked;
    }
-
    TCHAR* NoLock::toString()
    {
-	 return STRDUP_TtoT(_T("NoLock"));
+        return STRDUP_TtoT(_T("NoLock"));
    }
    bool NoLock::obtain() { return true; }
    void NoLock::release() {}
    bool NoLock::isLocked() { return false; }
+   
+  const char* NoLock::getClassName(){
+    return "NoLock";
+  }
+  const char* NoLock::getObjectName() const{
+    return getClassName();
+  }
    
 
 
@@ -66,6 +72,12 @@ CL_NS_DEF(store)
 	   this->locks_LOCK = locks_LOCK;
 	   this->lockName = lockName;
    }
+  const char* SingleInstanceLock::getClassName(){
+    return "SingleInstanceLock";
+  }
+  const char* SingleInstanceLock::getObjectName() const{
+    return getClassName();
+  }
    
    bool SingleInstanceLock::obtain()
    {
@@ -112,6 +124,13 @@ CL_NS_DEF(store)
 	   _CLDELETE_ARRAY( lockFile );
 	   _CLDELETE_LCaARRAY( lockDir );
    }
+   
+  const char* FSLock::getClassName(){
+    return "FSLock";
+  }
+  const char* FSLock::getObjectName() const{
+    return getClassName();
+  }
 
    bool FSLock::obtain()
    {

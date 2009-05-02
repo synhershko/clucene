@@ -125,8 +125,10 @@ protected:
 
 		SkipBuffer(const SkipBuffer& other);
 		CL_NS(store)::IndexInput* clone() const;
-		const char* getObjectName();
+
 		const char* getDirectoryType() const;
+		const char* getObjectName() const;
+		static const char* getClassName();
 	};
 };
 CL_NS_END

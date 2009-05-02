@@ -32,15 +32,11 @@ FieldsWriter::FieldsWriter(Directory* d, const char* segment, FieldInfos* fn):
 
 	CND_PRECONDITION(segment != NULL,"segment is NULL");
 
-	const char* buf = Misc::segmentname(segment,".fdt");
-    fieldsStream = d->createOutput ( buf );
-    _CLDELETE_CaARRAY( buf );
+  fieldsStream = d->createOutput ( Misc::segmentname(segment,".fdt").c_str() );
 
 	CND_CONDITION(indexStream != NULL,"fieldsStream is NULL");
     
-	buf = Misc::segmentname(segment,".fdx");
-    indexStream = d->createOutput( buf );
-    _CLDELETE_CaARRAY( buf );
+  indexStream = d->createOutput( Misc::segmentname(segment,".fdx").c_str() );
       
 	CND_CONDITION(indexStream != NULL,"indexStream is NULL");
 

@@ -15,9 +15,9 @@
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,LuceneLock)
 CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(document,FieldSelector)
 
 CL_NS_DEF(index)
-class FieldSelector;
 class SegmentInfos;
 class TermFreqVector;
 class TermEnum;
@@ -415,6 +415,22 @@ public:
    * @throws UnsupportedOperationException unless overridden in subclass
    */
   virtual bool isOptimized();
+  
+  /**
+   *  Return an array of term frequency vectors for the specified document.
+   *  The array contains a vector for each vectorized field in the document.
+   *  Each vector contains terms and frequencies for all terms in a given vectorized field.
+   *  If no such fields existed, the method returns null. The term vectors that are
+   * returned my either be of type TermFreqVector or of type TermPositionsVector if
+   * positions or offsets have been stored.
+   *
+   * @param docNumber document for which term frequency vectors are returned
+   * @return array of term frequency vectors. May be null if no term vectors have been
+   *  stored for the specified document.
+   * @throws IOException if index cannot be accessed
+   * @see org.apache.lucene.document.Field.TermVector
+   */
+   virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber) = 0;
 
   /**
   *  Return a term frequency vector for the specified document and field. The
@@ -450,23 +466,6 @@ public:
    * @throws IOException if term vectors cannot be accessed or if they do not exist on the field and doc. specified.
    */
   virtual void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper) =0;
-
-
-  /**
-   *  Return an array of term frequency vectors for the specified document.
-   *  The array contains a vector for each vectorized field in the document.
-   *  Each vector contains terms and frequencies for all terms in a given vectorized field.
-   *  If no such fields existed, the method returns null. The term vectors that are
-   * returned my either be of type TermFreqVector or of type TermPositionsVector if
-   * positions or offsets have been stored.
-   *
-   * @param docNumber document for which term frequency vectors are returned
-   * @return array of term frequency vectors. May be null if no term vectors have been
-   *  stored for the specified document.
-   * @throws IOException if index cannot be accessed
-   * @see org.apache.lucene.document.Field.TermVector
-   */
-   virtual CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber, const TCHAR* field=NULL) = 0;
 
 	/**
 	* Returns <code>true</code> if an index exists at the specified directory.
@@ -517,7 +516,7 @@ public:
    * @see org.apache.lucene.document.LoadFirstFieldSelector
    */
   //When we convert to JDK 1.5 make this Set<String>
-	virtual bool document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector) =0;
+	virtual bool document(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector) =0;
 
   /** Gets the stored fields of the <code>n</code><sup>th</sup>
   * <code>Document</code> in this index.

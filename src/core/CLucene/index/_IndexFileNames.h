@@ -41,8 +41,8 @@ public:
 	static CL_NS(util)::ValueArray<const char*> COMPOUND_EXTENSIONS;
 	static CL_NS(util)::ValueArray<const char*> VECTOR_EXTENSIONS;
 	
-	static char* fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
-	static bool isDocStoreFile( char* fileName );
+  static std::string fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
+	static bool isDocStoreFile( const char* fileName );
 	
 };
 

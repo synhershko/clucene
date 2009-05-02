@@ -42,7 +42,7 @@ Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, const TCHAR* que
 						q->setBoost(itr->second);
 					}
 				}
-				if (q->getQueryName() == PhraseQuery::getClassName()) {
+				if (q->getObjectName() == PhraseQuery::getClassName()) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
 				// TODO:

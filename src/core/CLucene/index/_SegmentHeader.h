@@ -173,7 +173,7 @@ class SegmentReader: public DirectoryIndexReader {
 	class Norm :LUCENE_BASE{
 		int32_t number;
 		int64_t normSeek;
-		SegmentReader* reader;
+		SegmentReader* _this;
 		const char* segment; ///< pointer to segment name
     volatile int32_t refCount;
     bool useSingleNormStream;
@@ -186,11 +186,13 @@ class SegmentReader: public DirectoryIndexReader {
      */
     void close();
 	public:
+    DEFINE_MUTEX(THIS_LOCK)
+
 		CL_NS(store)::IndexInput* in;
 		uint8_t* bytes;
 		bool dirty;
 		//Constructor
-		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
+		Norm(CL_NS(store)::IndexInput* instrm, bool useSingleNormStream, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
 		//Destructor
 		~Norm();
 
@@ -198,12 +200,13 @@ class SegmentReader: public DirectoryIndexReader {
 
     void incRef();
     void decRef();
+	  friend class SegmentReader;
 	};
 	friend class SegmentReader::Norm;
 
 	//Holds the name of the segment that is being read
-	const char* segment;
-  SegmentInfo si;
+  std::string segment;
+  SegmentInfo* si;
   int32_t readBufferSize;
 	
 	//Indicates if there are documents marked as deleted
@@ -218,13 +221,10 @@ class SegmentReader: public DirectoryIndexReader {
 
 	//Holds all norms for all fields in the segment
 	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar> NormsType;
-    NormsType _norms; 
-	DEFINE_MUTEX(_norms_LOCK)
+  NormsType _norms; 
     
 	uint8_t* ones;
 	uint8_t* fakeNorms();
-
-	uint8_t hasSingleNorm;
 
   // optionally used for the .nrm file shared by multiple norms
 	CL_NS(store)::IndexInput* singleNormStream;
@@ -243,7 +243,7 @@ class SegmentReader: public DirectoryIndexReader {
 	CL_NS(util)::ThreadLocal<TermVectorsReader*,
 		CL_NS(util)::Deletor::Object<TermVectorsReader> >termVectorsLocal;
 
-	void initialize(SegmentInfo* si);
+	void initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores);
 
 	/**
 	* Create a clone from the initial TermVectorsReader and store it in the ThreadLocal.
@@ -336,17 +336,17 @@ public:
 	///Checks if a segment managed by SegmentInfo si has deletions
 	static bool hasDeletions(const SegmentInfo* si);
     bool hasDeletions() const;
-	bool hasNorms(const TCHAR* field) const;
+	bool hasNorms(const TCHAR* field);
 
 	///Returns all file names managed by this SegmentReader
-	void files(AStringArrayWithDeletor& retarray);
+  void files(std::vector<std::string>& retarray);
 	///Returns an enumeration of all the Terms and TermInfos in the set.
 	TermEnum* terms();
 	///Returns an enumeration of terms starting at or after the named term t
 	TermEnum* terms(const Term* t);
 
 	///Gets the document identified by n
-	bool document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector);
+	bool document(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector);
 
 	///Checks if the n-th document has been marked deleted
 	bool isDeleted(const int32_t n);
@@ -378,8 +378,8 @@ public:
 	void norms(const TCHAR* field, uint8_t* bytes);
 	
 	///concatenating segment with ext and x
-	char* SegmentName(const char* ext, const int32_t x=-1);
-    ///Creates a filename in buffer by concatenating segment with ext and x
+  std::string SegmentName(const char* ext, const int32_t x=-1);
+  ///Creates a filename in buffer by concatenating segment with ext and x
 	void SegmentName(char* buffer,int32_t bufferLen,const char* ext, const int32_t x=-1 );
 
 	/**
@@ -407,7 +407,7 @@ public:
   *  If no such fields existed, the method returns null.
   * @throws IOException
   */
-  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber, const TCHAR* field=NULL);
+  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
 
 private:
 	//Open all norms files for all fields
