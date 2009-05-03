@@ -140,12 +140,23 @@ if [ $t_c_h == 1 ] || [ $t_ifdefs == 1 ] || [ $t_exports == 1 ]; then
     
         #check that all classes are exported
         if [ $t_exports == 1 ]; then
-            XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
-            if [ "$XX" != "" ]; then
-                echo "$H has unexported class: $XX"
-                echo ""
-                FAIL=1
-            fi
+      		if [ "${H:0:1" == "_" ]; then
+      			#internal headers... none must be exported
+	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
+	          if [ "$XX" == "" ]; then
+	              echo "$H has exported class: $XX"
+	              echo ""
+	              FAIL=1
+	          fi
+          else
+          	#external headers... all must be exported
+	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
+	          if [ "$XX" != "" ]; then
+	              echo "$H has unexported class: $XX"
+	              echo ""
+	              FAIL=1
+	          fi
+          fi
         fi
         
         #test that each header compiles independently...

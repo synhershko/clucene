@@ -224,7 +224,7 @@ bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSel
 		/*
 		if ((bits & FieldsWriter::FIELD_IS_BINARY) != 0) {
 			int32_t fieldLen = fieldsStream->readVInt();
-            FieldsReader::FieldsStreamHolder* subStream = new FieldsReader::FieldsStreamHolder(fieldsStream, fieldLen);
+            FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, fieldLen);
 			uint8_t bits = Field::STORE_YES;
 			Field* f = _CLNEW Field(
 				fi->name,     // name
@@ -268,7 +268,7 @@ bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSel
 			if ( (bits & FieldsWriter::FIELD_IS_COMPRESSED) != 0 ) {
 				bits |= Field::STORE_COMPRESS;
 				int32_t fieldLen = fieldsStream->readVInt();
-                FieldsStreamHolder* subStream = new FieldsStreamHolder(fieldsStream, fieldLen);
+                FieldsStreamHolder* subStream = _CLNEW FieldsStreamHolder(fieldsStream, fieldLen);
 
                 //todo: we dont have gzip inputstream available, must alert user
                 //to somehow use a gzip inputstream
@@ -414,7 +414,7 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 			bits |= Field::STORE_COMPRESS;
 			const int32_t toRead = fieldsStream->readVInt();
 
-			FieldsStreamHolder* subStream = new FieldsStreamHolder(fieldsStream, toRead);
+			FieldsStreamHolder* subStream = _CLNEW FieldsStreamHolder(fieldsStream, toRead);
 
 			//todo: we dont have gzip inputstream available, must alert user
 			//to somehow use a gzip inputstream

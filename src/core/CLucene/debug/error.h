@@ -29,6 +29,8 @@
 #define CL_ERR_AlreadyClosed 18
 #define CL_ERR_StaleReader 19
 #define CL_ERR_LockObtainFailed 20
+#define CL_ERR_Merge //< Exception thrown if there are any problems while executing a merge.
+#define CL_ERR_MergeAborted
 
 ////////////////////////////////////////////////////////
 //error try/throw/catch definitions

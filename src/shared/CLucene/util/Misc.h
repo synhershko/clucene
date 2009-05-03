@@ -51,7 +51,6 @@ CL_NS_DEF(util)
 	static TCHAR* stringTrim(TCHAR* s);
 	static TCHAR* wordTrim(TCHAR* s);
 	
-	static char* longToBase( int64_t value, int32_t base );
 	static size_t longToBase( int64_t value, int32_t base, char* to ); //< length of to should be at least ((sizeof(unsigned long) << 3) + 1). returns actual length used
 	static int64_t base36ToLong( const char* value );	
 

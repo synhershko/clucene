@@ -39,6 +39,17 @@ int main(int argc, char *argv[])
 		_crtBreakAlloc=-1;
 	#endif
 	#endif
+
+	#ifdef DMALLOC
+		if ( getenv("DMALLOC_OPTIONS") == NULL ){
+			dmalloc_debug_setup("low,log=dmalloc.log.txt");
+		}else{
+			//apparently cygwin has to have this code....
+			dmalloc_debug_setup(getenv("DMALLOC_OPTIONS"));
+		}
+	#endif
+
+
 	int ret_result = 0;
 	int i=0;
 	int exclude = 0;
@@ -203,8 +214,7 @@ exit_point:
 	_CLDELETE_CaARRAY(cl_tempDir)
 
 	_lucene_shutdown(); //clears all static memory
-    //print lucenebase debug
-   
+
 	if ( ret_result != 0 )
 		return ret_result;
 	else

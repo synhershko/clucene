@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 
 #include "CLucene/_ApiHeader.h"
-#include "DefaultSkipListReader.h"
+#include "_DefaultSkipListReader.h"
 
 CL_NS_DEF(index)
 

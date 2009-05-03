@@ -14,7 +14,7 @@ CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,IndexOutput)
 CL_CLASS_DEF(store,IndexInput)
 CL_CLASS_DEF(index,FieldInfo)
-CL_CLASS_DEF(store,RAMIndexOutput)
+CL_CLASS_DEF(store,RAMOutputStream)
 CL_CLASS_DEF(document,Document)
 CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(index,FieldInfos)
@@ -43,7 +43,7 @@ public:
 	// and adds a new entry for this document into the index
 	// stream.  This assumes the buffer was already written
 	// in the correct fields format.
-	void flushDocument(int32_t numStoredFields, CL_NS(store)::RAMIndexOutput* buffer);
+	void flushDocument(int32_t numStoredFields, CL_NS(store)::RAMOutputStream* buffer);
 
 	void flush();
 

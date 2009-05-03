@@ -50,6 +50,9 @@ OPTION(ENABLE_MMAP
 OPTION(DISABLE_MULTITHREADING
   "disable multithreading - remove all locking code"
   OFF)
+OPTION(ENABLE_DMALLOC
+  "enable dmalloc memory leak checker"
+  OFF)
 OPTION(ENABLE_ASCII_MODE
   "enable ascii support"
   OFF)
@@ -139,6 +142,7 @@ ADD_SUBDIRECTORY (src/test)
 ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)
 IF ( BUILD_CONTRIBS )
   ADD_SUBDIRECTORY (src/contribs EXCLUDE_FROM_ALL)
+  SET(BUILD_CONTRIBS_LIB 1)
 ENDIF ( BUILD_CONTRIBS )
 IF ( BUILD_CONTRIBS_LIB )
   ADD_SUBDIRECTORY (src/contribs-lib EXCLUDE_FROM_ALL)

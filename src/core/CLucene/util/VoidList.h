@@ -123,6 +123,7 @@ public:
 //(This class is roughly equivalent to Vector, except that it is unsynchronized.)
 #define CLArrayList CLVector 
 #define CLHashSet CLHashList
+#define CLList CLVector
 
 //implementation of the List interface, provides access to the first and last list elements in O(1) 
 //no comparator is required... and so can contain duplicates

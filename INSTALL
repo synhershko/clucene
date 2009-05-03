@@ -140,6 +140,21 @@ valgrind before being passed.
 
 #valgrind --leak-check=full <program>
 
+Memory leak tracking with dmalloc
+---------------------------------
+dmalloc (http://dmalloc.com/) is also a nice tool for finding memory leaks. 
+To enable, set the ENABLE_DMALLOC flag to ON in cmake. You will of course
+have to have the dmalloc lib installed for this to work.
+
+The cl_test file will by default print a low number of errors and leaks into
+the dmalloc.log.txt file (however, this has a tendency to print false positives). 
+You can override this by setting your environment variable DMALLOC_OPTIONS. 
+See http://dmalloc.com/ or dmalloc --usage for more information on how to use dmalloc
+
+For example:
+# DMALLOC_OPTIONS=medium,log=dmalloc.log.txt
+# export DMALLOC_OPTIONS
+
 Performance with gprof
 ----------------------
 Compile with gprof turned on (ENABLE_GPROF in cmake gui or using ccmake).

@@ -22,8 +22,8 @@
 //#include "IndexReader.h"
 #include "_TermInfosReader.h"
 #include "_CompoundFile.h"
-#include "DefaultSkipListReader.h"
 #include "DirectoryIndexReader.h"
+#include "_DefaultSkipListReader.h"
 #include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_DEF(index)

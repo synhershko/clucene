@@ -3,8 +3,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${clucene-shared_SOURCE_DIR}/
 
 #define command line options
 INCLUDE (DefineOptions)
-
-DEFINE_OPTIONS(EXTRA_OPTIONS)
+DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
 
 #see if we can hide all symbols by default...
@@ -67,7 +66,8 @@ SET(clucene_core_Files
 	./CLucene/index/TermInfosWriter.cpp
 	./CLucene/index/Term.cpp
 	./CLucene/index/Terms.cpp
-	./CLucene/index/DocumentWriter.cpp
+	#./CLucene/index/DocumentsWriter.cpp
+	#./CLucene/index/DocumentsWriterThreadState.cpp
 	./CLucene/index/SegmentTermVector.cpp
 	./CLucene/index/TermVectorReader.cpp
 	./CLucene/index/FieldInfos.cpp
@@ -157,7 +157,7 @@ SET_TARGET_PROPERTIES(clucene-core PROPERTIES
 
 #link the clucene-core library against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    TARGET_LINK_LIBRARIES(clucene-core clucene-shared)
+    TARGET_LINK_LIBRARIES(clucene-core clucene-shared ${EXTRA_LIBS})
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 
 

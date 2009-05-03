@@ -196,4 +196,10 @@
 //memory handling macros/functions
 #include "CLucene/debug/mem.h"
 
+#ifdef DMALLOC
+  #include <stdlib.h>
+  #include <string.h>
+	#include <dmalloc.h>
+#endif
+
 #endif //lucene_sharedheader_h

@@ -1,7 +1,7 @@
 PROJECT(clucene-contribs-lib-test)
 
 INCLUDE (DefineOptions)
-DEFINE_OPTIONS(EXTRA_OPTIONS)
+DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS})
 
 INCLUDE_DIRECTORIES( ${clucene-contribs-lib-test_SOURCE_DIR} )
@@ -29,5 +29,5 @@ ADD_EXECUTABLE(cl_contribs-lib-test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${t
 
 #link the executable against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
-    TARGET_LINK_LIBRARIES(cl_contribs-lib-test clucene-core clucene-shared clucene-contribs-lib)
+    TARGET_LINK_LIBRARIES(cl_contribs-lib-test clucene-core clucene-shared clucene-contribs-lib ${EXTRA_LIBS})
 ENDIF ( NOT USE_SHARED_OBJECT_FILES )

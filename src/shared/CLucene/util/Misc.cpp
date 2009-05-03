@@ -351,15 +351,6 @@ TCHAR* Misc::wordTrim(TCHAR* text) {
 	return text;
 }
 
-char* Misc::longToBase( int64_t value, int32_t base ) {
-  char buf[(sizeof(unsigned long) << 3) + 1];
-  size_t len = longToBase(value,base,buf);
-
-  char* retval = (char*)malloc( len + 1 );
-  memcpy( retval, buf, len+1 );
-  
-  return retval;
-}
 size_t Misc::longToBase( int64_t value, int32_t base, char* retval ) {
     static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     char buf[(sizeof(unsigned long) << 3) + 1];

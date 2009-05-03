@@ -39,7 +39,7 @@ SegmentMerger::SegmentMerger(IndexWriter* writer, const char* name){
     queue            = NULL;
     fieldInfos       = NULL;
 	useCompoundFile  = writer->getUseCompoundFile();
-    skipBuffer       = _CLNEW CL_NS(store)::RAMIndexOutput();
+    skipBuffer       = _CLNEW CL_NS(store)::RAMOutputStream();
 
     segment          = STRDUP_AtoA(name);
     directory		   = writer->getDirectory();

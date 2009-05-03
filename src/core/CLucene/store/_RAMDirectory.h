@@ -68,7 +68,7 @@ CL_NS_DEF(store)
 	};
 
 
-	class RAMIndexOutput: public IndexOutput {		
+	class RAMOutputStream: public IndexOutput {		
 	protected:
 		RAMFile* file;
 		bool deleteFile;
@@ -86,10 +86,10 @@ CL_NS_DEF(store)
 	public:
 		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=1024);
 		
-		RAMIndexOutput(RAMFile* f);
-		RAMIndexOutput();
+		RAMOutputStream(RAMFile* f);
+		RAMOutputStream();
   	    /** Construct an empty output buffer. */
-		virtual ~RAMIndexOutput();
+		virtual ~RAMOutputStream();
 
 		virtual void close();
 
@@ -108,12 +108,13 @@ CL_NS_DEF(store)
     	
     	int64_t getFilePointer() const;
     	
-		const char* getObjectName(){ return getClassName(); }
-		static const char* getClassName(){ return "RAMIndexOutput"; }    	
-    	
+		const char* getObjectName();
+		static const char* getClassName();   	
+   	
 	};
+	typedef RAMOutputStream RAMIndexOutput; //deprecated
 
-  class RAMIndexInput:public IndexInput{				
+	class RAMInputStream:public IndexInput {				
 	private:
 		RAMFile* file;
 		int64_t _length;
@@ -129,13 +130,13 @@ CL_NS_DEF(store)
 		
 	protected:
 		/** IndexInput methods */
-		RAMIndexInput(const RAMIndexInput& clone);
+		RAMInputStream(const RAMInputStream& clone);
 		
 	public:
-		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMIndexOutput::BUFFER_SIZE);
+		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMOutputStream::BUFFER_SIZE);
 
-		RAMIndexInput(RAMFile* f);
-		~RAMIndexInput();
+		RAMInputStream(RAMFile* f);
+		~RAMInputStream();
 		IndexInput* clone() const;
 
 		void close();
@@ -147,11 +148,11 @@ CL_NS_DEF(store)
 		inline int64_t getFilePointer() const;
 		
 		void seek(const int64_t pos);
-		
 		const char* getDirectoryType() const;
 		const char* getObjectName() const;
 		static const char* getClassName();
 	};
+	typedef RAMInputStream RAMIndexInput; //deprecated
 
 CL_NS_END
 #endif
