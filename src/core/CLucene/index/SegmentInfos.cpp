@@ -6,7 +6,6 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 
-#include "CLucene/util/_StringIntern.h"
 #include "_SegmentInfos.h"
 #include "_IndexFileNames.h"
 #include "_SegmentHeader.h"
@@ -23,81 +22,36 @@ CL_NS_USE(util)
 
 CL_NS_DEF(index)
 
-//Func - Constructor. Initialises SegmentInfo.
-//Pre  - Name holds the unique name in the directory Dir
-//       DocCount holds the number of documents in the segment
-//       Dir holds the Directory where the segment resides
-//Post - The instance has been created. name contains the duplicated string Name.
-//       docCount = DocCount and dir references Dir
-SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir) :
-			docCount(_docCount),
-			preLockless(true),
-			delGen(SegmentInfo::NO),
-			isCompoundFile(SegmentInfo::CHECK_DIR),
-			hasSingleNormFile(false),
-			_sizeInBytes(-1),
-			docStoreOffset(-1),
-			docStoreIsCompoundFile(false)
-{
-	this->name = const_cast<char*>(CLStringIntern::internA( _name , 2));
-	this->docStoreSegment = this->name; // save on intern lookup
-	this->dir = _dir;
-}
-
 SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir,
-			bool _isCompoundFile, bool _hasSingleNormFile,
-			int32_t _docStoreOffset, const char* _docStoreSegment, bool _docStoreIsCompoundFile)
-			:
-			docCount(_docCount),
-			preLockless(false),
-			delGen(SegmentInfo::NO),
-			isCompoundFile(_isCompoundFile ? SegmentInfo::YES : SegmentInfo::NO),
-			hasSingleNormFile(_hasSingleNormFile),
-			_sizeInBytes(-1),
-			docStoreOffset(_docStoreOffset),
-			docStoreSegment( _docStoreSegment ),
-			docStoreIsCompoundFile(_docStoreIsCompoundFile)
-{
-	CND_PRECONDITION(docStoreOffset == -1 || docStoreSegment != NULL, "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
-
-	this->name = const_cast<char*>(CLStringIntern::internA( _name ));
-	this->dir = _dir;
-}
-
-   void SegmentInfo::reset(const SegmentInfo* src) {
-	   clearFiles();
-	   this->name = src->name;
-	   docCount = src->docCount;
-	   dir = src->dir;
-	   preLockless = src->preLockless;
-	   delGen = src->delGen;
-	   docStoreOffset = src->docStoreOffset;
-	   docStoreIsCompoundFile = src->docStoreIsCompoundFile;
-	   if (src->normGen.values == NULL) {
-       this->normGen.deleteValues();
-     }else{
-		   // optimized case to allocate new array only if current memory buffer is too small
-       if (this->normGen.length < src->normGen.length) {
-			   _CLDELETE_LARRAY(normGen.values);
-         normGen.values = _CL_NEWARRAY(int64_t, src->normGen.length);
-       }
-       this->normGen.length = src->normGen.length;
-       memcpy(this->normGen.values, src->normGen.values, this->normGen.length);
-	   }
-	   isCompoundFile = src->isCompoundFile;
-	   hasSingleNormFile = src->hasSingleNormFile;
-   }
+			  bool _isCompoundFile, 
+        bool _hasSingleNormFile,
+			  int32_t _docStoreOffset, 
+        const char* _docStoreSegment, 
+        bool _docStoreIsCompoundFile):
+		docCount(_docCount),
+		isCompoundFile(_isCompoundFile ? SegmentInfo::YES : SegmentInfo::NO),
+		hasSingleNormFile(_hasSingleNormFile),
+		docStoreOffset (_docStoreOffset),
+    docStoreSegment( _docStoreSegment == NULL ? "" : _docStoreSegment ),
+		docStoreIsCompoundFile(_docStoreIsCompoundFile)
+  {
+	  CND_PRECONDITION(docStoreOffset == -1 || docStoreSegment != NULL, "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
+		preLockless = false;
+		delGen = SegmentInfo::NO;
+		_sizeInBytes = -1;
+	  this->name = _name;
+	  this->dir = _dir;
+  }
 
    SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input): 
-     _sizeInBytes(-1), 
-     docStoreSegment(NULL)
+     _sizeInBytes(-1)
    {
 	   this->dir = _dir;
 
 	   {	
-		   char aname[CL_MAX_PATH]; // don't ref-count aname since it will be handled by CLStringIntern
+		   char aname[CL_MAX_PATH];
        input->readString(aname, CL_MAX_PATH);
-		   name = aname;
+		   this->name = aname;
 	   }
 
 	   docCount = input->readInt();
@@ -145,10 +99,33 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 		   hasSingleNormFile = false;
 		   docStoreOffset = -1;
 		   docStoreIsCompoundFile = false;
-		   //docStoreSegment = NULL;
 	   }
    }
-     
+
+   void SegmentInfo::reset(const SegmentInfo* src) {
+	   clearFiles();
+	   this->name = src->name;
+	   docCount = src->docCount;
+	   dir = src->dir;
+	   preLockless = src->preLockless;
+	   delGen = src->delGen;
+	   docStoreOffset = src->docStoreOffset;
+	   docStoreIsCompoundFile = src->docStoreIsCompoundFile;
+	   if (src->normGen.values == NULL) {
+       this->normGen.deleteValues();
+     }else{
+		   // optimized case to allocate new array only if current memory buffer is too small
+       if (this->normGen.length < src->normGen.length) {
+			   _CLDELETE_LARRAY(normGen.values);
+         normGen.values = _CL_NEWARRAY(int64_t, src->normGen.length);
+       }
+       this->normGen.length = src->normGen.length;
+       memcpy(this->normGen.values, src->normGen.values, this->normGen.length);
+	   }
+	   isCompoundFile = src->isCompoundFile;
+	   hasSingleNormFile = src->hasSingleNormFile;
+   }
+
    SegmentInfo::~SegmentInfo(){
      normGen.deleteValues();
    }
@@ -208,7 +185,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
     if (useCompoundFile) {
       _files.push_back( string(name) + "." + IndexFileNames::COMPOUND_FILE_EXTENSION);
     } else {
-      ValueArray<const char*>& exts = IndexFileNames::NON_STORE_INDEX_EXTENSIONS;
+      ConstValueArray<const char*>& exts = IndexFileNames::NON_STORE_INDEX_EXTENSIONS;
       for(size_t i=0;i<exts.length;i++){
         addIfExists(_files, name + "." + exts[i]);
       }
@@ -221,14 +198,14 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
       if (docStoreIsCompoundFile) {
         _files.push_back(docStoreSegment + "." + IndexFileNames::COMPOUND_FILE_STORE_EXTENSION);
       } else {
-        ValueArray<const char*>& exts = IndexFileNames::STORE_INDEX_EXTENSIONS;
+        ConstValueArray<const char*>& exts = IndexFileNames::STORE_INDEX_EXTENSIONS;
         for(size_t i=0;i<exts.length;i++)
           addIfExists(_files, docStoreSegment + "." + exts[i]);
       }
     } else if (!useCompoundFile) {
       // We are not sharing, and, these files were not
       // included in the compound file
-      ValueArray<const char*>& exts = IndexFileNames::STORE_INDEX_EXTENSIONS;
+      ConstValueArray<const char*>& exts = IndexFileNames::STORE_INDEX_EXTENSIONS;
       for(size_t i=0;i<exts.length;i++)
         addIfExists(_files, name + "." + exts[i]);
     }
@@ -541,7 +518,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 
 
 
-  std::ostream* SegmentInfos::infoStream = &std::cout;
+  std::ostream* SegmentInfos::infoStream = &std::cout; //todo!!!!!!!!
 
   /** If non-null, information about retries when loading
   * the segments file will be printed to this.
@@ -608,9 +585,10 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 
     vector<string>::iterator itr = files.begin();
 		const char* file;
+    size_t seglen = strlen(IndexFileNames::SEGMENTS);
 	  while ( itr != files.end() ) {
       file = itr->c_str();
-		  if ( strncmp( file, IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS) ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
+		  if ( strncmp( file, IndexFileNames::SEGMENTS, seglen ) == 0 && strcmp( file, IndexFileNames::SEGMENTS_GEN ) != 0 ) {
 			  int64_t gen = generationFromSegmentsFileName( file );
 			  if ( gen > max ) {
 				  max = gen;
@@ -627,10 +605,9 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
 	  vector<string> files;
     directory->list(&files);
     if ( files.empty() ){
-		  TCHAR* strdir = directory->toString();
+		  string strdir = directory->toString();
 		  TCHAR err[CL_MAX_PATH + 65];
-		  _sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir);
-		  _CLDELETE_ARRAY(strdir);
+		  _sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir.c_str());
 		  _CLTHROWT(CL_ERR_IO, err);
 	  }
 	  int64_t gen = getCurrentSegmentGeneration( files );

@@ -23,24 +23,23 @@ CL_NS_DEF(store)
 
 LockFactory::LockFactory()
 {
-	lockPrefix = NULL;
 }
 
 LockFactory::~LockFactory()
 {
-	_CLDELETE_CaARRAY( lockPrefix );
 }
 
-void LockFactory::setLockPrefix( char* lockPrefix )
+void LockFactory::setLockPrefix( const char* lockPrefix )
 {
-    _CLDELETE_CaARRAY( this->lockPrefix );
-	if ( lockPrefix != NULL )
-		this->lockPrefix = STRDUP_AtoA(lockPrefix);
+  if ( lockPrefix != NULL )
+    this->lockPrefix = lockPrefix;
+  else
+    this->lockPrefix.clear();
 }
 
-char* LockFactory::getLockPrefix()
+const char* LockFactory::getLockPrefix()
 {
-	return lockPrefix;
+	return lockPrefix.c_str();
 }
 
 SingleInstanceLockFactory::SingleInstanceLockFactory()
@@ -105,43 +104,42 @@ FSLockFactory::FSLockFactory( const char* lockDir )
 
 FSLockFactory::~FSLockFactory()
 {
-	_CLDELETE_CaARRAY( lockDir );
 }
 
 void FSLockFactory::setLockDir( const char* lockDir )
 {
-	this->lockDir = STRDUP_AtoA( lockDir );
+	this->lockDir = lockDir;
 }
 
 LuceneLock* FSLockFactory::makeLock( const char* lockName )
 {
 	char name[CL_MAX_DIR];
 
-	if ( lockPrefix != NULL ) {
-		cl_sprintf(name, CL_MAX_DIR, "%s-%s", lockPrefix, lockName);
+	if ( !lockPrefix.empty() ) {
+		cl_sprintf(name, CL_MAX_DIR, "%s-%s", lockPrefix.c_str(), lockName);
 	} else {
 		cl_strcpy(name,lockName,CL_MAX_DIR);
 	}
 
-	return _CLNEW FSLock( lockDir, name );
+	return _CLNEW FSLock( lockDir.c_str(), name );
 }
 
 void FSLockFactory::clearLock( const char* lockName )
 {
-	if ( Misc::dir_Exists( lockDir )) {
+	if ( Misc::dir_Exists( lockDir.c_str() )) {
 		char name[CL_MAX_DIR];
 		char path[CL_MAX_DIR];
 		struct cl_stat_t buf;
 
-		if ( lockPrefix != NULL ) {
-			STRCPY_AtoA(name,lockPrefix,strlen(lockPrefix)+1);
+		if ( !lockPrefix.empty() ) {
+			STRCPY_AtoA(name,lockPrefix.c_str(),lockPrefix.length()+1);
 			strcat(name,"-");
 			strcat(name,lockName);
 		} else {
 			strcpy(name,lockName);
 		}
 
-		_snprintf(path,CL_MAX_DIR,"%s/%s",lockDir,name);
+		_snprintf(path,CL_MAX_DIR,"%s/%s",lockDir.c_str(),name);
 
 		int32_t ret = fileStat(path,&buf);
 		if ( ret==0 && !(buf.st_mode & S_IFDIR) && _unlink( path ) == -1 ) {

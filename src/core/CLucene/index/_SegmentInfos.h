@@ -80,11 +80,12 @@ CL_NS_DEF(index)
     void addIfExists(std::vector<std::string>& files, const std::string& fileName);
 
 	public:
-		SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir);
-
 		SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir,
-			bool _isCompoundFile, bool _hasSingleNormFile,
-			int32_t _docStoreOffset = -1, const char* _docStoreSegment = NULL, bool _docStoreIsCompoundFile = false);
+			bool _isCompoundFile=SegmentInfo::CHECK_DIR, 
+      bool _hasSingleNormFile=false,
+			int32_t _docStoreOffset = -1, 
+      const char* _docStoreSegment = NULL, 
+      bool _docStoreIsCompoundFile = false);
 
 		/**
 		* Construct a new SegmentInfo instance by reading a

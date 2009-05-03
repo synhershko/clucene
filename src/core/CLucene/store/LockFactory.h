@@ -17,20 +17,17 @@ class LocksType;
 
 class CLUCENE_EXPORT LockFactory: LUCENE_BASE {
 protected:
-	
-	char* lockPrefix;
-	
+  std::string lockPrefix;
 public:
 	
 	LockFactory();
 	virtual ~LockFactory();
 	
-	void setLockPrefix( char* lockPrefix );
-	char* getLockPrefix();
+	void setLockPrefix( const char* lockPrefix );
+	const char* getLockPrefix();
 	
 	virtual LuceneLock* makeLock( const char* lockName )=0;
 	virtual void clearLock( const char* lockName )=0;
-	
 };
 
 class CLUCENE_EXPORT SingleInstanceLockFactory: public LockFactory {
@@ -61,7 +58,7 @@ public:
 
 class CLUCENE_EXPORT FSLockFactory: public LockFactory {
 private:
-	const char* lockDir;
+  std::string lockDir;
 	
 public:
 	FSLockFactory( const char* lockDir=NULL );

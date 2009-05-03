@@ -72,6 +72,8 @@ CL_NS_DEF(store)
 	   this->locks_LOCK = locks_LOCK;
 	   this->lockName = lockName;
    }
+   SingleInstanceLock::~SingleInstanceLock(){
+   }
   const char* SingleInstanceLock::getClassName(){
     return "SingleInstanceLock";
   }

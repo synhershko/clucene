@@ -88,21 +88,21 @@ MultiReader::~MultiReader() {
   subReaders->deleteValues();
 }
 
-/*
+
 IndexReader* MultiReader::reopen() {
   ensureOpen();
 
   bool reopened = false;
-  IndexReader[] newSubReaders = new IndexReader[subReaders->length];
-  bool[] newDecrefOnClose = new bool[subReaders->length];
+  ObjectArray<IndexReader>* newSubReaders = _CLNEW ObjectArray<IndexReader>(subReaders->length);
+  bool* newDecrefOnClose = _CL_NEWARRAY(bool,subReaders->length);
 
   bool success = false;
   try {
     for (int32_t i = 0; i < subReaders->length; i++) {
-      newSubReaders[i] = (*subReaders)[i].reopen();
+      newSubReaders->values[i] = (*subReaders)[i]->reopen();
       // if at least one of the subreaders was updated we remember that
       // and return a new MultiReader
-      if (newSubReaders[i] != (*subReaders)[i]) {
+      if ((*newSubReaders)[i] != (*subReaders)[i]) {
         reopened = true;
         // this is a new subreader instance, so on close() we don't
         // decRef but close it
@@ -113,39 +113,40 @@ IndexReader* MultiReader::reopen() {
 
     if (reopened) {
       for (int32_t i = 0; i < subReaders->length; i++) {
-        if (newSubReaders[i] == (*subReaders)[i]) {
-          newSubReaders[i].incRef();
+        if ((*newSubReaders)[i] == (*subReaders)[i]) {
+          (*newSubReaders)[i]->incRef();
           newDecrefOnClose[i] = true;
         }
       }
 
-      MultiReader mr = new MultiReader(newSubReaders);
-      mr._internal->decrefOnClose = newDecrefOnClose;
+      MultiReader* mr = _CLNEW MultiReader(newSubReaders);
+      mr->_internal->decrefOnClose = newDecrefOnClose;
       success = true;
       return mr;
     } else {
       success = true;
       return this;
     }
-  } finally {
+  } _CLFINALLY (
     if (!success && reopened) {
-      for (int32_t i = 0; i < newSubReaders.length; i++) {
-        if (newSubReaders[i] != null) {
+      for (int32_t i = 0; i < newSubReaders->length; i++) {
+        if ((*newSubReaders)[i] != NULL) {
           try {
             if (newDecrefOnClose[i]) {
-              newSubReaders[i].decRef();
+              (*newSubReaders)[i]->decRef();
             } else {
-              newSubReaders[i].close();
+              (*newSubReaders)[i]->close();
             }
-          } catch (IOException ignore) {
+          } catch (CLuceneError& ignore) {
+            if ( ignore.number() != CL_ERR_IO ) throw ignore;
             // keep going - we want to clean up as much as possible
           }
         }
       }
     }
-  }
+  )
 }
-*/
+
 ObjectArray<TermFreqVector>* MultiReader::getTermFreqVectors(int32_t n){
     ensureOpen();
 	int32_t i = readerIndex(n);        // find segment num
@@ -192,9 +193,9 @@ int32_t MultiReader::maxDoc() const {
 	return _internal->_maxDoc;
 }
 
-bool MultiReader::document(int32_t n, CL_NS(document)::Document& doc, FieldSelector* fieldSelector){
+bool MultiReader::document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector){
 	ensureOpen();
-    int32_t i = readerIndex(n);			  // find segment num
+  int32_t i = readerIndex(n);			  // find segment num
 	return (*subReaders)[i]->document(n - starts[i],doc, fieldSelector);	  // dispatch to segment reader
 }
 

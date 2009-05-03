@@ -93,14 +93,14 @@ protected:
   /**
   * @throws AlreadyClosedException if this IndexReader is closed
   */
-  void ensureOpen();
+  virtual void ensureOpen();
 
   /**
    * Increments the refCount of this IndexReader instance. RefCounts are used to determine
    * when a reader can be closed safely, i. e. as soon as no other IndexReader is referencing
    * it anymore.
    */
-  void incRef();
+  virtual void incRef();
 
   /**
    * Decreases the refCount of this IndexReader instance. If the refCount drops
@@ -108,7 +108,7 @@ protected:
    *
    * @throws IOException in case an IOException occurs in commit() or doClose()
    */
-  void decRef();
+  virtual void decRef();
 
   /** Does nothing by default. Subclasses that require a write lock for
    *  index modifications must implement this method. */
@@ -207,7 +207,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  IndexReader* reopen();
+  virtual IndexReader* reopen();
 
   /**
    * Returns the directory associated with this index.  The Default
@@ -216,7 +216,7 @@ public:
    * UnsupportedOperationException if one was not specified.
    * @throws UnsupportedOperationException if no directory
    */
-  CL_NS(store)::Directory* directory();
+  virtual CL_NS(store)::Directory* directory();
 
 	DEFINE_MUTEX(THIS_LOCK)
 
@@ -224,7 +224,7 @@ public:
    *
    * @throws IOException
    */
-  void flush();
+  virtual void flush();
 
   /**
    * Commit changes resulting from delete, undeleteAll, or
@@ -248,7 +248,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-	void undeleteAll();
+	virtual void undeleteAll();
 
 	/**
 	* Get a list of unique field names that exist in this index and have the specified

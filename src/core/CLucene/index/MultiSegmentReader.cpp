@@ -97,7 +97,7 @@ MultiSegmentReader::MultiSegmentReader(
   // MultiSegmentReader - we have to incRef those readers
   ValueArray<bool>* readerShared = _CLNEW ValueArray<bool>(infos->size());
   
-  for (size_t i = infos->size() - 1; i>=0; i--) {
+  for (int32_t i = infos->size() - 1; i>=0; i--) {
     // find SegmentReader for this segment
     map<string,size_t>::iterator oldReaderIndex = segmentReaders.find(infos->info(i)->name);
     if ( oldReaderIndex == segmentReaders.end()) {

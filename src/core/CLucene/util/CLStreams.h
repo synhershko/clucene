@@ -103,7 +103,7 @@ public:
 template <class T> 
 class CLUCENE_EXPORT BufferedStream{
 public:
-		~BufferedStream(){}
+		virtual ~BufferedStream(){}
     /**
      * @brief Repositions this stream to a given position.
      *

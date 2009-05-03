@@ -38,8 +38,7 @@ CL_CLASS_DEF(util,StringBuffer)
 	protected:
 		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
 	private:
-		char* directory;
-		char* lockDir;
+    std::string directory;
 		int refCount;
 		void create();
 		
@@ -128,7 +127,7 @@ CL_CLASS_DEF(util,StringBuffer)
 	  */
 	  bool getUseMMap() const;
 
-	  TCHAR* toString() const;
+	  std::string toString() const;
 
 		static const char* getClassName();
 		const char* getObjectName() const;

@@ -34,12 +34,12 @@ public:
 	LUCENE_STATIC_CONSTANT(int32_t,VECTOR_EXTENSIONS_LENGTH=3);
 	LUCENE_STATIC_CONSTANT(int32_t,STORE_INDEX_EXTENSIONS_LENGTH=5);
 	
-	static CL_NS(util)::ValueArray<const char*> INDEX_EXTENSIONS;
-	static CL_NS(util)::ValueArray<const char*> INDEX_EXTENSIONS_IN_COMPOUND_FILE;
-	static CL_NS(util)::ValueArray<const char*> STORE_INDEX_EXTENSIONS;
-	static CL_NS(util)::ValueArray<const char*> NON_STORE_INDEX_EXTENSIONS;
-	static CL_NS(util)::ValueArray<const char*> COMPOUND_EXTENSIONS;
-	static CL_NS(util)::ValueArray<const char*> VECTOR_EXTENSIONS;
+	static CL_NS(util)::ConstValueArray<const char*> INDEX_EXTENSIONS;
+	static CL_NS(util)::ConstValueArray<const char*> INDEX_EXTENSIONS_IN_COMPOUND_FILE;
+	static CL_NS(util)::ConstValueArray<const char*> STORE_INDEX_EXTENSIONS;
+	static CL_NS(util)::ConstValueArray<const char*> NON_STORE_INDEX_EXTENSIONS;
+	static CL_NS(util)::ConstValueArray<const char*> COMPOUND_EXTENSIONS;
+	static CL_NS(util)::ConstValueArray<const char*> VECTOR_EXTENSIONS;
 	
   static std::string fileNameFromGeneration( const char* base, const char* extension, int64_t gen );
 	static bool isDocStoreFile( const char* fileName );

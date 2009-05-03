@@ -75,7 +75,7 @@ public:
      * @throws UnsupportedOperationException */
 	CL_NS(store)::LuceneLock* makeLock(const char* name);
 
-	TCHAR* toString() const;
+	std::string toString() const;
 	
 	static const char* getClassName();
 	const char* getObjectName() const;

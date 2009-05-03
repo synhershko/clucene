@@ -38,8 +38,8 @@ CL_NS_DEF(index)
 		SegmentTermEnum* indexEnum;
 		int64_t _size;
 
-		Term* indexTerms;
-        int32_t indexTermsLength;
+		Term* indexTerms; //note: this is a list of objects, not arrays!
+    int32_t indexTermsLength;
 		TermInfo* indexInfos;
 		int64_t* indexPointers;
 

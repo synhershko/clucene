@@ -429,17 +429,17 @@ public:
     int32_t mergedDocCount = merger.merge();
 
 #ifdef _CL_DEBUG_INFO
-	 fprintf(_CL_DEBUG_INFO,"\n into %s (%d docs)\n",mergedName, mergedDocCount);
+	  fprintf(_CL_DEBUG_INFO,"\n into %s (%d docs)\n",mergedName, mergedDocCount);
 #endif
 
-	segmentInfos->clearto(minSegment, end);// remove old infos & add new
+	  segmentInfos->clearto(minSegment, end);// remove old infos & add new
     segmentInfos->add( _CLNEW SegmentInfo(mergedName, mergedDocCount, directory) );
 
     // close readers before we attempt to delete now-obsolete segments
     merger.closeReaders();
 
-	LuceneLock* lock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-	LockWith2 with ( lock, commitLockTimeout,this, &segmentsToDelete, true );
+	  LuceneLock* lock = directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
+	  LockWith2 with ( lock, commitLockTimeout,this, &segmentsToDelete, true );
 
     {
     	SCOPED_LOCK_MUTEX(directory->THIS_LOCK) // in- & inter-process sync
@@ -692,7 +692,7 @@ public:
 	  if (create){
 		  writer->segmentInfos->write(writer->getDirectory());
 		  if ( segmentsToDelete != NULL )
-			writer->deleteSegments(segmentsToDelete);  // delete now-unused segments
+			  writer->deleteSegments(segmentsToDelete);  // delete now-unused segments
 	  }else
 		  writer->segmentInfos->read(writer->getDirectory());
   }

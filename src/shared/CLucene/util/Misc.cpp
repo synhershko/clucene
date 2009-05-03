@@ -254,7 +254,11 @@ string Misc::segmentname( const char* segment, const char* ext, const int32_t x 
 
   string ret = segment;
   ret += ext;
-  if ( x!=-1 ) ret += x;
+  if ( x!=-1 ){
+    char buf[10];
+    itoa(x,buf,10);
+    ret += buf;
+  }
 
   return ret;
 }
@@ -356,20 +360,23 @@ char* Misc::longToBase( int64_t value, int32_t base ) {
   
   return retval;
 }
-size_t Misc::longToBase( int64_t value, int32_t base, char* buf ) {
-  static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-  char *ptr, *end;
-assert(false); //test me!
-  ptr = end = buf + sizeof(buf) - 1;
+size_t Misc::longToBase( int64_t value, int32_t base, char* retval ) {
+    static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    char buf[(sizeof(unsigned long) << 3) + 1];
+    char *ptr, *end;
 
-  *ptr = '\0';
-  do {
-          *--ptr = digits[ value % base ];
-          value /= base;
-  } while ( ptr > buf && value );
+    ptr = end = buf + sizeof(buf) - 1;
 
-  buf[end-ptr] = 0;
-  return end - ptr;
+    *ptr = '\0';
+    do {
+            *--ptr = digits[ value % base ];
+            value /= base;
+    } while ( ptr > buf && value );
+
+    memcpy( retval, ptr, end - ptr );
+    retval[end-ptr] = 0;
+    
+    return end-ptr;
 }
 
 int64_t Misc::base36ToLong( const char* value ) {

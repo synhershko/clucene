@@ -205,13 +205,8 @@ void IndexModifier::close() {
 	open = false;
 }
 
-TCHAR* IndexModifier::toString() const{
-	TCHAR* dir = directory->toString();
-	TCHAR* ret = _CL_NEWARRAY(TCHAR,_tcslen(dir)+7); //strlen("Index@")
-	_tcscpy(ret,_T("Index@"));
-	_tcscat(ret,dir);
-	_CLDELETE_CARRAY(dir);
-	return ret;
+string IndexModifier::toString() const{
+	return string("Index@") + directory->toString();
 }
 
 

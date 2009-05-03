@@ -24,19 +24,14 @@ LuceneLock* Directory::makeLock(const char* name) {
 
 void Directory::setLockFactory( LockFactory* lockFactory ) {
 	this->lockFactory = lockFactory;
-	
-	TCHAR* lockId = getLockID();
-	char* alockId = STRDUP_TtoA(lockId);
-	lockFactory->setLockPrefix( alockId );
-	_CLDELETE_CARRAY(lockId);
-	_CLDELETE_CaARRAY(alockId);
+	lockFactory->setLockPrefix( getLockID().c_str() );
 }
 
 LockFactory* Directory::getLockFactory() {
 	return lockFactory;
 }
 
-TCHAR* Directory::getLockID() {
+string Directory::getLockID() {
 	return toString();
 }
 

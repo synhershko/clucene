@@ -22,7 +22,7 @@ CL_NS_DEF(index)
 
 
   void DirectoryIndexReader::doClose() {
-    if(closeDirectory){
+    if(closeDirectory && _directory){
       _directory->close();
       _CLDECDELETE(_directory);
     }
@@ -108,12 +108,15 @@ CL_NS_DEF(index)
     this->deletionPolicy = NULL;
     this->writeLock = NULL;
     this->rollbackSegmentInfos = NULL;
-    this->_directory = __directory;
+    this->_directory = _CL_POINTER(__directory);
     this->segmentInfos = segmentInfos;
     this->closeDirectory = closeDirectory;
   }
 
-  DirectoryIndexReader::DirectoryIndexReader(){}
+  DirectoryIndexReader::DirectoryIndexReader():
+    IndexReader()
+  {
+  }
   DirectoryIndexReader::~DirectoryIndexReader(){
     try {
       if (writeLock != NULL) {
@@ -122,6 +125,7 @@ CL_NS_DEF(index)
       }
     }catch(...){
     }
+     _CLDELETE(segmentInfos);
   }
   DirectoryIndexReader::DirectoryIndexReader(Directory* __directory, SegmentInfos* segmentInfos, bool closeDirectory):
     IndexReader()

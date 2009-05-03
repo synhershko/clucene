@@ -91,7 +91,7 @@ CL_NS_DEF(store)
 
 		virtual void close();
 		
-		TCHAR* toString() const;
+    std::string toString() const;
 
 		static const char* getClassName();
 		const char* getObjectName() const;

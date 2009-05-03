@@ -42,7 +42,7 @@ CL_NS_DEF(index)
 
 
 		int32_t firstInt = input->readInt();
-      if (firstInt >= 0) {
+    if (firstInt >= 0) {
          // original-format file, without explicit format version number
          format = 0;
          size = firstInt;
@@ -56,7 +56,7 @@ CL_NS_DEF(index)
          format = firstInt;
 
          // check that it is a format we can understand
-         if (format < TermInfosWriter::FORMAT){
+         if (format < -3){ //TODO: should be TermInfosWriter::FORMAT
             TCHAR err[30];
             _sntprintf(err,30,_T("Unknown format version: %d"), format);
             _CLTHROWT(CL_ERR_CorruptIndex,err);

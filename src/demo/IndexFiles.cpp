@@ -23,9 +23,7 @@ using namespace lucene::util;
 using namespace lucene::store;
 using namespace lucene::document;
 
-Document* FileDocument(const char* f){
-	// make a new, empty document
-	Document* doc = _CLNEW Document();
+void FileDocument(const char* f, Document* doc){
 
 	// Add the path of the file as a field named "path".  Use a Tex t field, so
 	// that the index stores the path, and so that the path is searchable
@@ -61,51 +59,26 @@ Document* FileDocument(const char* f){
 		doc->add( *_CLNEW Field(_T("contents"),str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
 	}
 
-	//_tprintf(_T("%s\n"),doc->toString());
-	// return the document
-	return doc;
 }
 
-void indexDocs(IndexWriter* writer, char* directory) {
-	DIR* dir = opendir(directory);
-	if ( dir != NULL ){
-		struct dirent* fl;
-		
-		char path[CL_MAX_DIR];
-		_snprintf(path,CL_MAX_DIR,"%s/",directory);
-		char* pathP = path + strlen(path);
+void indexDocs(IndexWriter* writer, const char* directory) {
+  vector<string> files;
+  Misc::listFiles(directory,files,true);
+  vector<string>::iterator itr = files.begin();
+	// use a single, empty document
+	Document doc;
+	while ( itr != files.end() ){
+    const char* path = itr->c_str();
+	  printf( "adding: %s\n", path );
 
-		fl = readdir(dir);
-		while ( fl != NULL ){
-			if ( (strcmp(fl->d_name, ".")) && (strcmp(fl->d_name, "..")) ) {
-			pathP[0]=0;
-			strcat(pathP,fl->d_name);
-			
-			struct stat buf;
-			int32_t ret = stat(path,&buf);
-			if ( buf.st_mode & S_IFDIR ) {
-				indexDocs(writer, path );
-			}else{
-				printf( "adding: %s\n", fl->d_name );
-
-				Document* doc = FileDocument( path );
-				writer->addDocument( doc );
-				_CLDELETE(doc);
-			}
-		}
-		fl = readdir(dir);
-
-		}
-		closedir(dir);
-	}else{
-		    printf( "adding: %s\n", directory);
-
-		    Document* doc = FileDocument( directory );
-		    writer->addDocument( doc );
-		    _CLDELETE(doc);
+    doc.clear();
+		FileDocument( path, &doc );
+		writer->addDocument( &doc );
+break;
+    itr++;
 	}
 }
-void IndexFiles(char* path, char* target, const bool clearIndex){
+void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	IndexWriter* writer = NULL;
 	//lucene::analysis::SimpleAnalyzer* an = *_CLNEW lucene::analysis::SimpleAnalyzer();
 	lucene::analysis::standard::StandardAnalyzer an;
@@ -120,7 +93,7 @@ void IndexFiles(char* path, char* target, const bool clearIndex){
 	}else{
 		writer = _CLNEW IndexWriter( target ,&an, true);
 	}
-	writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+	writer->setMaxFieldLength(1000);
 	/*printf("Set MaxFieldLength: ");
 	char mfl[250];
 	fgets(mfl,250,stdin);
@@ -132,7 +105,7 @@ void IndexFiles(char* path, char* target, const bool clearIndex){
 	uint64_t str = Misc::currentTimeMillis();
 
 	indexDocs(writer, path);
-	writer->optimize();
+//	writer->optimize();
 	writer->close();
 	_CLDELETE(writer);
 

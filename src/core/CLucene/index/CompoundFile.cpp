@@ -268,12 +268,8 @@ LuceneLock* CompoundFileReader::makeLock(const char* name){
    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: CompoundFileReader::makeLock");
 }
 
-TCHAR* CompoundFileReader::toString() const{
-	TCHAR* ret = _CL_NEWARRAY(TCHAR,strlen(fileName)+20); //20=strlen("CompoundFileReader@")
-	_tcscpy(ret,_T("CompoundFileReader@"));
-	STRCPY_AtoT(ret+19,fileName,strlen(fileName));
-
-	return ret;
+string CompoundFileReader::toString() const{
+	return string("CompoundFileReader@") + fileName;
 }
 
 CompoundFileWriter::CompoundFileWriter(Directory* dir, const char* name):
