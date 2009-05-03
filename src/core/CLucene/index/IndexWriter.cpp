@@ -54,6 +54,6 @@ CL_NS_DEF(index)
     messageID = -1;
   }
 */
-  ~IndexWriter::IndexWriter(){
+  IndexWriter::~IndexWriter(){
   }
 CL_NS_END
