@@ -229,7 +229,7 @@ public:
 	* {@link Hits#doc(int)} may thus not have the same value present as when
 	* this field was indexed.
 	*
-	* @see #setBoost(float)
+	* @see #setBoost(float_t)
 	*/
 	float_t getBoost() const;
       
@@ -241,13 +241,13 @@ public:
 	* containing this field.  If a document has multiple fields with the same
 	* name, all such values are multiplied together.  This product is then
 	* multipled by the value {@link Similarity#lengthNorm(String,int)}, and
-	* rounded by {@link Similarity#encodeNorm(float)} before it is stored in the
+	* rounded by {@link Similarity#encodeNorm(float_t)} before it is stored in the
 	* index.  One should attempt to ensure that this product does not overflow
 	* the range of that encoding.
 	*
-	* @see Document#setBoost(float)
+	* @see Document#setBoost(float_t)
 	* @see Similarity#lengthNorm(String, int)
-	* @see Similarity#encodeNorm(float)
+	* @see Similarity#encodeNorm(float_t)
 	*/
 	void setBoost(const float_t value);
 

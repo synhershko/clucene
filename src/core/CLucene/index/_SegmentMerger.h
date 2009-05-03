@@ -35,7 +35,7 @@ CL_NS_DEF(index)
 class SegmentMerger:LUCENE_BASE {
 	bool useCompoundFile;
 	
-	CL_NS(store)::RAMIndexOutput* skipBuffer;
+	CL_NS(store)::RAMOutputStream* skipBuffer;
 	int32_t lastSkipDoc;
 	int64_t lastSkipFreqPointer;
 	int64_t lastSkipProxPointer;

@@ -114,13 +114,13 @@ CL_NS_DEF(store)
   }
   
 
-  RAMIndexOutput::~RAMIndexOutput(){
+  RAMOutputStream::~RAMOutputStream(){
 	if ( deleteFile ){
         _CLDELETE(file);
 	}else
      	file = NULL;
   }
-  RAMIndexOutput::RAMIndexOutput(RAMFile* f):
+  RAMOutputStream::RAMOutputStream(RAMFile* f):
 	file(f),
 	deleteFile(false),
 	currentBuffer(NULL),
@@ -131,7 +131,7 @@ CL_NS_DEF(store)
   {
   }
   
-  RAMIndexOutput::RAMIndexOutput():
+  RAMOutputStream::RAMOutputStream():
     file(_CLNEW RAMFile),
     deleteFile(true),
     currentBuffer(NULL),
@@ -142,7 +142,7 @@ CL_NS_DEF(store)
   {
   }
 
-  void RAMIndexOutput::writeTo(IndexOutput* out){
+  void RAMOutputStream::writeTo(IndexOutput* out){
     flush();
     const int64_t end = file->getLength();
     int64_t pos = 0;
@@ -158,17 +158,17 @@ CL_NS_DEF(store)
     }
   }
 
-  void RAMIndexOutput::reset(){
+  void RAMOutputStream::reset(){
 	seek((int64_t)0);
     file->setLength((int64_t)0);
   }
 
-  void RAMIndexOutput::close() {
+  void RAMOutputStream::close() {
     flush();
   }
 
   /** Random-at methods */
-  void RAMIndexOutput::seek( const int64_t pos ) {
+  void RAMOutputStream::seek( const int64_t pos ) {
           // set the file length in case we seek back
           // and flush() has not been called yet
 	  setFileLength();
@@ -180,11 +180,11 @@ CL_NS_DEF(store)
 	  bufferPosition = (int32_t)( pos % BUFFER_SIZE );
   }
   
-  int64_t RAMIndexOutput::length() const {
+  int64_t RAMOutputStream::length() const {
     return file->getLength();
   }
 
-  void RAMIndexOutput::writeByte( const uint8_t b ) {  
+  void RAMOutputStream::writeByte( const uint8_t b ) {  
 	  if ( bufferPosition == bufferLength ) {
 		  currentBufferIndex++;
 		  switchCurrentBuffer();
@@ -192,7 +192,7 @@ CL_NS_DEF(store)
 	  currentBuffer[bufferPosition++] = b;
   }
 
-  void RAMIndexOutput::writeBytes( const uint8_t* b, const int32_t len ) {
+  void RAMOutputStream::writeBytes( const uint8_t* b, const int32_t len ) {
 	  int32_t srcOffset = 0;
 	  
 	  while ( srcOffset != len ) {
@@ -212,7 +212,7 @@ CL_NS_DEF(store)
 	  }	  	  
   }
   
-  void RAMIndexOutput::switchCurrentBuffer() {
+  void RAMOutputStream::switchCurrentBuffer() {
 	  
 	  if ( currentBufferIndex == file->numBuffers() ) {
 		  currentBuffer = file->addBuffer( BUFFER_SIZE );
@@ -228,24 +228,24 @@ CL_NS_DEF(store)
 
 
   
-  void RAMIndexOutput::setFileLength() {
+  void RAMOutputStream::setFileLength() {
 	  int64_t pointer = bufferStart + bufferPosition;
 	  if ( pointer > file->getLength() ) {
 		  file->setLength( pointer );
 	  }
   }
   
-  void RAMIndexOutput::flush() {
+  void RAMOutputStream::flush() {
 	  file->setLastModified( Misc::currentTimeMillis() );
 	  setFileLength();
   }
   
-  int64_t RAMIndexOutput::getFilePointer() const {
+  int64_t RAMOutputStream::getFilePointer() const {
 	  return currentBufferIndex < 0 ? 0 : bufferStart + bufferPosition;
   }
   
   
-  RAMIndexInput::RAMIndexInput(RAMFile* f):
+  RAMInputStream::RAMInputStream(RAMFile* f):
   	file(f), 
   	currentBuffer(NULL), 
   	currentBufferIndex(-1), 
@@ -260,7 +260,7 @@ CL_NS_DEF(store)
     }    
   }
   
-  RAMIndexInput::RAMIndexInput(const RAMIndexInput& other):
+  RAMInputStream::RAMInputStream(const RAMInputStream& other):
     IndexInput(other)
   {
   	file = other.file;
@@ -272,27 +272,27 @@ CL_NS_DEF(store)
     bufferLength = other.bufferLength;
   }
   
-  RAMIndexInput::~RAMIndexInput(){
-      RAMIndexInput::close();
+  RAMInputStream::~RAMInputStream(){
+      RAMInputStream::close();
   }
   
-  IndexInput* RAMIndexInput::clone() const
+  IndexInput* RAMInputStream::clone() const
   {
-    RAMIndexInput* ret = _CLNEW RAMIndexInput(*this);
+    RAMInputStream* ret = _CLNEW RAMInputStream(*this);
     return ret;
   }
   
-  int64_t RAMIndexInput::length() const {
+  int64_t RAMInputStream::length() const {
     return _length;
   }
   
-  const char* RAMIndexInput::getDirectoryType() const{ 
-    return RAMDirectory::getClassName(); 
+  const char* RAMInputStream::getDirectoryType() const{ 
+	  return RAMDirectory::getClassName(); 
   }
 	const char* RAMIndexInput::getObjectName() const{ return getClassName(); }
 	const char* RAMIndexInput::getClassName(){ return "RAMIndexInput"; }
   
-  uint8_t RAMIndexInput::readByte()
+  uint8_t RAMInputStream::readByte()
   {
 	  if ( bufferPosition >= bufferLength ) {
 		  currentBufferIndex++;
@@ -301,7 +301,7 @@ CL_NS_DEF(store)
 	  return currentBuffer[bufferPosition++];
   }
   
-  void RAMIndexInput::readBytes( uint8_t* dest, const int32_t len ) {
+  void RAMInputStream::readBytes( uint8_t* dest, const int32_t len ) {
 	  
 	  int32_t destOffset = 0;
 	  int32_t remainder = len;
@@ -324,11 +324,11 @@ CL_NS_DEF(store)
 	  
   }
   
-  int64_t RAMIndexInput::getFilePointer() const {
+  int64_t RAMInputStream::getFilePointer() const {
 	  return currentBufferIndex < 0 ? 0 : bufferStart + bufferPosition;
   }
   
-  void RAMIndexInput::seek( const int64_t pos ) {
+  void RAMInputStream::seek( const int64_t pos ) {
 	  if ( currentBuffer == NULL || pos < bufferStart || pos >= bufferStart + BUFFER_SIZE ) {
 		  currentBufferIndex = (int32_t)( pos / BUFFER_SIZE );
 		  switchCurrentBuffer();
@@ -336,10 +336,10 @@ CL_NS_DEF(store)
 	  bufferPosition = (int32_t)(pos % BUFFER_SIZE);
   }
   
-  void RAMIndexInput::close() {
+  void RAMInputStream::close() {
   }
   
-  void RAMIndexInput::switchCurrentBuffer() {
+  void RAMInputStream::switchCurrentBuffer() {
 	  if ( currentBufferIndex >= file->numBuffers() ) {
 		  // end of file reached, no more buffers left
 		  _CLTHROWA(CL_ERR_IO, "Read past EOF");
@@ -453,7 +453,7 @@ CL_NS_DEF(store)
 		error.set(CL_ERR_IO, "[RAMDirectory::open] The requested file does not exist.");
 		return false;
     }
-    ret = _CLNEW RAMIndexInput( file );
+    ret = _CLNEW RAMInputStream( file );
 	return true;
   }
 
@@ -534,7 +534,7 @@ CL_NS_DEF(store)
     #endif
     (*files)[n] = file;
 
-    return _CLNEW RAMIndexOutput(file);
+    return _CLNEW RAMOutputStream(file);
   }
 
   std::string RAMDirectory::toString() const{

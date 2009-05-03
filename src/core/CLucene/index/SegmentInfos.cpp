@@ -23,26 +23,52 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir,
-			  bool _isCompoundFile, 
-        bool _hasSingleNormFile,
-			  int32_t _docStoreOffset, 
-        const char* _docStoreSegment, 
-        bool _docStoreIsCompoundFile):
-		docCount(_docCount),
-		isCompoundFile(_isCompoundFile ? SegmentInfo::YES : SegmentInfo::NO),
-		hasSingleNormFile(_hasSingleNormFile),
-		docStoreOffset (_docStoreOffset),
-    docStoreSegment( _docStoreSegment == NULL ? "" : _docStoreSegment ),
-		docStoreIsCompoundFile(_docStoreIsCompoundFile)
-  {
-	  CND_PRECONDITION(docStoreOffset == -1 || docStoreSegment != NULL, "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
-		preLockless = false;
-		delGen = SegmentInfo::NO;
-		_sizeInBytes = -1;
-	  this->name = _name;
-	  this->dir = _dir;
+			bool _isCompoundFile, bool _hasSingleNormFile,
+			int32_t _docStoreOffset, const char* _docStoreSegment, bool _docStoreIsCompoundFile)
+			:
+			docCount(_docCount),
+			preLockless(false),
+			delGen(SegmentInfo::NO),
+			isCompoundFile(_isCompoundFile ? SegmentInfo::YES : SegmentInfo::NO),
+			hasSingleNormFile(_hasSingleNormFile),
+			_sizeInBytes(-1),
+			docStoreOffset(_docStoreOffset),
+      docStoreSegment( _docStoreSegment == NULL ? "" : _docStoreSegment ),
+			docStoreIsCompoundFile(_docStoreIsCompoundFile)
+{
+	CND_PRECONDITION(docStoreOffset == -1 || docStoreSegment != NULL, "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
+
+	this->name = _name;
+	this->dir = _dir;
+}
+
+string SegmentInfo::segString(Directory* dir) {
+  string cfs;
+  try {
+    if (getUseCompoundFile())
+      cfs = "c";
+    else
+      cfs = "C";
+  } catch (CLuceneError& ioe) {
+    if ( ioe.number() != CL_ERR_IO ) throw ioe;
+    cfs = "?";
   }
 
+  string docStore;
+
+  if (docStoreOffset != -1)
+    docStore = string("->") + docStoreSegment;
+  else
+    docStore = "";
+
+  char docCountStr[20];
+  itoa(docCount,docCountStr,10);
+
+  return string(name) + ":" +
+    cfs +
+    string(this->dir == dir ? "" : "x") +
+    docCountStr + docStore;
+}
    SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input): 
      _sizeInBytes(-1)
    {
@@ -559,7 +585,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
       infos.clear();
   }
   
-  SegmentInfo* SegmentInfos::info(int32_t i) {
+  SegmentInfo* SegmentInfos::info(int32_t i) const {
   //Func - Returns a reference to the i-th SegmentInfo in the list.
   //Pre  - i >= 0
   //Post - A reference to the i-th SegmentInfo instance has been returned

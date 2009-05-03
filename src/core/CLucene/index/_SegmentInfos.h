@@ -188,7 +188,10 @@ CL_NS_DEF(index)
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
 
-    friend class SegmentReader;
+	    friend class SegmentReader;
+	   
+	    /** Used for debugging */
+	    std::string segString(CL_NS(store)::Directory* dir);
 	};
 
 	typedef CL_NS(util)::CLVector<SegmentInfo*,CL_NS(util)::Deletor::Object<SegmentInfo> > segmentInfosType;
@@ -292,7 +295,7 @@ CL_NS_DEF(index)
         ~SegmentInfos();
 
 		//Returns a reference to the i-th SegmentInfo in the list.
-		SegmentInfo* info(int32_t i);
+		SegmentInfo* info(int32_t i) const;
 
 		/**
 		* Get the generation (N) of the current segments_N file

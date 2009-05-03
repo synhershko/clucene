@@ -66,11 +66,11 @@ public:
 	* each field in this document.  Thus, this method in effect sets a default
 	* boost for the fields of this document.
 	*
-	* @see Field#setBoost(float)
+	* @see Field#setBoost(float_t)
 	*/
 	void setBoost(const float_t boost);
   
-	/** Returns, at indexing time, the boost factor as set by {@link #setBoost(float)}. 
+	/** Returns, at indexing time, the boost factor as set by {@link #setBoost(float_t)}. 
 	*
 	* <p>Note that once a document is indexed this value is no longer available
 	* from the index.  At search time, for retrieved documents, this method always 
@@ -80,7 +80,7 @@ public:
 	* information see the "norm(t,d)" part of the scoring formula in 
 	* {@link Similarity}.)
 	*
-	* @see #setBoost(float)
+	* @see #setBoost(float_t)
 	*/
 	float_t getBoost() const;
 

@@ -72,7 +72,8 @@ SET(clucene_core_Files
 	./CLucene/index/TermInfosWriter.cpp
 	./CLucene/index/Term.cpp
 	./CLucene/index/Terms.cpp
-	./CLucene/index/DocumentWriter.cpp
+	#./CLucene/index/DocumentsWriter.cpp
+	#./CLucene/index/DocumentsWriterThreadState.cpp
 	./CLucene/index/SegmentTermVector.cpp
 	./CLucene/index/TermVectorReader.cpp
 	./CLucene/index/FieldInfos.cpp

@@ -27,32 +27,30 @@
 
 CL_NS_DEF(util)
 
-StringReader::StringReader ( TCHAR* value, const int32_t length, bool copyData )
+StringReader::StringReader ( const TCHAR* value, const int32_t length, bool copyData )
 {
+	this->init(value,length,copyData);
+}
+
+void StringReader::init ( const TCHAR* value, const int32_t length, bool copyData ){
 	this->m_size = length;
 	this->pos = 0;
 	if ( copyData ){
-		this->value = _CL_NEWARRAY(TCHAR, this->m_size);
-		_tcsncpy(this->value, value, this->m_size);
+		TCHAR* value = _CL_NEWARRAY(TCHAR, this->m_size);
+		_tcsncpy(value, value, this->m_size);
+		this->value = value;
 	}else{
 		this->value = value;
 	}
 	this->ownValue = copyData;
 }
 
-StringReader::StringReader ( const TCHAR* value, const int32_t length ){
-	if ( length >= 0 )
-		this->m_size = length;
-	else
-		this->m_size = _tcslen(value);
-	this->pos = 0;
-	this->value = _CL_NEWARRAY(TCHAR, this->m_size);
-	_tcsncpy(this->value, value, this->m_size);
-	this->ownValue = true;
-}
 StringReader::~StringReader(){
-	if ( ownValue )
-		_CLDELETE_ARRAY(this->value);
+	if ( ownValue && this->value != NULL){
+		TCHAR* value = (TCHAR*) this->value;
+		_CLDELETE_LARRAY(value);
+		this->value = NULL;
+	}
 }
 
 size_t StringReader::size(){
