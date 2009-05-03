@@ -9,7 +9,7 @@
 
 //todo: this is a hack...
 #ifndef CND_PRECONDITION
-	#define CND_PRECONDITION(x,y)
+	#define CND_PRECONDITION(x,y) assert(x)
 #endif
 
 //Macro for creating new objects

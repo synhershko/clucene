@@ -24,7 +24,7 @@ using namespace std;
 using namespace lucene::util;
 
 void DeleteFiles(const char* dir);
-void IndexFiles(char* path, char* target, const bool clearIndex);
+void IndexFiles(const char* path, const char* target, const bool clearIndex);
 void SearchFiles(const char* index);
 void getStats(const char* directory);
 
@@ -32,33 +32,22 @@ int main( int32_t argc, char** argv ){
 	//Dumper Debug
 	#ifdef _MSC_VER
 	#ifdef _DEBUG
-		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );//| _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF );
+		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF );
+		_crtBreakAlloc=-1;
 	#endif
 	#endif
 
 	uint64_t str = Misc::currentTimeMillis();
 	try{
 
-		printf("Location of text files to be indexed: ");
-		char files[250];
-		char* tmp = fgets(files,250,stdin);
-		if ( tmp == NULL ) return 1;
-		files[strlen(files)-1] = 0;
-		
-		printf("Location to store the clucene index: ");
-		char ndx[250];
-		tmp = fgets(ndx,250,stdin);
-		if ( tmp == NULL ) return 1;
-		ndx[strlen(ndx)-1] = 0;
-
-		IndexFiles(files,ndx,true);
-		getStats(ndx);
+		const char* ndx = "d:/git_lucene232/testindex";
+    //IndexFiles("d:\\git_lucene232\\clucene\\src\\test\\data\\reuters-21578", ndx, true);
+		//getStats(ndx);
 		SearchFiles(ndx);
-		DeleteFiles(ndx);
 
 	}catch(CLuceneError& err){
 		printf("Error: %s\n", err.what());
-    }catch(...){
+  }catch(...){
 		printf("Unknown error\n");
 	}
 

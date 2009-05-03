@@ -537,10 +537,8 @@ CL_NS_DEF(store)
     return _CLNEW RAMIndexOutput(file);
   }
 
-  TCHAR* RAMDirectory::toString() const{
-	  TCHAR* ret = _CL_NEWARRAY(TCHAR,13); // 13 = strlen(RAMDirectory);
-	  _tcscpy(ret,_T("RAMDirectory"));
-	  return ret;
+  std::string RAMDirectory::toString() const{
+	  return "RAMDirectory";
   }
 
   const char* RAMDirectory::getClassName(){

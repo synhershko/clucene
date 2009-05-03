@@ -276,7 +276,7 @@ public:
 	*/
 	void close();
 
-	TCHAR* toString() const;	
+  std::string toString() const;	
 	
 	/**
 	* Gets the version number of the currently open index.

@@ -88,13 +88,13 @@ class CLUCENE_EXPORT Directory: LUCENE_REFBASE, public CL_NS(util)::NamedObject 
 		// Closes the store. 
 		virtual void close() = 0;
 		
-		virtual TCHAR* toString() const = 0;
+    virtual std::string toString() const = 0;
 
 		void setLockFactory( LockFactory* lockFactory );
 		
 		LockFactory* getLockFactory();
 		
-		virtual TCHAR* getLockID();
+    virtual std::string getLockID();
 	};
 CL_NS_END
 #endif

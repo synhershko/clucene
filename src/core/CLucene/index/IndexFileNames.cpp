@@ -29,7 +29,7 @@ CL_NS_DEF(index)
 	const char* IndexFileNames::SEPARATE_NORMS_EXTENSION = "s";
 	const char* IndexFileNames::GEN_EXTENSION = "gen";
 
-	const char* IndexFileNames_INDEX_EXTENSIONS_s[] = 
+	const char* IndexFileNames_INDEX_EXTENSIONS_s[] =
 		{
 			IndexFileNames::COMPOUND_FILE_EXTENSION,
 			IndexFileNames::FIELD_INFOS_EXTENSION,
@@ -47,7 +47,7 @@ CL_NS_DEF(index)
 			IndexFileNames::NORMS_EXTENSION,
 			IndexFileNames::COMPOUND_FILE_STORE_EXTENSION
 		};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::INDEX_EXTENSIONS(IndexFileNames_INDEX_EXTENSIONS_s, 15 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::INDEX_EXTENSIONS(IndexFileNames_INDEX_EXTENSIONS_s, 15 );
 
 	const char* IndexFileNames_INDEX_EXTENSIONS_IN_COMPOUND_FILE_s[] = {
 		IndexFileNames::FIELD_INFOS_EXTENSION,
@@ -62,7 +62,7 @@ CL_NS_DEF(index)
 		IndexFileNames::VECTORS_FIELDS_EXTENSION,
 		IndexFileNames::NORMS_EXTENSION
 	};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::INDEX_EXTENSIONS_IN_COMPOUND_FILE(IndexFileNames_INDEX_EXTENSIONS_IN_COMPOUND_FILE_s, 11 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::INDEX_EXTENSIONS_IN_COMPOUND_FILE(IndexFileNames_INDEX_EXTENSIONS_IN_COMPOUND_FILE_s, 11 );
 
 	const char* IndexFileNames_STORE_INDEX_EXTENSIONS_s[] = {
 		IndexFileNames::VECTORS_INDEX_EXTENSION,
@@ -71,7 +71,7 @@ CL_NS_DEF(index)
 		IndexFileNames::FIELDS_INDEX_EXTENSION,
 		IndexFileNames::FIELDS_EXTENSION
 	};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::STORE_INDEX_EXTENSIONS(IndexFileNames_STORE_INDEX_EXTENSIONS_s, 5 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::STORE_INDEX_EXTENSIONS(IndexFileNames_STORE_INDEX_EXTENSIONS_s, 5 );
 	
 	const char* IndexFileNames_NON_STORE_INDEX_EXTENSIONS_s[] = {
 		IndexFileNames::FIELD_INFOS_EXTENSION,
@@ -81,7 +81,7 @@ CL_NS_DEF(index)
 		IndexFileNames::TERMS_INDEX_EXTENSION,
 		IndexFileNames::NORMS_EXTENSION
 	};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::NON_STORE_INDEX_EXTENSIONS(IndexFileNames_NON_STORE_INDEX_EXTENSIONS_s, 6 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::NON_STORE_INDEX_EXTENSIONS(IndexFileNames_NON_STORE_INDEX_EXTENSIONS_s, 6 );
 
 	const char* IndexFileNames_COMPOUND_EXTENSIONS_s[] = {
 		IndexFileNames::FIELD_INFOS_EXTENSION,
@@ -92,14 +92,14 @@ CL_NS_DEF(index)
 		IndexFileNames::TERMS_INDEX_EXTENSION,
 		IndexFileNames::TERMS_EXTENSION
 	};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::COMPOUND_EXTENSIONS(IndexFileNames_COMPOUND_EXTENSIONS_s, 7 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::COMPOUND_EXTENSIONS(IndexFileNames_COMPOUND_EXTENSIONS_s, 7 );
 
 	const char* IndexFileNames_VECTOR_EXTENSIONS_s[] = {
 		IndexFileNames::VECTORS_INDEX_EXTENSION,
 		IndexFileNames::VECTORS_DOCUMENTS_EXTENSION,
 		IndexFileNames::VECTORS_FIELDS_EXTENSION
 	};
-	CL_NS(util)::ValueArray<const char*> IndexFileNames::VECTOR_EXTENSIONS(IndexFileNames_VECTOR_EXTENSIONS_s, 3 );
+	CL_NS(util)::ConstValueArray<const char*> IndexFileNames::VECTOR_EXTENSIONS(IndexFileNames_VECTOR_EXTENSIONS_s, 3 );
 
 	string IndexFileNames::fileNameFromGeneration( const char* base, const char* extension, int64_t gen ) {
 		if ( gen == SegmentInfo::NO ) {
@@ -109,7 +109,7 @@ CL_NS_DEF(index)
 		} else {
       char buf[(sizeof(unsigned long) << 3) + 1];
       CL_NS(util)::Misc::longToBase( gen, 36, buf );
-      return string(base) + buf + extension;
+      return string(base) + "_" + buf + extension;
 		}
 	}
 	

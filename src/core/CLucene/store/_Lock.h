@@ -32,7 +32,7 @@ public:
 	  
   public:
 	  SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName );
-
+    virtual ~SingleInstanceLock();
 	  bool obtain();
 	  void release();
 	  bool isLocked();
@@ -45,6 +45,7 @@ public:
 
 
   class NoLock: public LuceneLock {
+  public:
 	  bool obtain();
 	  void release();
 	  bool isLocked();

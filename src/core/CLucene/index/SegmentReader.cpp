@@ -38,8 +38,9 @@ CL_NS_DEF(index)
   //Pre  - instrm is a valid reference to an IndexInput
   //Post - A Norm instance has been created with an empty bytes array
 
-	 bytes = NULL;
-     dirty = false;
+    refCount = 1;
+	  bytes = NULL;
+    dirty = false;
   }
 
   SegmentReader::Norm::~Norm() {
@@ -57,11 +58,17 @@ CL_NS_DEF(index)
       _CLDELETE_ARRAY(bytes);
 
   }
+  void SegmentReader::Norm::doDelete(Norm* norm){
+    if ( norm->refCount == 0 ){
+      _CLLDELETE(norm);
+    }
+  }
 
   void SegmentReader::Norm::close(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     if (in != NULL && !useSingleNormStream) {
       in->close();
+      _CLDELETE(in);
     }
     in = NULL;
   }
@@ -98,39 +105,37 @@ CL_NS_DEF(index)
     //       identified by si->
     //Post - All files of the segment have been read
 
-    deletedDocs      = NULL;
-    ones			   = NULL;
+    this->deletedDocs      = NULL;
+    this->ones			   = NULL;
     //There are no documents yet marked as deleted
-    deletedDocsDirty = false;
+    this->deletedDocsDirty = false;
 
-    normsDirty=false;
-    undeleteAll=false;
+    this->normsDirty=false;
+    this->undeleteAll=false;
 
-    rollbackDeletedDocsDirty = false;
-    rollbackNormsDirty = false;
-    rollbackUndeleteAll = false;
+    this->rollbackDeletedDocsDirty = false;
+    this->rollbackNormsDirty = false;
+    this->rollbackUndeleteAll = false;
 
     //Duplicate the name of the segment from SegmentInfo to segment
-    segment          = si->name;
+    this->segment          = si->name;
 
     // make sure that all index files have been read or are kept open
     // so that if an index update removes them we'll still have them
-    freqStream       = NULL;
-    proxStream       = NULL;
-
-    storeCFSReader = NULL;
-    referencedSegmentReader = NULL;
-
-    segment = si->name;
-    this->si = si;
-    this->readBufferSize = readBufferSize;
-
-    this->cfsReader = NULL;
-    this->fieldsReader = NULL;
+    this->freqStream       = NULL;
+    this->proxStream       = NULL;
+    this->singleNormStream = NULL;
     this->termVectorsReaderOrig = NULL;
     this->_fieldInfos = NULL;
     this->tis = NULL;
-    this->singleNormStream = NULL;
+    this->fieldsReader = NULL;
+    this->cfsReader = NULL;
+    this->storeCFSReader = NULL;
+    this->referencedSegmentReader = NULL;
+
+    this->segment = si->name;
+    this->si = si;
+    this->readBufferSize = readBufferSize;
 
     bool success = false;
 
@@ -279,6 +284,11 @@ CL_NS_DEF(index)
     return instance;
   }
 
+  SegmentReader::SegmentReader():
+    DirectoryIndexReader(),
+    _norms(false,true)
+  {
+  }
   SegmentReader::~SegmentReader(){
   //Func - Destructor.
   //Pre  - doClose has been invoked!
@@ -287,15 +297,16 @@ CL_NS_DEF(index)
       doClose(); //this means that index reader doesn't need to be closed manually
 
       _CLDELETE(_fieldInfos);
-	  _CLDELETE(fieldsReader);
+      _CLDELETE(fieldsReader);
       _CLDELETE(tis);	      
- 	  _CLDELETE(freqStream);
-	  _CLDELETE(proxStream);
-	  _CLDELETE(deletedDocs);
-	  _CLDELETE_ARRAY(ones);
-     _CLDELETE(termVectorsReaderOrig)
-     _CLDECDELETE(cfsReader);
-    //termVectorsLocal->unregister(this);
+      _CLDELETE(freqStream);
+      _CLDELETE(proxStream);
+      _CLDELETE(deletedDocs);
+      _CLDELETE_ARRAY(ones);
+      _CLDELETE(termVectorsReaderOrig)
+      _CLDECDELETE(cfsReader);
+      //termVectorsLocal->unregister(this);
+      _norms.clear();
   }
 
   void SegmentReader::commitChanges(){
@@ -339,7 +350,7 @@ CL_NS_DEF(index)
 
       if (hasReferencedReader) {
         referencedSegmentReader->decRefReaderNotNorms();
-        referencedSegmentReader = NULL;
+        _CLDELETE(referencedSegmentReader);
       }
 
       deletedDocs = NULL;
@@ -719,7 +730,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
         // norms and will never read them again.
         norm->close();
       }
-      return norm->bytes;
+        return norm->bytes;
     }
   }
 /**
@@ -835,7 +846,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
         // singleNormFile means multiple norms share this file
         string ext = string(".") + IndexFileNames::NORMS_EXTENSION;
-        assert(false);//test this...
         bool singleNormFile = fileName.compare(fileName.length()-ext.length(),ext.length(),ext)==0;
         IndexInput* normInput = NULL;
         int64_t normSeek;

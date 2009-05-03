@@ -201,6 +201,8 @@ class SegmentReader: public DirectoryIndexReader {
     void incRef();
     void decRef();
 	  friend class SegmentReader;
+
+    static void doDelete(Norm* norm);
 	};
 	friend class SegmentReader::Norm;
 
@@ -220,7 +222,10 @@ class SegmentReader: public DirectoryIndexReader {
 
 
 	//Holds all norms for all fields in the segment
-	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar> NormsType;
+	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,
+    CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar,
+    CL_NS(util)::Deletor::Dummy,
+    Norm > NormsType;
   NormsType _norms; 
     
 	uint8_t* ones;
@@ -327,6 +332,7 @@ public:
 
 
 
+	SegmentReader();
 	///Destructor.
 	virtual ~SegmentReader();
 

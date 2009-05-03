@@ -28,16 +28,24 @@ void SearchFiles(const char* index){
 	TCHAR tline[80];
 	const TCHAR* buf;
 
-	IndexSearcher s(index);
-    while (true) {
+  IndexReader* reader = IndexReader::open(index);
+  while (true) {
 		printf("Enter query string: ");
-		char* tmp = fgets(line,80,stdin);
-		if ( tmp == NULL ) continue;
-		line[strlen(line)-1]=0;
+		//char* tmp = fgets(line,80,stdin);
+		//if ( tmp == NULL ) continue;
+		//line[strlen(line)-1]=0;
+    strcpy(line,"test");
+
+    IndexReader* newreader = reader->reopen();
+    if ( newreader != reader ){
+      _CLDELETE(reader);
+      reader = newreader;
+    }
+    IndexSearcher s(reader);
 
 		if ( strlen(line) == 0 )
 			break;
-	    STRCPY_AtoT(tline,line,80);
+	  STRCPY_AtoT(tline,line,80);
 		Query* q = QueryParser::parse(tline,_T("contents"),&analyzer);
 
 		buf = q->toString(_T("contents"));
@@ -61,9 +69,11 @@ void SearchFiles(const char* index){
 
 		_CLDELETE(h);
 		_CLDELETE(q);
-		
+
+	  s.close();
+break;
 	}
-	s.close();
+  _CLDELETE(reader);
 	//delete line;
 }	
 

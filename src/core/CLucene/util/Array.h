@@ -131,13 +131,27 @@ public:
 	ValueArray(T* values, size_t length):ArrayBase<T>(values,length){}
 	ValueArray(size_t length):ArrayBase<T>(length){}
 
-    void deleteValues(){
-      if ( this->values == NULL )
-          return;
-	    this->deleteArray();
+  void deleteValues(){
+    if ( this->values == NULL )
+        return;
+    this->deleteArray();
 	}
 	virtual ~ValueArray(){
-	    deleteValues();
+	  deleteValues();
+	}
+};
+
+/** A value array for const values (never deleted) */
+template<typename T>
+class CLUCENE_EXPORT ConstValueArray: public ArrayBase<T>{
+public:
+  ConstValueArray():ArrayBase<T>(){}
+	ConstValueArray(T* values, size_t length):ArrayBase<T>(values,length){}
+	ConstValueArray(size_t length):ArrayBase<T>(length){}
+
+  void deleteValues(){
+	}
+	virtual ~ConstValueArray(){
 	}
 };
 
