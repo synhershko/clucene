@@ -18,7 +18,7 @@
 #else
    #define _CLNEW new
    //todo: get this working again...
-   //#define LUCENE_BASE_CHECK(obj) (obj)->dummy__see_mem_h_for_details
+   //#define LUCENE_BASE_CHECK(obj) if (obj) obj->dummy__see_mem_h_for_details
 #endif
 #define _CL_POINTER(x) (x==NULL?NULL:(x->__cl_addref()>=0?x:x)) //return a add-ref'd object
 
@@ -33,19 +33,19 @@
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 //6.0
-	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete[] const_cast<TCHAR*>(x); x=NULL;}
-	#define _CLDELETE_CaARRAY(x) if (x!=NULL){delete[] const_cast<char*>(x); x=NULL;}
-	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete[] const_cast<TCHAR*>(x);}
-	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){delete[] const_cast<char*>(x);}
+	#define _CLDELETE_CARRAY(x) delete[] const_cast<TCHAR*>(x); x=NULL;
+	#define _CLDELETE_CaARRAY(x) delete[] const_cast<char*>(x); x=NULL;
+	#define _CLDELETE_LCARRAY(x) delete[] const_cast<TCHAR*>(x);
+	#define _CLDELETE_LCaARRAY(x) delete[] const_cast<char*>(x);
 #endif
 
 //Macro for creating new arrays
 #define _CL_NEWARRAY(type,size) new type[size]
-#define _CLDELETE_ARRAY(x) if (x!=NULL){delete [] x; x=NULL;}
-#define _CLDELETE_LARRAY(x) if (x!=NULL){delete [] x;}
+#define _CLDELETE_ARRAY(x) {delete[] x;x=NULL;}
+#define _CLDELETE_LARRAY(x) {delete[] x;}
 #ifndef _CLDELETE_CARRAY
-	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete [] x; x=NULL;}
-	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete [] x;}
+	#define _CLDELETE_CARRAY(x) {delete[] x;x=NULL;}
+	#define _CLDELETE_LCARRAY(x) {delete[] x;}
 #endif
 
 //a shortcut for deleting a carray and all its contents
@@ -63,8 +63,10 @@
 	#define _CLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; x=NULL; }
 	#define _CLLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; }
 #else
-	#define _CLDELETE(x) if (x!=NULL){ LUCENE_BASE_CHECK(x); delete x; x=NULL; }
-	#define _CLLDELETE(x) if (x!=NULL){ LUCENE_BASE_CHECK(x); delete x; }
+	// Here we had a redundant check for NULL and LUCENE_BASE_CHECK(x), which were removed once the internal memory
+	// tracking code was put out
+	#define _CLDELETE(x) {delete x;x=NULL;}
+	#define _CLLDELETE(x) {delete x;}
 #endif
 
 //_CLDECDELETE deletes objects which are *always* refcounted
@@ -74,6 +76,6 @@
 //_VDelete should be used for deleting non-clucene objects.
 //when using reference counting, _CLDELETE casts the object
 //into a LuceneBase*.
-#define _CLVDELETE(x) if(x!=NULL){delete x; x=NULL;}
+#define _CLVDELETE(x) {delete x;x=NULL;}
 
 #endif //_lucene_debug_lucenebase_
