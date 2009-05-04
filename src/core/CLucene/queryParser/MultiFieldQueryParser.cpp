@@ -21,76 +21,18 @@ CL_NS_USE(analysis)
 CL_NS_DEF(queryParser)
 
 
-MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysis)::Analyzer* a, BoostMap* boosts):
-	QueryParser(NULL,a)
+MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** _fields, CL_NS(analysis)::Analyzer* a, BoostMap* _boosts):
+	QueryParser(NULL,a), fields(_fields), boosts(_boosts)
 {
-	this->fields = fields;
-    this->boosts = boosts;
 }
 MultiFieldQueryParser::~MultiFieldQueryParser(){
 }
 
-//static 
-Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, Analyzer* analyzer)
-{
-    BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
-    int32_t i = 0;
-	while ( fields[i] != NULL ){
-		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
-			//todo: Move to using BooleanClause::Occur
-			bQuery->add(q, true, false, false);
-		} else {
-			_CLDELETE(q);
-		}
-
-		i++;
-	}
-    return bQuery;
-}
-
-//static 
-Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, const uint8_t* flags, Analyzer* analyzer)
-{
-    BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
-    int32_t i = 0;
-    while ( fields[i] != NULL )
-    {
-		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
-			uint8_t flag = flags[i];
-			switch (flag)
-			{
-				//todo: Move to using BooleanClause::Occur
-			case MultiFieldQueryParser::REQUIRED_FIELD:
-				bQuery->add(q, true, true, false);
-				break;
-			case MultiFieldQueryParser::PROHIBITED_FIELD:
-				bQuery->add(q, true, false, true);
-				break;
-			default:
-				bQuery->add(q, true, false, false);
-				break;
-			}
-		} else {
-			_CLDELETE(q);
-		}
-
-        i++;
-    }
-    return bQuery;
-}
-
-//not static
-CL_NS(search)::Query* MultiFieldQueryParser::parse(const TCHAR* query) {
-	return parse(query, this->fields, this->analyzer);
-}
-
-Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText, int32_t slop){
+Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, const TCHAR* queryText, const int32_t slop){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
-			Query* q = QueryParser::GetFieldQuery(fields[i], queryText);
+			Query* q = QueryParser::getFieldQuery(fields[i], queryText);
 			if (q != NULL) {
 				//If the user passes a map of boosts
 				if (boosts != NULL) {
@@ -103,116 +45,133 @@ Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText
 				if (q->getQueryName() == PhraseQuery::getClassName()) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
+				// TODO:
 				//if (q instanceof MultiPhraseQuery) {
 				//	((MultiPhraseQuery) q).setSlop(slop);
 				//}
-				q = QueryAddedCallback(fields[i], q);
-				if ( q )
-					clauses.push_back(_CLNEW BooleanClause(q, true, false,false));
+				clauses.push_back(_CLNEW BooleanClause(q, true, BooleanClause::SHOULD));
 			}
 		}
 		if (clauses.size() == 0)  // happens for stopwords
 			return NULL;
-        Query* q = QueryParser::GetBooleanQuery(clauses);
-		return q;
+		return QueryParser::getBooleanQuery(clauses, true);
 	}else{
-		Query* q = QueryParser::GetFieldQuery(field, queryText);
-		if ( q )
-			q = QueryAddedCallback(field,q);
-		return q;
+		return QueryParser::getFieldQuery(field, queryText);
 	}
 }
 
-
-Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
-	return GetFieldQuery(field, queryText, 0);
-}
-
-
-CL_NS(search)::Query* MultiFieldQueryParser::GetFuzzyQuery(const TCHAR* field, TCHAR* termStr){
+Query* MultiFieldQueryParser::getFuzzyQuery(const TCHAR* field, TCHAR* termStr, const float_t minSimilarity){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
-			Query* q = QueryParser::GetFuzzyQuery(fields[i], termStr); //todo: , minSimilarity
-			if ( q ){
-				q = QueryAddedCallback(fields[i], q);
-				if ( q ){
-					clauses.push_back(_CLNEW BooleanClause(q,true,false,false) );
-				}
-			}
+			Query* q = QueryParser::getFuzzyQuery(fields[i], termStr, minSimilarity);
+			if (q) clauses.push_back(_CLNEW BooleanClause(q,true, BooleanClause::SHOULD) );
 		}
-		return QueryParser::GetBooleanQuery(clauses);
-	}else{
-		Query* q = QueryParser::GetFuzzyQuery(field, termStr);//todo: , minSimilarity
-		if ( q )
-			q = QueryAddedCallback(field,q);
-		return q;
+		return QueryParser::getBooleanQuery(clauses, true);
 	}
+	return QueryParser::getFuzzyQuery(field, termStr, minSimilarity);
 }
 
-Query* MultiFieldQueryParser::GetPrefixQuery(const TCHAR* field, TCHAR* termStr){
+Query* MultiFieldQueryParser::getPrefixQuery(const TCHAR* field, TCHAR* termStr){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
-			Query* q = QueryParser::GetPrefixQuery(fields[i], termStr);
-			if ( q ){
-				q = QueryAddedCallback(fields[i],q);
-				if ( q ){
-					clauses.push_back(_CLNEW BooleanClause(q,true,false,false));
-				}
-			}
+			Query* q = QueryParser::getPrefixQuery(fields[i], termStr);
+			if (q) clauses.push_back(_CLNEW BooleanClause(q,true,BooleanClause::SHOULD));
 		}
-		return QueryParser::GetBooleanQuery(clauses);
-	}else{
-		Query* q = QueryParser::GetPrefixQuery(field, termStr);
-		if ( q )
-			q = QueryAddedCallback(field,q);
-		return q;
+		return QueryParser::getBooleanQuery(clauses, true);
 	}
+	return QueryParser::getPrefixQuery(field, termStr);
 }
 
-Query* MultiFieldQueryParser::GetWildcardQuery(const TCHAR* field, TCHAR* termStr){
+Query* MultiFieldQueryParser::getWildcardQuery(const TCHAR* field, TCHAR* termStr){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
-			Query* q = QueryParser::GetWildcardQuery(fields[i], termStr);
-			if ( q ){
-				q = QueryAddedCallback(fields[i],q);
-				if ( q ){
-					clauses.push_back(_CLNEW BooleanClause(q,true,false,false));
-				}
-			}
+			Query* q = QueryParser::getWildcardQuery(fields[i], termStr);
+			if (q) clauses.push_back(_CLNEW BooleanClause(q,true,BooleanClause::SHOULD));
 		}
-		return QueryParser::GetBooleanQuery(clauses);
-	}else{
-		Query* q = QueryParser::GetWildcardQuery(field, termStr);
-		if ( q )
-			q = QueryAddedCallback(field,q);
-		return q;
+		return QueryParser::getBooleanQuery(clauses, true);
 	}
+	return QueryParser::getWildcardQuery(field, termStr);
 }
 
 
-Query* MultiFieldQueryParser::GetRangeQuery(const TCHAR* field, TCHAR* part1, TCHAR* part2, bool inclusive){
+Query* MultiFieldQueryParser::getRangeQuery(const TCHAR* field, TCHAR* part1, TCHAR* part2, const bool inclusive){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
-			Query* q = QueryParser::GetRangeQuery(fields[i], part1, part2, inclusive);
-			if ( q ){
-				q = QueryAddedCallback(fields[i],q);
-				if ( q ){
-					clauses.push_back(_CLNEW BooleanClause(q,true,false,false));
-				}
-			}
+			Query* q = QueryParser::getRangeQuery(fields[i], part1, part2, inclusive);
+			if (q) clauses.push_back(_CLNEW BooleanClause(q,true,BooleanClause::SHOULD));
 		}
-		return QueryParser::GetBooleanQuery(clauses);
+		return QueryParser::getBooleanQuery(clauses, true);
 	}else{
-		Query* q = QueryParser::GetRangeQuery(field, part1, part2, inclusive);
-		if ( q )
-			q = QueryAddedCallback(field,q);
-		return q;
+		return QueryParser::getRangeQuery(field, part1, part2, inclusive);
 	}
 }
 
+//static
+Query* MultiFieldQueryParser::parse(const TCHAR** _queries, const TCHAR** _fields, Analyzer* analyzer)
+{
+	BooleanQuery* bQuery = _CLNEW BooleanQuery();
+	for (size_t i = 0; _fields[i]!=NULL; i++)
+	{
+		if (_queries[i] == NULL) {
+			_CLLDELETE(bQuery);
+			_CLTHROWA(CL_ERR_IllegalArgument, "_queries.length != _fields.length");
+		}
+		// TODO: Reuse qp instead of creating it over and over again
+		QueryParser* qp = _CLNEW QueryParser(_fields[i], analyzer);
+		Query* q = qp->parse(_queries[i]);
+		if (q!=NULL && // q never null, just being defensive
+			(!(q->instanceOf(BooleanQuery::getClassName()) || ((BooleanQuery*)q)->getClauseCount() > 0))) {
+				bQuery->add(q, true, BooleanClause::SHOULD);
+		} else
+			_CLLDELETE(q);
+		_CLLDELETE(qp);
+	}
+	return bQuery;
+}
+
+// static
+Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** _fields, const uint8_t* flags, Analyzer* analyzer) {
+	BooleanQuery* bQuery = _CLNEW BooleanQuery();
+	for (size_t i = 0; _fields[i]!=NULL; i++) {
+		if (flags[i] == NULL) {
+			_CLLDELETE(bQuery);
+			_CLTHROWA(CL_ERR_IllegalArgument, "_fields.length != flags.length");
+		}
+		QueryParser* qp = _CLNEW QueryParser(_fields[i], analyzer);
+		Query* q = qp->parse(query);
+		if (q!=NULL && // q never null, just being defensive 
+			(!(q->instanceOf(BooleanQuery::getClassName())) || ((BooleanQuery*)q)->getClauseCount()>0)) {
+				bQuery->add(q, true, (BooleanClause::Occur)flags[i]);
+		} else
+			_CLLDELETE(q);
+		_CLLDELETE(qp);
+	}
+	return bQuery;
+}
+
+//static
+Query* MultiFieldQueryParser::parse(const TCHAR** _queries, const TCHAR** _fields, const uint8_t* flags, Analyzer* analyzer){
+	BooleanQuery* bQuery = _CLNEW BooleanQuery();
+	for (size_t i = 0; _fields[i]!=NULL; i++)
+	{
+		if (_queries[i] == NULL || flags[i] == NULL) {
+			_CLLDELETE(bQuery);
+			_CLTHROWA(CL_ERR_IllegalArgument, "_queries, _fields, and flags array have have different length");
+		}
+		QueryParser* qp = _CLNEW QueryParser(_fields[i], analyzer);
+		Query* q = qp->parse(_queries[i]);
+		if (q!=NULL && // q never null, just being defensive
+			(!(q->instanceOf(BooleanQuery::getClassName())) || ((BooleanQuery*)q)->getClauseCount()>0)) {
+				bQuery->add(q, true, (BooleanClause::Occur)flags[i]);
+		} else
+			_CLLDELETE(q);
+		_CLLDELETE(qp);
+	}
+	return bQuery;
+}
 
 CL_NS_END

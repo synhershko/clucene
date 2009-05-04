@@ -322,7 +322,7 @@ protected:
 	/**
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText);
+	virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText);
 
 	/**
 	* Base implementation delegates to {@link #getFieldQuery(String,String)}.
@@ -331,12 +331,12 @@ protected:
 	*
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop);
+	virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop);
 
 	/**
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getRangeQuery(const TCHAR* field, TCHAR* part1, TCHAR* part2, const bool inclusive);
+	virtual CL_NS(search)::Query* getRangeQuery(const TCHAR* field, TCHAR* part1, TCHAR* part2, const bool inclusive);
 
 	/**
 	* Factory method for generating query, given a set of clauses.
@@ -375,7 +375,7 @@ protected:
 	* @return Resulting {@link Query} built for the term
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getWildcardQuery(const TCHAR* _field, TCHAR* termStr);
+	virtual CL_NS(search)::Query* getWildcardQuery(const TCHAR* _field, TCHAR* termStr);
 
 	/**
 	* Factory method for generating a query (similar to
@@ -400,7 +400,7 @@ protected:
 	* @return Resulting {@link Query} built for the term
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getPrefixQuery(const TCHAR* _field, TCHAR* _termStr);
+	virtual CL_NS(search)::Query* getPrefixQuery(const TCHAR* _field, TCHAR* _termStr);
 
 	/**
 	* Factory method for generating a query (similar to
@@ -413,7 +413,7 @@ protected:
 	* @return Resulting {@link Query} built for the term
 	* @exception ParseException throw in overridden method to disallow
 	*/
-	CL_NS(search)::Query* getFuzzyQuery(const TCHAR* _field, TCHAR* termStr, const float_t minSimilarity);
+	virtual CL_NS(search)::Query* getFuzzyQuery(const TCHAR* _field, TCHAR* termStr, const float_t minSimilarity);
 
 private:
 	/**

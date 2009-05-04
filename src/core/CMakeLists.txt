@@ -29,7 +29,7 @@ SET(clucene_core_Files
 	./CLucene/util/StringIntern.cpp
 	./CLucene/util/BitSet.cpp
 	./CLucene/queryParser/FastCharStream.cpp
-	#./CLucene/queryParser/MultiFieldQueryParser.cpp
+	./CLucene/queryParser/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/QueryParser.cpp
 	./CLucene/queryParser/QueryParserTokenManager.cpp
 	./CLucene/queryParser/Token.cpp
