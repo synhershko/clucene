@@ -11,7 +11,6 @@
 
 CL_CLASS_DEF(document,Document)
 CL_CLASS_DEF(document,Field)
-#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(index)
 

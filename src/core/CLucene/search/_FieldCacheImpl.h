@@ -12,9 +12,6 @@ CL_CLASS_DEF(search,SortComparator)
 CL_CLASS_DEF(search,SortComparatorSource)
 #include "FieldCache.h"
 #include "CLucene/LuceneThreads.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
-
-
 CL_NS_DEF(search)
 
 class fieldcacheCacheType;

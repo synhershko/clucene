@@ -230,12 +230,12 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
 
     for (int32_t i = 0; i < size; ++i) {
       TVTerm* term = terms[i];
-	  int32_t start = CL_NS(util)::Misc::stringDifference(lastTermText, lastTermTextLen, 
+	    int32_t start = CL_NS(util)::Misc::stringDifference(lastTermText, lastTermTextLen, 
 		  term->getTermText(),term->getTermTextLen());
       int32_t length = term->getTermTextLen() - start;
       tvf->writeVInt(start);			  // write shared prefix length
       tvf->writeVInt(length);			  // write delta length
-      tvf->writeChars(term->getTermText(), start, length);  // write delta chars
+      tvf->writeChars(term->getTermText()+start, length);  // write delta chars
       tvf->writeVInt(term->freq);
 
       lastTermText = term->getTermText();

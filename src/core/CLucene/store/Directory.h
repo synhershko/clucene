@@ -7,8 +7,6 @@
 #ifndef _lucene_store_Directory
 #define _lucene_store_Directory
 
-
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/LuceneThreads.h"
 #include <string>
 

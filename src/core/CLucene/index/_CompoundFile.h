@@ -9,9 +9,9 @@
 
 
 CL_CLASS_DEF(store,Lock)
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
+#include "_SegmentMerger.h"
 
 CL_NS_DEF(index)
 
@@ -104,14 +104,8 @@ public:
  *
  */
 class CompoundFileWriter:LUCENE_BASE {
-	CL_NS(store)::Directory* directory;
-	char* fileName;
-	CL_NS(util)::CLHashSet<const char*,
-		CL_NS(util)::Compare::Char,CL_NS(util)::Deletor::acArray> ids;
-	typedef CL_NS(util)::CLLinkedList<WriterFileEntry*,
-		CL_NS(util)::Deletor::Object<WriterFileEntry> > EntriesType;	
-	EntriesType* entries;
-	bool merged;
+  class Internal;
+  Internal* _internal;
 
 	/** Copy the contents of the file with specified extension into the
 	*  provided output stream. Use the provided buffer for moving data
@@ -122,7 +116,7 @@ public:
 	/** Create the compound stream in the specified file. The file name is the
 	*  entire name (no extensions are added).
 	*/
-	CompoundFileWriter(CL_NS(store)::Directory* dir, const char* name);
+	CompoundFileWriter(CL_NS(store)::Directory* dir, const char* name, SegmentMerger::CheckAbort* checkAbort = NULL);
 	~CompoundFileWriter();
 	/** Returns the directory of the compound file. */
 	CL_NS(store)::Directory* getDirectory();

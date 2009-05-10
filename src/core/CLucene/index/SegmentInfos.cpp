@@ -36,7 +36,7 @@ SegmentInfo::SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store
       docStoreSegment( _docStoreSegment == NULL ? "" : _docStoreSegment ),
 			docStoreIsCompoundFile(_docStoreIsCompoundFile)
 {
-	CND_PRECONDITION(docStoreOffset == -1 || docStoreSegment != NULL, "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
+	CND_PRECONDITION(docStoreOffset == -1 || !docStoreSegment.empty(), "failed testing for (docStoreOffset == -1 || docStoreSegment != NULL)");
 
 	this->name = _name;
 	this->dir = _dir;
@@ -61,13 +61,10 @@ string SegmentInfo::segString(Directory* dir) {
   else
     docStore = "";
 
-  char docCountStr[20];
-  itoa(docCount,docCountStr,10);
-
   return string(name) + ":" +
     cfs +
     string(this->dir == dir ? "" : "x") +
-    docCountStr + docStore;
+    Misc::toString(docCount) + docStore;
 }
    SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input): 
      _sizeInBytes(-1)
@@ -536,7 +533,7 @@ string SegmentInfo::segString(Directory* dir) {
 
    /** We consider another SegmentInfo instance equal if it
    *  has the same dir and same name. */
-   bool SegmentInfo::equals(SegmentInfo* obj) {
+   bool SegmentInfo::equals(const SegmentInfo* obj) {
 	   return (obj->dir == this->dir && obj->name.compare(this->name) == 0 );
    }
 
@@ -544,7 +541,7 @@ string SegmentInfo::segString(Directory* dir) {
 
 
 
-  std::ostream* SegmentInfos::infoStream = &std::cout; //todo!!!!!!!!
+  std::ostream* SegmentInfos::infoStream = NULL;
 
   /** If non-null, information about retries when loading
   * the segments file will be printed to this.
@@ -688,8 +685,10 @@ string SegmentInfo::segString(Directory* dir) {
 			infos.erase(bitr,bitr + count);
 		}
   }
-  void SegmentInfos::add(SegmentInfo* info){
-	infos.push_back(info);
+  void SegmentInfos::add(SegmentInfo* info, int32_t pos){
+    if ( pos == -1 ) infos.push_back(info);
+    if ( pos < 0 || pos >= (int32_t)infos.size() ) _CLTHROWA(CL_ERR_IllegalArgument, "pos is out of range");
+    infos.insert( infos.begin()+pos, info );
   }
   int32_t SegmentInfos::size() const{
 	  return infos.size();
@@ -701,6 +700,35 @@ string SegmentInfo::segString(Directory* dir) {
 	  infos.set(pos, si);
   }
   void SegmentInfos::clear() { infos.clear(); }
+
+
+  void SegmentInfos::insert(SegmentInfos* _infos){
+    infos.insert(infos.end(),_infos->infos.begin(),_infos->infos.end());
+  }
+	void SegmentInfos::insert(SegmentInfo* info){
+    infos.push_back(info);
+  }
+	int32_t SegmentInfos::indexOf(const SegmentInfo* info) const{
+    segmentInfosType::const_iterator itr = infos.begin();
+    int32_t c=-1;
+    while ( itr != infos.end()){
+      c++;
+      if ( *itr == info ){
+        return c;
+      }
+    }
+    return -1;
+  }
+	void SegmentInfos::range(size_t from, size_t to, SegmentInfos& ret) const{
+    segmentInfosType::const_iterator itr = infos.begin();
+    itr+= from;
+    for (size_t i=0;i<to;i++){
+      ret.infos.push_back(*itr);
+    }
+  }
+  void SegmentInfos::remove(size_t index){
+    infos.remove(index);
+  }
 
   void SegmentInfos::read(Directory* directory, const char* segmentFileName){
 	  bool success = false;
@@ -762,52 +790,66 @@ string SegmentInfo::segString(Directory* dir) {
   }
 
 
-  //TODO: this still hasn't been ported yet...
   void SegmentInfos::write(Directory* directory){
   //Func - Writes a new segments file based upon the SegmentInfo instances it manages
   //Pre  - directory is a valid reference to a Directory
   //Post - The new segment has been written to disk
-    
-	  //Open an IndexOutput to the segments file
-	  IndexOutput* output = directory->createOutput("segments.new");
-	   //Check if output is valid
-	  if (output){
+
+    string segmentFileName = getNextSegmentFileName();
+
+    // Always advance the generation on write:
+    if (generation == -1) {
+      generation = 1;
+    } else {
+      generation++;
+    }
+
+    IndexOutput* output = directory->createOutput(segmentFileName.c_str());
+
+    bool success = false;
+
+    try {
+      output->writeInt(CURRENT_FORMAT); // write FORMAT
+      output->writeLong(++version); // every write changes
+                                   // the index
+      output->writeInt(counter); // write counter
+      output->writeInt(size()); // write infos
+      for (int32_t i = 0; i < size(); i++) {
+        info(i)->write(output);
+      }         
+    }_CLFINALLY (
       try {
-        output->writeInt(FORMAT); // write FORMAT
-        output->writeLong(++version); // every write changes the index
-        output->writeInt(counter); //Write the counter
-
-        //Write the number of SegmentInfo Instances
-        //which is equal to the number of segments in directory as
-        //each SegmentInfo manages a single segment
-        output->writeInt(infos.size());			  
-
-        SegmentInfo *si = NULL;
-
-        //Iterate through all the SegmentInfo instances
-        for (uint32_t i = 0; i < infos.size(); ++i) {
-          //Retrieve the SegmentInfo
-          si = info(i);
-          //Condition check to see if si has been retrieved
-          CND_CONDITION(si != NULL,"No SegmentInfo instance found");
-
-          //Write the name of the current segment
-          output->writeString(si->name);
-
-          //Write the number of documents in the segment 
-          output->writeInt(si->docCount);
-        }
-      } _CLFINALLY(
         output->close();
-        _CLDELETE( output );
-      );
+        _CLDELETE(output);
+        success = true;
+      } _CLFINALLY (
+        if (!success) {
+          // Try not to leave a truncated segments_N file in
+          // the index:
+          directory->deleteFile(segmentFileName.c_str());
+        }
+      )
+    )
 
-      // install new segment info
-      directory->renameFile("segments.new","segments");
-	  }
+    try {
+      output = directory->createOutput(IndexFileNames::SEGMENTS_GEN);
+      try {
+        output->writeInt(FORMAT_LOCKLESS);
+        output->writeLong(generation);
+        output->writeLong(generation);
+      } _CLFINALLY(
+        _CLDELETE(output);
+      )
+    } catch (CLuceneError& e) {
+      if ( e.number() != CL_ERR_IO ) throw e;
+      // It's OK if we fail to write this file since it's
+      // used only as one of the retry fallbacks.
+    }
+    
+    lastGeneration = generation;
   }
 
-  SegmentInfos* SegmentInfos::clone() {
+  SegmentInfos* SegmentInfos::clone() const{
 	  SegmentInfos* sis = _CLNEW SegmentInfos(true, infos.size());
 	  for(size_t i=0;i<infos.size();i++) {
 		  sis->setElementAt(infos[i]->clone(), i);
@@ -1008,7 +1050,7 @@ string SegmentInfo::segString(Directory* dir) {
 
       // Save the original root cause:
       if (exc.number() == 0) {
-        CND_CONDITION( saved_error.number() > 0, _T("Unsupported error code"));
+        CND_CONDITION( saved_error.number() > 0, "Unsupported error code");
         exc.set(saved_error.number(),saved_error.what());
       }
 

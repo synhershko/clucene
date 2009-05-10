@@ -60,7 +60,10 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 		store->close();
 		_CLDECDELETE(store);
 		store = (Directory*)FSDirectory::getDirectory(fsdir, false);
-	}
+  }else{
+    CuMessageA(tc, "Memory used at end: %l", ((RAMDirectory*)store)->sizeInBytes);
+  }
+
 	srand(1251971);
 	start = Misc::currentTimeMillis();
 
@@ -110,10 +113,10 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 }
 
 void ramtest(CuTest *tc){
-	StoreTest(tc,10000,true);
+	StoreTest(tc,1000,true);
 }
 void fstest(CuTest *tc){
-	StoreTest(tc,1000,false);
+	StoreTest(tc,100,false);
 }
 
 CuSuite *teststore(void)

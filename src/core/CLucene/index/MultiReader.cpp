@@ -98,7 +98,7 @@ IndexReader* MultiReader::reopen() {
 
   bool success = false;
   try {
-    for (int32_t i = 0; i < subReaders->length; i++) {
+    for (size_t i = 0; i < subReaders->length; i++) {
       newSubReaders->values[i] = (*subReaders)[i]->reopen();
       // if at least one of the subreaders was updated we remember that
       // and return a new MultiReader
@@ -112,7 +112,7 @@ IndexReader* MultiReader::reopen() {
     }
 
     if (reopened) {
-      for (int32_t i = 0; i < subReaders->length; i++) {
+      for (size_t i = 0; i < subReaders->length; i++) {
         if ((*newSubReaders)[i] == (*subReaders)[i]) {
           (*newSubReaders)[i]->incRef();
           newDecrefOnClose[i] = true;
@@ -129,7 +129,7 @@ IndexReader* MultiReader::reopen() {
     }
   } _CLFINALLY (
     if (!success && reopened) {
-      for (int32_t i = 0; i < newSubReaders->length; i++) {
+      for (size_t i = 0; i < newSubReaders->length; i++) {
         if ((*newSubReaders)[i] != NULL) {
           try {
             if (newDecrefOnClose[i]) {
@@ -360,5 +360,10 @@ int64_t MultiReader::getVersion() {
   _CLTHROWA(CL_ERR_UnsupportedOperation, "MultiReader does not support this method.");
 }
 
-
+const char* MultiReader::getClassName(){
+  return "MultiReader";
+}
+const char* MultiReader::getObjectName() const{
+  return getClassName();
+}
 CL_NS_END

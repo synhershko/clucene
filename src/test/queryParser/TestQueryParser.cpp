@@ -24,11 +24,11 @@ public:
 	{
 	}
 
-	bool next(Token* token) {
+	Token* next(Token* token) {
 		if (inPhrase) {
 			inPhrase = false;
 			token->set( _T("phrase2"), savedStart, savedEnd);
-			return true;
+			return token;
 		}else{
 			while( input->next(token) ){
 				if ( _tcscmp(token->termBuffer(), _T("phrase")) == 0 ) {
@@ -36,13 +36,13 @@ public:
 					savedStart = token->startOffset();
 					savedEnd = token->endOffset();
 					token->set( _T("phrase1"), savedStart, savedEnd);
-					return true;
+					return token;
 				}else if ( _tcscmp(token->termBuffer(), _T("stop") ) !=0 ){
-					return true;
+					return token;
 				}
 			}
 		}
-		return false;
+		return NULL;
 	}
 };
 

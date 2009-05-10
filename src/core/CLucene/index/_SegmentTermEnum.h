@@ -126,8 +126,9 @@ private:
 	 * Reads the next term in the enumeration
 	 */
 	Term* readTerm(Term* reuse);
-    /** 
+   /** 
 	 * Instantiate a buffer of length length+1
+   * TODO: deprecate this...
 	 */
 	void growBuffer(const uint32_t length, bool force_copy);
 

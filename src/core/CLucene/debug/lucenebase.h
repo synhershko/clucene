@@ -7,10 +7,6 @@
 #ifndef _lucene_debug_lucenebase_
 #define _lucene_debug_lucenebase_
 
-#ifdef _LUCENE_PRAGMA_ONCE
-# pragma once
-#endif
-
 CL_NS_DEF(debug)
 
 //Lucenebase is the superclass of all clucene objects. It provides

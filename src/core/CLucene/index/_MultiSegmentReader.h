@@ -112,6 +112,9 @@ public:
   friend class MultiReader;
   friend class SegmentReader;
   friend class DirectoryIndexReader;
+    
+  static const char* getClassName();
+  const char* getObjectName() const;
 };
 
 
@@ -209,7 +212,7 @@ public:
   * Not implemented.
   * @throws UnsupportedOperationException
   */
-  uint8_t* getPayload(uint8_t* data, const int32_t offset);
+  uint8_t* getPayload(uint8_t* data);
 
   /**
   *

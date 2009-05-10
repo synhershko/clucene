@@ -141,7 +141,7 @@ ObjectArray<TermVectorOffsetInfo>* SegmentTermPositionVector::getOffsets(const s
 	if (index >=0 && index < offsets->length)
 		return offsets->values[index];
 	else
-		return &TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
+		return TermVectorOffsetInfo_EMPTY_OFFSET_INFO;
 }
 
 ValueArray<int32_t>* SegmentTermPositionVector::getTermPositions(const size_t index) {

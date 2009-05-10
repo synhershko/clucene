@@ -1,4 +1,9 @@
-
+/*------------------------------------------------------------------------------
+* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
+* the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
 #ifndef _lucene_index_IndexFileDeleter_
 #define _lucene_index_IndexFileDeleter_
 
@@ -96,17 +101,10 @@ private:
 
 		static const char* getClassName();
 		const char* getObjectName() const;
-
-    bool operator < (CommitPoint& v)
-    {
-      return this->compareTo(&v) < 0;
-    }
-    bool operator < (CommitPoint* v)
-    {
-      return this->compareTo(v) < 0;
-    }
+    static bool sort(IndexCommitPoint* elem1, IndexCommitPoint* elem2);
   };
 
+private:
   /* Files that we tried to delete but failed (likely
    * because they are open and we are running on Windows),
    * so we will retry them again later: */
@@ -140,6 +138,9 @@ private:
   CL_NS(store)::Directory* directory;
   IndexDeletionPolicy* policy;
   DocumentsWriter* docWriter;
+
+
+public:
   void deletePendingFiles();
 
   void setInfoStream(std::ostream* infoStream);
@@ -153,7 +154,6 @@ private:
    */
   void deleteCommits();
 
-public:
   /** Change to true to see details of reference counts when
    *  infoStream != null */
   static bool VERBOSE_REF_COUNTS;
@@ -213,7 +213,7 @@ public:
 
   /** Delets the specified files, but only if they are new
    *  (have not yet been incref'd). */
-  void CLUCENE_LOCAL_DECL deleteNewFiles(std::vector<std::string>& files);
+  void CLUCENE_LOCAL_DECL deleteNewFiles(const std::vector<std::string>& files);
   void CLUCENE_LOCAL_DECL deleteFile(const char* fileName);
 };
 

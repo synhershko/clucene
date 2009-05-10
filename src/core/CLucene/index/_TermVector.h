@@ -188,28 +188,30 @@ public:
 class TermVectorMapper; // Forward declaration
 
 class TermVectorsReader:LUCENE_BASE {
-private:
+public:
+  //todo: this is wrong, i think
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_VERSION = 2);
+	LUCENE_STATIC_CONSTANT(uint8_t, STORE_POSITIONS_WITH_TERMVECTOR = 0x1);
+	LUCENE_STATIC_CONSTANT(uint8_t, STORE_OFFSET_WITH_TERMVECTOR = 0x2);
+private:
 
 	//The size in bytes that the FORMAT_VERSION will take up at the beginning of each file 
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_SIZE = 4);
 
-	LUCENE_STATIC_CONSTANT(uint8_t, STORE_POSITIONS_WITH_TERMVECTOR = 0x1);
-	LUCENE_STATIC_CONSTANT(uint8_t, STORE_OFFSET_WITH_TERMVECTOR = 0x2);
 
-    FieldInfos* fieldInfos;
-    
-    CL_NS(store)::IndexInput* tvx;
-    CL_NS(store)::IndexInput* tvd;
-    CL_NS(store)::IndexInput* tvf;
-    int64_t _size; // TODO: size_t ?
+  FieldInfos* fieldInfos;
+  
+  CL_NS(store)::IndexInput* tvx;
+  CL_NS(store)::IndexInput* tvd;
+  CL_NS(store)::IndexInput* tvf;
+  int64_t _size; // TODO: size_t ?
 
 	// The docID offset where our docs begin in the index
 	// file.  This will be 0 if we have our own private file.
 	int32_t docStoreOffset;
     
-    int32_t tvdFormat;
-    int32_t tvfFormat;
+  int32_t tvdFormat;
+  int32_t tvfFormat;
 
 public:
 	TermVectorsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fieldInfos,

@@ -37,5 +37,8 @@ bool Scorer::score( HitCollector* results, const int32_t maxDoc ) {
   }
   return true;
 }
+bool Scorer::sort(const Scorer* elem1, const Scorer* elem2){
+  return elem1->doc() < elem1->doc();
+}
 
 CL_NS_END

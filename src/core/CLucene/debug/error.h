@@ -29,8 +29,10 @@
 #define CL_ERR_AlreadyClosed 18
 #define CL_ERR_StaleReader 19
 #define CL_ERR_LockObtainFailed 20
-#define CL_ERR_Merge //< Exception thrown if there are any problems while executing a merge.
-#define CL_ERR_MergeAborted
+#define CL_ERR_Merge 21 //< Exception thrown if there are any problems while executing a merge.
+#define CL_ERR_MergeAborted 22
+#define CL_ERR_OutOfMemory 23
+#define CL_ERR_FieldReader 24
 
 ////////////////////////////////////////////////////////
 //error try/throw/catch definitions
@@ -70,7 +72,7 @@
 #ifdef _UCS2
     CLuceneError(int num, const TCHAR* str, bool ownstr);
 #endif
-  	int number(){return error_number;}
+  	int number() const{return error_number;}
 		char* what();
 		TCHAR* twhat();
 		~CLuceneError() throw();

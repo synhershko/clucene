@@ -24,13 +24,11 @@ CL_NS_DEF(search)
  * Expert: Compares two ScoreDoc objects for sorting.
  *
  */
- class CLUCENE_EXPORT ScoreDocComparator:LUCENE_BASE {
+ class CLUCENE_EXPORT ScoreDocComparator {
  protected:
 	 ScoreDocComparator(){}
  public:
 	 virtual ~ScoreDocComparator();
-//    CL_NS(util)::Comparable** cachedValues;
-//    ScoreDocComparator(CL_NS(util)::Comparable** cachedValues);
 
 	 /**
 	 * Compares two ScoreDoc objects and returns a result indicating their
@@ -42,7 +40,7 @@ CL_NS_DEF(search)
 	 *         <code>0</code> if they are equal
 	 * @see java.util.Comparator
 	 */
-    virtual int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j) = 0;
+   virtual int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j) = 0;
 
 	/**
 	* Returns the value used to sort the given document.  The
@@ -53,7 +51,7 @@ CL_NS_DEF(search)
 	* @param i Document
 	* @return Serializable object
 	*/
-    virtual CL_NS(util)::Comparable* sortValue (struct ScoreDoc* i) = 0;
+  virtual CL_NS(util)::Comparable* sortValue (struct ScoreDoc* i) = 0;
 
 	
 	/**
@@ -67,7 +65,7 @@ CL_NS_DEF(search)
 	* @return One of the constants in SortField.
 	* @see SortField
 	*/
-    virtual int32_t sortType() = 0;
+  virtual int32_t sortType() = 0;
 
 	/** Special comparator for sorting hits according to computed relevance (document score). */
 	static ScoreDocComparator* RELEVANCE();

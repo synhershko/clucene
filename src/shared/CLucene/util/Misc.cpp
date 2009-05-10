@@ -89,6 +89,15 @@ size_t Misc::whashCode(const wchar_t* str, size_t len){
 	return hashCode;
 }
 
+std::string Misc::toString(const TCHAR* s, int32_t len){
+  if ( s == NULL || len == 0 ) return "";
+  if ( len < 0 ) len = _tcslen(s);
+  char* buf = _CL_NEWARRAY(char,len+1);
+  STRCPY_WtoA(buf,s,len+1);
+  string ret = buf;
+  _CLDELETE_CaARRAY(buf);
+  return ret;
+}
 //static
 char* Misc::_wideToChar(const wchar_t* s){
    size_t len = _tcslen(s);
@@ -403,6 +412,26 @@ void Misc::listFiles(const char* directory, std::vector<std::string>& files, boo
 	  fl = readdir(dir);
   }
   closedir(dir);
+}
+
+
+std::string Misc::toString(const bool value){
+  return value ? "true" : "false";
+}
+std::string Misc::toString(const int32_t value){
+  char buf[20];
+  _snprintf(buf,20,"%d",value);
+  return buf;
+}
+std::string Misc::toString(const int64_t value){
+  char buf[20];
+  _snprintf(buf,20,"%l",value);
+  return buf;
+}
+std::string Misc::toString(const float_t value){
+  char buf[20];
+  _snprintf(buf,20,"%0.2f",value);
+  return buf;
 }
 
 CL_NS_END

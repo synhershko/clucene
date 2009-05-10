@@ -237,9 +237,9 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   TCHAR* terms[2];
   terms[0]=NULL;terms[1]=NULL;
   Token t;
-  bool tret=true;
+  Token* tret=&t;
   bool from=true;
-  while(tret)
+  while(tret!=NULL)
   {
 		try{
 		  tret = source->next(&t);
@@ -249,7 +249,7 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
 			else
 				throw err;
 		}
-		if (tret)
+		if (tret!=NULL)
 		{
 			if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
 				continue;

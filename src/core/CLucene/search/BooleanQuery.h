@@ -7,10 +7,6 @@
 #ifndef _lucene_search_BooleanQuery_
 #define _lucene_search_BooleanQuery_
 
-
-//#include "ConjunctionScorer.h"
-//#include "CLucene/index/IndexReader.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 CL_CLASS_DEF(util,StringBuffer)
 CL_CLASS_DEF(search,Weight)
 CL_CLASS_DEF(search,BooleanWeight2)

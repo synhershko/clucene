@@ -23,7 +23,7 @@
 #include "_TermInfosReader.h"
 #include "_CompoundFile.h"
 #include "DirectoryIndexReader.h"
-#include "_DefaultSkipListReader.h"
+#include "_SkipListReader.h"
 #include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_DEF(index)
@@ -143,7 +143,7 @@ private:
 public:
 	int32_t getPayloadLength() const;
 
-	uint8_t* getPayload(uint8_t* data, const int32_t offset);
+	uint8_t* getPayload(uint8_t* data);
 
 	bool isPayloadAvailable() const;
 
@@ -415,6 +415,8 @@ public:
   */
   CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
 
+  static const char* getClassName();
+  const char* getObjectName() const;
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir, int32_t readBufferSize);
@@ -473,6 +475,7 @@ private:
   friend class SegmentTermPositions;
   friend class MultiReader;
   friend class MultiSegmentReader;
+  friend class SegmentMerger;
 };
 
 CL_NS_END

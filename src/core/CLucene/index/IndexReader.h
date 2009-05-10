@@ -9,8 +9,8 @@
 
 
 #include "CLucene/util/Array.h"
+#include "CLucene/util/VoidList.h"
 #include "CLucene/LuceneThreads.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,LuceneLock)
@@ -52,7 +52,7 @@ class TermVectorMapper;
  </p>
 
 */
-class CLUCENE_EXPORT IndexReader :LUCENE_BASE{
+class CLUCENE_EXPORT IndexReader: public CL_NS(util)::NamedObject{
   bool closed;
   mutable int refCount;
 protected:
@@ -698,6 +698,7 @@ public:
 
   friend class SegmentReader;
   friend class MultiReader;
+  friend class IndexWriter;
   friend class MultiSegmentReader;
 };
 

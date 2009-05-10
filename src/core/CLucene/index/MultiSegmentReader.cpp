@@ -474,6 +474,12 @@ void MultiSegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDel
       itr++;
     }
 }
+const char* MultiSegmentReader::getClassName(){
+  return "MultiSegmentReader";
+}
+const char* MultiSegmentReader::getObjectName() const{
+  return getClassName();
+}
 
 
 
@@ -894,15 +900,14 @@ int32_t MultiTermPositions::getPayloadLength() const{
   return curAsTP->getPayloadLength();
 }
 
-uint8_t* MultiTermPositions::getPayload(uint8_t* data, const int32_t offset){
+uint8_t* MultiTermPositions::getPayload(uint8_t* data){
   TermPositions* curAsTP = current->__asTermPositions();
-  return curAsTP->getPayload(data, offset);
+  return curAsTP->getPayload(data);
 }
 
 bool MultiTermPositions::isPayloadAvailable() const{
   TermPositions* curAsTP = current->__asTermPositions();
   return curAsTP->isPayloadAvailable();
 }
-
 
 CL_NS_END

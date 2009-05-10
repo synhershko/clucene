@@ -45,9 +45,9 @@ CL_NS_DEF2(analysis,standard)
 
     // createToken centralizes token creation for auditing purposes.
 	//Token* createToken(CL_NS(util)::StringBuffer* sb, TokenTypes tokenCode);
-    inline bool setToken(Token* t, CL_NS(util)::StringBuffer* sb, TokenTypes tokenCode);
+    inline Token* setToken(Token* t, CL_NS(util)::StringBuffer* sb, TokenTypes tokenCode);
 
-    bool ReadDotted(CL_NS(util)::StringBuffer* str, TokenTypes forcedType,Token* t);
+    Token* ReadDotted(CL_NS(util)::StringBuffer* str, TokenTypes forcedType,Token* t);
 
 	CL_NS(util)::BufferedReader* reader;
 	bool deleteReader;
@@ -62,24 +62,24 @@ CL_NS_DEF2(analysis,standard)
     /** Returns the next token in the stream, or false at end-of-stream.
     * The returned token's type is set to an element of
     * StandardTokenizerConstants::tokenImage. */
-    bool next(Token* token);
+    Token* next(Token* token);
 
     // Reads for number like "1"/"1234.567", or IP address like "192.168.1.2".
-    bool ReadNumber(const TCHAR* previousNumber, const TCHAR prev, Token* t);
+    Token* ReadNumber(const TCHAR* previousNumber, const TCHAR prev, Token* t);
 
-    bool ReadAlphaNum(const TCHAR prev, Token* t);
+    Token* ReadAlphaNum(const TCHAR prev, Token* t);
 
     // Reads for apostrophe-containing word.
-    bool ReadApostrophe(CL_NS(util)::StringBuffer* str, Token* t);
+    Token* ReadApostrophe(CL_NS(util)::StringBuffer* str, Token* t);
 
     // Reads for something@... it may be a COMPANY name or a EMAIL address
-    bool ReadAt(CL_NS(util)::StringBuffer* str, Token* t);
+    Token* ReadAt(CL_NS(util)::StringBuffer* str, Token* t);
 
     // Reads for COMPANY name like AT&T.
-    bool ReadCompany(CL_NS(util)::StringBuffer* str, Token* t);
+    Token* ReadCompany(CL_NS(util)::StringBuffer* str, Token* t);
     
     // Reads CJK characters
-    bool ReadCJK(const TCHAR prev, Token* t);
+    Token* ReadCJK(const TCHAR prev, Token* t);
   };
 
 CL_NS_END2

@@ -419,7 +419,7 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
     free(buffer);
 }
 
-ObjectArray<TermVectorOffsetInfo> TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
+ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO = _CLNEW ObjectArray<TermVectorOffsetInfo>;
 
 TermVectorOffsetInfo::TermVectorOffsetInfo() {
 	startOffset = 0;

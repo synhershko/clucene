@@ -7,7 +7,7 @@
 #include "test.h"
 
 //an in memory input stream for testing binary data
-class MemReader: public CL_NS(util)::InputStream{
+class MemReader: public CL_NS(util)::Reader{
 	signed char* value;
 	size_t len;
 	int64_t pos;
@@ -81,26 +81,26 @@ public:
   void TestBinaryDocument(CuTest *tc){
     char factbook[1024];
     strcpy(factbook, clucene_data_location);
-	strcat(factbook, "/reuters-21578/feldman-cia-worldfactbook-data.txt");
-	CuAssert(tc,_T("Factbook file does not exist"),Misc::dir_Exists(factbook));
+	  strcat(factbook, "/reuters-21578/feldman-cia-worldfactbook-data.txt");
+	  CuAssert(tc,_T("Factbook file does not exist"),Misc::dir_Exists(factbook));
 
     Document doc;
     Field* f;
-    const signed char* _as;
     const signed char* _as2;
     const TCHAR* _ts;
-	CL_NS(util)::InputStream* strm;
+	  const ValueArray<uint8_t>* strm;
     RAMDirectory ram;
 
     const char* areaderString = "a string reader field";
     const TCHAR* treaderString = _T("a string reader field");
     int readerStringLen = strlen(areaderString);
 
-	SimpleAnalyzer an;
+	  SimpleAnalyzer an;
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
     //use binary utf8
-    doc.add( *_CLNEW Field(_T("utf8Field"), _CLNEW MemReader(areaderString), 
+    ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString));
+    doc.add( *_CLNEW Field(_T("utf8Field"), b , 
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
@@ -112,10 +112,12 @@ public:
     doc.clear();
 
     //done adding documents, now try and read them back
-	writer.optimize();
+    writer.optimize();
 	
     //use big file
-    doc.add( *_CLNEW Field(_T("fileField"), _CLNEW CL_NS(util)::FileInputStream(factbook), 
+    CL_NS(util)::FileInputStream input(factbook);
+    CL_NS(util)::SimpleInputStreamReader sreader(&input, SimpleInputStreamReader::ASCII);
+    doc.add( *_CLNEW Field(_T("fileField"), &sreader, 
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
@@ -129,14 +131,13 @@ public:
     //now check binary stream
     reader->document(0, doc);
     f = doc.getField(_T("utf8Field"));
-    strm = f->streamValue();
+    strm = f->binaryValue();
 
+    CLUCENE_ASSERT(readerStringLen == b->length);
     for ( int i=0;i<readerStringLen;i++){
-        CLUCENE_ASSERT(strm->read(_as,1,1)==1);
-        CLUCENE_ASSERT(*_as==areaderString[i]);
+        CLUCENE_ASSERT((*strm)[i]==areaderString[i]);
     }
-    CLUCENE_ASSERT(strm->read(_as,1,1)==-1);
-	doc.clear();
+	  doc.clear();
 
 
     //and check reader stream
@@ -150,18 +151,19 @@ public:
     //now check file stream
     reader->document(2, doc);
     f = doc.getField(_T("fileField"));
-    strm = f->streamValue();
+    strm = f->binaryValue();
     FileInputStream fbStream(factbook);
 
+    int i=0;
     do{
         int32_t rd = fbStream.read(_as2,1,1);
         if ( rd == -1 )
             break;
         CLUCENE_ASSERT(rd==1);
-        CLUCENE_ASSERT(strm->read(_as,1,1)==1);
-        CLUCENE_ASSERT(*_as==*_as2);
+        CLUCENE_ASSERT((*strm)[i]==*_as2);
+        i++;
     }while(true);
-    CLUCENE_ASSERT(strm->read(_as,1,1)==-1);
+    CLUCENE_ASSERT(i == b->length);
     doc.clear();
 
 

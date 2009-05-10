@@ -8,6 +8,7 @@
 #include "AnalysisHeader.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_ThreadLocal.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
@@ -143,6 +144,11 @@ void Token::setText(const TCHAR* text){
 	_termText[_termTextLen] = 0; //make sure null terminated
 }
 
+void Token::setTermLength(int32_t len){
+  if(bufferTextLen<len)
+    this->growBuffer(len);
+  this->_termTextLen = len;
+}
 void Token::growBuffer(size_t size){
 	if(bufferTextLen>=size)
 		return;
@@ -229,6 +235,8 @@ void Token::clear() {
 	// type = DEFAULT_TYPE;
 }
 
+void TokenStream::reset(){
+}
 
 Token* TokenStream::next(){
 	Token* t = _CLNEW Token; //deprecated

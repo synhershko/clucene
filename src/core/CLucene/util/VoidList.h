@@ -20,6 +20,7 @@ template<typename _kt,typename _base,typename _valueDeletor>
 class CLUCENE_INLINE_EXPORT __CLList:public _base,LUCENE_BASE {
 private:
 	bool dv;
+protected:
 	typedef _base base;
 public:
 	typedef typename _base::const_iterator const_iterator;
@@ -101,8 +102,9 @@ public:
 		if ( dv && !dontDelete ) 
 			_valueDeletor::doDelete(key);
 	}
-
 };
+
+
 
 //growable arrays of Objects (like a collection or list)
 //a list, so can contain duplicates

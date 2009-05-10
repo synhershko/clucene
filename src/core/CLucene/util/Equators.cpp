@@ -34,6 +34,25 @@ AbstractDeletor::~AbstractDeletor(){
 ////////////////////////////////////////////////////////////////////////////////
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
+int32_t compare(Comparable* o1, Comparable* o2){
+  if ( o1 == NULL && o2 == NULL )
+    return 0;
+  else if ( o1 == NULL )
+    return 1;
+  else if ( o2 == NULL )
+    return -1;
+  else
+    return o1->compareTo(o2);
+}
+NamedObject::~NamedObject(){
+}
+bool NamedObject::instanceOf(const char* other) const{
+  const char* t = this->getObjectName();
+	if ( t==other || strcmp( t, other )==0 )
+		return true;
+	else
+		return false;
+}
 
 int32_t Compare::Int32::getValue() const{ return value; }
 Compare::Int32::Int32(int32_t val){

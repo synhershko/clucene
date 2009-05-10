@@ -54,6 +54,12 @@ CL_NS_DEF(util)
 	static size_t longToBase( int64_t value, int32_t base, char* to ); //< length of to should be at least ((sizeof(unsigned long) << 3) + 1). returns actual length used
 	static int64_t base36ToLong( const char* value );	
 
+  static std::string toString(const int32_t value);
+  static std::string toString(const int64_t value);
+  static std::string toString(const bool value);
+  static std::string toString(const float_t value);
+  static std::string toString(const TCHAR* s, int32_t len=-1);
+
 	#ifdef _UCS2
     static size_t whashCode(const wchar_t* str);
 		static size_t whashCode(const wchar_t* str, size_t len);

@@ -7,15 +7,8 @@
 #ifndef _lucene_analysis_standard_StandardAnalyzer
 #define _lucene_analysis_standard_StandardAnalyzer
 
-
-//#include "CLucene/util/VoidMap.h"
 CL_CLASS_DEF(util,BufferedReader)
 #include "CLucene/analysis/AnalysisHeader.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
-//#include "CLucene/analysis/Analyzers.h"
-//#include "StandardFilter.h"
-//#include "StandardTokenizer.h"
-
 
 CL_NS_DEF2(analysis,standard)
 

@@ -47,7 +47,7 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
 	//Here is the default implementation:
 	void _Cnd_OutDebug( const char* FormattedMsg, const char* StrTitle, const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal );
 	
-	void __cnd_FormatDebug( const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal );
+	void CLUCENE_SHARED_EXPORT __cnd_FormatDebug( const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal );
 	#define CND__EXIT(file,line,title,mes2)						{__cnd_FormatDebug(file,line,title,mes2,1);}
 	#define CND__EXITCONDITION(cond,file,line,title,mes2)		{if(!(cond)){__cnd_FormatDebug(file,line,title,mes2,1);}}
 	#define CND__CONDITION(cond,file,line,title,mes2)			{if(!(cond)){__cnd_FormatDebug(file,line,title,mes2,0);}}

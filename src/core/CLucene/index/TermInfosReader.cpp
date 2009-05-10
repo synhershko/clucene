@@ -46,7 +46,7 @@ CL_NS_DEF(index)
 	  string tiiFile = Misc::segmentname(segment,".tii");
 	  bool success = false;
     origEnum = indexEnum = NULL;
-    indexTermsLength = totalIndexInterval = _size = 0;
+    _size = indexTermsLength = totalIndexInterval = 0;
 
 	  try {
 		  //Create an SegmentTermEnum for storing all the terms read of the segment

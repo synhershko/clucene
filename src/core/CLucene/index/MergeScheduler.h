@@ -9,6 +9,8 @@
 
 CL_NS_DEF(index)
 
+class IndexWriter;
+
 /** Expert: {@link IndexWriter} uses an instance
  *  implementing this interface to execute the merges
  *  selected by a {@link MergePolicy}.  The default
@@ -16,14 +18,14 @@ CL_NS_DEF(index)
  * <p><b>NOTE:</b> This API is new and still experimental
  * (subject to change suddenly in the next release)</p>
 */
-class MergeScheduler {
+class MergeScheduler: public CL_NS(util)::NamedObject {
 public:
   /** Run the merges provided by {@link IndexWriter#getNextMerge()}. */
-  void merge(IndexWriter* writer) = 0;
+  virtual void merge(IndexWriter* writer) = 0;
 
   /** Close this MergeScheduler. */
-  void close() = 0;
-}
+  virtual void close() = 0;
+};
 
 /** A {@link MergeScheduler} that simply does each merge
  *  sequentially, using the current thread. */
@@ -34,18 +36,12 @@ public:
   /** Just do the merges in sequence. We do this
    * "synchronized" so that even if the application is using
    * multiple threads, only one merge may run at a time. */
-  void merge(IndexWriter* writer){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    while(true) {
-      MergePolicy::OneMerge* merge = writer->getNextMerge();
-      if (merge == NULL)
-        break;
-      writer->merge(merge);
-    }
-  }
+  void merge(IndexWriter* writer);
+  void close();
 
-  void close() {}
-}
+  const char* getObjectName() const;
+  static const char* getClassName();
+};
 
 
 CL_NS_END

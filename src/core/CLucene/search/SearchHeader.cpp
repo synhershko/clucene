@@ -81,13 +81,6 @@ Query* Query::combine(Query** queries){
 Similarity* Query::getSimilarity(Searcher* searcher) {
    return searcher->getSimilarity();
 }
-bool Query::instanceOf(const char* other) const{
-  const char* t = getObjectName();
-	if ( t==other || strcmp( t, other )==0 )
-		return true;
-	else
-		return false;
-}
 TCHAR* Query::toString() const{
    return toString(LUCENE_BLANK_STRING);
 }

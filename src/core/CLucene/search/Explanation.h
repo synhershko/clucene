@@ -7,7 +7,7 @@
 #ifndef _lucene_search_Explanation
 #define _lucene_search_Explanation
 
-#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/VoidList.h"
 
 CL_NS_DEF(search)
 

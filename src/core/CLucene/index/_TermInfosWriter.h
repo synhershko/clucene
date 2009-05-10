@@ -14,7 +14,8 @@ CL_CLASS_DEF(store,Directory)
 //#include "Term.h"
 
 CL_NS_DEF(index)
-
+class FieldInfos;
+class TermInfo;
 
 	// This stores a monotonically increasing set of <Term, TermInfo> pairs in a
 	// Directory.  A TermInfos can be written once, in order.  
@@ -22,18 +23,41 @@ CL_NS_DEF(index)
 	private:
 		FieldInfos* fieldInfos;
 		CL_NS(store)::IndexOutput* output;
-		Term* lastTerm;
 		TermInfo* lastTi;
 		int64_t size;
-		int64_t lastIndexPointer;
-		bool isIndex;
+
+    int64_t lastIndexPointer;
+    bool isIndex;
+    TCHAR* lastTermText;
+    size_t lastTermTextBufLen; //current length of lastTermText buffer
+    int32_t lastTermTextLength; 
+    int32_t lastFieldNumber;
+
+    TCHAR* termTextBuffer;
+    size_t termTextBufferLen; //current length of termTextBuffer buffer
+
 		TermInfosWriter* other;
 	
 		//inititalize
 		TermInfosWriter(CL_NS(store)::Directory* directory, const char* segment, FieldInfos* fis, int32_t interval, bool isIndex);
+
+    int32_t compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t start, int32_t length);
 	public:
+    /** Expert: The maximum number of skip levels. Smaller values result in 
+    * slightly smaller indexes, but slower skipping in big posting lists.
+    */
+    int32_t maxSkipLevels;
+
 		/** The file format version, a negative number. */
-		LUCENE_STATIC_CONSTANT(int32_t,FORMAT=-2);
+		LUCENE_STATIC_CONSTANT(int32_t,FORMAT=-3);
+
+    //Expert: The fraction of {@link TermDocs} entries stored in skip tables,
+    //used to accellerate {@link TermDocs#skipTo(int)}.  Larger values result in
+    //smaller indices, greater acceleration, but fewer accelerable cases, while
+    //smaller values result in bigger indices, less acceleration and more
+    //accelerable cases. More detailed experiments would be useful here. */
+    LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_TERMDOCS_SKIP_INTERVAL=16);
+
 
 		/**
 		* Expert: The fraction of terms in the "dictionary" which should be stored
@@ -57,12 +81,13 @@ CL_NS_DEF(index)
 
 		~TermInfosWriter();
 
-		/**
-		* Adds a new <Term, TermInfo> pair to the set.
-		* Term must be lexicographically greater than all previous Terms added.
-		* TermInfo pointers must be positive and greater than all previous.
-		*/
-		void add(Term* term, const TermInfo* ti);
+      
+    void add(Term* term, TermInfo* ti);
+
+    /** Adds a new <<fieldNumber, termText>, TermInfo> pair to the set.
+    Term must be lexicographically greater than all previous Terms added.
+    TermInfo pointers must be positive and greater than all previous.*/
+		void add(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength, const TermInfo* ti);
 
 		/** Called to complete TermInfos creation. */
 		void close();
@@ -70,7 +95,7 @@ CL_NS_DEF(index)
 	private:
         /** Helps constructors to initialize instances */
 		void initialise(CL_NS(store)::Directory* directory, const char* segment, int32_t interval, bool IsIndex);
-		void writeTerm(Term* term);
+		void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength);
 	};
 CL_NS_END
 #endif

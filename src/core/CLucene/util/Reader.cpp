@@ -33,12 +33,12 @@ StringReader::StringReader ( const TCHAR* value, const int32_t length, bool copy
 }
 
 void StringReader::init ( const TCHAR* value, const int32_t length, bool copyData ){
-	this->m_size = length;
+  this->m_size = ( length < 0 ? _tcslen(value) : length );
 	this->pos = 0;
 	if ( copyData ){
-		TCHAR* value = _CL_NEWARRAY(TCHAR, this->m_size);
-		_tcsncpy(value, value, this->m_size);
-		this->value = value;
+		TCHAR* b = _CL_NEWARRAY(TCHAR, this->m_size+1);
+		_tcsncpy(b, value, this->m_size+1);
+		this->value = b;
 	}else{
 		this->value = value;
 	}

@@ -101,7 +101,7 @@ CL_NS_DEF(store)
   }
 
   void IndexOutput::writeVInt(const int32_t vi) {
-	uint32_t i = vi;
+	  uint32_t i = vi;
     while ((i & ~0x7F) != 0) {
       writeByte((uint8_t)((i & 0x7f) | 0x80));
       i >>= 7; //doing unsigned shift
@@ -136,15 +136,15 @@ CL_NS_DEF(store)
   
   void IndexOutput::writeString(const TCHAR* s, const int32_t length ) {
     writeVInt(length);
-    writeChars(s, 0, length);
+    writeChars(s, length);
   }
 
-  void IndexOutput::writeChars(const TCHAR* s, const int32_t start, const int32_t length){
-    if ( length < 0 || start < 0 )
+  void IndexOutput::writeChars(const TCHAR* s, const int32_t length){
+    if ( length < 0 )
       _CLTHROWA(CL_ERR_IllegalArgument, "IO Argument Error. Value must be a positive value.");
 
-    const int32_t end = start + length;
-    for (int32_t i = start; i < end; ++i) {
+    const int32_t end = length;
+    for (int32_t i = 0; i < end; ++i) {
         const int32_t code = (int32_t)s[i];
         if (code >= 0x01 && code <= 0x7F)
 					writeByte((uint8_t)code);

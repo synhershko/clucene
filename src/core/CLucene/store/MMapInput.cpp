@@ -128,25 +128,26 @@ CL_NS_USE(util)
 	  internal->_length = GetFileSize(internal->fhandle, &dummy);
 
 	  if ( internal->_length > 0 ){
-		internal->mmaphandle = CreateFileMappingA(internal->fhandle,NULL,PAGE_READONLY,0,0,NULL);
-		if ( internal->mmaphandle != NULL ){
-			void* address = MapViewOfFile(internal->mmaphandle,FILE_MAP_READ,0,0,0);
-			if ( address != NULL ){
-				internal->data = (uint8_t*)address;
-				return; //SUCCESS!
+			internal->mmaphandle = CreateFileMappingA(internal->fhandle,NULL,PAGE_READONLY,0,0,NULL);
+			if ( internal->mmaphandle != NULL ){
+				void* address = MapViewOfFile(internal->mmaphandle,FILE_MAP_READ,0,0,0);
+				if ( address != NULL ){
+					internal->data = (uint8_t*)address;
+					return; //SUCCESS!
+				}
 			}
-		}
-		
-		//failure:
-		int errnum = GetLastError(); 
-		
-		CloseHandle(internal->mmaphandle);
-
-		char* lpMsgBuf=strerror(errnum);
-		char* errstr = _CL_NEWARRAY(char, strlen(lpMsgBuf)+80); 
-		sprintf(errstr, "MMapIndexInput::MMapIndexInput failed with error %d: %s", errnum, lpMsgBuf); 
-
-		_CLTHROWA_DEL(CL_ERR_IO,errstr);
+			
+			//failure:
+			int errnum = GetLastError(); 
+			
+			CloseHandle(internal->mmaphandle);
+	
+			char* lpMsgBuf=strerror(errnum);
+			size_t len = strlen(lpMsgBuf)+80;
+			char* errstr = _CL_NEWARRAY(char, len); 
+			cl_sprintf(errstr, "MMapIndexInput::MMapIndexInput failed with error %d: %s", len, errnum, lpMsgBuf); 
+	
+			_CLTHROWA_DEL(CL_ERR_IO,errstr);
 	  }
 
 #else //_CL_HAVE_FUNCTION_MAPVIEWOFFILE

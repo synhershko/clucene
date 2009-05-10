@@ -5,6 +5,9 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
+#include "Term.h"
+#include "_TermInfo.h"
+#include "_SkipListWriter.h"
 #include "_CompoundFile.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/store/IndexInput.h"
@@ -272,89 +275,115 @@ string CompoundFileReader::toString() const{
 	return string("CompoundFileReader@") + fileName;
 }
 
-CompoundFileWriter::CompoundFileWriter(Directory* dir, const char* name):
-	ids(true),entries(_CLNEW EntriesType(true)){
+
+
+class CompoundFileWriter::Internal{
+public:
+	CL_NS(store)::Directory* directory;
+	string fileName;
+
+	CL_NS(util)::CLHashSet<const char*,
+		CL_NS(util)::Compare::Char,CL_NS(util)::Deletor::acArray> ids;
+
+	typedef CL_NS(util)::CLLinkedList<WriterFileEntry*,
+		CL_NS(util)::Deletor::Object<WriterFileEntry> > EntriesType;	
+	EntriesType* entries;
+
+	bool merged;
+  SegmentMerger::CheckAbort* checkAbort;
+
+  Internal():
+    entries(_CLNEW EntriesType(true)),
+    ids(true)
+  {
+
+  }
+  ~Internal(){
+	_CLDELETE(entries);
+  }
+};
+CompoundFileWriter::CompoundFileWriter(Directory* dir, const char* name, SegmentMerger::CheckAbort* checkAbort){
+  _internal = _CLNEW Internal;
   if (dir == NULL)
       _CLTHROWA(CL_ERR_NullPointer,"directory cannot be null");
   if (name == NULL)
       _CLTHROWA(CL_ERR_NullPointer,"name cannot be null");
-  merged = false;
-  directory = dir;
-  fileName = STRDUP_AtoA(name);
+  _internal->merged = false;
+  _internal->checkAbort = checkAbort;
+  _internal->directory = dir;
+  _internal->fileName = STRDUP_AtoA(name);
 }
 
 CompoundFileWriter::~CompoundFileWriter(){
-	_CLDELETE_CaARRAY(fileName);
-	_CLDELETE(entries);
+  _CLDELETE(_internal);
 }
 
 Directory* CompoundFileWriter::getDirectory(){
-  return directory;
+  return _internal->directory;
 }
 
 /** Returns the name of the compound file. */
 const char* CompoundFileWriter::getName() const{
-  return fileName;
+  return _internal->fileName.c_str();
 }
 
 void CompoundFileWriter::addFile(const char* file){
-  if (merged)
+  if (_internal->merged)
       _CLTHROWA(CL_ERR_IO,"Can't add extensions after merge has been called");
 
   if (file == NULL)
       _CLTHROWA(CL_ERR_NullPointer,"file cannot be null");
 
-  if (ids.find(file)!=ids.end()){
+  if (_internal->ids.find(file)!=_internal->ids.end()){
      char buf[CL_MAX_PATH + 30];
      strcpy(buf,"File ");
      strncat(buf,file,CL_MAX_PATH);
      strcat(buf," already added");
      _CLTHROWA(CL_ERR_IO,buf);
   }
-  ids.insert(STRDUP_AtoA(file));
+  _internal->ids.insert(STRDUP_AtoA(file));
 
   WriterFileEntry* entry = _CLNEW WriterFileEntry();
   STRCPY_AtoA(entry->file,file,CL_MAX_PATH);
-  entries->push_back(entry);
+  _internal->entries->push_back(entry);
 }
 
 void CompoundFileWriter::close(){
-  if (merged)
+  if (_internal->merged)
       _CLTHROWA(CL_ERR_IO,"Merge already performed");
 
-  if (entries->size()==0) //isEmpty()
+  if (_internal->entries->size()==0) //isEmpty()
       _CLTHROWA(CL_ERR_IO,"No entries to merge have been defined");
 
-  merged = true;
+  _internal->merged = true;
 
   // open the compound stream
   IndexOutput* os = NULL;
   try {
-      os = directory->createOutput(fileName);
+      os = _internal->directory->createOutput(_internal->fileName.c_str());
 
       // Write the number of entries
-      os->writeVInt(entries->size());
+      os->writeVInt(_internal->entries->size());
 
       // Write the directory with all offsets at 0.
       // Remember the positions of directory entries so that we can
       // adjust the offsets later
       { //msvc6 for scope fix
 		  TCHAR tfile[CL_MAX_PATH];
-		  for ( CLLinkedList<WriterFileEntry*>::iterator i=entries->begin();i!=entries->end();i++ ){
+		  for ( CLLinkedList<WriterFileEntry*>::iterator i=_internal->entries->begin();i!=_internal->entries->end();i++ ){
 			  WriterFileEntry* fe = *i;
 			  fe->directoryOffset = os->getFilePointer();
 			  os->writeLong(0);    // for now
-			  STRCPY_AtoT(tfile,fe->file,CL_MAX_PATH);
-			  os->writeString(tfile,_tcslen(tfile));
+			  os->writeString(fe->file);
 		  }
 	  }
 
       // Open the files and copy their data into the stream.
       // Remember the locations of each file's data section.
       { //msvc6 for scope fix
-		  int32_t bufferLength = 1024;
-		  uint8_t buffer[1024];
-		  for ( CL_NS(util)::CLLinkedList<WriterFileEntry*>::iterator i=entries->begin();i!=entries->end();i++ ){
+      const int32_t bufferLength = 16384;
+		  uint8_t buffer[bufferLength];
+		  for ( CL_NS(util)::CLLinkedList<WriterFileEntry*>::iterator i=_internal->entries->begin();i!=_internal->entries->end();i++ ){
 			  WriterFileEntry* fe = *i;
 			  fe->dataOffset = os->getFilePointer();
 			  copyFile(fe, os, buffer, bufferLength);
@@ -363,7 +392,8 @@ void CompoundFileWriter::close(){
 
 	  { //msvc6 for scope fix
 		  // Write the data offsets into the directory of the compound stream
-		  for ( CLLinkedList<WriterFileEntry*>::iterator i=entries->begin();i!=entries->end();i++ ){
+		  for ( CLLinkedList<WriterFileEntry*>::iterator i=_internal->entries->begin();
+            i!=_internal->entries->end();i++ ){
 			  WriterFileEntry* fe = *i;
 			  os->seek(fe->directoryOffset);
 			  os->writeLong(fe->dataOffset);
@@ -382,7 +412,7 @@ void CompoundFileWriter::copyFile(WriterFileEntry* source, IndexOutput* os, uint
   try {
       int64_t startPtr = os->getFilePointer();
 
-      is = directory->openInput(source->file);
+      is = _internal->directory->openInput(source->file);
       int64_t length = is->length();
       int64_t remainder = length;
       int32_t chunk = bufferLength;
@@ -392,15 +422,20 @@ void CompoundFileWriter::copyFile(WriterFileEntry* source, IndexOutput* os, uint
           is->readBytes(buffer, len);
           os->writeBytes(buffer, len);
           remainder -= len;
+          
+          if (_internal->checkAbort != NULL)
+            // Roughly every 2 MB we will check if
+            // it's time to abort
+            _internal->checkAbort->work(80);
       }
 
       // Verify that remainder is 0
       if (remainder != 0){
          TCHAR buf[CL_MAX_PATH+100];
          _sntprintf(buf,CL_MAX_PATH+100,_T("Non-zero remainder length after copying")
-          _T(": %d (id: %s, length: %d, buffer size: %d)"),
-          remainder,source->file,length,chunk );
-		 _CLTHROWT(CL_ERR_IO,buf);
+            _T(": %d (id: %s, length: %d, buffer size: %d)"),
+            remainder,source->file,length,chunk );
+		    _CLTHROWT(CL_ERR_IO,buf);
       }
 
       // Verify that the output length diff is equal to original file

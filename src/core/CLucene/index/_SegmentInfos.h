@@ -183,7 +183,7 @@ CL_NS_DEF(index)
 
 		/** We consider another SegmentInfo instance equal if it
 		*  has the same dir and same name. */
-		bool equals(SegmentInfo* obj);
+		bool equals(const SegmentInfo* obj);
 
 		///Gets the Directory where the segment resides
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
@@ -230,6 +230,8 @@ CL_NS_DEF(index)
 
 	class SegmentInfos: LUCENE_BASE {
 	public:
+	  DEFINE_MUTEX(THIS_LOCK)
+
 		/** The file format version, a negative number. */
 		/* Works since counter, the old 1st entry, is always >= 0 */
 		LUCENE_STATIC_CONSTANT(int32_t,FORMAT=-1);
@@ -290,9 +292,9 @@ CL_NS_DEF(index)
 
     static void message(const char* _message, ...);
 
-    public:
-        SegmentInfos(bool deleteMembers=true, int32_t reserveCount=0);
-        ~SegmentInfos();
+  public:
+      SegmentInfos(bool deleteMembers=true, int32_t reserveCount=0);
+      ~SegmentInfos();
 
 		//Returns a reference to the i-th SegmentInfo in the list.
 		SegmentInfo* info(int32_t i) const;
@@ -350,11 +352,19 @@ CL_NS_DEF(index)
 		void clearto(size_t to, size_t end);
 		//count of segment infos
 		int32_t size() const;
-		//add a segment info
-		void add(SegmentInfo* info);
+		/** add a segment info
+    * @param pos position to add the info at. -1 for last position
+    */
+		void add(SegmentInfo* info, int32_t pos=-1);
 		SegmentInfo* elementAt(int32_t pos);
 		void setElementAt(SegmentInfo* si, int32_t pos);
 		inline void clear();
+    
+		void insert(SegmentInfos* infos);
+		void insert(SegmentInfo* info);
+		int32_t indexOf(const SegmentInfo* info) const;
+		void range(size_t from, size_t to, SegmentInfos& ret) const;
+    void remove(size_t index);
 
 		/**
 		* Read a particular segmentFileName.  Note that this may
@@ -383,7 +393,7 @@ CL_NS_DEF(index)
 		* Returns a copy of this instance, also copying each
 		* SegmentInfo.
 		*/
-		SegmentInfos* clone();
+		SegmentInfos* clone() const;
 
 		/**
 		* version number when this SegmentInfos was generated.

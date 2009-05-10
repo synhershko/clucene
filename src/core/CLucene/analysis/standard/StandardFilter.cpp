@@ -23,34 +23,34 @@ CL_NS_DEF2(analysis,standard)
   StandardFilter::~StandardFilter(){
   }
 
-  bool StandardFilter::next(Token* t) {
-    if (!input->next(t))
-      return false;
+  Token* StandardFilter::next(Token* t) {
+    if (input->next(t)==NULL)
+      return NULL;
 
     TCHAR* text = t->_termText;
     const int32_t textLength = t->termLength();
     const TCHAR* type = t->type();
 
     if ( type == tokenImage[APOSTROPHE] && //we can compare the type directy since the type should always come from the tokenImage
-		( textLength >= 2 && _tcsicmp(text+textLength-2, _T("'s"))==0  ) )
+		  ( textLength >= 2 && _tcsicmp(text+textLength-2, _T("'s"))==0  ) )
     {
       // remove 's
       text[textLength-2]=0; 
-	  t->resetTermTextLen();
+	    t->resetTermTextLen();
 
-      return true;
+      return t;
 
     } else if ( type == tokenImage[ACRONYM] ) {		  // remove dots
-		int32_t j = 0;
-		for ( int32_t i=0;i<textLength;i++ ){
-			if ( text[i] != '.' )
-				text[j++]=text[i];
-		}
-		text[j]=0;
-      return true;
+		  int32_t j = 0;
+		  for ( int32_t i=0;i<textLength;i++ ){
+			  if ( text[i] != '.' )
+				  text[j++]=text[i];
+		  }
+		  text[j]=0;
+      return t;
 
     } else {
-      return true;
+      return t;
     }
   }
 

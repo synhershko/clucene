@@ -7,15 +7,8 @@
 #ifndef _lucene_search_Hits_h
 #define _lucene_search_Hits_h
 
-
-//#include "CLucene/index/IndexReader.h"
 CL_CLASS_DEF(index,Term)
-//#include "Filter.h"
 CL_CLASS_DEF(document,Document)
-//#include "Sort.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
-//#include "Explanation.h"
-//#include "Similarity.h"
 
 CL_NS_DEF(search)
 
