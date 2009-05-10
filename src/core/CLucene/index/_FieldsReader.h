@@ -7,8 +7,6 @@
 #ifndef _lucene_index_FieldsReader_
 #define _lucene_index_FieldsReader_
 
-
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/util/_ThreadLocal.h"
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(document,Document)
@@ -47,8 +45,6 @@ CL_NS_DEF(index)
 
 		DEFINE_MUTEX(THIS_LOCK)
 		CL_NS(util)::ThreadLocal<CL_NS(store)::IndexInput*, CL_NS(util)::Deletor::Object<CL_NS(store)::IndexInput> > fieldsStreamTL;
-
-		class FieldsStreamHolder;
 	public:
 		FieldsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fn,
 			int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE, int32_t docStoreOffset = -1, int32_t size = 0);
@@ -117,7 +113,7 @@ CL_NS_DEF(index)
 
 		public:
 			LazyField(FieldsReader* _parent, const TCHAR* _name, int config, const int32_t _toRead, const int64_t _pointer);
-
+      virtual ~LazyField();
 		private:
 			CL_NS(store)::IndexInput* getFieldStream();
 
@@ -125,7 +121,7 @@ CL_NS_DEF(index)
 			/** The value of the field in Binary, or null.  If null, the Reader value,
 			* String value, or TokenStream value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(util)::InputStream* streamValue();
+			const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
 
 			/** The value of the field as a Reader, or null.  If null, the String value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
@@ -149,6 +145,7 @@ CL_NS_DEF(index)
 			void setToRead(const int32_t _toRead);
 		};
 		friend class LazyField;
+		friend class SegmentMerger;
 
 		// Instances of this class hold field properties and data
 		// for merge
@@ -156,10 +153,11 @@ CL_NS_DEF(index)
 		public:
 			const TCHAR* stringValue() const;
 			CL_NS(util)::Reader* readerValue() const;
-			CL_NS(util)::InputStream* streamValue() const;
+			const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
 			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
 
 			FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
+      virtual ~FieldForMerge();
 		};
 	};
 CL_NS_END

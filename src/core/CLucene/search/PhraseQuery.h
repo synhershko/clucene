@@ -15,14 +15,8 @@
 #include "Query.h"
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(search,Scorer)
-//#include "CLucene/index/Terms.h"
-//#include "CLucene/index/IndexReader.h"
 CL_CLASS_DEF(util,StringBuffer)
-//#include "CLucene/util/VoidList.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/util/Array.h"
-//#include "ExactPhraseScorer.h"
-//#include "SloppyPhraseScorer.h"
 
 CL_NS_DEF(search)
 	/** A Query that matches documents containing a particular sequence of terms.

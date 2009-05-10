@@ -95,8 +95,7 @@ public:
 private:
     int startOffset;
     int endOffset;
-public: // TODO: Remove after TermVectorWriter has been ported
-	static CL_NS(util)::ObjectArray<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
+public: // TODO: Remove after TermVectorWriter has been ported;
     TermVectorOffsetInfo();
     ~TermVectorOffsetInfo();
     TermVectorOffsetInfo(int32_t startOffset, int32_t endOffset);
@@ -124,7 +123,7 @@ public: // TODO: Remove after TermVectorWriter has been ported
     bool equals(TermVectorOffsetInfo* o);
     size_t hashCode() const;
 };
-
+extern CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO;
 
 /** Extends <code>TermFreqVector</code> to provide additional information about
  *  positions in which each of the terms is found. A TermPositionVector not necessarily

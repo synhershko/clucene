@@ -23,6 +23,11 @@ CL_CLASS_DEF(index, TermEnum)
 CL_NS_DEF(index)
 
 /** 
+* <p>[Note that as of <b>2.1</b>, all but one of the
+* methods in this class are available via {@link
+* IndexWriter}.  The one method that is not available is
+* {@link #deleteDocument(int)}.]</p>
+*
 * A class to modify an index, i.e. to delete and add documents. This
 * class hides {@link IndexReader} and {@link IndexWriter} so that you
 * do not need to care about implementation details such as that adding
@@ -70,6 +75,7 @@ CL_NS_DEF(index)
 * want to update 20 documents, you should first delete all those documents,
 * then add all the new documents.
 * 
+* @deprecated Please use {@link IndexWriter} instead.
 */
 class CLUCENE_EXPORT IndexModifier :LUCENE_BASE{
 protected:

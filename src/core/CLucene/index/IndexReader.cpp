@@ -181,7 +181,7 @@ CL_NS_DEF(index)
   //Pre  - directory != NULL and contains the path name of the directory to check
   //Post - The last modified time of the index has been returned
 
-    CND_PRECONDITION(directory != NULL, "directory is NULL");
+    CND_PRECONDITION(directory2 != NULL, "directory is NULL");
 
 	  IndexReaderFindSegmentsFile runner(directory2);
 	  return (uint64_t)runner.run();

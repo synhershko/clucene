@@ -1,7 +1,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "_IndexFileDeleter.h"
 #include "IndexFileNameFilter.h"
-#include "_DocumentWriter.h"
+#include "_DocumentsWriter.h"
 #include "_SegmentHeader.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/LuceneThreads.h"
@@ -33,6 +33,11 @@ IndexFileDeleter::CommitPoint::CommitPoint(IndexFileDeleter* _this, SegmentInfos
 */
 std::string IndexFileDeleter::CommitPoint::getSegmentsFileName() {
 	return segmentsFileName;
+}
+bool IndexFileDeleter::CommitPoint::sort(IndexCommitPoint* elem1, IndexCommitPoint* elem2){
+  if (((CommitPoint*)elem1)->gen < ((CommitPoint*)elem2)->gen)
+    return true;
+  return false;
 }
 
 const std::vector<std::string>& IndexFileDeleter::CommitPoint::getFileNames() {
@@ -178,8 +183,8 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	}
 	
 	// We keep commits list in sorted order (oldest to newest):
-  assert(false);//test this...
-  std::sort(commits.begin(), commits.end());
+  assert(commits.size() < 3);//test this...
+  std::sort(commits.begin(), commits.end(), CommitPoint::sort);
 	
 	// Now delete anything with ref count at 0.  These are
 	// presumably abandoned files eg due to crash of
@@ -356,11 +361,13 @@ void IndexFileDeleter::checkpoint(SegmentInfos* segmentInfos, bool isCommit) {
 
   // Incref the files:
   incRef(segmentInfos, isCommit);
-  vector<string> docWriterFiles;
+  const vector<string>* docWriterFiles = NULL;
   if (docWriter != NULL) {
-    docWriter->files(docWriterFiles);
-    if (!docWriterFiles.empty())
-      incRef(docWriterFiles);
+    docWriterFiles = &docWriter->files();
+    if (!docWriterFiles->empty())
+      incRef(*docWriterFiles);
+    else
+      docWriterFiles = NULL;
   }
 
   if (isCommit) {
@@ -393,11 +400,11 @@ void IndexFileDeleter::checkpoint(SegmentInfos* segmentInfos, bool isCommit) {
       }
     }
   }
-  if (!docWriterFiles.empty())
-    lastFiles.insert(lastFiles.end(), docWriterFiles.begin(),docWriterFiles.end());
-  }
+  if (docWriterFiles != NULL)
+    lastFiles.insert(lastFiles.end(), docWriterFiles->begin(),docWriterFiles->end());
+}
 
-  void IndexFileDeleter::incRef(SegmentInfos* segmentInfos, bool isCommit) {
+void IndexFileDeleter::incRef(SegmentInfos* segmentInfos, bool isCommit) {
   int32_t size = segmentInfos->size();
   for(int32_t i=0;i<size;i++) {
     SegmentInfo* segmentInfo = segmentInfos->info(i);
@@ -481,7 +488,7 @@ void IndexFileDeleter::deleteFiles(vector<string>& files) {
 
 /** Delets the specified files, but only if they are new
 *  (have not yet been incref'd). */
-void IndexFileDeleter::deleteNewFiles(std::vector<std::string>& files) {
+void IndexFileDeleter::deleteNewFiles(const std::vector<std::string>& files) {
 	int32_t size = files.size();
 	for(int32_t i=0;i<size;i++)
 	  if (refCounts.find((char*)files[i].c_str()) == refCounts.end())

@@ -17,7 +17,6 @@ void testIWmergeSegments1(CuTest *tc){
 	IndexWriter ndx(&ram,&a,false);
 	ndx.setUseCompoundFile(false);
 	ndx.setMergeFactor(2);
-	ndx.setMinMergeDocs(1);
 	TCHAR fld[1000];
 	for ( int i=0;i<1000;i++ ){
         English::IntToEnglish(i,fld,1000);

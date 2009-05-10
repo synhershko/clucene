@@ -17,57 +17,58 @@ CL_CLASS_DEF(search,Explanation)
 CL_NS_DEF(search)
    /** Expert: Implements scoring for a class of queries. */
 class CLUCENE_EXPORT Scorer: LUCENE_BASE {
-   private:
-      Similarity* similarity;
-   protected:
-      /** Constructs a Scorer. */
-      Scorer(Similarity* similarity);
+private:
+  Similarity* similarity;
+protected:
+  /** Constructs a Scorer. */
+  Scorer(Similarity* similarity);
 
-	public:
-		virtual ~Scorer();
+public:
+	virtual ~Scorer();
 
-      /** Returns the Similarity implementation used by this scorer. */
-      Similarity* getSimilarity()  const;
+  /** Returns the Similarity implementation used by this scorer. */
+  Similarity* getSimilarity()  const;
 
-      /** Scores all documents and passes them to a collector. */
-      virtual void score(HitCollector* hc) ;
+  /** Scores all documents and passes them to a collector. */
+  virtual void score(HitCollector* hc) ;
 
-      virtual bool score( HitCollector* results, const int32_t maxDoc );
+  virtual bool score( HitCollector* results, const int32_t maxDoc );
 
-      /** Advance to the next document matching the query.  Returns true iff there
-         * is another match. */
-      virtual bool next() = 0;
+  /** Advance to the next document matching the query.  Returns true iff there
+     * is another match. */
+  virtual bool next() = 0;
 
-      /** Returns the current document number.  Initially invalid, until {@link
-         * #next()} is called the first time. */
-      virtual int32_t doc() const = 0;
+  /** Returns the current document number.  Initially invalid, until {@link
+     * #next()} is called the first time. */
+  virtual int32_t doc() const = 0;
 
-      /** Returns the score of the current document.  Initially invalid, until
-         * {@link #next()} is called the first time. */
-      virtual float_t score() = 0;
+  /** Returns the score of the current document.  Initially invalid, until
+     * {@link #next()} is called the first time. */
+  virtual float_t score() = 0;
 
-      /** Skips to the first match beyond the current whose document number is
-         * greater than or equal to <i>target</i>. <p>Returns true iff there is such
-         * a match.  <p>Behaves as if written: <pre>
-         *   boolean skipTo(int32_t target) {
-         *     do {
-         *       if (!next())
-         * 	     return false;
-         *     } while (target > doc());
-         *     return true;
-         *   }
-         * </pre>
-         * Most implementations are considerably more efficient than that.
-         */
-      virtual bool skipTo(int32_t target) = 0;
+  /** Skips to the first match beyond the current whose document number is
+     * greater than or equal to <i>target</i>. <p>Returns true iff there is such
+     * a match.  <p>Behaves as if written: <pre>
+     *   boolean skipTo(int32_t target) {
+     *     do {
+     *       if (!next())
+     * 	     return false;
+     *     } while (target > doc());
+     *     return true;
+     *   }
+     * </pre>
+     * Most implementations are considerably more efficient than that.
+     */
+  virtual bool skipTo(int32_t target) = 0;
 
-      /** Returns an explanation of the score for <code>doc</code>. */
-      virtual void explain(int32_t doc, Explanation* ret) = 0;
+  /** Returns an explanation of the score for <code>doc</code>. */
+  virtual void explain(int32_t doc, Explanation* ret) = 0;
 
-	  
-      /** Returns an string which explains the object */
-      virtual TCHAR* toString() = 0;
 
-    };
+  /** Returns an string which explains the object */
+  virtual TCHAR* toString() = 0;
+
+  static bool sort(const Scorer* elem1, const Scorer* elem2);
+};
 CL_NS_END
 #endif

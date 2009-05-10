@@ -8,13 +8,15 @@
 
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexOutput.h"
-#include "CLucene/store/_RAMDirectory.h"
+#include "CLucene/store/_RAMdirectory.h"
 #include "CLucene/util/Array.h"
+#include "CLucene/util/_Arrays.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/CLStreams.h"
 #include "CLucene/document/Field.h"
 #include "CLucene/search/Similarity.h"
 #include "CLucene/document/Document.h"
+#include "_TermInfo.h"
 #include "_FieldInfos.h"
 #include "_CompoundFile.h"
 #include "IndexWriter.h"
@@ -22,7 +24,6 @@
 #include "_FieldsWriter.h"
 #include "Term.h"
 #include "_Term.h"
-#include "_TermInfo.h"
 #include "_TermVector.h"
 #include "_TermInfosWriter.h"
 #include "CLucene/analysis/AnalysisHeader.h"
@@ -46,22 +47,35 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataHash(ObjectArray<FieldData>(16)),
   vectorFieldPointers(ValueArray<int64_t>(10)),
   vectorFieldNumbers(ValueArray<int32_t>(10)),
-  postingsFreeList(ValueArray<Posting>(256)),
+  postingsFreeList(ValueArray<Posting*>(256)),
   allFieldDataArray(ObjectArray<FieldData>(10)),
-  postingsVectors(ObjectArray<PostingVector*>(1)),
+  postingsVectors(ValueArray<PostingVector*>(1)),
   charPool( CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
-  postingsPool( ByteBlockPool(__parent, BYTE_BLOCK_SIZE) ),
-  vectorsPool( ByteBlockPool(__parent, BYTE_BLOCK_SIZE) )
+  postingsPool( ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
+  vectorsPool( ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) )
 {
   fieldDataHashMask = 15;
   postingsFreeCount = 0;
-  stringReader = _CLNEW ReusableStringReader(_T(""),0,true);
+  stringReader = _CLNEW ReusableStringReader(_T(""),0,false);
 
   isIdle = true;
   numThreads = 1;
 
   tvfLocal = _CLNEW RAMOutputStream();    // Term vectors for one doc
   fdtLocal = _CLNEW RAMOutputStream();    // Stored fields for one doc
+
+  this->docBoost = 0.0;
+  this->fieldGen = this->posUpto = this->maxPostingsVectors = this->numStoredFields = 0;
+  this->numAllFieldData = this->docID = NULL;
+  this->numFieldData = numVectorFields = this->proxUpto = this->freqUpto = this->offsetUpto = 0;
+  this->localFieldsWriter = NULL;
+  this->maxTermPrefix = NULL;
+  this->p = NULL;
+  this->prox = NULL;
+  this->vector = NULL;
+  this->offsets = NULL;
+  this->pos = NULL;
+  this->freq = NULL;
 }
 
 void DocumentsWriter::ThreadState::resetPostings() {
@@ -138,7 +152,7 @@ void DocumentsWriter::ThreadState::writeDocument() {
 
   if (_parent->bufferIsFull && !_parent->flushPending) {
     _parent->flushPending = true;
-    _parent->doFlushAfter = true;
+    doFlushAfter = true;
   }
 }
 
@@ -148,7 +162,7 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
   assert (_parent->writer->testPoint("DocumentsWriter.ThreadState.init start"));
 
   this->docID = docID;
-  docBoost = doc.getBoost();
+  docBoost = doc->getBoost();
   numStoredFields = 0;
   numFieldData = 0;
   numVectorFields = 0;
@@ -158,10 +172,10 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
   assert (0 == fdtLocal->getFilePointer());
   assert (0 == tvfLocal->length());
   assert (0 == tvfLocal->getFilePointer());
-  final int32_t thisFieldGen = fieldGen++;
+  const int32_t thisFieldGen = fieldGen++;
 
-  List docFields = doc.getFields();
-  final int32_t numDocFields = docFields.size();
+  const Document::FieldsType& docFields = *doc->getFields();
+  const int32_t numDocFields = docFields.size();
   bool docHasVectors = false;
 
   // Absorb any new fields first seen in this document.
@@ -170,55 +184,53 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
   // vectors, etc.):
 
   for(int32_t i=0;i<numDocFields;i++) {
-    Fieldable* field = docFields.get(i);
+    Fieldable* field = docFields[i];
 
     FieldInfo* fi = _parent->fieldInfos->add(field->name(), field->isIndexed(), field->isTermVectorStored(),
                                   field->isStorePositionWithTermVector(), field->isStoreOffsetWithTermVector(),
                                   field->getOmitNorms(), false);
-    if (fi.isIndexed && !fi.omitNorms) {
+    if (fi->isIndexed && !fi->omitNorms) {
       // Maybe grow our buffered norms
-      if (_parent->norms.length <= fi.number) {
-        int32_t newSize = (int32_t) ((1+fi.number)*1.25);
-        BufferedNorms[] newNorms = _CLNEW BufferedNorms[newSize];
-        System.arraycopy(_parent->norms, 0, newNorms, 0, _parent->norms.length);
-        norms = newNorms;
+      if (_parent->norms.length <= fi->number) {
+        int32_t newSize = (int32_t) ((1+fi->number)*1.25);
+        _parent->norms.resize(newSize);
       }
 
-      if (_parent->norms[fi.number] == NULL)
-        _parent->norms[fi.number] = _CLNEW BufferedNorms();
+      if (_parent->norms[fi->number] == NULL)
+        _parent->norms.values[fi->number] = _CLNEW BufferedNorms();
 
       _parent->hasNorms = true;
     }
 
     // Make sure we have a FieldData allocated
-    int32_t hashPos = fi.name.hashCode() & fieldDataHashMask;
+    int32_t hashPos = Misc::thashCode(fi->name) & fieldDataHashMask; //TODO: put hash in fieldinfo
     FieldData* fp = fieldDataHash[hashPos];
     while(fp != NULL && _tcscmp(fp->fieldInfo->name, fi->name) != 0 )
       fp = fp->next;
 
     if (fp == NULL) {
-
-      fp = _CLNEW FieldData(fi);
+      fp = _CLNEW FieldData(_parent,this,fi);
       fp->next = fieldDataHash[hashPos];
-      fieldDataHash[hashPos] = fp;
+      fieldDataHash.values[hashPos] = fp;
 
       if (numAllFieldData == allFieldDataArray.length) {
         int32_t newSize = (int32_t) (allFieldDataArray.length*1.5);
         int32_t newHashSize = fieldDataHash.length*2;
 
-        FieldData newArray[] = _CLNEW FieldData[newSize];
-        FieldData newHashArray[] = _CLNEW FieldData[newHashSize];
-        System.arraycopy(allFieldDataArray, 0, newArray, 0, numAllFieldData);
+        ObjectArray<FieldData> newArray(newSize);
+        ObjectArray<FieldData> newHashArray(newHashSize);
+        memcpy(newArray.values, allFieldDataArray.values, sizeof(FieldData) * numAllFieldData);
 
         // Rehash
         fieldDataHashMask = newSize-1;
-        for(int32_t j=0;j<fieldDataHash.length;j++) {
+        for(size_t j=0;j<fieldDataHash.length;j++) {
           FieldData* fp0 = fieldDataHash[j];
           while(fp0 != NULL) {
-            hashPos = fp0->fieldInfo->name.hashCode() & fieldDataHashMask;
-            FieldData nextFP0 = fp0.next;
-            fp0.next = newHashArray[hashPos];
-            newHashArray[hashPos] = fp0;
+            //todo: put hash code into fieldinfo to reduce number of hashes necessary
+            hashPos = Misc::thashCode(fp0->fieldInfo->name) & fieldDataHashMask;
+            FieldData* nextFP0 = fp0->next;
+            fp0->next = newHashArray[hashPos];
+            newHashArray.values[hashPos] = fp0;
             fp0 = nextFP0;
           }
         }
@@ -226,7 +238,7 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
         allFieldDataArray = newArray;
         fieldDataHash = newHashArray;
       }
-      allFieldDataArray[numAllFieldData++] = fp;
+      allFieldDataArray.values[numAllFieldData++] = fp;
     } else {
       assert (fp->fieldInfo == fi);
     }
@@ -237,29 +249,19 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
       fp->lastGen = thisFieldGen;
       fp->fieldCount = 0;
       fp->doVectors = fp->doVectorPositions = fp->doVectorOffsets = false;
-      fp->doNorms = fi.isIndexed && !fi.omitNorms;
+      fp->doNorms = fi->isIndexed && !fi->omitNorms;
 
       if (numFieldData == fieldDataArray.length) {
-        int32_t newSize = fieldDataArray.length*2;
-        FieldData newArray[] = new FieldData[newSize];
-        System.arraycopy(fieldDataArray, 0, newArray, 0, numFieldData);
-        fieldDataArray = newArray;
-
+        fieldDataArray.resize(fieldDataArray.length*2);
       }
-      fieldDataArray[numFieldData++] = fp;
+      fieldDataArray.values[numFieldData++] = fp;
     }
 
     if (field->isTermVectorStored()) {
       if (!fp->doVectors && numVectorFields++ == vectorFieldPointers.length) {
-        const int32_t newSize = (numVectorFields*1.5);
-
-		vectorFieldPointers.deleteArray();
-        vectorFieldPointers.values = _CL_NEWARRAY(int64_t, newSize);
-		vectorFieldPointers.length = newSize;
-
-		vectorFieldNumbers.deleteArray();
-        vectorFieldNumbers.values = _CL_NEWARRAY(int32_t, newSize);
-		vectorFieldNumbers.length = newSize;
+        const int32_t newSize = (int32_t)(numVectorFields*1.5);
+		    vectorFieldPointers.resize(newSize);
+		    vectorFieldNumbers.resize(newSize);
       }
       fp->doVectors = true;
       docHasVectors = true;
@@ -269,97 +271,95 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
     }
 
     if (fp->fieldCount == fp->docFields.length) {
-      Fieldable[] newArray = new Fieldable[fp->docFields.length*2];
-      System.arraycopy(fp->docFields, 0, newArray, 0, fp->docFields.length);
-      fp->docFields = newArray;
+      fp->docFields.resize(fp->docFields.length*2);
     }
 
     // Lazily allocate arrays for postings:
-    if (field->isIndexed() && fp->postingsHash == NULL)
+    if (field->isIndexed() && fp->postingsHash.values == NULL)
       fp->initPostingArrays();
 
-    fp->docFields[fp->fieldCount++] = field;
+    fp->docFields.values[fp->fieldCount++] = field;
   }
 
   // Maybe init the local & global fieldsWriter
   if (localFieldsWriter == NULL) {
-    if (fieldsWriter == NULL) {
-      assert (docStoreSegment == NULL);
-      assert (segment != NULL);
-      docStoreSegment = segment;
+    if (_parent->fieldsWriter == NULL) {
+      assert (_parent->docStoreSegment.empty());
+      assert (!_parent->segment.empty());
+      _parent->docStoreSegment = _parent->segment;
       // If we hit an exception while init'ing the
       // fieldsWriter, we must abort this segment
       // because those files will be in an unknown
       // state:
       try {
-        fieldsWriter = _CLNEW FieldsWriter(directory, docStoreSegment, fieldInfos);
+        _parent->fieldsWriter = _CLNEW FieldsWriter(_parent->directory, _parent->docStoreSegment.c_str(), _parent->fieldInfos);
       } catch (CLuceneError& t) {
-        throw new AbortException(t, DocumentsWriter.this);
+        throw AbortException(t,_parent);
       }
-      files = NULL;
+      _CLDELETE(_parent->_files);
     }
-    localFieldsWriter = _CLNEW FieldsWriter(NULL, fdtLocal, fieldInfos);
+    localFieldsWriter = _CLNEW FieldsWriter(NULL, fdtLocal, _parent->fieldInfos);
   }
 
   // First time we see a doc that has field(s) with
   // stored vectors, we init our tvx writer
   if (docHasVectors) {
-    if (tvx == NULL) {
-      assert (docStoreSegment != NULL);
+    if (_parent->tvx == NULL) {
+      assert (!_parent->docStoreSegment.empty());
       // If we hit an exception while init'ing the term
       // vector output files, we must abort this segment
       // because those files will be in an unknown
       // state:
       try {
-        tvx = directory.createOutput(docStoreSegment + "." + IndexFileNames.VECTORS_INDEX_EXTENSION);
-        tvx->writeInt(TermVectorsReader.FORMAT_VERSION);
-        tvd = directory.createOutput(docStoreSegment +  "." + IndexFileNames.VECTORS_DOCUMENTS_EXTENSION);
-        tvd->writeInt(TermVectorsReader.FORMAT_VERSION);
-        tvf = directory.createOutput(docStoreSegment +  "." + IndexFileNames.VECTORS_FIELDS_EXTENSION);
-        tvf.writeInt(TermVectorsReader.FORMAT_VERSION);
+        _parent->tvx = _parent->directory->createOutput( (_parent->docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str() );
+        _parent->tvx->writeInt(TermVectorsReader::FORMAT_VERSION);
+        _parent->tvd = _parent->directory->createOutput( (_parent->docStoreSegment +  "." + IndexFileNames::VECTORS_DOCUMENTS_EXTENSION).c_str() );
+        _parent->tvd->writeInt(TermVectorsReader::FORMAT_VERSION);
+        _parent->tvf = _parent->directory->createOutput( (_parent->docStoreSegment +  "." + IndexFileNames::VECTORS_FIELDS_EXTENSION).c_str() );
+        _parent->tvf->writeInt(TermVectorsReader::FORMAT_VERSION);
 
         // We must "catch up" for all docs before us
         // that had no vectors:
-        for(int32_t i=0;i<numDocsInStore;i++) {
-          tvx->writeLong(tvd->getFilePointer());
-          tvd->writeVInt(0);
+        for(int32_t i=0;i<_parent->numDocsInStore;i++) {
+          _parent->tvx->writeLong(_parent->tvd->getFilePointer());
+          _parent->tvd->writeVInt(0);
         }
 
       } catch (CLuceneError& t) {
-        throw new AbortException(t, DocumentsWriter.this);
+        throw AbortException(t, _parent);
       }
-      files = NULL;
+      _CLDELETE(_parent->_files);
     }
 
     numVectorFields = 0;
   }
 }
 
-void DocumentsWriter::ThreadState::doPostingSort(ValueArray<Posting>& postings, int32_t numPosting) {
+void DocumentsWriter::ThreadState::doPostingSort(ValueArray<Posting*>& postings, int32_t numPosting) {
   quickSort(postings, 0, numPosting-1);
 }
 
-void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting>& postings, int32_t lo, int32_t hi) {
+void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting*>& postings, int32_t lo, int32_t hi) {
   if (lo >= hi)
     return;
 
-  int32_t mid = (lo + hi) >>> 1;
+  int32_t mid = ((uint32_t)(lo + hi)) >> 1; //unsigned shift...
 
   if (comparePostings(postings[lo], postings[mid]) > 0) {
-    Posting tmp = postings[lo];
-    postings[lo] = postings[mid];
-    postings[mid] = tmp;
+    Posting* tmp = postings[lo];
+    postings.values[lo] = postings[mid];
+    postings.values[mid] = tmp;
   }
 
   if (comparePostings(postings[mid], postings[hi]) > 0) {
-    Posting tmp = postings[mid];
-    postings[mid] = postings[hi];
-    postings[hi] = tmp;
+    Posting* tmp = postings[mid];
+    postings.values[mid] = postings[hi];
+    postings.values[hi] = tmp;
 
     if (comparePostings(postings[lo], postings[mid]) > 0) {
-      Posting tmp2 = postings[lo];
-      postings[lo] = postings[mid];
-      postings[mid] = tmp2;
+      Posting* tmp2 = postings[lo];
+      postings.values[lo] = postings[mid];
+      postings.values[mid] = tmp2;
     }
   }
 
@@ -369,7 +369,7 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting>& postings, int3
   if (left >= right)
     return;
 
-  Posting partition = postings[mid];
+  Posting* partition = postings[mid];
 
   for (; ;) {
     while (comparePostings(postings[right], partition) > 0)
@@ -379,9 +379,9 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting>& postings, int3
       ++left;
 
     if (left < right) {
-      Posting tmp = postings[left];
-      postings[left] = postings[right];
-      postings[right] = tmp;
+      Posting* tmp = postings[left];
+      postings.values[left] = postings[right];
+      postings.values[right] = tmp;
       --right;
     } else {
       break;
@@ -392,31 +392,31 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting>& postings, int3
   quickSort(postings, left + 1, hi);
 }
 
-void DocumentsWriter::ThreadState::doVectorSort(ValueArray<PostingVector>& postings, int32_t numPosting) {
+void DocumentsWriter::ThreadState::doVectorSort(ValueArray<PostingVector*>& postings, int32_t numPosting) {
   quickSort(postings, 0, numPosting-1);
 }
 
-void DocumentsWriter::ThreadState::quickSort(ValueArray<PostingVector>& postings, int32_t lo, int32_t hi) {
+void DocumentsWriter::ThreadState::quickSort(ValueArray<PostingVector*>& postings, int32_t lo, int32_t hi) {
   if (lo >= hi)
     return;
 
-  int32_t mid = (lo + hi) >>> 1;
+  int32_t mid = ((uint8_t)(lo + hi)) >> 1; //unsigned shift..
 
-  if (comparePostings(postings[lo].p, postings[mid].p) > 0) {
-    PostingVector tmp = postings[lo];
-    postings[lo] = postings[mid];
-    postings[mid] = tmp;
+  if (comparePostings(postings[lo]->p, postings[mid]->p) > 0) {
+    PostingVector* tmp = postings[lo];
+    postings.values[lo] = postings[mid];
+    postings.values[mid] = tmp;
   }
 
-  if (comparePostings(postings[mid].p, postings[hi].p) > 0) {
-    PostingVector tmp = postings[mid];
-    postings[mid] = postings[hi];
-    postings[hi] = tmp;
+  if (comparePostings(postings[mid]->p, postings[hi]->p) > 0) {
+    PostingVector* tmp = postings[mid];
+    postings.values[mid] = postings[hi];
+    postings.values[hi] = tmp;
 
-    if (comparePostings(postings[lo].p, postings[mid].p) > 0) {
-      PostingVector tmp2 = postings[lo];
-      postings[lo] = postings[mid];
-      postings[mid] = tmp2;
+    if (comparePostings(postings[lo]->p, postings[mid]->p) > 0) {
+      PostingVector* tmp2 = postings[lo];
+      postings.values[lo] = postings[mid];
+      postings.values[mid] = tmp2;
     }
   }
 
@@ -426,19 +426,19 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<PostingVector>& postings
   if (left >= right)
     return;
 
-  PostingVector partition = postings[mid];
+  PostingVector* partition = postings[mid];
 
   for (; ;) {
-    while (comparePostings(postings[right].p, partition.p) > 0)
+    while (comparePostings(postings[right]->p, partition->p) > 0)
       --right;
 
-    while (left < right && comparePostings(postings[left].p, partition.p) <= 0)
+    while (left < right && comparePostings(postings[left]->p, partition->p) <= 0)
       ++left;
 
     if (left < right) {
-      PostingVector tmp = postings[left];
-      postings[left] = postings[right];
-      postings[right] = tmp;
+      PostingVector* tmp = postings[left];
+      postings.values[left] = postings[right];
+      postings.values[right] = tmp;
       --right;
     } else {
       break;
@@ -453,33 +453,33 @@ void DocumentsWriter::ThreadState::trimFields() {
 
   int32_t upto = 0;
   for(int32_t i=0;i<numAllFieldData;i++) {
-    FieldData fp = allFieldDataArray[i];
+    FieldData* fp = allFieldDataArray[i];
     if (fp->lastGen == -1) {
       // This field was not seen since the previous
       // flush, so, free up its resources now
 
       // Unhash
-      final int32_t hashPos = fp->fieldInfo.name.hashCode() & fieldDataHashMask;
-      FieldData last = NULL;
-      FieldData fp0 = fieldDataHash[hashPos];
+      const int32_t hashPos = Misc::thashCode(fp->fieldInfo->name) & fieldDataHashMask;
+      FieldData* last = NULL;
+      FieldData* fp0 = fieldDataHash[hashPos];
       while(fp0 != fp) {
         last = fp0;
-        fp0 = fp0.next;
+        fp0 = fp0->next;
       }
-      assert fp0 != NULL;
+      assert(fp0 != NULL);
 
       if (last == NULL)
-        fieldDataHash[hashPos] = fp->next;
+        fieldDataHash.values[hashPos] = fp->next;
       else
-        last.next = fp->next;
+        last->next = fp->next;
 
-      if (infoStream != NULL)
-        infoStream.println("  remove field=" + fp->fieldInfo.name);
+      if (_parent->infoStream != NULL)
+        (*_parent->infoStream) << "  remove field=" << fp->fieldInfo->name << "\n";
 
     } else {
       // Reset
       fp->lastGen = -1;
-      allFieldDataArray[upto++] = fp;
+      allFieldDataArray.values[upto++] = fp;
 
       if (fp->numPostings > 0 && ((float_t) fp->numPostings) / fp->postingsHashSize < 0.2) {
         int32_t hashSize = fp->postingsHashSize;
@@ -497,10 +497,10 @@ void DocumentsWriter::ThreadState::trimFields() {
 
   // If we didn't see any norms for this field since
   // last flush, free it
-  for(int32_t i=0;i<norms.length;i++) {
-    BufferedNorms n = norms[i];
-    if (n != NULL && n.upto == 0)
-      norms[i] = NULL;
+  for(size_t i=0;i<_parent->norms.length;i++) {
+    BufferedNorms* n = _parent->norms[i];
+    if (n != NULL && n->upto == 0)
+      _parent->norms.values[i] = NULL;
   }
 
   numAllFieldData = upto;
@@ -508,60 +508,61 @@ void DocumentsWriter::ThreadState::trimFields() {
   // Also pare back PostingsVectors if it's excessively
   // large
   if (maxPostingsVectors * 1.5 < postingsVectors.length) {
-    final int32_t newSize;
+    int32_t newSize;
     if (0 == maxPostingsVectors)
       newSize = 1;
     else
       newSize = (int32_t) (1.5*maxPostingsVectors);
-    PostingVector[] newArray = _CLNEW PostingVector[newSize];
-    System.arraycopy(postingsVectors, 0, newArray, 0, newSize);
-    postingsVectors = newArray;
+    postingsVectors.resize(newSize);
   }
 }
 
-void DocumentsWriter::ThreadState::processDocument(Analyzer analyzer)
-  {
+void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
+{
 
-  final int32_t numFields = numFieldData;
+  const int32_t numFields = numFieldData;
 
-  assert 0 == fdtLocal->length();
+  assert (0 == fdtLocal->length());
 
-  if (tvx != NULL)
+  if (_parent->tvx != NULL){
     // If we are writing vectors then we must visit
     // fields in sorted order so they are written in
     // sorted order.  TODO: we actually only need to
     // sort the subset of fields that have vectors
     // enabled; we could save [small amount of] CPU
     // here.
-    Arrays.sort(fieldDataArray, 0, numFields);
+    Arrays<FieldData*>::sort(fieldDataArray.values,fieldDataArray.length, 0, numFields);
+  }
 
   // We process the document one field at a time
   for(int32_t i=0;i<numFields;i++)
-    fieldDataArray[i].processField(analyzer);
+    fieldDataArray[i]->processField(analyzer);
 
-  if (maxTermPrefix != NULL && infoStream != NULL)
-    infoStream.println("WARNING: document contains at least one immense term (longer than the max length " + MAX_TERM_LENGTH + "), all of which were skipped.  Please correct the analyzer to not produce such terms.  The prefix of the first immense term is: '" + maxTermPrefix + "...'");
+  if (maxTermPrefix != NULL && _parent->infoStream != NULL)
+    (*_parent->infoStream) << "WARNING: document contains at least one immense term (longer than the max length " << MAX_TERM_LENGTH << "), all of which were skipped.  Please correct the analyzer to not produce such terms.  The prefix of the first immense term is: '" << maxTermPrefix << "...'\n";
 
-  if (ramBufferSize != IndexWriter.DISABLE_AUTO_FLUSH
-      && numBytesUsed > 0.95 * ramBufferSize)
-    balanceRAM();
+  if (_parent->ramBufferSize != IndexWriter::DISABLE_AUTO_FLUSH
+      && _parent->numBytesUsed > 0.95 * _parent->ramBufferSize)
+    _parent->balanceRAM();
 }
 
 // USE ONLY FOR DEBUGGING!
 /*
   String getPostingText() {
-  char[] text = charPool.buffers[p.textStart >> CHAR_BLOCK_SHIFT];
-  int32_t upto = p.textStart & CHAR_BLOCK_MASK;
+  TCHAR* text = charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  int32_t upto = p->textStart & CHAR_BLOCK_MASK;
   while(text[upto] != 0xffff)
   upto++;
-  return new String(text, p.textStart, upto-(p.textStart & BYTE_BLOCK_MASK));
+  return new String(text, p->textStart, upto-(p->textStart & BYTE_BLOCK_MASK));
   }
+*/
 
-bool DocumentsWriter::ThreadState::postingEquals(final char[] tokenText, final int32_t tokenTextLen) {
+bool DocumentsWriter::ThreadState::postingEquals(const TCHAR* tokenText, const int32_t tokenTextLen) {
 
-  final char[] text = charPool.buffers[p.textStart >> CHAR_BLOCK_SHIFT];
-  assert text != NULL;
-  int32_t pos = p.textStart & CHAR_BLOCK_MASK;
+  const CL_NS(util)::ValueArray<TCHAR>* _text = charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  assert (_text != NULL);
+  const CL_NS(util)::ValueArray<TCHAR>& text = *_text;
+  int32_t pos = p->textStart & CHAR_BLOCK_MASK;
 
   int32_t tokenPos = 0;
   for(;tokenPos<tokenTextLen;pos++,tokenPos++)
@@ -570,14 +571,14 @@ bool DocumentsWriter::ThreadState::postingEquals(final char[] tokenText, final i
   return 0xffff == text[pos];
 }
 
-int32_t DocumentsWriter::ThreadState::comparePostings(Posting p1, Posting p2) {
-  final char[] text1 = charPool.buffers[p1.textStart >> CHAR_BLOCK_SHIFT];
-  int32_t pos1 = p1.textStart & CHAR_BLOCK_MASK;
-  final char[] text2 = charPool.buffers[p2.textStart >> CHAR_BLOCK_SHIFT];
-  int32_t pos2 = p2.textStart & CHAR_BLOCK_MASK;
+int32_t DocumentsWriter::ThreadState::comparePostings(Posting* p1, Posting* p2) {
+  const CL_NS(util)::ValueArray<TCHAR>& text1 = *charPool.buffers[p1->textStart >> CHAR_BLOCK_SHIFT];
+  int32_t pos1 = p1->textStart & CHAR_BLOCK_MASK;
+  const CL_NS(util)::ValueArray<TCHAR>& text2 = *charPool.buffers[p2->textStart >> CHAR_BLOCK_SHIFT];
+  int32_t pos2 = p2->textStart & CHAR_BLOCK_MASK;
   while(true) {
-    final char c1 = text1[pos1++];
-    final char c2 = text2[pos2++];
+    const TCHAR c1 = text1[pos1++];
+    const TCHAR c2 = text2[pos2++];
     if (c1 < c2)
       if (0xffff == c2)
         return 1;
@@ -593,118 +594,136 @@ int32_t DocumentsWriter::ThreadState::comparePostings(Posting p1, Posting p2) {
   }
 }
 
-void DocumentsWriter::ThreadState::writeFreqVInt(int32_t i) {
+void DocumentsWriter::ThreadState::writeFreqVInt(int32_t vi) {
+  uint32_t i = vi;
   while ((i & ~0x7F) != 0) {
     writeFreqByte((uint8_t)((i & 0x7f) | 0x80));
-    i >>>= 7;
+    i >>= 7; //unsigned shift...
   }
   writeFreqByte((uint8_t) i);
 }
 
-void DocumentsWriter::ThreadState::writeProxVInt(int32_t i) {
+void DocumentsWriter::ThreadState::writeProxVInt(int32_t vi) {
+  uint32_t i = vi;
   while ((i & ~0x7F) != 0) {
     writeProxByte((uint8_t)((i & 0x7f) | 0x80));
-    i >>>= 7;
+    i >>= 7; //unsigned shift...
   }
   writeProxByte((uint8_t) i);
 }
 
 void DocumentsWriter::ThreadState::writeFreqByte(uint8_t b) {
-  assert freq != NULL;
-  if (freq[freqUpto] != 0) {
-    freqUpto = postingsPool.allocSlice(freq, freqUpto);
+  assert (freq != NULL);
+  if ((*freq)[freqUpto] != 0) {
+    freqUpto = postingsPool.allocSlice((*freq), freqUpto);
     freq = postingsPool.buffer;
-    p.freqUpto = postingsPool.uint8_tOffset;
+    p->freqUpto = postingsPool.byteOffset;
   }
-  freq[freqUpto++] = b;
+  (*freq)[freqUpto++] = b;
 }
 
 void DocumentsWriter::ThreadState::writeProxByte(uint8_t b) {
-  assert prox != NULL;
-  if (prox[proxUpto] != 0) {
-    proxUpto = postingsPool.allocSlice(prox, proxUpto);
+  assert (prox != NULL);
+  if ((*prox)[proxUpto] != 0) {
+    proxUpto = postingsPool.allocSlice(*prox, proxUpto);
     prox = postingsPool.buffer;
-    p.proxUpto = postingsPool.uint8_tOffset;
-    assert prox != NULL;
+    p->proxUpto = postingsPool.byteOffset;
+    assert (prox != NULL);
   }
-  prox[proxUpto++] = b;
-  assert proxUpto != prox.length;
+  (*prox)[proxUpto++] = b;
+  assert (proxUpto != prox->length);
 }
 
-void DocumentsWriter::ThreadState::writeProxBytes(uint8_t[] b, int32_t offset, int32_t len) {
-  final int32_t offsetEnd = offset + len;
+void DocumentsWriter::ThreadState::writeProxBytes(uint8_t* b, int32_t offset, int32_t len) {
+  const int32_t offsetEnd = offset + len;
   while(offset < offsetEnd) {
-    if (prox[proxUpto] != 0) {
+    if ((*prox)[proxUpto] != 0) {
       // End marker
-      proxUpto = postingsPool.allocSlice(prox, proxUpto);
+      proxUpto = postingsPool.allocSlice(*prox, proxUpto);
       prox = postingsPool.buffer;
-      p.proxUpto = postingsPool.uint8_tOffset;
+      p->proxUpto = postingsPool.byteOffset;
     }
 
-    prox[proxUpto++] = b[offset++];
-    assert proxUpto != prox.length;
+    prox->values[proxUpto++] = b[offset++];
+    assert (proxUpto != prox->length);
   }
 }
 
-void DocumentsWriter::ThreadState::writeOffsetVInt(int32_t i) {
+void DocumentsWriter::ThreadState::writeOffsetVInt(int32_t vi) {
+  uint32_t i = vi;
   while ((i & ~0x7F) != 0) {
     writeOffsetByte((uint8_t)((i & 0x7f) | 0x80));
-    i >>>= 7;
+    i >>= 7; //unsigned shift...
   }
   writeOffsetByte((uint8_t) i);
 }
 
 void DocumentsWriter::ThreadState::writeOffsetByte(uint8_t b) {
-  assert offsets != NULL;
-  if (offsets[offsetUpto] != 0) {
-    offsetUpto = vectorsPool->allocSlice(offsets, offsetUpto);
-    offsets = vectorsPool->buffer;
-    vector.offsetUpto = vectorsPool->uint8_tOffset;
+  assert (offsets != NULL);
+  if ((*offsets)[offsetUpto] != 0) {
+    offsetUpto = vectorsPool.allocSlice(*offsets, offsetUpto);
+    offsets = vectorsPool.buffer;
+    vector->offsetUpto = vectorsPool.byteOffset;
   }
-  offsets[offsetUpto++] = b;
+  (*offsets)[offsetUpto++] = b;
 }
 
-void DocumentsWriter::ThreadState::writePosVInt(int32_t i) {
+void DocumentsWriter::ThreadState::writePosVInt(int32_t vi) {
+	uint32_t i = vi;
   while ((i & ~0x7F) != 0) {
     writePosByte((uint8_t)((i & 0x7f) | 0x80));
-    i >>>= 7;
+    i >>= 7; //unsigned shift...
   }
   writePosByte((uint8_t) i);
 }
 
 void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
-  assert pos != NULL;
-  if (pos[posUpto] != 0) {
-    posUpto = vectorsPool->allocSlice(pos, posUpto);
-    pos = vectorsPool->buffer;
-    vector.posUpto = vectorsPool->uint8_tOffset;
+  assert (pos != NULL);
+  if ((*pos)[posUpto] != 0) {
+    posUpto = vectorsPool.allocSlice(*pos, posUpto);
+    pos = vectorsPool.buffer;
+    vector->posUpto = vectorsPool.byteOffset;
   }
-  pos[posUpto++] = b;
+  (*pos)[posUpto++] = b;
 }
 
 
 
-
-DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, FieldInfo fieldInfo):
+DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
   _parent(__parent),
-  docFields(ObjectArray<Fieldable*>(1)),
+  docFields(ObjectArray<Fieldable>(1)),
   localToken (_CLNEW Token),
   vectorSliceReader(_CLNEW ByteSliceReader())
 {
+  this->fieldCount = this->postingsHashSize = this->postingsHashHalfSize = this->postingsVectorsUpto = 0;
+  this->postingsHashMask = this->offsetEnd = 0;
+  this->offsetStartCode = this->offsetStart = this->numPostings = this->position = this->length = this->offset = 0;
+  this->boost = 0.0; 
+  this->next = NULL;
   this->lastGen = -1;
   this->fieldInfo = fieldInfo;
-  threadState = ThreadState.this;
+  this->threadState = __threadState;
+  this->postingsCompacted = false;
 }
 
+bool DocumentsWriter::ThreadState::FieldData::sort(FieldData* e1, FieldData* e2){
+  return _tcscmp(e1->fieldInfo->name, e2->fieldInfo->name) < 0;
+}
 void DocumentsWriter::ThreadState::FieldData::resetPostingArrays() {
   if (!postingsCompacted)
     compactPostings();
-  recyclePostings(this->postingsHash, numPostings);
-  Arrays.fill(postingsHash, 0, postingsHash.length, NULL);
+  _parent->recyclePostings(this->postingsHash, numPostings);
+  memset(postingsHash.values, 0, postingsHash.length & sizeof(Posting));
   postingsCompacted = false;
   numPostings = 0;
 }
 
+const char* DocumentsWriter::ThreadState::FieldData::getObjectName() const{
+  return getClassName();
+}
+const char* DocumentsWriter::ThreadState::FieldData::getClassName(){
+  return "DocumentsWriter::ThreadState";
+}
 void DocumentsWriter::ThreadState::FieldData::initPostingArrays() {
   // Target hash fill factor of <= 50%
   // NOTE: must be a power of two for hash collision
@@ -712,39 +731,42 @@ void DocumentsWriter::ThreadState::FieldData::initPostingArrays() {
   postingsHashSize = 4;
   postingsHashHalfSize = 2;
   postingsHashMask = postingsHashSize-1;
-  postingsHash = _CLNEW Posting[postingsHashSize];
+  postingsHash.resize(postingsHashSize);
 }
 
-int32_t DocumentsWriter::ThreadState::FieldData::compareTo(Object o) {
-  return fieldInfo.name.compareTo(((FieldData) o).fieldInfo.name);
+int32_t DocumentsWriter::ThreadState::FieldData::compareTo(NamedObject* o) {
+  if ( o->getObjectName() != FieldData::getClassName() )
+    return -1;
+  return _tcscmp(fieldInfo->name, ((FieldData*) o)->fieldInfo->name);
 }
 
 void DocumentsWriter::ThreadState::FieldData::compactPostings() {
   int32_t upto = 0;
   for(int32_t i=0;i<postingsHashSize;i++)
     if (postingsHash[i] != NULL)
-      postingsHash[upto++] = postingsHash[i];
+      postingsHash.values[upto++] = postingsHash[i];
 
-  assert upto == numPostings;
+  assert (upto == numPostings);
   postingsCompacted = true;
 }
 
-Posting[] DocumentsWriter::ThreadState::FieldData::sortPostings() {
+CL_NS(util)::ValueArray<DocumentsWriter::Posting*>* DocumentsWriter::ThreadState::FieldData::sortPostings() {
   compactPostings();
-  doPostingSort(postingsHash, numPostings);
-  return postingsHash;
+  threadState->doPostingSort(postingsHash, numPostings);
+  return &postingsHash;
 }
 
-void DocumentsWriter::ThreadState::FieldData::processField(Analyzer analyzer) {
+
+void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
   length = 0;
   position = 0;
   offset = 0;
-  boost = docBoost;
+  boost = threadState->docBoost;
 
-  final int32_t maxFieldLength = writer.getMaxFieldLength();
+  const int32_t maxFieldLength = _parent->writer->getMaxFieldLength();
 
-  final int32_t limit = fieldCount;
-  final Fieldable[] docFieldsFinal = docFields;
+  const int32_t limit = fieldCount;
+  const ObjectArray<Fieldable>& docFieldsFinal = docFields;
 
   bool doWriteVectors = true;
 
@@ -752,34 +774,34 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer analyzer) {
   // field:
   try {
     for(int32_t j=0;j<limit;j++) {
-      Fieldable field = docFieldsFinal[j];
+      Fieldable* field = docFieldsFinal[j];
 
       if (field->isIndexed())
         invertField(field, analyzer, maxFieldLength);
 
       if (field->isStored()) {
-        numStoredFields++;
+        threadState->numStoredFields++;
         bool success = false;
         try {
-          localFieldsWriter->writeField(fieldInfo, field);
+          threadState->localFieldsWriter->writeField(fieldInfo, field);
           success = true;
-        } finally {
+        } _CLFINALLY(
           // If we hit an exception inside
           // localFieldsWriter->writeField, the
           // contents of fdtLocal can be corrupt, so
           // we must discard all stored fields for
           // this document:
           if (!success)
-            fdtLocal->reset();
-        }
+            threadState->fdtLocal->reset();
+        )
       }
 
-      docFieldsFinal[j] = NULL;
+      docFieldsFinal.values[j] = NULL;
     }
   } catch (AbortException& ae) {
     doWriteVectors = false;
     throw ae;
-  } finally {
+  } _CLFINALLY (
     if (postingsVectorsUpto > 0) {
       try {
         if (doWriteVectors) {
@@ -788,144 +810,176 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer analyzer) {
           try {
             writeVectors(fieldInfo);
             success = true;
-          } finally {
+          } _CLFINALLY (
             if (!success) {
               // If we hit an exception inside
               // writeVectors, the contents of tvfLocal
               // can be corrupt, so we must discard all
               // term vectors for this document:
-              numVectorFields = 0;
-              tvfLocal->reset();
+              threadState->numVectorFields = 0;
+              threadState->tvfLocal->reset();
             }
-          }
+          )
         }
-      } finally {
-        if (postingsVectorsUpto > maxPostingsVectors)
-          maxPostingsVectors = postingsVectorsUpto;
+      } _CLFINALLY (
+        if (postingsVectorsUpto > threadState->maxPostingsVectors)
+          threadState->maxPostingsVectors = postingsVectorsUpto;
         postingsVectorsUpto = 0;
-        vectorsPool->reset();
-      }
+        threadState->vectorsPool.reset();
+      )
     }
-  }
+  )
 }
-
-void DocumentsWriter::ThreadState::FieldData::invertField(Fieldable field, Analyzer analyzer, final int32_t maxFieldLength) {
+void DocumentsWriter::ThreadState::FieldData::invertField(const Fieldable* field, Analyzer* analyzer, const int32_t maxFieldLength) {
 
   if (length>0)
-    position += analyzer.getPositionIncrementGap(fieldInfo.name);
+    position += analyzer->getPositionIncrementGap(fieldInfo->name);
 
   if (!field->isTokenized()) {     // un-tokenized field
-    String stringValue = field->stringValue();
-    final int32_t valueLength = stringValue.length();
-    Token token = localToken;
-    token.clear();
-    char[] termBuffer = token.termBuffer();
-    if (termBuffer.length < valueLength)
-      termBuffer = token.resizeTermBuffer(valueLength);
-    stringValue.getChars(0, valueLength, termBuffer, 0);
-    token.setTermLength(valueLength);
-    token.setStartOffset(offset);
-    token.setEndOffset(offset + stringValue.length());
+    const TCHAR* stringValue = field->stringValue();
+    size_t valueLength = _tcslen(stringValue);
+    Token* token = localToken;
+    token->clear();
+    TCHAR* termBuffer = token->_termText;
+    if (token->_termTextLen < valueLength){
+      token->growBuffer(valueLength);
+      termBuffer = token->_termText;
+    }
+    _tcsncpy(termBuffer,stringValue, valueLength);
+    token->setTermLength(valueLength);
+    token->setStartOffset(offset);
+    token->setEndOffset(offset + valueLength);
     addPosition(token);
-    offset += stringValue.length();
+    offset += valueLength;
     length++;
   } else {                                  // tokenized field
-    final TokenStream stream;
-    final TokenStream streamValue = field->tokenStreamValue();
+    TokenStream* stream;
+    TokenStream* streamValue = field->tokenStreamValue();
 
     if (streamValue != NULL)
       stream = streamValue;
     else {
       // the field does not have a TokenStream,
       // so we have to obtain one from the analyzer
-      final Reader reader;        // find or make Reader
-      final Reader readerValue = field->readerValue();
+      Reader* reader;        // find or make Reader
+      Reader* readerValue = field->readerValue();
 
       if (readerValue != NULL)
         reader = readerValue;
       else {
-        String stringValue = field->stringValue();
+        const TCHAR* stringValue = field->stringValue();
+        size_t stringValueLength = _tcslen(stringValue);
         if (stringValue == NULL)
           _CLTHROWA(CL_ERR_IllegalArgument, "field must have either TokenStream, String or Reader value");
-        stringReader.init(stringValue);
-        reader = stringReader;
+        threadState->stringReader->init(stringValue, stringValueLength);
+        reader = threadState->stringReader;
       }
 
       // Tokenize field and add to postingTable
-      stream = analyzer.reusableTokenStream(fieldInfo.name, reader);
+      stream = analyzer->reusableTokenStream(fieldInfo->name, reader);
     }
 
     // reset the TokenStream to the first token
-    stream.reset();
+    stream->reset();
 
     try {
       offsetEnd = offset-1;
       for(;;) {
-        Token token = stream.next(localToken);
+        Token* token = stream->next(localToken);
         if (token == NULL) break;
-        position += (token.getPositionIncrement() - 1);
+        position += (token->getPositionIncrement() - 1);
         addPosition(token);
-        if (++length >= maxFieldLength) {
-          if (infoStream != NULL)
-            infoStream.println("maxFieldLength " +maxFieldLength+ " reached for field " + fieldInfo.name + ", ignoring following tokens");
-          break;
-        }
+        ++length;
+        
+				// Apply field truncation policy.
+				if (maxFieldLength != IndexWriter::FIELD_TRUNC_POLICY__WARN) {
+					// The client programmer has explicitly authorized us to
+					// truncate the token stream after maxFieldLength tokens.
+					if ( length > maxFieldLength) {
+	          if (_parent->infoStream != NULL)
+	            (*_parent->infoStream) << "maxFieldLength "  << maxFieldLength << " reached for field " << fieldInfo->name << ", ignoring following tokens\n";
+						break;
+					}
+				} else if (length > IndexWriter::DEFAULT_MAX_FIELD_LENGTH) {
+					const TCHAR* errMsgBase = 
+						_T("Indexing a huge number of tokens from a single")
+						_T(" field (\"%s\", in this case) can cause CLucene")
+						_T(" to use memory excessively.")
+						_T("  By default, CLucene will accept only %s tokens")
+						_T(" tokens from a single field before forcing the")
+						_T(" client programmer to specify a threshold at")
+						_T(" which to truncate the token stream.")
+						_T("  You should set this threshold via")
+						_T(" IndexReader::maxFieldLength (set to LUCENE_INT32_MAX")
+						_T(" to disable truncation, or a value to specify maximum number of fields).");
+					
+					TCHAR defaultMaxAsChar[34];
+					_i64tot(IndexWriter::DEFAULT_MAX_FIELD_LENGTH,
+						defaultMaxAsChar, 10
+					);
+					int32_t errMsgLen = _tcslen(errMsgBase)
+						+ _tcslen(fieldInfo->name)
+						+ _tcslen(defaultMaxAsChar);
+					TCHAR* errMsg = _CL_NEWARRAY(TCHAR,errMsgLen+1);
+					
+					_sntprintf(errMsg, errMsgLen,errMsgBase, fieldInfo->name, defaultMaxAsChar);
+					
+					_CLTHROWT_DEL(CL_ERR_Runtime,errMsg);
+				}
       }
       offset = offsetEnd+1;
-    } finally {
-      stream.close();
-    }
+    } _CLFINALLY (
+      _CLDELETE(stream);
+    )
   }
 
   boost *= field->getBoost();
 }
 
-PostingVector DocumentsWriter::ThreadState::FieldData::iaddNewVector() {
+DocumentsWriter::PostingVector* DocumentsWriter::ThreadState::FieldData::addNewVector() {
 
-  if (postingsVectorsUpto == postingsVectors.length) {
-    final int32_t newSize;
-    if (postingsVectors.length < 2)
+  if (postingsVectorsUpto == threadState->postingsVectors.length) {
+    int32_t newSize;
+    if (threadState->postingsVectors.length < 2)
       newSize = 2;
     else
-      newSize = (int32_t) (1.5*postingsVectors.length);
-    PostingVector[] newArray = new PostingVector[newSize];
-    System.arraycopy(postingsVectors, 0, newArray, 0, postingsVectors.length);
-    postingsVectors = newArray;
+      newSize = (int32_t) (1.5*threadState->postingsVectors.length);
+    threadState->postingsVectors.resize(newSize);
   }
 
-  p.vector = postingsVectors[postingsVectorsUpto];
-  if (p.vector == NULL)
-    p.vector = postingsVectors[postingsVectorsUpto] = new PostingVector();
+  threadState->p->vector = threadState->postingsVectors[postingsVectorsUpto];
+  if (threadState->p->vector == NULL)
+    threadState->p->vector = threadState->postingsVectors.values[postingsVectorsUpto] = _CLNEW PostingVector();
 
   postingsVectorsUpto++;
 
-  final PostingVector v = p.vector;
-  v.p = p;
+  PostingVector* v = threadState->p->vector;
+  v->p = threadState->p;
 
-  final int32_t firstSize = levelSizeArray[0];
+  const int32_t firstSize = levelSizeArray[0];
 
   if (doVectorPositions) {
-    final int32_t upto = vectorsPool->newSlice(firstSize);
-    v.posStart = v.posUpto = vectorsPool->uint8_tOffset + upto;
+    const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
+    v->posStart = v->posUpto = threadState->vectorsPool.byteOffset + upto;
   }
 
   if (doVectorOffsets) {
-    final int32_t upto = vectorsPool->newSlice(firstSize);
-    v.offsetStart = v.offsetUpto = vectorsPool->uint8_tOffset + upto;
+    const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
+    v->offsetStart = v->offsetUpto = threadState->vectorsPool.byteOffset + upto;
   }
 
   return v;
 }
 
-void DocumentsWriter::ThreadState::FieldData::iaddPosition(Token token) {
+void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
 
-  final Payload payload = token.getPayload();
+  const Payload* payload = token->getPayload();
 
   // Get the text of this term.  Term can either
-  // provide a String token or offset into a char[]
+  // provide a String token or offset into a TCHAR*
   // array
-  final char[] tokenText = token.termBuffer();
-  final int32_t tokenTextLen = token.termLength();
+  const TCHAR* tokenText = token->termBuffer();
+  const int32_t tokenTextLen = token->termLength();
 
   int32_t code = 0;
 
@@ -934,27 +988,27 @@ void DocumentsWriter::ThreadState::FieldData::iaddPosition(Token token) {
   while (downto > 0)
     code = (code*31) + tokenText[--downto];
 
-  // System.out.println("  addPosition: buffer=" + new String(tokenText, 0, tokenTextLen) + " pos=" + position + " offsetStart=" + (offset+token.startOffset()) + " offsetEnd=" + (offset + token.endOffset()) + " docID=" + docID + " doPos=" + doVectorPositions + " doOffset=" + doVectorOffsets);
+  // System.out.println("  addPosition: buffer=" + new String(tokenText, 0, tokenTextLen) + " pos=" + position + " offsetStart=" + (offset+token->startOffset()) + " offsetEnd=" + (offset + token->endOffset()) + " docID=" + docID + " doPos=" + doVectorPositions + " doOffset=" + doVectorOffsets);
 
   int32_t hashPos = code & postingsHashMask;
 
-  assert !postingsCompacted;
+  assert (!postingsCompacted);
 
   // Locate Posting in hash
-  p = postingsHash[hashPos];
+  threadState->p = postingsHash[hashPos];
 
-  if (p != NULL && !postingEquals(tokenText, tokenTextLen)) {
+  if (threadState->p != NULL && !threadState->postingEquals(tokenText, tokenTextLen)) {
     // Conflict: keep searching different locations in
     // the hash table.
-    final int32_t inc = ((code>>8)+code)|1;
+    const int32_t inc = ((code>>8)+code)|1;
     do {
       code += inc;
       hashPos = code & postingsHashMask;
-      p = postingsHash[hashPos];
-    } while (p != NULL && !postingEquals(tokenText, tokenTextLen));
+      threadState->p = postingsHash[hashPos];
+    } while (threadState->p != NULL && !threadState->postingEquals(tokenText, tokenTextLen));
   }
 
-  final int32_t proxCode;
+  int32_t proxCode;
 
   // If we hit an exception below, it's possible the
   // posting list or term vectors data will be
@@ -964,57 +1018,57 @@ void DocumentsWriter::ThreadState::FieldData::iaddPosition(Token token) {
 
   try {
 
-    if (p != NULL) {       // term seen since last flush
+    if (threadState->p != NULL) {       // term seen since last flush
 
-      if (docID != p.lastDocID) { // term not yet seen in this doc
+      if (threadState->docID != threadState->p->lastDocID) { // term not yet seen in this doc
 
-        // System.out.println("    seen before (new docID=" + docID + ") freqUpto=" + p.freqUpto +" proxUpto=" + p.proxUpto);
+        // System.out.println("    seen before (new docID=" + docID + ") freqUpto=" + p->freqUpto +" proxUpto=" + p->proxUpto);
 
-        assert p.docFreq > 0;
+        assert (threadState->p->docFreq > 0);
 
         // Now that we know doc freq for previous doc,
         // write it & lastDocCode
-        freqUpto = p.freqUpto & BYTE_BLOCK_MASK;
-        freq = postingsPool.buffers[p.freqUpto >> BYTE_BLOCK_SHIFT];
-        if (1 == p.docFreq)
-          writeFreqVInt(p.lastDocCode|1);
+        threadState->freqUpto = threadState->p->freqUpto & BYTE_BLOCK_MASK;
+        threadState->freq = threadState->postingsPool.buffers[threadState->p->freqUpto >> BYTE_BLOCK_SHIFT];
+        if (1 == threadState->p->docFreq)
+          threadState->writeFreqVInt(threadState->p->lastDocCode | 1);
         else {
-          writeFreqVInt(p.lastDocCode);
-          writeFreqVInt(p.docFreq);
+          threadState->writeFreqVInt(threadState->p->lastDocCode);
+          threadState->writeFreqVInt(threadState->p->docFreq);
         }
-        p.freqUpto = freqUpto + (p.freqUpto & BYTE_BLOCK_NOT_MASK);
+        threadState->p->freqUpto = threadState->freqUpto + (threadState->p->freqUpto & BYTE_BLOCK_NOT_MASK);
 
         if (doVectors) {
-          vector = addNewVector();
+          threadState->vector = addNewVector();
           if (doVectorOffsets) {
-            offsetStartCode = offsetStart = offset + token.startOffset();
-            offsetEnd = offset + token.endOffset();
+            offsetStartCode = offsetStart = offset + token->startOffset();
+            offsetEnd = offset + token->endOffset();
           }
         }
 
         proxCode = position;
 
-        p.docFreq = 1;
+        threadState->p->docFreq = 1;
 
         // Store code so we can write this after we're
         // done with this new doc
-        p.lastDocCode = (docID-p.lastDocID) << 1;
-        p.lastDocID = docID;
+        threadState->p->lastDocCode = (threadState->docID - threadState->p->lastDocID) << 1;
+        threadState->p->lastDocID = threadState->docID;
 
       } else {                                // term already seen in this doc
-        // System.out.println("    seen before (same docID=" + docID + ") proxUpto=" + p.proxUpto);
-        p.docFreq++;
+        // System.out.println("    seen before (same docID=" + docID + ") proxUpto=" + p->proxUpto);
+        threadState->p->docFreq++;
 
-        proxCode = position-p.lastPosition;
+        proxCode = position - threadState->p->lastPosition;
 
         if (doVectors) {
-          vector = p.vector;
-          if (vector == NULL)
-            vector = addNewVector();
+          threadState->vector = threadState->p->vector;
+          if (threadState->vector == NULL)
+            threadState->vector = addNewVector();
           if (doVectorOffsets) {
-            offsetStart = offset + token.startOffset();
-            offsetEnd = offset + token.endOffset();
-            offsetStartCode = offsetStart-vector.lastOffset;
+            offsetStart = offset + token->startOffset();
+            offsetEnd = offset + token->endOffset();
+            offsetStartCode = offsetStart - threadState->vector->lastOffset;
           }
         }
       }
@@ -1022,177 +1076,187 @@ void DocumentsWriter::ThreadState::FieldData::iaddPosition(Token token) {
       // System.out.println("    never seen docID=" + docID);
 
       // Refill?
-      if (0 == postingsFreeCount) {
-        getPostings(postingsFreeList);
-        postingsFreeCount = postingsFreeList.length;
+      if (0 == threadState->postingsFreeCount) {
+        _parent->getPostings(threadState->postingsFreeList);
+        threadState->postingsFreeCount = threadState->postingsFreeList.length;
       }
 
-      final int32_t textLen1 = 1+tokenTextLen;
-      if (textLen1 + charPool.uint8_tUpto > CHAR_BLOCK_SIZE) {
+      const int32_t textLen1 = 1+tokenTextLen;
+      if (textLen1 + threadState->charPool.byteUpto > CHAR_BLOCK_SIZE) {
         if (textLen1 > CHAR_BLOCK_SIZE) {
           // Just skip this term, to remain as robust as
           // possible during indexing.  A TokenFilter
           // can be inserted into the analyzer chain if
           // other behavior is wanted (pruning the term
           // to a prefix, throwing an exception, etc).
-          if (maxTermPrefix == NULL)
-            maxTermPrefix = new String(tokenText, 0, 30);
+          if (threadState->maxTermPrefix == NULL){
+            threadState->maxTermPrefix = _CL_NEWARRAY(TCHAR,31);
+            _tcsncpy(threadState->maxTermPrefix,tokenText,30);
+            threadState->maxTermPrefix[30] = 0;
+          }
 
           // Still increment position:
           position++;
           return;
         }
-        charPool.nextBuffer();
+        threadState->charPool.nextBuffer();
       }
-      final char[] text = charPool.buffer;
-      final int32_t textUpto = charPool.uint8_tUpto;
+      ValueArray<TCHAR>* text = threadState->charPool.buffer;
+      const int32_t textUpto = threadState->charPool.byteUpto;
 
       // Pull next free Posting from free list
-      p = postingsFreeList[--postingsFreeCount];
+      threadState->p = threadState->postingsFreeList[--threadState->postingsFreeCount];
 
-      p.textStart = textUpto + charPool.uint8_tOffset;
-      charPool.uint8_tUpto += textLen1;
+      threadState->p->textStart = textUpto + threadState->charPool.byteOffset;
+      threadState->charPool.byteUpto += textLen1;
 
-      System.arraycopy(tokenText, 0, text, textUpto, tokenTextLen);
-
+      _tcsncpy(text->values, tokenText, tokenTextLen);
       text[textUpto+tokenTextLen] = 0xffff;
 
-      assert postingsHash[hashPos] == NULL;
+      assert (postingsHash[hashPos] == NULL);
 
-      postingsHash[hashPos] = p;
+      postingsHash.values[hashPos] = threadState->p;
       numPostings++;
 
       if (numPostings == postingsHashHalfSize)
         rehashPostings(2*postingsHashSize);
 
       // Init first slice for freq & prox streams
-      final int32_t firstSize = levelSizeArray[0];
+      const int32_t firstSize = levelSizeArray[0];
 
-      final int32_t upto1 = postingsPool.newSlice(firstSize);
-      p.freqStart = p.freqUpto = postingsPool.uint8_tOffset + upto1;
+      std::vector<int> x(1);
+      std::vector<int>* y = &x;
 
-      final int32_t upto2 = postingsPool.newSlice(firstSize);
-      p.proxStart = p.proxUpto = postingsPool.uint8_tOffset + upto2;
+      const int32_t upto1 = threadState->postingsPool.newSlice(firstSize);
+      threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool.byteOffset + upto1;
 
-      p.lastDocCode = docID << 1;
-      p.lastDocID = docID;
-      p.docFreq = 1;
+      const int32_t upto2 = threadState->postingsPool.newSlice(firstSize);
+      threadState->p->proxStart = threadState->p->proxUpto = threadState->postingsPool.byteOffset + upto2;
+
+      threadState->p->lastDocCode = threadState->docID << 1;
+      threadState->p->lastDocID = threadState->docID;
+      threadState->p->docFreq = 1;
 
       if (doVectors) {
-        vector = addNewVector();
+        threadState->vector = addNewVector();
         if (doVectorOffsets) {
-          offsetStart = offsetStartCode = offset + token.startOffset();
-          offsetEnd = offset + token.endOffset();
+          offsetStart = offsetStartCode = offset + token->startOffset();
+          offsetEnd = offset + token->endOffset();
         }
       }
 
       proxCode = position;
     }
 
-    proxUpto = p.proxUpto & BYTE_BLOCK_MASK;
-    prox = postingsPool.buffers[p.proxUpto >> BYTE_BLOCK_SHIFT];
-    assert prox != NULL;
+    threadState->proxUpto = threadState->p->proxUpto & BYTE_BLOCK_MASK;
+    threadState->prox = threadState->postingsPool.buffers[threadState->p->proxUpto >> BYTE_BLOCK_SHIFT];
+    assert (threadState->prox != NULL);
 
-    if (payload != NULL && payload.length > 0) {
-      writeProxVInt((proxCode<<1)|1);
-      writeProxVInt(payload.length);
-      writeProxBytes(payload.data, payload.offset, payload.length);
-      fieldInfo.storePayloads = true;
+    if (payload != NULL && payload->length() > 0) {
+      threadState->writeProxVInt((proxCode<<1)|1);
+      threadState->writeProxVInt(payload->length());
+      threadState->writeProxBytes(payload->getData().values, payload->getOffset(), payload->length());
+      fieldInfo->storePayloads = true;
     } else
-      writeProxVInt(proxCode<<1);
+      threadState->writeProxVInt(proxCode<<1);
 
-    p.proxUpto = proxUpto + (p.proxUpto & BYTE_BLOCK_NOT_MASK);
+    threadState->p->proxUpto = threadState->proxUpto + (threadState->p->proxUpto & BYTE_BLOCK_NOT_MASK);
 
-    p.lastPosition = position++;
+    threadState->p->lastPosition = position++;
 
     if (doVectorPositions) {
-      posUpto = vector.posUpto & BYTE_BLOCK_MASK;
-      pos = vectorsPool->buffers[vector.posUpto >> BYTE_BLOCK_SHIFT];
-      writePosVInt(proxCode);
-      vector.posUpto = posUpto + (vector.posUpto & BYTE_BLOCK_NOT_MASK);
+      threadState->posUpto = threadState->vector->posUpto & BYTE_BLOCK_MASK;
+      threadState->pos = threadState->vectorsPool.buffers[threadState->vector->posUpto >> BYTE_BLOCK_SHIFT];
+      threadState->writePosVInt(proxCode);
+      threadState->vector->posUpto = threadState->posUpto + (threadState->vector->posUpto & BYTE_BLOCK_NOT_MASK);
     }
 
     if (doVectorOffsets) {
-      offsetUpto = vector.offsetUpto & BYTE_BLOCK_MASK;
-      offsets = vectorsPool->buffers[vector.offsetUpto >> BYTE_BLOCK_SHIFT];
-      writeOffsetVInt(offsetStartCode);
-      writeOffsetVInt(offsetEnd-offsetStart);
-      vector.lastOffset = offsetEnd;
-      vector.offsetUpto = offsetUpto + (vector.offsetUpto & BYTE_BLOCK_NOT_MASK);
+      threadState->offsetUpto = threadState->vector->offsetUpto & BYTE_BLOCK_MASK;
+      threadState->offsets = threadState->vectorsPool.buffers[threadState->vector->offsetUpto >> BYTE_BLOCK_SHIFT];
+      threadState->writeOffsetVInt(offsetStartCode);
+      threadState->writeOffsetVInt(offsetEnd-offsetStart);
+      threadState->vector->lastOffset = offsetEnd;
+      threadState->vector->offsetUpto = threadState->offsetUpto + (threadState->vector->offsetUpto & BYTE_BLOCK_NOT_MASK);
     }
   } catch (CLuceneError& t) {
-    throw new AbortException(t, DocumentsWriter.this);
+    throw AbortException(t, _parent);
   }
 }
 
-void DocumentsWriter::ThreadState::FieldData::rehashPostings(final int32_t newSize) {
+void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSize) {
 
-  final int32_t newMask = newSize-1;
+  const int32_t newMask = newSize-1;
 
-  Posting[] newHash = new Posting[newSize];
+  ValueArray<Posting*> newHash(newSize);
+  ValueArray<bool> newHashB(newSize);
+
   for(int32_t i=0;i<postingsHashSize;i++) {
-    Posting p0 = postingsHash[i];
+    Posting* p0 = postingsHash[i];
     if (p0 != NULL) {
-      final int32_t start = p0.textStart & CHAR_BLOCK_MASK;
-      final char[] text = charPool.buffers[p0.textStart >> CHAR_BLOCK_SHIFT];
+      const int32_t start = p0->textStart & CHAR_BLOCK_MASK;
+      const CL_NS(util)::ValueArray<TCHAR>* text = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT];
       int32_t pos = start;
-      while(text[pos] != 0xffff)
+      while( (*text)[pos] != 0xffff)
         pos++;
       int32_t code = 0;
       while (pos > start)
-        code = (code*31) + text[--pos];
+        code = (code*31) + (*text)[--pos];
 
       int32_t hashPos = code & newMask;
-      assert hashPos >= 0;
-      if (newHash[hashPos] != NULL) {
-        final int32_t inc = ((code>>8)+code)|1;
+      assert (hashPos >= 0);
+      if (newHashB[hashPos]) {
+        const int32_t inc = ((code>>8)+code)|1;
         do {
           code += inc;
           hashPos = code & newMask;
-        } while (newHash[hashPos] != NULL);
+        } while (newHashB[hashPos]);
       }
-      newHash[hashPos] = p0;
+      newHash.values[hashPos] = p0;
+      newHashB.values[hashPos] = true;
     }
   }
 
   postingsHashMask =  newMask;
-  postingsHash = newHash;
+  postingsHash.deleteArray();
+  postingsHash.length = newHash.length;
+  postingsHash.values = newHash.takeArray();
   postingsHashSize = newSize;
   postingsHashHalfSize = newSize >> 1;
 }
 
-void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo fieldInfo) {
+void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo) {
 
-  assert fieldInfo.storeTermVector;
+  assert (fieldInfo->storeTermVector);
 
-  vectorFieldNumbers[numVectorFields] = fieldInfo.number;
-  vectorFieldPointers[numVectorFields] = tvfLocal->getFilePointer();
-  numVectorFields++;
+  threadState->vectorFieldNumbers.values[threadState->numVectorFields] = fieldInfo->number;
+  threadState->vectorFieldPointers.values[threadState->numVectorFields] = threadState->tvfLocal->getFilePointer();
+  threadState->numVectorFields++;
 
-  final int32_t numPostingsVectors = postingsVectorsUpto;
+  const int32_t numPostingsVectors = postingsVectorsUpto;
 
-  tvfLocal->writeVInt(numPostingsVectors);
+  threadState->tvfLocal->writeVInt(numPostingsVectors);
   uint8_t bits = 0x0;
   if (doVectorPositions)
-    bits |= TermVectorsReader.STORE_POSITIONS_WITH_TERMVECTOR;
+    bits |= TermVectorsReader::STORE_POSITIONS_WITH_TERMVECTOR;
   if (doVectorOffsets)
-    bits |= TermVectorsReader.STORE_OFFSET_WITH_TERMVECTOR;
-  tvfLocal->writeByte(bits);
+    bits |= TermVectorsReader::STORE_OFFSET_WITH_TERMVECTOR;
+  threadState->tvfLocal->writeByte(bits);
 
-  doVectorSort(postingsVectors, numPostingsVectors);
+  threadState->doVectorSort(threadState->postingsVectors, numPostingsVectors);
 
-  Posting lastPosting = NULL;
+  Posting* lastPosting = NULL;
 
-  final ByteSliceReader reader = vectorSliceReader;
+  ByteSliceReader* reader = vectorSliceReader;
 
   for(int32_t j=0;j<numPostingsVectors;j++) {
-    PostingVector vector = postingsVectors[j];
-    Posting posting = vector.p;
-    final int32_t freq = posting.docFreq;
+    PostingVector* vector = threadState->postingsVectors[j];
+    Posting* posting = vector->p;
+    const int32_t freq = posting->docFreq;
 
-    final int32_t prefix;
-    final char[] text2 = charPool.buffers[posting.textStart >> CHAR_BLOCK_SHIFT];
-    final int32_t start2 = posting.textStart & CHAR_BLOCK_MASK;
+    int32_t prefix = 0;
+    const CL_NS(util)::ValueArray<TCHAR>* text2 = threadState->charPool.buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
+    const int32_t start2 = posting->textStart & CHAR_BLOCK_MASK;
     int32_t pos2 = start2;
 
     // Compute common prefix between last term and
@@ -1200,12 +1264,12 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo fieldInfo) 
     if (lastPosting == NULL)
       prefix = 0;
     else {
-      final char[] text1 = charPool.buffers[lastPosting.textStart >> CHAR_BLOCK_SHIFT];
-      final int32_t start1 = lastPosting.textStart & CHAR_BLOCK_MASK;
+      const CL_NS(util)::ValueArray<TCHAR>* text1 = threadState->charPool.buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT];
+      const int32_t start1 = lastPosting->textStart & CHAR_BLOCK_MASK;
       int32_t pos1 = start1;
       while(true) {
-        final char c1 = text1[pos1];
-        final char c2 = text2[pos2];
+        const TCHAR c1 = (*text1)[pos1];
+        const TCHAR c2 = (*text2)[pos2];
         if (c1 != c2 || c1 == 0xffff) {
           prefix = pos1-start1;
           break;
@@ -1217,25 +1281,25 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo fieldInfo) 
     lastPosting = posting;
 
     // Compute length
-    while(text2[pos2] != 0xffff)
+    while((*text2)[pos2] != 0xffff)
       pos2++;
 
-    final int32_t suffix = pos2 - start2 - prefix;
-    tvfLocal->writeVInt(prefix);
-    tvfLocal->writeVInt(suffix);
-    tvfLocal->writeChars(text2, start2 + prefix, suffix);
-    tvfLocal->writeVInt(freq);
+    const int32_t suffix = pos2 - start2 - prefix;
+    threadState->tvfLocal->writeVInt(prefix);
+    threadState->tvfLocal->writeVInt(suffix);
+    threadState->tvfLocal->writeChars(text2->values + start2 + prefix, suffix);
+    threadState->tvfLocal->writeVInt(freq);
 
     if (doVectorPositions) {
-      reader.init(vectorsPool, vector.posStart, vector.posUpto);
-      reader.writeTo(tvfLocal);
+      reader->init(&threadState->vectorsPool, vector->posStart, vector->posUpto);
+      reader->writeTo(threadState->tvfLocal);
     }
 
     if (doVectorOffsets) {
-      reader.init(vectorsPool, vector.offsetStart, vector.offsetUpto);
-      reader.writeTo(tvfLocal);
+      reader->init(&threadState->vectorsPool, vector->offsetStart, vector->offsetUpto);
+      reader->writeTo(threadState->tvfLocal);
     }
   }
 }
-*/
+
 CL_NS_END

@@ -39,6 +39,7 @@
 	#define _CLDELETE_LCaARRAY(x) delete[] const_cast<char*>(x);
 #endif
 
+//TODO: start using malloc, instead of new[], this is necessary for the Array code, that uses malloc.
 //Macro for creating new arrays
 #define _CL_NEWARRAY(type,size) new type[size]
 #define _CLDELETE_ARRAY(x) {delete[] x;x=NULL;}
@@ -78,4 +79,4 @@
 //into a LuceneBase*.
 #define _CLVDELETE(x) {delete x;x=NULL;}
 
-#endif //_lucene_debug_lucenebase_
+#endif //_lucene_debug_mem_h

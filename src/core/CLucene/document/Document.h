@@ -7,7 +7,8 @@
 #ifndef _lucene_document_Document_
 #define _lucene_document_Document_
 
-CL_CLASS_DEF(document,Field)
+#include "CLucene/util/VoidList.h"
+#include "Field.h"
 
 ///todo: jlucene has change from using DocumentFieldList/Enumeration
 ///to using a java List... do we want to do this too?
@@ -15,24 +16,6 @@ CL_NS_DEF(document)
 
 //predefine
 class Document;
-
-class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
-    class CLUCENE_EXPORT DocumentFieldList :LUCENE_BASE{
-    public:
-    	DocumentFieldList(Field* f, DocumentFieldList* n);
-    	~DocumentFieldList();
-    	Field* field;
-    	DocumentFieldList* next;
-    };
-	friend class Document;
-private:
-	const DocumentFieldList* fields;
-public:
-	DocumentFieldEnumeration(const DocumentFieldList* fl);
-	~DocumentFieldEnumeration();
-	bool hasMoreElements() const;
-	Field* nextElement();
-};
 
 /** Documents are the unit of indexing and search.
 *
@@ -48,8 +31,10 @@ public:
 * IndexReader#document(int32_t, Document*)}.
 */
 class CLUCENE_EXPORT Document:LUCENE_BASE {
+public:
+  typedef CL_NS(util)::CLArrayList<Fieldable*,CL_NS(util)::Deletor::Object<Fieldable> > FieldsType;
 private:
-	DocumentFieldEnumeration::DocumentFieldList* fieldList;
+	FieldsType* fields;
 	float_t boost;
 public:
 	/** Constructs a new document with no fields. */
@@ -95,7 +80,7 @@ public:
 	* document has to be added.</p>
 	*
 	*/
-	void add(Field& field);
+	void add(Fieldable& field);
 
 	/**
 	* <p>Removes field with the specified name from the document.
@@ -128,7 +113,9 @@ public:
 	* Note: name is case sensitive
 	* Do not use this method with lazy loaded fields.
 	*/
-	Field* getField(const TCHAR* name) const;
+	Fieldable* getFieldable(const TCHAR* name) const;
+  
+	_CL_DEPRECATED(getFieldable) Field* getField(const TCHAR* name) const;
 	
 	/** Returns the string value of the field with the given name if any exist in
 	* this document, or null.  If multiple fields exist with this name, this
@@ -138,17 +125,21 @@ public:
 	*/
 	const TCHAR* get(const TCHAR* field) const;
 
-	/** Returns an Enumeration of all the fields in a document.
-	* @deprecated use {@link #getFields()} instead
-	*/
-	_CL_DEPRECATED(  getFields() ) DocumentFieldEnumeration* fields() const;
+  /** Returns a List of all the fields in a document.
+   * <p>Note that fields which are <i>not</i> {@link Fieldable#isStored() stored} are
+   * <i>not</i> available in documents retrieved from the index, e.g. with {@link
+   * Hits#doc(int)}, {@link Searcher#doc(int)} or {@link IndexReader#document(int)}.
+   */
+  const FieldsType* getFields() const;
 
-	/** Returns a List of all the fields in a document.
-	* <p>Note that fields which are <i>not</i> {@link Field#isStored() stored} are
-	* <i>not</i> available in documents retrieved from the index, e.g. with {@link
-	* Hits#doc(int)}, {@link Searcher#doc(int)} or {@link IndexReader#document(int)}.
-	*/
-	DocumentFieldEnumeration* getFields() const;
+  /**
+   * Returns an array of {@link Fieldable}s with the given name.
+   * This method can return <code>null</code>.
+   *
+   * @param name the name of the field
+   * @return a <code>Fieldable[]</code> array or <code>null</code>
+   */
+  void getFieldables(const TCHAR* name, std::vector<Fieldable*>& ret);
 
 	/** Prints the fields of a document for human consumption. */
 	TCHAR* toString() const;

@@ -1167,4 +1167,11 @@ bool SegmentReader::hasNorms(const TCHAR* field){
       norm->dirty = norm->rollbackDirty;
     }
   }
+  
+  const char* SegmentReader::getClassName(){
+    return "SegmentReader";
+  }
+  const char* SegmentReader::getObjectName() const{
+    return getClassName();
+  }
 CL_NS_END

@@ -115,19 +115,20 @@ CL_NS_DEF(store)
   
 
   RAMOutputStream::~RAMOutputStream(){
-	if ( deleteFile ){
-        _CLDELETE(file);
-	}else
-     	file = NULL;
+	  if ( deleteFile ){
+          _CLDELETE(file);
+    }else{
+     	  file = NULL;
+    }
   }
   RAMOutputStream::RAMOutputStream(RAMFile* f):
-	file(f),
-	deleteFile(false),
-	currentBuffer(NULL),
-	currentBufferIndex(-1),
-	bufferPosition(0),
-	bufferStart(0),
-	bufferLength(0)
+	  file(f),
+	  deleteFile(false),
+	  currentBuffer(NULL),
+	  currentBufferIndex(-1),
+	  bufferPosition(0),
+	  bufferStart(0),
+	  bufferLength(0)
   {
   }
   
@@ -368,6 +369,7 @@ CL_NS_DEF(store)
   RAMDirectory::RAMDirectory():
    Directory(),files(_CLNEW FileMap(true,true))
   {
+    this->sizeInBytes = 0;
 	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
   }
     

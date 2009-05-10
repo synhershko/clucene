@@ -62,9 +62,9 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 class CLUCENE_EXPORT NamedObject{
 public:
-  virtual ~NamedObject(){
-  }
+  virtual ~NamedObject();
 	virtual const char* getObjectName() const = 0;
+  bool instanceOf(const char* otherobject) const;
 };
 class CLUCENE_INLINE_EXPORT Comparable:public NamedObject{
 public:
@@ -169,6 +169,11 @@ public:
 		}
 	};
 };
+
+
+
+
+int32_t compare(Comparable* o1, Comparable* o2);
 
 ////////////////////////////////////////////////////////////////////////////////
 // allocators

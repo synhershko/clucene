@@ -8,7 +8,8 @@
 #define _lucene_analysis_AnalysisHeader_
 
 #include "CLucene/index/Payload.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/VoidList.h"
+#include "CLucene/LuceneThreads.h"
 
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
@@ -138,6 +139,8 @@ public:
 	/** Set the starting offset.
 	@see #startOffset() */
 	void setStartOffset(const int32_t val);
+
+  void setTermLength(int32_t);
 
 	/**
 	* Returns this Token's ending offset, one greater than the position of the

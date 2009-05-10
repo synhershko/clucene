@@ -116,6 +116,9 @@ public:
    * @throws UnsupportedOperationException
    */
   int64_t getVersion();
+  
+  static const char* getClassName();
+  const char* getObjectName() const;
 };
 
 

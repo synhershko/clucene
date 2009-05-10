@@ -8,11 +8,9 @@
 #define _lucene_store_RAMDirectory_
 
 
-//#include "Lock.h"
+#include "CLucene/util/VoidMap.h"
 #include "Directory.h"
 CL_CLASS_DEF(store,RAMFile)
-//#include "CLucene/util/VoidMap.h"
-//#include "CLucene/util/Arrays.h"
 
 CL_NS_DEF(store)
 
@@ -45,7 +43,7 @@ CL_NS_DEF(store)
 	public:
 		int64_t sizeInBytes; //todo
 		
-	    DEFINE_MUTABLE_MUTEX(files_mutex) // mutable: const methods must also be able to synchronize properly
+	  DEFINE_MUTABLE_MUTEX(files_mutex) // mutable: const methods must also be able to synchronize properly
 
 		/// Returns a null terminated array of strings, one for each file in the directory. 
 		void list(std::vector<std::string>* names) const;

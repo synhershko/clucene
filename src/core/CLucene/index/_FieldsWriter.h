@@ -7,16 +7,13 @@
 #ifndef _lucene_index_FieldsWriter_
 #define _lucene_index_FieldsWriter_
 
-
-#include "CLucene/util/VoidMapSetDefinitions.h"
 CL_CLASS_DEF(store,Directory)
-//#include "CLucene/store/RAMDirectory.h"
 CL_CLASS_DEF(store,IndexOutput)
 CL_CLASS_DEF(store,IndexInput)
 CL_CLASS_DEF(index,FieldInfo)
 CL_CLASS_DEF(store,RAMOutputStream)
 CL_CLASS_DEF(document,Document)
-CL_CLASS_DEF(document,Field)
+CL_CLASS_DEF(document,Fieldable)
 CL_CLASS_DEF(index,FieldInfos)
 //#include "FieldInfos.h"
 
@@ -47,18 +44,16 @@ public:
 
 	void flush();
 
-	/** Bulk write a contiguous series of documents.  The
-	*  lengths array is the length (in bytes) of each raw
-	*  document.  The stream IndexInput is the
-	*  fieldsStream from which we should bulk-copy all
-	*  bytes. */
-	void addRawDocuments(CL_NS(store)::IndexInput* stream, const int32_t* lengths, const int32_t numDocs);
-
-
-	inline void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
+	inline void writeField(FieldInfo* fi, CL_NS(document)::Fieldable* field);
 
 	void close();
 
+  /** Bulk write a contiguous series of documents.  The
+  *  lengths array is the length (in bytes) of each raw
+  *  document.  The stream IndexInput is the
+  *  fieldsStream from which we should bulk-copy all
+  *  bytes. */
+  void addRawDocuments(CL_NS(store)::IndexInput* stream, const int32_t* lengths, const int32_t numDocs);
 	void addDocument(CL_NS(document)::Document* doc);
 };
 CL_NS_END

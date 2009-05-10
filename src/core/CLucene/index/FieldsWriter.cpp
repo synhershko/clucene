@@ -74,14 +74,14 @@ void FieldsWriter::close() {
 		//Close fieldsStream
 		fieldsStream->close();
 		_CLDELETE( fieldsStream );
-		}
+	}
 
 	//Check if indexStream is valid
 	if (indexStream){
 		//Close indexStream
 		indexStream->close();
 		_CLDELETE( indexStream );
-		}
+	}
 }
 
 void FieldsWriter::addDocument(Document* doc) {
@@ -97,33 +97,34 @@ void FieldsWriter::addDocument(Document* doc) {
 	indexStream->writeLong(fieldsStream->getFilePointer());
 
 	int32_t storedCount = 0;
-	DocumentFieldEnumeration* fields = doc->getFields();
-	while (fields->hasMoreElements()) {
-		Field* field = fields->nextElement();
-		if (field->isStored())
-			storedCount++;
-	}
-	_CLLDELETE(fields);
-	fieldsStream->writeVInt(storedCount);
-
-	fields = doc->getFields();
-	while (fields->hasMoreElements()) {
-		Field* field = fields->nextElement();
-		if (field->isStored()) {
-			writeField(fieldInfos->fieldInfo(field->name()), field);
-		}
-	}
-	_CLDELETE(fields);
+  {
+    const Document::FieldsType& fields = *doc->getFields();
+    for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
+		  Fieldable* field = *itr;
+		  if (field->isStored())
+			  storedCount++;
+	  }
+	  fieldsStream->writeVInt(storedCount);
+  }
+  {
+	  const Document::FieldsType& fields = *doc->getFields();
+    for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
+		  Fieldable* field = *itr;
+		  if (field->isStored()) {
+			  writeField(fieldInfos->fieldInfo(field->name()), field);
+		  }
+	  }
+  }
 }
 
-void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
+void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Fieldable* field)
 {
 	// if the field as an instanceof FieldsReader.FieldForMerge, we're in merge mode
 	// and field.binaryValue() already returns the compressed value for a field
 	// with isCompressed()==true, so we disable compression in that case
 	//bool disableCompression = (field instanceof FieldsReader.FieldForMerge);
 
-	fieldsStream->writeVInt(fieldInfos->fieldNumber(field->name()));
+	fieldsStream->writeVInt(fi->number);
 	uint8_t bits = 0;
 	if (field->isTokenized())
 		bits |= FieldsWriter::FIELD_IS_TOKENIZED;
@@ -135,9 +136,10 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 	fieldsStream->writeByte(bits);
 
 	if ( field->isCompressed() ){
+    //TODO: implement this...
 		_CLTHROWA(CL_ERR_Runtime, "CLucene does not directly support compressed fields. Write a compressed byte array instead");
 	}else{
-
+    
 		//FEATURE: this problem in Java Lucene too, if using Reader, data is not stored.
 		//todo: this is a logic bug...
 		//if the field is stored, and indexed, and is using a reader the field wont get indexed
@@ -150,32 +152,11 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 		//write the field data while the documentwrite analyses the document! how cool would
 		//that be! it would cut out all these buffers!!!
 
-
 		// compression is disabled for the current field
 		if (field->isBinary()) {
-			//todo: since we currently don't support static length vints, we have to
-			//read the entire stream into memory first.... ugly!
-			InputStream* stream = field->streamValue();
-			const signed char* sd;
-
-			int32_t sz = stream->size();
-			if ( sz < 0 )
-				sz = 10000000; //todo: we should warn the developer here....
-
-			//how do wemake sure we read the entire index in now???
-			//todo: we need to have a max amount, and guarantee its all in or throw an error..
-			//todo: make this value configurable....
-			int32_t rl = stream->read(sd, sz, 1);
-
-			if ( rl < 0 ){
-				fieldsStream->writeVInt(0); //todo: could we detect this earlier and not actually write the field??
-			}else{
-				//todo: if this int could be written with a constant length, then
-				//the stream could be read and written a bit at a time then the length
-				//is re-written at the end.
-				fieldsStream->writeVInt(rl);
-				fieldsStream->writeBytes((uint8_t*)sd, rl);
-			}
+			const CL_NS(util)::ValueArray<uint8_t>* data = field->binaryValue();
+      fieldsStream->writeVInt(data->length);
+      fieldsStream->writeBytes(data->values, data->length);
 
 		}else if ( field->stringValue() == NULL ){ //we must be using readerValue
 			CND_PRECONDITION(!field->isIndexed(), "Cannot store reader if it is indexed too")
@@ -212,11 +193,6 @@ void FieldsWriter::flush() {
   fieldsStream->flush();
 }
 
-/** Bulk write a contiguous series of documents.  The
-*  lengths array is the length (in bytes) of each raw
-*  document.  The stream IndexInput is the
-*  fieldsStream from which we should bulk-copy all
-*  bytes. */
 void FieldsWriter::addRawDocuments(CL_NS(store)::IndexInput* stream, const int32_t* lengths, const int32_t numDocs) {
 	int64_t position = fieldsStream->getFilePointer();
 	const int64_t start = position;

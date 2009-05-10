@@ -4,10 +4,10 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
+#define _CL__CND_DEBUG
 #include "CLucene/_SharedHeader.h"
 #include "_condition.h"
 #include "CLucene/util/Misc.h"
-#ifdef _CL__CND_DEBUG
 
 #define __CND_STR_PRECONDITION    "PRECONDITION"
 #define __CND_STR_CONDITION       "CONDITION"
@@ -76,5 +76,3 @@ void __cnd_FormatDebug( const char* File, int32_t Line, int32_t Title, const cha
 
 	_Cnd_OutDebug(M, StrTitle, File, Line, Title, Mes2, fatal);
 }
-#endif 
-

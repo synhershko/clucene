@@ -7,7 +7,6 @@
 #ifndef _lucene_index_internal_Term_
 #define _lucene_index_internal_Term_
 
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "Term.h"
 #include <functional>
 

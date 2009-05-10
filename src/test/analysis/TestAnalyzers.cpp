@@ -70,7 +70,7 @@
         CLUCENE_ASSERT( tokenStream->next(token) != NULL );
         CuAssertStrEquals(tc,_T("token.termBuffer()"), _T("Qwerty"),
                     token->termBuffer());
-		_CLDELETE(token);
+        _CLDELETE(token);
         _CLDELETE(tokenStream);
 
         StringReader reader2(text);
@@ -78,7 +78,7 @@
         CLUCENE_ASSERT( tokenStream->next(token) != NULL );
         CuAssertStrEquals(tc, _T("token.termBuffer()"), _T("qwerty"),
                     token->termBuffer());
-		_CLDELETE(token);
+        _CLDELETE(token);
         _CLDELETE(tokenStream);
    }
 

@@ -9,29 +9,38 @@
 
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/config/_Threads.h"
+#include "CLucene/util/Array.h"
+#include "CLucene/store/_RAMDirectory.h"
+#include "_TermInfo.h"
 
-CL_CLASS_DEF(store,RAMOutputStream)
 CL_CLASS_DEF(analysis,Analyzer)
 CL_CLASS_DEF(analysis,Token)
 CL_CLASS_DEF(document,Fieldable)
+CL_CLASS_DEF(store,IndexOutput)
 CL_CLASS_DEF(document,Document)
+CL_CLASS_DEF(util,StringReader)
 
 CL_NS_DEF(index)
 
 class DocumentsWriter;
 class DefaultSkipListWriter;
+class FieldInfos;
+class FieldsWriter;
+class FieldInfos;
+class IndexWriter;
+class TermInfo;
+class TermInfosWriter;
+class Term;
+class FieldInfo;
+class Term_Compare;
+class Term_Equals;
 
 /** Used only internally to DW to call abort "up the stack" */
 class AbortException{
 public:
-//  CLuceneError& err;
-  AbortException(CLuceneError& err, DocumentsWriter* docWriter) {
-//TODO:    docWriter->setAborting();
-//    this->err = err;
-  }
+  CLuceneError err;
+  AbortException(CLuceneError& _err, DocumentsWriter* docWriter);
 };
-
-
 
 /**
  * This class accepts multiple added documents and directly
@@ -115,6 +124,32 @@ public:
  * or none") added to the index.
  */
 class DocumentsWriter {
+public:
+  
+  // Number of documents a delete term applies to.
+  class Num {
+  private:
+  	int32_t num;
+  public:
+    Num(int32_t num) {
+      this->num = num;
+    }
+    int32_t getNum() {
+      return num;
+    }
+    void setNum(int32_t num) {
+      // Only record the new number if it's greater than the
+      // current one.  This is important because if multiple
+      // threads are replacing the same doc at nearly the
+      // same time, it's possible that one thread that got a
+      // higher docID is scheduled before the other
+      // threads.
+      if (num > this->num)
+        this->num = num;
+    }
+  };
+  typedef CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals> TermNumMapType;
+
 private:
   IndexWriter* writer;
   CL_NS(store)::Directory* directory;
@@ -160,28 +195,11 @@ private:
   static int32_t BYTES_PER_INT;
 
 
-  // Number of documents a delete term applies to.
-  class Num {
-  private:
-  	int32_t num;
-  public:
-    Num(int32_t num) {
-      this->num = num;
-    }
-    int32_t getNum() {
-      return num;
-    }
-    void setNum(int32_t num) {
-      // Only record the new number if it's greater than the
-      // current one.  This is important because if multiple
-      // threads are replacing the same doc at nearly the
-      // same time, it's possible that one thread that got a
-      // higher docID is scheduled before the other
-      // threads.
-      if (num > this->num)
-        this->num = num;
-    }
-  };
+  // This Hashmap buffers delete terms in ram before they
+  // are applied.  The key is delete term; the value is
+  // number of buffered documents the term applies to.
+  TermNumMapType* bufferedDeleteTerms;
+  int32_t numBufferedDeleteTerms;
 
 
   /* Simple StringReader that can be reset to a new string;
@@ -189,6 +207,9 @@ private:
    * Field. */
   typedef CL_NS(util)::StringReader ReusableStringReader;
 
+  class ThreadState;
+  class FieldMergeState;
+  class ByteSliceReader;
   
   /* Class that Posting and PostingVector use to write uint8_t
    * streams into shared fixed-size uint8_t[] arrays.  The idea
@@ -207,34 +228,38 @@ private:
    * hit a non-zero uint8_t. */
   template<typename T>
   class BlockPool {
-    CL_NS(util)::ValueArray<T*> buffers;
+  protected:
+    CL_NS(util)::ValueArray<T>* buffer;                              // Current head buffer
+    CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<T> > buffers;
     int32_t numBuffer;
 
     int32_t bufferUpto;                        // Which buffer we are upto
     int32_t byteUpto;             // Where we are in head buffer
-	int32_t blockSize;
+	  int32_t blockSize;
 
-    T* buffer;                              // Current head buffer
     int32_t byteOffset;          // Current head offset
 
     DocumentsWriter* parent;
   public:
+    virtual CL_NS(util)::ValueArray<T>* getNewBlock() = 0;
+
     BlockPool(DocumentsWriter* _parent, int32_t _blockSize):
-      buffers(CL_NS(util)::ValueArray<T*>(10))
+      buffers(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<T> >(10))
     {
-	  this->blockSize = _blockSize;
+	    this->blockSize = _blockSize;
       this->parent = _parent;
       bufferUpto = -1;
       byteUpto = blockSize;
       byteOffset = -blockSize;
       buffer = NULL;
+      numBuffer = 0;
     }
-	~BlockPool(){
-		buffers.deleteAll();
-	}
+	  ~BlockPool(){
+		  buffers.deleteValues();
+	  }
 
     void reset() {
-      parent->recycleCharBlocks(buffers, 1+bufferUpto);
+      parent->recycleBlocks(buffers, 1+bufferUpto);
       bufferUpto = -1;
       byteUpto = blockSize;
       byteOffset = -blockSize;
@@ -243,25 +268,38 @@ private:
     void nextBuffer() {
       if (1+bufferUpto == buffers.length) {
       	//expand the number of buffers
-      	T** oldBuffers = buffers.values;
-      	int32_t oldLen = buffers.length;
-        buffers.length = (size_t)(buffers.length * 1.5);
-      	buffers.values = _CL_NEWARRAY(T*, (buffers.length) );
-      	
-      	for (int32_t i=0;i<oldLen;i++){
-      		buffers.values[i] = oldBuffers[i];
-      	}
-      	_CLDELETE_ARRAY(oldBuffers);
+        buffers.resize( (int32_t)(buffers.length * 1.5));
       }
-      buffer = buffers.values[1+bufferUpto] = parent->getCharBlock();
+      buffer = buffers.values[1+bufferUpto] = getNewBlock();
       bufferUpto++;
 
       byteUpto = 0;
       byteOffset += blockSize;
     }
+
+    friend class DocumentsWriter::ThreadState;
+    friend class DocumentsWriter::FieldMergeState;
+    friend class DocumentsWriter::ByteSliceReader;
   };
-  typedef BlockPool<TCHAR> CharBlockPool;
-  typedef BlockPool<uint8_t> ByteBlockPool;
+  
+  class CharBlockPool: public BlockPool<TCHAR>{
+  public:
+    CharBlockPool(DocumentsWriter* _parent, int32_t _blockSize):
+        BlockPool(_parent, _blockSize)
+    {
+    }
+    CL_NS(util)::ValueArray<TCHAR>* getNewBlock(){
+        return parent->getCharBlock();
+    }
+  };
+  class ByteBlockPool: public BlockPool<uint8_t>{
+    bool trackAllocations;
+  public:
+    ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize);
+    CL_NS(util)::ValueArray<uint8_t>* getNewBlock();
+    int32_t newSlice(const int32_t size);
+    int32_t allocSlice(CL_NS(util)::ValueArray<uint8_t>& slice, const int32_t upto);
+  };
 
 
 
@@ -273,7 +311,7 @@ private:
   class ByteSliceReader: public CL_NS(store)::IndexInput {
     ByteBlockPool* pool;
     int32_t bufferUpto;
-    uint8_t* buffer;
+    CL_NS(util)::ValueArray<uint8_t>* buffer;
     int32_t limit;
     int32_t level;
 
@@ -281,6 +319,7 @@ private:
     int32_t bufferOffset;
     int32_t endIndex;
   public:
+    ByteSliceReader();
     void init(ByteBlockPool* pool, int32_t startIndex, int32_t endIndex);
 
     uint8_t readByte();
@@ -292,17 +331,20 @@ private:
     void seek(const int64_t pos);
     void close();
 	
-	IndexInput* clone() const;
-	const char* getDirectoryType() const;
-	const char* getObjectName();
+	  IndexInput* clone() const;
+	  const char* getDirectoryType() const;
+	  const char* getObjectName() const;
+	  static const char* getClassName();
+    
+    friend class FieldMergeState;
   };
 
 
-  class PostingVector; //predefine...
+  struct PostingVector; //predefine...
 
   /* Used to track postings for a single term.  One of these
    * exists per unique term seen since the last flush. */
-  class Posting {
+  struct Posting {
     int32_t textStart;                                  // Address into char[] blocks where our text is stored
     int32_t docFreq;                                    // # times this term occurs in the current doc
     int32_t freqStart;                                  // Address of first uint8_t[] slice for freq
@@ -318,7 +360,7 @@ private:
   /* Used to track data for term vectors.  One of these
    * exists per unique term seen in each field in the
    * document. */
-  class PostingVector {
+  struct PostingVector {
     Posting* p;                                      // Corresponding Posting instance for this term
     int32_t lastOffset;                                 // Last offset we saw
     int32_t offsetStart;                                // Address of first slice for offsets
@@ -332,7 +374,7 @@ private:
    * to a partial segment. */
   class BufferedNorms {
   public:
-    CL_NS(store)::RAMOutputStream* out;
+    CL_NS(store)::RAMOutputStream out;
     int32_t upto;
 
     BufferedNorms();
@@ -354,7 +396,7 @@ private:
   int32_t postingsFreeCount;
   int32_t postingsAllocCount;
 
-  CL_NS(util)::CLArrayList<TCHAR*, CL_NS(util)::Deletor::tcArray> freeCharBlocks;
+  CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<TCHAR>*, CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<TCHAR> > > freeCharBlocks;
 
   /* We have three pools of RAM: Postings, uint8_t blocks
    * (holds freq/prox posting data) and char blocks (holds
@@ -389,7 +431,8 @@ private:
   std::string segmentFileName(const std::string& extension);
   std::string segmentFileName(const char* extension);
 
-  const TermInfo* termInfo; // minimize consing
+  TermInfo termInfo; // minimize consing
+
 
   /** Reset after a flush */
   void resetPostingsData();
@@ -408,7 +451,8 @@ private:
   // used when we hit a exception when adding a document
   void addDeleteDocID(int32_t docId);
 
-  CL_NS(util)::CLArrayList<uint8_t*> freeByteBlocks;
+  CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<uint8_t>*, 
+    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > freeByteBlocks;
 
 
 
@@ -427,19 +471,19 @@ private:
       ThreadState* threadState;
 
       int32_t fieldCount;
-	  CL_NS(util)::ObjectArray<CL_NS(document)::Fieldable*> docFields;
+	    CL_NS(util)::ObjectArray<CL_NS(document)::Fieldable> docFields;
 
       FieldData* next;
 
       bool postingsCompacted;
 
-      CL_NS(util)::ValueArray<Posting> postingsHash;
+      CL_NS(util)::ValueArray<Posting*> postingsHash;
       int32_t postingsHashSize;
       int32_t postingsHashHalfSize;
       int32_t postingsHashMask;
 
       int32_t postingsVectorsUpto;
-	  DocumentsWriter* _parent;
+	    DocumentsWriter* _parent;
 
       int32_t offsetEnd;
       CL_NS(analysis)::Token* localToken;
@@ -452,27 +496,27 @@ private:
       void initPostingArrays();
 
       /** Only called when term vectors are enabled.  This
-        *  is called the first time we see a given term for
-        *  each * document, to allocate a PostingVector
-        *  instance that * is used to record data needed to
-        *  write the posting * vectors. */
-      PostingVector* iaddNewVector();
+      *  is called the first time we see a given term for
+      *  each * document, to allocate a PostingVector
+      *  instance that * is used to record data needed to
+      *  write the posting * vectors. */
+      PostingVector* addNewVector();
 
       /** This is the hotspot of indexing: it's called once
-        *  for every term of every document.  Its job is to *
-        *  update the postings uint8_t stream (Postings hash) *
-        *  based on the occurence of a single term. */
-      void iaddPosition(CL_NS(analysis)::Token* token);
+      *  for every term of every document.  Its job is to *
+      *  update the postings uint8_t stream (Postings hash) *
+      *  based on the occurence of a single term. */
+      void addPosition(CL_NS(analysis)::Token* token);
 
       /** Called when postings hash is too small (> 50%
-        *  occupied) or too large (< 20% occupied). */
+      *  occupied) or too large (< 20% occupied). */
       void rehashPostings(int32_t newSize);
 
       /** Called once per field per document if term vectors
-        *  are enabled, to write the vectors to *
-        *  RAMOutputStream, which is then quickly flushed to
-        *  * the real term vectors files in the Directory. */
-      void writeVectors(FieldInfo fieldInfo);
+      *  are enabled, to write the vectors to *
+      *  RAMOutputStream, which is then quickly flushed to
+      *  the real term vectors files in the Directory. */
+      void writeVectors(FieldInfo* fieldInfo);
 
       void compactPostings();
 
@@ -490,23 +534,31 @@ private:
       bool doVectorOffsets;
       void resetPostingArrays();
 
-      FieldData(DocumentsWriter* _parent, FieldInfo* fieldInfo);
+      FieldData(DocumentsWriter* _parent, ThreadState* __threadState, FieldInfo* fieldInfo);
 
       /** So Arrays.sort can sort us. */
       int32_t compareTo(const void* o);
 
       /** Collapse the hash table & sort in-place. */
-	  CL_NS(util)::ValueArray<Posting>* sortPostings();
+	    CL_NS(util)::ValueArray<Posting*>* sortPostings();
 
       /** Process all occurrences of one field in the document. */
       void processField(CL_NS(analysis)::Analyzer* analyzer);
 
       /* Invert one occurrence of one field in the document */
-      void invertField(CL_NS(document)::Fieldable* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
+      void invertField(const CL_NS(document)::Fieldable* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
+
+      static bool sort(FieldData*, FieldData*);
+
+	    const char* getObjectName() const;
+      static const char* getClassName();
+      int32_t compareTo(lucene::util::NamedObject *);
+      friend class ThreadState;
+      friend class FieldMergeState;
     };
 
   private:
-    CL_NS(util)::ValueArray<Posting> postingsFreeList;           // Free Posting instances
+    CL_NS(util)::ValueArray<Posting*> postingsFreeList;           // Free Posting instances
     int32_t postingsFreeCount;
 
     CL_NS(util)::ValueArray<int64_t> vectorFieldPointers;
@@ -526,7 +578,7 @@ private:
 
     int32_t fieldGen;
 
-    CL_NS(util)::ObjectArray<PostingVector*> postingsVectors;
+    CL_NS(util)::ValueArray<PostingVector*> postingsVectors;
     int32_t maxPostingsVectors;
 
     // Used to read a string value for a field
@@ -537,40 +589,36 @@ private:
     ByteBlockPool vectorsPool;
     CharBlockPool charPool;
 
-
     // Current posting we are working on
-    CL_NS(util)::ValueArray<Posting> p;
+    Posting* p;
     PostingVector* vector;
 
     //writeFreqByte...
-    uint8_t* freq;
+    CL_NS(util)::ValueArray<uint8_t>* freq;
     int32_t freqUpto;
 
     //writeProxByte...
-    CL_NS(util)::ValueArray<uint8_t> prox;
+    CL_NS(util)::ValueArray<uint8_t>* prox;
     int32_t proxUpto;
 
     //writeOffsetByte...
-    CL_NS(util)::ValueArray<uint8_t> offsets;
+    CL_NS(util)::ValueArray<uint8_t>* offsets;
     int32_t offsetUpto;
 
     //writePosByte...
-    CL_NS(util)::ValueArray<uint8_t> pos;
+    CL_NS(util)::ValueArray<uint8_t>* pos;
     int32_t posUpto;
 
 
-    /** Initializes shared state for this new document */
-    void init(CL_NS(document)::Document* doc, int32_t docID);
-
     /** Do in-place sort of Posting array */
-    void doPostingSort(CL_NS(util)::ValueArray<Posting>* postings, int32_t numPosting);
+    void doPostingSort(CL_NS(util)::ValueArray<Posting*>& postings, int32_t numPosting);
 
-    void quickSort(CL_NS(util)::ValueArray<Posting>* postings, int32_t lo, int32_t hi);
+    void quickSort(CL_NS(util)::ValueArray<Posting*>& postings, int32_t lo, int32_t hi);
 
     /** Do in-place sort of PostingVector array */
-    void doVectorSort(CL_NS(util)::ValueArray<PostingVector*>* postings, int32_t numPosting);
+    void doVectorSort(CL_NS(util)::ValueArray<PostingVector*>& postings, int32_t numPosting);
 
-    void quickSort(CL_NS(util)::ValueArray<PostingVector*>* postings, int32_t lo, int32_t hi);
+    void quickSort(CL_NS(util)::ValueArray<PostingVector*>& postings, int32_t lo, int32_t hi);
 
     // USE ONLY FOR DEBUGGING!
     /*
@@ -585,12 +633,12 @@ private:
 
     /** Test whether the text for current Posting p equals
       *  current tokenText. */
-    bool postingEquals(TCHAR* tokenText, int32_t tokenTextLen);
+    bool postingEquals(const TCHAR* tokenText, int32_t tokenTextLen);
 
     /** Compares term text for two Posting instance and
       *  returns -1 if p1 < p2; 1 if p1 > p2; else 0.
       */
-    int32_t comparePostings(Posting p1, Posting p2);
+    int32_t comparePostings(Posting* p1, Posting* p2);
 
 
   public:
@@ -603,10 +651,13 @@ private:
     CL_NS(util)::ObjectArray<FieldData> allFieldDataArray; // All FieldData instances
     bool doFlushAfter;
     int32_t docID;                            // docID we are now working on
-	DocumentsWriter* _parent;
+	  DocumentsWriter* _parent;
 
 
-	ThreadState(DocumentsWriter* _parent);
+	  ThreadState(DocumentsWriter* _parent);
+
+    /** Initializes shared state for this new document */
+    void init(CL_NS(document)::Document* doc, int32_t docID);
 
     /** Tokenizes the fields of a document into Postings */
     void processDocument(CL_NS(analysis)::Analyzer* analyzer);
@@ -655,6 +706,8 @@ private:
     /** Write uint8_t into pos stream of current
       *  PostingVector */
     void writePosByte(uint8_t b);
+
+    friend class FieldMergeState;
   };
 
 
@@ -680,8 +733,37 @@ private:
    * inverted document. */
   void finishDocument(ThreadState* state);
 
+
+  /** Used to merge the postings from multiple ThreadStates
+   * when creating a segment */
+  class FieldMergeState {
+  private:
+    ThreadState::FieldData* field;
+    CL_NS(util)::ValueArray<Posting*>* postings;
+
+    Posting* p;
+    CL_NS(util)::ValueArray<TCHAR>* text;
+    int32_t textOffset;
+
+    int32_t postingUpto;
+
+    ByteSliceReader freq;
+    ByteSliceReader prox;
+
+    int32_t docID;
+    int32_t termFreq;
+  public:
+    FieldMergeState();
+    bool nextTerm();
+    bool nextDoc();
+
+    friend class DocumentsWriter;
+  };
+
+
 public:
   DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer);
+  ~DocumentsWriter();
 
   /** If non-null, various details of indexing are printed
    *  here. */
@@ -714,11 +796,11 @@ public:
   int32_t getDocStoreOffset();
 
   /** Closes the current open doc stores an returns the doc
-   *  store segment name.  This returns null if there are *
+   *  store segment name.  This returns a blank string if there are
    *  no buffered documents. */
   std::string closeDocStore();
 
-  const std::vector<std::string>* abortedFiles();
+  const std::vector<std::string>& abortedFiles();
   
   /* Returns list of files in use by this instance,
    * including any flushed segments. */
@@ -787,14 +869,14 @@ public:
 
   int32_t getNumBufferedDeleteTerms();
 
-  const std::vector<string>* getBufferedDeleteTerms();
+  const TermNumMapType& getBufferedDeleteTerms();
 
   const std::vector<int32_t>* getBufferedDeleteDocIDs();
 
   // Reset buffered deletes.
   void clearBufferedDeletes();
 
-  bool bufferDeleteTerms(const CL_NS(util)::ObjectArray<Term*>* terms);
+  bool bufferDeleteTerms(const CL_NS(util)::ObjectArray<Term>* terms);
 
   bool bufferDeleteTerm(Term* term);
 
@@ -834,11 +916,12 @@ public:
   //   3,4,5: Posting is referenced by postings hash, which
   //          targets 25-50% fill factor; approximate this
   //          as 3X # pointers
+  //TODO: estimate this accurately for C++!
   static const int32_t POSTING_NUM_BYTE; /// = OBJECT_HEADER_BYTES + 9*INT_NUM_BYTE + 5*POINTER_NUM_BYTE;
 
   /* Allocate more Postings from shared pool */
-  void getPostings(Posting* postings);
-  void recyclePostings(CL_NS(util)::ValueArray<Posting>& postings, int32_t numPostings);
+  void getPostings(CL_NS(util)::ValueArray<Posting*>& postings);
+  void recyclePostings(CL_NS(util)::ValueArray<Posting*>& postings, int32_t numPostings);
 
   /* Initial chunks size of the shared uint8_t[] blocks used to
      store postings data */
@@ -848,10 +931,10 @@ public:
   static const int32_t BYTE_BLOCK_NOT_MASK;
 
   /* Allocate another uint8_t[] from the shared pool */
-  uint8_t* getByteBlock(bool trackAllocations);
+  CL_NS(util)::ValueArray<uint8_t>* getByteBlock(bool trackAllocations);
 
   /* Return a uint8_t[] to the pool */
-  void recycleByteBlocks(uint8_t** blocks, int32_t start, int32_t end);
+  void recycleBlocks(CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<uint8_t> >& blocks, int32_t end);
 
   /* Initial chunk size of the shared char[] blocks used to
      store term text */
@@ -862,10 +945,10 @@ public:
   static const int32_t MAX_TERM_LENGTH;
 
   /* Allocate another char[] from the shared pool */
-  TCHAR* getCharBlock();
+  CL_NS(util)::ValueArray<TCHAR>* getCharBlock();
 
   /* Return a char[] to the pool */
-  void recycleCharBlocks(CL_NS(util)::ValueArray<TCHAR*>& blocks, int32_t numBlocks);
+  void recycleBlocks(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<TCHAR> >& blocks, int32_t numBlocks);
 
   std::string toMB(int64_t v);
 

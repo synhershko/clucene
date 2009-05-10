@@ -7,11 +7,8 @@
 #ifndef _lucene_queryParser_MultiFieldQueryParser_
 #define _lucene_queryParser_MultiFieldQueryParser_
 
-
-//#include "CLucene/analysis/AnalysisHeader.h"
-//#include "CLucene/search/SearchHeader.h"
 #include "QueryParser.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/VoidMap.h"
 
 
 CL_NS_DEF(queryParser)

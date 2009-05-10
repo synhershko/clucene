@@ -32,11 +32,11 @@ CL_NS_DEF2(analysis,standard)
     const TCHAR* type = t->type();
 
     if ( type == tokenImage[APOSTROPHE] && //we can compare the type directy since the type should always come from the tokenImage
-		( textLength >= 2 && _tcsicmp(text+textLength-2, _T("'s"))==0  ) )
+		  ( textLength >= 2 && _tcsicmp(text+textLength-2, _T("'s"))==0  ) )
     {
       // remove 's
       text[textLength-2]=0; 
-	  t->resetTermTextLen();
+	    t->resetTermTextLen();
 
       return t;
 

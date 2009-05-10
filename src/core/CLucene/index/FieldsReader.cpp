@@ -24,64 +24,6 @@ CL_NS_USE(document)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-
-class FieldsReader::FieldsStreamHolder: public InputStream{
-    CL_NS(store)::IndexInput* indexInput;
-	signed char* buffer;
-	size_t bufferLen;
-	int32_t subLength;
-	int32_t pos;
-	void growBuffer(int32_t to){
-		this->bufferLen = to;
-		this->buffer = (signed char*)realloc(buffer,bufferLen);
-	}
-public:
-    FieldsStreamHolder(CL_NS(store)::IndexInput* indexInput, int32_t subLength, int32_t bufferLength=4096){
-		this->indexInput = indexInput->clone();
-		this->subLength = subLength;
-		this->bufferLen = cl_min(bufferLength,subLength);
-		this->pos = 0;
-		this->buffer = (signed char*)malloc(bufferLen);
-	}
-    ~FieldsStreamHolder(){
-		indexInput->close();
-		_CLDELETE(indexInput);
-		if ( buffer != NULL )
-			free(buffer);
-	}
-    int32_t read(const signed char*& start, int32_t min, int32_t _max){
-		int32_t max = cl_max(min,_max);
-		int32_t ret = cl_min(max, this->subLength-this->pos);
-		if ( ret > bufferLen )
-			growBuffer(ret);
-
-		start = this->buffer;
-		if ( ret == 0 )
-			return -1;
-		indexInput->readBytes((uint8_t*)this->buffer, ret);
-		pos += ret;
-		return ret;
-	}
-    int64_t skip(int64_t ntoskip){
-		int32_t origPos = this->pos;
-		int32_t r;
-		while ( ntoskip > 0 && pos < subLength ){
-			r = (int32_t)cl_min3(ntoskip, this->bufferLen, this->subLength-this->pos);
-			indexInput->readBytes((uint8_t*)this->buffer, r);
-			this->pos += r;
-			ntoskip -= r;
-		}
-		return this->pos-origPos;
-	}
-	int64_t position(){
-		return this->pos;
-	}
-	size_t size(){
-		return this->subLength;
-	}
-};
-
-
 FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, int32_t _readBufferSize, int32_t _docStoreOffset, int32_t size):
 	fieldInfos(fn), closed(false)
 {
@@ -108,7 +50,7 @@ FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, in
 
 			// Verify the file is long enough to hold all of our
 			// docs
-			CND_CONDITION(((int32_t) (indexStream.length() / 8)) >= size + this->docStoreOffset,
+			CND_CONDITION(((int32_t) (indexStream->length() / 8)) >= size + this->docStoreOffset,
 				"the file is not long enough to hold all of our docs");
 		} else {
 			this->docStoreOffset = 0;
@@ -381,8 +323,10 @@ void FieldsReader::addFieldForMerge(CL_NS(document)::Document& doc, const FieldI
 
 	if ( binary || compressed) {
 		int32_t toRead = fieldsStream->readVInt();
-		data = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
-		v = Field::VALUE_STREAM;
+    CL_NS(util)::ValueArray<uint8_t> b(toRead);
+    fieldsStream->readBytes(b.values,toRead);
+		v = Field::VALUE_BINARY;
+    data = b.takeArray();
 	} else {
 		data = fieldsStream->readString();
 		v = Field::VALUE_STRING;
@@ -396,14 +340,15 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 	//we have a binary stored field, and it may be compressed
 	if (binary) {
 		const int32_t toRead = fieldsStream->readVInt();
-		FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, toRead);
+    ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>(toRead);
+    fieldsStream->readBytes(b->values,toRead);
 		if (compressed) {
 			// we still do not support compressed fields
-			doc.add(* _CLNEW Field(fi->name, subStream, Field::STORE_COMPRESS)); // todo: uncompress(subStream->getStream())
-		}
-		else
-			doc.add(* _CLNEW Field(fi->name, subStream, Field::STORE_YES));
-
+			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_COMPRESS)); // todo: uncompress(subStream->getStream())
+    }else{
+			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_YES));
+    }
+    //no need to clean up, Field consumes b
 	} else {
 		uint8_t bits = 0;
 		bits |= getIndexType(fi, tokenize);
@@ -413,15 +358,15 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 		if (compressed) {
 			bits |= Field::STORE_COMPRESS;
 			const int32_t toRead = fieldsStream->readVInt();
-
-			FieldsStreamHolder* subStream = _CLNEW FieldsStreamHolder(fieldsStream, toRead);
+      ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>(toRead);
+      fieldsStream->readBytes(b->values,toRead);
 
 			//todo: we dont have gzip inputstream available, must alert user
 			//to somehow use a gzip inputstream
 			f = _CLNEW Field(fi->name,      // field name
 				//todo: new String(uncompress(subStream->getStream()), "UTF-8"), // uncompress the value and add as string
-				subStream, bits);
-			f->setOmitNorms(fi->omitNorms);
+				b, bits);
+			  f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
 			f = _CLNEW Field(fi->name,     // name
@@ -484,8 +429,10 @@ FieldsReader::LazyField::LazyField(FieldsReader* _parent, const TCHAR* _name,
 	this->pointer = _pointer;
 	lazy = true;
 }
+FieldsReader::LazyField::~LazyField(){
+}
 
-CL_NS(store)::IndexInput* FieldsReader::LazyField::getFieldStream() {
+CL_NS(store)::IndexInput* FieldsReader::LazyField::getFieldStream(){
 	CL_NS(store)::IndexInput* localFieldsStream = parent->fieldsStreamTL.get();
 	if (localFieldsStream == NULL) {
 		localFieldsStream = parent->cloneableFieldsStream->clone();
@@ -494,24 +441,31 @@ CL_NS(store)::IndexInput* FieldsReader::LazyField::getFieldStream() {
 	return localFieldsStream;
 }
 
-CL_NS(util)::InputStream* FieldsReader::LazyField::streamValue() {
+const ValueArray<uint8_t>* FieldsReader::LazyField::binaryValue(){
 	parent->ensureOpen();
 	if (fieldsData == NULL) {
-		//uint8_t* b = _CL_NEWARRAY(uint8_t, toRead);
+		ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>(toRead);
 		CL_NS(store)::IndexInput* localFieldsStream = getFieldStream();
 
-		localFieldsStream->seek(pointer);
-		FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(localFieldsStream, toRead);
-		//localFieldsStream->readBytes(b, toRead);
-		if (isCompressed()) {
-			//fieldsData = uncompress(b);
-			//todo: ... what happens here?
-		} else {
-			fieldsData = subStream;
-		}
-		valueType = VALUE_STREAM;
+		//Throw this IO Exception since IndexREader.document does so anyway, so probably not that big of a change for people
+    //since they are already handling this exception when getting the document
+    try {
+      localFieldsStream->seek(pointer);
+      localFieldsStream->readBytes(b->values, toRead);
+      /*if (isCompressed == true) {
+        fieldsData = uncompress(b);
+      } else {*/
+        fieldsData = b;
+      //}
+		  valueType = VALUE_BINARY;
+
+    }catch(CLuceneError& err){
+      if ( err.number() != CL_ERR_IO ) throw err;
+      _CLTHROWA(CL_ERR_FieldReader, err.what());
+    }
+
 	}
-	return static_cast<CL_NS(util)::InputStream*>(fieldsData);
+	return static_cast<ValueArray<uint8_t>*>(fieldsData);
 }
 
 CL_NS(util)::Reader* FieldsReader::LazyField::readerValue() const {
@@ -580,8 +534,8 @@ CL_NS(util)::Reader* FieldsReader::FieldForMerge::readerValue() const {
 	return NULL;
 }
 
-CL_NS(util)::InputStream* FieldsReader::FieldForMerge::streamValue() const {
-	return (valueType & VALUE_STREAM) ? static_cast<CL_NS(util)::InputStream*>(fieldsData) : NULL;
+const CL_NS(util)::ValueArray<uint8_t>* FieldsReader::FieldForMerge::binaryValue(){
+	return (valueType & VALUE_BINARY) ? static_cast<CL_NS(util)::ValueArray<uint8_t>*>(fieldsData) : NULL;
 }
 
 CL_NS(analysis)::TokenStream* FieldsReader::FieldForMerge::tokenStreamValue() const {
@@ -611,6 +565,8 @@ FieldsReader::FieldForMerge::FieldForMerge(void* _value, ValueType _type, const 
 	if (fi->storeTermVector) bits |= TERMVECTOR_YES;
 
 	setConfig(bits);
+}
+FieldsReader::FieldForMerge::~FieldForMerge(){
 }
 
 CL_NS_END

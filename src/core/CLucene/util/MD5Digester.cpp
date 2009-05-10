@@ -81,7 +81,7 @@ char* PrintMD5(uint8_t md5Digest[16])
 
 	for (nCount = 0; nCount < 16; nCount++)
 	{
-		sprintf(chEach, "%02x", md5Digest[nCount]);
+		cl_sprintf(chEach, 10, "%02x", md5Digest[nCount]);
 		strncat(chBuffer, chEach, sizeof(chEach));
 	}
 

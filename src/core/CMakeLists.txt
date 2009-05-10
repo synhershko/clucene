@@ -65,20 +65,24 @@ SET(clucene_core_Files
 	./CLucene/document/NumberTools.cpp
 	./CLucene/index/IndexFileNames.cpp
 	./CLucene/index/IndexFileNameFilter.cpp
+	#./CLucene/index/IndexDeletionPolicy.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp
+	./CLucene/index/MergeScheduler.cpp
 	./CLucene/index/SegmentTermDocs.cpp
 	./CLucene/index/FieldsWriter.cpp
 	./CLucene/index/TermInfosWriter.cpp
 	./CLucene/index/Term.cpp
 	./CLucene/index/Terms.cpp
-	#./CLucene/index/DocumentsWriter.cpp
-	#./CLucene/index/DocumentsWriterThreadState.cpp
+	./CLucene/index/MergePolicy.cpp
+	./CLucene/index/DocumentsWriter.cpp
+	./CLucene/index/DocumentsWriterThreadState.cpp
 	./CLucene/index/SegmentTermVector.cpp
 	./CLucene/index/TermVectorReader.cpp
 	./CLucene/index/FieldInfos.cpp
 	./CLucene/index/CompoundFile.cpp
-	./CLucene/index/DefaultSkipListReader.cpp
+	./CLucene/index/SkipListReader.cpp
+	./CLucene/index/SkipListWriter.cpp
 	./CLucene/index/IndexFileDeleter.cpp
 	./CLucene/index/SegmentReader.cpp
   ./CLucene/index/DirectoryIndexReader.cpp
@@ -87,7 +91,6 @@ SET(clucene_core_Files
 	./CLucene/index/SegmentTermPositions.cpp
 	./CLucene/index/SegmentMerger.cpp
 	./CLucene/index/IndexWriter.cpp
-	./CLucene/index/MultiLevelSkipListReader.cpp
   ./CLucene/index/MultiReader.cpp
   ./CLucene/index/MultiSegmentReader.cpp
 	./CLucene/index/Payload.cpp

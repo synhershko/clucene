@@ -7,13 +7,10 @@
 #ifndef _lucene_analysis_Analyzers_
 #define _lucene_analysis_Analyzers_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
+#include "CLucene/util/VoidList.h"
+#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/CLStreams.h"
 #include "AnalysisHeader.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(analysis)
 
@@ -126,7 +123,11 @@ class CLUCENE_EXPORT LowerCaseFilter: public TokenFilter {
 public:
 	LowerCaseFilter(TokenStream* in, bool deleteTokenStream);
 	virtual ~LowerCaseFilter();
+<<<<<<< HEAD:src/core/CLucene/analysis/Analyzers.h
 	Token* next(Token*& token);
+=======
+	Token* next(Token* token);
+>>>>>>> working...:src/core/CLucene/analysis/Analyzers.h
 };
 
 
@@ -337,7 +338,6 @@ public:
 	 * To replace accented characters in a String by unaccented equivalents.
 	 */
 	Token* next(Token*& token);
-	
 	virtual ~ISOLatin1AccentFilter();
 };
 

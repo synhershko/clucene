@@ -60,10 +60,14 @@ Token* CharTokenizer::next(Token*& token){
 
 	}
 	buffer[length]=0;
+<<<<<<< HEAD:src/core/CLucene/analysis/Analyzers.cpp
 	if (token != NULL)
 		token->set( buffer, start, start+length);
 	else
 		token = _CLNEW Token( buffer, start, start+length );
+=======
+	token->set( buffer, start, start+length);
+>>>>>>> working...:src/core/CLucene/analysis/Analyzers.cpp
 	return token;
 }
 void CharTokenizer::reset(CL_NS(util)::Reader* input)
@@ -504,19 +508,19 @@ Token* KeywordTokenizer::next(Token*& token){
 	  if (token==NULL)
 		  token = _CLNEW Token();
       done = true;
-	  int32_t rd;
-	  const TCHAR* buffer=0;
+	    int32_t rd;
+	    const TCHAR* buffer=0;
       while (true) {
         rd = input->read(buffer, 1, bufferSize);
         if (rd == -1) 
 			break;
-		token->growBuffer(token->_termTextLen +rd+1);
+		  token->growBuffer(token->_termTextLen +rd+1);
 
-		uint32_t cp = rd;
-		if ( token->_termTextLen + cp > token->bufferLength() )
-			cp = token->bufferLength() -  token->_termTextLen;
-		_tcsncpy(token->_termText+token->_termTextLen,buffer,cp);
-		token->_termTextLen+=rd;
+		  uint32_t cp = rd;
+		  if ( token->_termTextLen + cp > token->bufferLength() )
+			  cp = token->bufferLength() -  token->_termTextLen;
+		    _tcsncpy(token->_termText+token->_termTextLen,buffer,cp);
+		    token->_termTextLen+=rd;
       }
 	  token->_termText[token->_termTextLen]=0;
 	  token->set(token->_termText,0,token->_termTextLen);
@@ -538,7 +542,11 @@ LengthFilter::LengthFilter(TokenStream* in, const size_t _min, const size_t _max
     this->_max = _max;
 }
 
+<<<<<<< HEAD:src/core/CLucene/analysis/Analyzers.cpp
 Token* LengthFilter::next(Token*& token)
+=======
+Token* LengthFilter::next(Token* token)
+>>>>>>> working...:src/core/CLucene/analysis/Analyzers.cpp
 {
     // return the first non-stop word found
     while ( input->next(token) )

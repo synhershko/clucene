@@ -19,7 +19,7 @@ class CLUCENE_EXPORT ScoreDocComparators:LUCENE_BASE {
 protected:
 	ScoreDocComparators();
 public:
-    ~ScoreDocComparators();
+  ~ScoreDocComparators();
 
 	class CLUCENE_EXPORT Relevance:public ScoreDocComparator {
 	public:

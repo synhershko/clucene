@@ -56,7 +56,7 @@ CL_NS_DEF(index)
          format = firstInt;
 
          // check that it is a format we can understand
-         if (format < -3){ //TODO: should be TermInfosWriter::FORMAT
+         if (format < TermInfosWriter::FORMAT){
             TCHAR err[30];
             _sntprintf(err,30,_T("Unknown format version: %d"), format);
             _CLTHROWT(CL_ERR_CorruptIndex,err);
@@ -378,8 +378,8 @@ CL_NS_DEF(index)
 			return;
 
         //Store the new bufferLength
-		if ( length - bufferLength < LUCENE_SEGMENTTERMENUM_GROWSIZE )
-			bufferLength = length+LUCENE_SEGMENTTERMENUM_GROWSIZE;
+		if ( length - bufferLength < 8 )
+			bufferLength = length+8;
 		else
 			bufferLength = length+1;
 
