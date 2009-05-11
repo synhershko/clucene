@@ -62,6 +62,7 @@ CL_NS_DEF(index)
     maxSkipLevels = 10;
     lastTermText = NULL;
     lastTermTextBufLen = 0;
+    lastTermTextLength = 0;
     lastFieldNumber = -1;
     termTextBuffer = NULL;
     termTextBufferLen = 0;
@@ -184,8 +185,11 @@ assert(false);//check...
       lastTermTextBufLen = (int32_t)(termTextLength*1.25);
       lastTermText = (TCHAR*)realloc(lastTermText, sizeof(TCHAR) * lastTermTextBufLen);
     }
-    _tcsncpy(lastTermText,termText+termTextStart,termTextLength);
-    assert(false);//check this...
+    if ( termText != NULL )
+      _tcsncpy(lastTermText,termText+termTextStart,termTextLength);
+    else
+      *lastTermText = 0;
+
     lastTermTextLength = termTextLength;
     lastFieldNumber = fieldNumber;
 

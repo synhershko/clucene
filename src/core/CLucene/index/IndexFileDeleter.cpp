@@ -9,6 +9,7 @@
 #include <assert.h>
 
 CL_NS_USE(store)
+CL_NS_USE(util)
 CL_NS_DEF(index)
 
 bool IndexFileDeleter::VERBOSE_REF_COUNTS = false;
@@ -345,14 +346,8 @@ void IndexFileDeleter::deletePendingFiles() {
 void IndexFileDeleter::checkpoint(SegmentInfos* segmentInfos, bool isCommit) {
 
   if (infoStream != NULL) {
-    string msg = "now checkpoint \"";
-    msg += segmentInfos->getCurrentSegmentFileName();
-    msg += "\" [";
-    msg += segmentInfos->size();
-    msg += " segments ; isCommit = ";
-    msg += isCommit;
-    msg += "]";
-    message( msg );
+    message(string("now checkpoint \"") + segmentInfos->getCurrentSegmentFileName() + "\" [" + 
+      Misc::toString(segmentInfos->size()) + " segments ; isCommit = " + Misc::toString(isCommit) + "]");
   }
 
   // Try again now to delete any previously un-deletable
@@ -426,9 +421,7 @@ void IndexFileDeleter::incRef(const vector<string>& files) {
     const string& fileName = files[i];
     RefCount* rc = getRefCount(fileName.c_str());
     if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-      string msg = string("  IncRef \"") + fileName + "\": pre-incr count is ";
-      msg += rc->count;
-      message(msg);
+      message(string("  IncRef \"") + fileName + "\": pre-incr count is " + Misc::toString(rc->count));
     }
     rc->IncRef();
   }
@@ -444,11 +437,7 @@ void IndexFileDeleter::decRef(const vector<string>& files) {
 void IndexFileDeleter::decRef(const string& fileName) {
   RefCount* rc = getRefCount(fileName.c_str());
   if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-    string msg = "  DecRef \"";
-    msg += fileName;
-    msg += "\": pre-decr count is ";
-    msg += rc->count;
-    message(msg);
+    message(string("  DecRef \"") + fileName + "\": pre-decr count is " + Misc::toString(rc->count));
   }
   if (0 == rc->DecRef()) {
     // This file is no int32_t64_ter referenced by any past

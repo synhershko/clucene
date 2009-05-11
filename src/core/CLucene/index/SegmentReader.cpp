@@ -343,9 +343,6 @@ CL_NS_DEF(index)
   //       tis != NULL
   //Post - All streams to files have been closed
 
-      CND_PRECONDITION(fieldsReader != NULL, "fieldsReader is NULL");
-      CND_PRECONDITION(tis != NULL, "tis is NULL");
-
       bool hasReferencedReader = (referencedSegmentReader != NULL);
 
       if (hasReferencedReader) {

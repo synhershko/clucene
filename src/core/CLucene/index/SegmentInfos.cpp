@@ -838,6 +838,7 @@ string SegmentInfo::segString(Directory* dir) {
         output->writeLong(generation);
         output->writeLong(generation);
       } _CLFINALLY(
+        output->close();
         _CLDELETE(output);
       )
     } catch (CLuceneError& e) {

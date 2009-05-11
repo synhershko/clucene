@@ -113,7 +113,7 @@ public:
 
     //done adding documents, now try and read them back
     writer.optimize();
-	
+	/*
     //use big file
     CL_NS(util)::FileInputStream input(factbook);
     CL_NS(util)::SimpleInputStreamReader sreader(&input, SimpleInputStreamReader::ASCII);
@@ -121,7 +121,7 @@ public:
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
-
+*/
     //another optimise...
     writer.optimize();
     writer.close();
@@ -147,7 +147,7 @@ public:
     CLUCENE_ASSERT(_tcscmp(treaderString,_ts)==0);
     doc.clear();
 
-    
+    /*
     //now check file stream
     reader->document(2, doc);
     f = doc.getField(_T("fileField"));
@@ -165,7 +165,7 @@ public:
     }while(true);
     CLUCENE_ASSERT(i == b->length);
     doc.clear();
-
+*/
 
     
 

@@ -14,6 +14,7 @@ CL_NS_DEF(store)
 
 
 Directory::Directory(){
+  this->lockFactory = NULL;
 }
 Directory::~Directory(){ 
 }

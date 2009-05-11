@@ -64,7 +64,7 @@ class CLUCENE_EXPORT NamedObject{
 public:
   virtual ~NamedObject();
 	virtual const char* getObjectName() const = 0;
-  bool instanceOf(const char* otherobject) const;
+  virtual bool instanceOf(const char* otherobject) const;
 };
 class CLUCENE_INLINE_EXPORT Comparable:public NamedObject{
 public:

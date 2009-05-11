@@ -50,7 +50,7 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
   // reverse because IndexWriter merges & deletes
   // the newest segments first.
 
-  ObjectArray<SegmentReader>* readers = _CLNEW ObjectArray<SegmentReader>(sis->size());
+  ObjectArray<IndexReader>* readers = _CLNEW ObjectArray<IndexReader>(sis->size());
   for (int i = sis->size()-1; i >= 0; i--) {
     try {
       readers->values[i] = SegmentReader::get(sis->info(i));
@@ -69,6 +69,7 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
       throw err;
     }
   }
+  initialize(readers);
 }
 
 /** This contructor is only used for {@link #reopen()} */

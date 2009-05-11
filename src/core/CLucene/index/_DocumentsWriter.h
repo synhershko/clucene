@@ -15,7 +15,7 @@
 
 CL_CLASS_DEF(analysis,Analyzer)
 CL_CLASS_DEF(analysis,Token)
-CL_CLASS_DEF(document,Fieldable)
+CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(store,IndexOutput)
 CL_CLASS_DEF(document,Document)
 CL_CLASS_DEF(util,StringReader)
@@ -471,7 +471,7 @@ private:
       ThreadState* threadState;
 
       int32_t fieldCount;
-	    CL_NS(util)::ObjectArray<CL_NS(document)::Fieldable> docFields;
+	    CL_NS(util)::ObjectArray<CL_NS(document)::Field> docFields;
 
       FieldData* next;
 
@@ -535,6 +535,7 @@ private:
       void resetPostingArrays();
 
       FieldData(DocumentsWriter* _parent, ThreadState* __threadState, FieldInfo* fieldInfo);
+      ~FieldData();
 
       /** So Arrays.sort can sort us. */
       int32_t compareTo(const void* o);
@@ -546,7 +547,7 @@ private:
       void processField(CL_NS(analysis)::Analyzer* analyzer);
 
       /* Invert one occurrence of one field in the document */
-      void invertField(const CL_NS(document)::Fieldable* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
+      void invertField(const CL_NS(document)::Field* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
 
       static bool sort(FieldData*, FieldData*);
 
@@ -714,13 +715,13 @@ private:
   // Max # ThreadState instances; if there are more threads
   // than this they share ThreadStates
   static const int32_t MAX_THREAD_STATE;
-  CL_NS(util)::ObjectArray<ThreadState> threadStates;
+  CL_NS(util)::ValueArray<ThreadState*> threadStates;
   CL_NS(util)::CLHashMap<_LUCENE_THREADID_TYPE, ThreadState*,
     CL_NS (util)::CLuceneThreadIdCompare,CL_NS (util)::CLuceneThreadIdCompare,
     CL_NS (util)::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>,
     CL_NS (util)::Deletor::Object<ThreadState> > threadBindings;
   int32_t numWaiting;
-  CL_NS(util)::ObjectArray<ThreadState> waitingThreadStates;
+  CL_NS(util)::ValueArray<ThreadState*> waitingThreadStates;
   int32_t pauseThreads;                       // Non-zero when we need all threads to
                                                   // pause (eg to flush)
   bool flushPending;                   // True when a thread has decided to flush
@@ -845,7 +846,7 @@ public:
   /* Walk through all unique text tokens (Posting
    * instances) found in this field and serialize them
    * into a single RAM segment. */
-  void appendPostings(CL_NS(util)::ObjectArray<ThreadState::FieldData>* fields,
+  void appendPostings(CL_NS(util)::ArrayBase<ThreadState::FieldData*>* fields,
                       TermInfosWriter* termsOut,
                       CL_NS(store)::IndexOutput* freqOut,
                       CL_NS(store)::IndexOutput* proxOut);

@@ -324,6 +324,7 @@ public:
   int32_t getMaxMergeDocs();
 
 
+  virtual bool instanceOf(const char* otherobject) const;
   static const char* getClassName();
   virtual const char* getObjectName() const;
 };

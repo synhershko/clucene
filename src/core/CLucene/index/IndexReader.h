@@ -295,7 +295,7 @@ public:
   
     /** Expert: Resets the normalization factor for the named field of the named
     * document.  The norm represents the product of the field's {@link
-    * Fieldable#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
+    * Field#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
     * int32_t) length normalization}.  Thus, to preserve the length normalization
     * values when resetting this, one should base the new value upon the old.
     *
@@ -510,7 +510,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    *
-   * @see org.apache.lucene.document.Fieldable
+   * @see org.apache.lucene.document.Field
    * @see org.apache.lucene.document.FieldSelector
    * @see org.apache.lucene.document.SetBasedFieldSelector
    * @see org.apache.lucene.document.LoadFirstFieldSelector

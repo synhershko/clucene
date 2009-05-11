@@ -84,7 +84,7 @@ FieldInfos* FieldInfos::clone()
 
 void FieldInfos::add(const Document* doc) {
   const Document::FieldsType& fields = *doc->getFields();
-	Fieldable* field;
+	Field* field;
   for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
 			field = *itr;
 			add(field->name(), field->isIndexed(), field->isTermVectorStored(), field->isStorePositionWithTermVector(),

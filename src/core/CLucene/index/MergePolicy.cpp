@@ -379,6 +379,17 @@ const char* LogMergePolicy::getClassName(){
 const char* LogMergePolicy::getObjectName() const{
   return getClassName();
 }
+bool LogMergePolicy::instanceOf(const char* other) const{
+  const char* t = this->getObjectName();
+  if ( t==other || strcmp( t, other )==0 ){
+		return true;
+  }
+  t = getClassName();
+  if ( t==other || strcmp( t, other )==0 ){
+    return true;
+  }
+  return false;
+}
 
 
 

@@ -102,7 +102,7 @@ CL_NS_DEF(index)
 	
 	private:
 		/**
-		* A Lazy implementation of Fieldable that differs loading of fields until asked for, instead of when the Document is
+		* A Lazy implementation of Field that differs loading of fields until asked for, instead of when the Document is
 		* loaded.
 		*/
 		class LazyField : public CL_NS(document)::Field {

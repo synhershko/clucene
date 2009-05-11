@@ -100,7 +100,7 @@ void FieldsWriter::addDocument(Document* doc) {
   {
     const Document::FieldsType& fields = *doc->getFields();
     for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
-		  Fieldable* field = *itr;
+		  Field* field = *itr;
 		  if (field->isStored())
 			  storedCount++;
 	  }
@@ -109,7 +109,7 @@ void FieldsWriter::addDocument(Document* doc) {
   {
 	  const Document::FieldsType& fields = *doc->getFields();
     for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
-		  Fieldable* field = *itr;
+		  Field* field = *itr;
 		  if (field->isStored()) {
 			  writeField(fieldInfos->fieldInfo(field->name()), field);
 		  }
@@ -117,7 +117,7 @@ void FieldsWriter::addDocument(Document* doc) {
   }
 }
 
-void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Fieldable* field)
+void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 {
 	// if the field as an instanceof FieldsReader.FieldForMerge, we're in merge mode
 	// and field.binaryValue() already returns the compressed value for a field

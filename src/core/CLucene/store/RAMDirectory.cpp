@@ -452,8 +452,8 @@ CL_NS_DEF(store)
     SCOPED_LOCK_MUTEX(files_mutex);
     RAMFile* file = files->get(name);
     if (file == NULL) { /* DSR:PROPOSED: Better error checking. */
-		error.set(CL_ERR_IO, "[RAMDirectory::open] The requested file does not exist.");
-		return false;
+		  error.set(CL_ERR_IO, "[RAMDirectory::open] The requested file does not exist.");
+		  return false;
     }
     ret = _CLNEW RAMInputStream( file );
 	return true;
