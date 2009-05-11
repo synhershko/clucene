@@ -158,7 +158,7 @@ void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::st
 		files->push_back ( string(segment) + "." + IndexFileNames::COMPOUND_EXTENSIONS[i] );
 	}
 
-    // Fieldable norm files
+    // Field norm files
 	for (size_t i = 0; i < fieldInfos->size(); i++) {
 		FieldInfo* fi = fieldInfos->fieldInfo(i);
 		if (fi->isIndexed && !fi->omitNorms) {

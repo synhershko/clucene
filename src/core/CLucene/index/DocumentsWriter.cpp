@@ -79,7 +79,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 }
 
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
-	waitingThreadStates( CL_NS(util)::ObjectArray<ThreadState>(MAX_THREAD_STATE) ),
+	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>)
 {
   numBytesAlloc = 0;
@@ -547,7 +547,7 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
     for(int32_t j=0;j<numFields;j++) {
       ThreadState::FieldData* fp = state->allFieldDataArray[j];
       if (fp->numPostings > 0)
-		allFields.push_back(fp);
+		    allFields.push_back(fp);
     }
   }
 
@@ -569,7 +569,7 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
     while(end < numAllFields && _tcscmp(allFields[end]->fieldInfo->name, fieldName)==0 )
       end++;
 
-    ObjectArray<ThreadState::FieldData> fields(end-start);
+    ValueArray<ThreadState::FieldData*> fields(end-start);
     for(int32_t i=start;i<end;i++)
       fields.values[i-start] = allFields[i];
 
@@ -656,7 +656,7 @@ int32_t pos2=0;
 }
 
 
-void DocumentsWriter::appendPostings(ObjectArray<ThreadState::FieldData>* fields,
+void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
                     TermInfosWriter* termsOut,
                     IndexOutput* freqOut,
                     IndexOutput* proxOut) {
@@ -681,7 +681,7 @@ void DocumentsWriter::appendPostings(ObjectArray<ThreadState::FieldData>* fields
   const int32_t skipInterval = termsOut->skipInterval;
   currentFieldStorePayloads = (*fields)[0]->fieldInfo->storePayloads;
 
-  ObjectArray<FieldMergeState> termStates(numFields);
+  ValueArray<FieldMergeState*> termStates(numFields);
 
   while(numFields > 0) {
 
@@ -1365,7 +1365,7 @@ DocumentsWriter::FieldMergeState::FieldMergeState(){
   p = NULL;
   text = NULL;
   textOffset = 0;
-  postingUpto = 0;
+  postingUpto = -1;
   docID = 0;
   termFreq = 0;
 }

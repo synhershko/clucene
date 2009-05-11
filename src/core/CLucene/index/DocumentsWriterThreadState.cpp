@@ -184,7 +184,7 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
   // vectors, etc.):
 
   for(int32_t i=0;i<numDocFields;i++) {
-    Fieldable* field = docFields[i];
+    Field* field = docFields[i];
 
     FieldInfo* fi = _parent->fieldInfos->add(field->name(), field->isIndexed(), field->isTermVectorStored(),
                                   field->isStorePositionWithTermVector(), field->isStoreOffsetWithTermVector(),
@@ -551,7 +551,7 @@ void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
   String getPostingText() {
   TCHAR* text = charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
   int32_t upto = p->textStart & CHAR_BLOCK_MASK;
-  while(text[upto] != 0xffff)
+  while((*text)[upto] != 0xffff)
   upto++;
   return new String(text, p->textStart, upto-(p->textStart & BYTE_BLOCK_MASK));
   }
@@ -691,7 +691,7 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
 
 DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
   _parent(__parent),
-  docFields(ObjectArray<Fieldable>(1)),
+  docFields(ObjectArray<Field>(1)),
   localToken (_CLNEW Token),
   vectorSliceReader(_CLNEW ByteSliceReader())
 {
@@ -705,7 +705,9 @@ DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, Th
   this->threadState = __threadState;
   this->postingsCompacted = false;
 }
+DocumentsWriter::ThreadState::FieldData::~FieldData(){
 
+}
 bool DocumentsWriter::ThreadState::FieldData::sort(FieldData* e1, FieldData* e2){
   return _tcscmp(e1->fieldInfo->name, e2->fieldInfo->name) < 0;
 }
@@ -766,7 +768,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
   const int32_t maxFieldLength = _parent->writer->getMaxFieldLength();
 
   const int32_t limit = fieldCount;
-  const ObjectArray<Fieldable>& docFieldsFinal = docFields;
+  const ObjectArray<Field>& docFieldsFinal = docFields;
 
   bool doWriteVectors = true;
 
@@ -774,7 +776,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
   // field:
   try {
     for(int32_t j=0;j<limit;j++) {
-      Fieldable* field = docFieldsFinal[j];
+      Field* field = docFieldsFinal[j];
 
       if (field->isIndexed())
         invertField(field, analyzer, maxFieldLength);
@@ -830,7 +832,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
     }
   )
 }
-void DocumentsWriter::ThreadState::FieldData::invertField(const Fieldable* field, Analyzer* analyzer, const int32_t maxFieldLength) {
+void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, Analyzer* analyzer, const int32_t maxFieldLength) {
 
   if (length>0)
     position += analyzer->getPositionIncrementGap(fieldInfo->name);
@@ -929,7 +931,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Fieldable* field
       }
       offset = offsetEnd+1;
     } _CLFINALLY (
-      _CLDELETE(stream);
+      stream->close(); //don't delete, this stream is re-used
     )
   }
 
@@ -1111,7 +1113,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
       threadState->charPool.byteUpto += textLen1;
 
       _tcsncpy(text->values, tokenText, tokenTextLen);
-      text[textUpto+tokenTextLen] = 0xffff;
+      (*text)[textUpto+tokenTextLen] = 0xffff;
 
       assert (postingsHash[hashPos] == NULL);
 
@@ -1123,9 +1125,6 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
 
       // Init first slice for freq & prox streams
       const int32_t firstSize = levelSizeArray[0];
-
-      std::vector<int> x(1);
-      std::vector<int>* y = &x;
 
       const int32_t upto1 = threadState->postingsPool.newSlice(firstSize);
       threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool.byteOffset + upto1;
@@ -1189,31 +1188,32 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
   const int32_t newMask = newSize-1;
 
   ValueArray<Posting*> newHash(newSize);
-  ValueArray<bool> newHashB(newSize);
+  int32_t hashPos, code, pos, start;
+  const CL_NS(util)::ValueArray<TCHAR>* text;
+  Posting* p0;
 
   for(int32_t i=0;i<postingsHashSize;i++) {
-    Posting* p0 = postingsHash[i];
+    p0 = postingsHash[i];
     if (p0 != NULL) {
-      const int32_t start = p0->textStart & CHAR_BLOCK_MASK;
-      const CL_NS(util)::ValueArray<TCHAR>* text = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT];
-      int32_t pos = start;
+      start = p0->textStart & CHAR_BLOCK_MASK;
+      text = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT];
+      pos = start;
       while( (*text)[pos] != 0xffff)
         pos++;
-      int32_t code = 0;
+      code = 0;
       while (pos > start)
         code = (code*31) + (*text)[--pos];
 
-      int32_t hashPos = code & newMask;
+      hashPos = code & newMask;
       assert (hashPos >= 0);
-      if (newHashB[hashPos]) {
+      if (newHash[hashPos] != NULL) {
         const int32_t inc = ((code>>8)+code)|1;
         do {
           code += inc;
           hashPos = code & newMask;
-        } while (newHashB[hashPos]);
+        } while (newHash[hashPos] != NULL);
       }
       newHash.values[hashPos] = p0;
-      newHashB.values[hashPos] = true;
     }
   }
 

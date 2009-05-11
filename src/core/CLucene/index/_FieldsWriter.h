@@ -13,7 +13,7 @@ CL_CLASS_DEF(store,IndexInput)
 CL_CLASS_DEF(index,FieldInfo)
 CL_CLASS_DEF(store,RAMOutputStream)
 CL_CLASS_DEF(document,Document)
-CL_CLASS_DEF(document,Fieldable)
+CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(index,FieldInfos)
 //#include "FieldInfos.h"
 
@@ -44,7 +44,7 @@ public:
 
 	void flush();
 
-	inline void writeField(FieldInfo* fi, CL_NS(document)::Fieldable* field);
+	inline void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
 
 	void close();
 

@@ -190,7 +190,7 @@ void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVector
 		  mapper->setDocumentNumber(docNum);
 		  readTermVector(field, position, mapper);
       } else {
-        // "Fieldable not found"
+        // "Field not found"
       }
     } else {
       // "No tvx file"

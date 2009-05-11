@@ -36,7 +36,7 @@ CL_NS_DEF(document)
 		fields->clear();
 	}
 
-	void Document::add(Fieldable& field) {
+	void Document::add(Field& field) {
 		fields->push_back(&field);
 	}
 
@@ -49,7 +49,7 @@ CL_NS_DEF(document)
    }
 
 
-	 Fieldable* Document::getFieldable(const TCHAR* name) const{
+	 Field* Document::getField(const TCHAR* name) const{
     CND_PRECONDITION(name != NULL, "name is NULL");
     for ( FieldsType::const_iterator itr = fields->begin();
       itr != fields->end(); itr ++ ){
@@ -58,13 +58,9 @@ CL_NS_DEF(document)
     }
 	  return NULL;
 	 }
-   Field* Document::getField(const TCHAR* name) const{
-     return (Field*)getFieldable(name);
-   }
-
 	const TCHAR* Document::get(const TCHAR* field) const {
 	  CND_PRECONDITION(field != NULL, "field is NULL");
-		Fieldable* f = getFieldable(field);
+		Field* f = getField(field);
 		if (f!=NULL)
 			return f->stringValue(); //this returns null it is a binary(reader)
 		else

@@ -369,7 +369,6 @@ void CompoundFileWriter::close(){
       // Remember the positions of directory entries so that we can
       // adjust the offsets later
       { //msvc6 for scope fix
-		  TCHAR tfile[CL_MAX_PATH];
 		  for ( CLLinkedList<WriterFileEntry*>::iterator i=_internal->entries->begin();i!=_internal->entries->end();i++ ){
 			  WriterFileEntry* fe = *i;
 			  fe->directoryOffset = os->getFilePointer();

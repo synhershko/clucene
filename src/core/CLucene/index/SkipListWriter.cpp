@@ -156,6 +156,8 @@ DefaultSkipListWriter::DefaultSkipListWriter(int32_t skipInterval, int32_t numbe
 {
   this->freqOutput = freqOutput;
   this->proxOutput = proxOutput;
+  this->curDoc = this->curPayloadLength = 0;
+  this->curFreqPointer =this->curProxPointer = 0;
   
   lastSkipDoc = _CL_NEWARRAY(int32_t,numberOfSkipLevels);
   lastSkipPayloadLength =  _CL_NEWARRAY(int32_t,numberOfSkipLevels);

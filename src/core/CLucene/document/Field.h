@@ -23,135 +23,6 @@ CL_CLASS_DEF(analysis,TokenStream)
 
 CL_NS_DEF(document)
 
-
-/**
- * Synonymous with {@link Field}.
- *
- **/
-class CLUCENE_EXPORT Fieldable {
-public:
-  virtual ~Fieldable();
-
-  /** Sets the boost factor hits on this field.  This value will be
-   * multiplied into the score of all hits on this this field of this
-   * document.
-   *
-   * <p>The boost is multiplied by {@link org.apache.lucene.document.Document#getBoost()} of the document
-   * containing this field.  If a document has multiple fields with the same
-   * name, all such values are multiplied together.  This product is then
-   * multipled by the value {@link org.apache.lucene.search.Similarity#lengthNorm(String,int)}, and
-   * rounded by {@link org.apache.lucene.search.Similarity#encodeNorm(float)} before it is stored in the
-   * index.  One should attempt to ensure that this product does not overflow
-   * the range of that encoding.
-   *
-   * @see org.apache.lucene.document.Document#setBoost(float)
-   * @see org.apache.lucene.search.Similarity#lengthNorm(String, int)
-   * @see org.apache.lucene.search.Similarity#encodeNorm(float)
-   */
-  virtual void setBoost(const float_t boost) = 0;
-
-  /** Returns the boost factor for hits for this field.
-   *
-   * <p>The default value is 1.0.
-   *
-   * <p>Note: this value is not stored directly with the document in the index.
-   * Documents returned from {@link org.apache.lucene.index.IndexReader#document(int)} and
-   * {@link org.apache.lucene.search.Hits#doc(int)} may thus not have the same value present as when
-   * this field was indexed.
-   *
-   * @see #setBoost(float)
-   */
-  virtual float_t getBoost() const = 0;
-
-  /** Returns the name of the field as an interned string.
-   * For example "date", "title", "body", ...
-   */
-  virtual const TCHAR* name() const = 0;
-
-  /** The value of the field as a String, or null.  If null, the Reader value,
-   * binary value, or TokenStream value is used.  Exactly one of stringValue(), 
-   * readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-  virtual const TCHAR* stringValue() const = 0;
-  
-  /** The value of the field as a Reader, or null.  If null, the String value,
-   * binary value, or TokenStream value is used.  Exactly one of stringValue(), 
-   * readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-  virtual CL_NS(util)::Reader* readerValue() const = 0;
-  
-  /** The value of the field in Binary, or null.  If null, the Reader value,
-   * String value, or TokenStream value is used. Exactly one of stringValue(), 
-   * readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-  virtual const CL_NS(util)::ValueArray<uint8_t>* binaryValue() = 0;
-  
-  /** The value of the field as a TokenStream, or null.  If null, the Reader value,
-   * String value, or binary value is used. Exactly one of stringValue(), 
-   * readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-	virtual CL_NS(analysis)::TokenStream* tokenStreamValue() const = 0;
-
-  /** True iff the value of the field is to be stored in the index for return
-    with search hits.  It is an error for this to be true if a field is
-    Reader-valued. */
-  virtual bool  isStored() const = 0;
-
-  /** True iff the value of the field is to be indexed, so that it may be
-    searched on. */
-  virtual bool  isIndexed() const = 0;
-
-  /** True iff the value of the field should be tokenized as text prior to
-    indexing.  Un-tokenized fields are indexed as a single word and may not be
-    Reader-valued. */
-  virtual bool  isTokenized() const = 0;
-
-  /** True if the value of the field is stored and compressed within the index */
-  virtual bool  isCompressed() const = 0;
-
-  /** True iff the term or terms used to index this field are stored as a term
-   *  vector, available from {@link org.apache.lucene.index.IndexReader#getTermFreqVector(int,String)}.
-   *  These methods do not provide access to the original content of the field,
-   *  only to terms used to index it. If the original content must be
-   *  preserved, use the <code>stored</code> attribute instead.
-   *
-   * @see org.apache.lucene.index.IndexReader#getTermFreqVector(int, String)
-   */
-  virtual bool isTermVectorStored() const = 0;
-
-  /**
-   * True iff terms are stored as term vector together with their offsets 
-   * (start and end positon in source text).
-   */
-  virtual bool isStoreOffsetWithTermVector() const = 0;
-
-  /**
-   * True iff terms are stored as term vector together with their token positions.
-   */
-  virtual bool isStorePositionWithTermVector() const = 0;
-
-  /** True iff the value of the filed is stored as binary */
-  virtual bool  isBinary() const = 0;
-
-  /** True if norms are omitted for this indexed field */
-  virtual bool getOmitNorms() const = 0;
-
-  /** Expert:
-   *
-   * If set, omit normalization factors associated with this indexed field.
-   * This effectively disables indexing boosts and length normalization for this field.
-   */
-  virtual void setOmitNorms(const bool omitNorms) = 0;
-
-  /**
-   * Indicates whether a Field is Lazy or not.  The semantics of Lazy loading are such that if a Field is lazily loaded, retrieving
-   * it's values via {@link #stringValue()} or {@link #binaryValue()} is only valid as long as the {@link org.apache.lucene.index.IndexReader} that
-   * retrieved the {@link Document} is still open.
-   *  
-   * @return true if this field can be loaded lazily
-   */
-  virtual bool isLazy() const = 0;
-
-	/** Prints a Field for human consumption. */
-	virtual TCHAR* toString() = 0;
-};
-
 /**
 A field is a section of a Document.  Each field has two parts, a name and a
 value.  Values may be free text, provided as a String or as a Reader, or they
@@ -162,7 +33,7 @@ index, so that they may be returned with hits on the document.
 PORTING: CLucene doesn't directly support compressed fields. However, it is easy 
 to reproduce this functionality by using the GZip streams in the contrib package.
 */
-class CLUCENE_EXPORT Field :public Fieldable{
+class CLUCENE_EXPORT Field : LUCENE_BASE{
 public:
 	enum Store{ 
 		/** Store the original field value in the index. This is useful for short texts

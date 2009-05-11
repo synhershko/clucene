@@ -116,8 +116,8 @@ int32_t FieldsReader::size() const{
 }
 
 bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSelector* fieldSelector) {
-    if ( (n + docStoreOffset) * 8L > indexStream->length() )
-        return false;
+  if ( (n + docStoreOffset) * 8L > indexStream->length() )
+      return false;
 	indexStream->seek((n + docStoreOffset) * 8L);
 	int64_t position = indexStream->readLong();
 	fieldsStream->seek(position);
@@ -126,7 +126,7 @@ bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSel
 	for (int32_t i = 0; i < numFields; i++) {
 		const int32_t fieldNumber = fieldsStream->readVInt();
 		FieldInfo* fi = fieldInfos->fieldInfo(fieldNumber);
-        if ( fi == NULL ) _CLTHROWA(CL_ERR_IO, "Field stream is invalid");
+    if ( fi == NULL ) _CLTHROWA(CL_ERR_IO, "Field stream is invalid");
 
 		FieldSelector::FieldSelectorResult acceptField = (fieldSelector == NULL) ?	FieldSelector::LOAD : fieldSelector->accept(fi->name);
 
@@ -162,85 +162,6 @@ bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSel
 		}else {
 			skipField(binary, compressed);
 		}
-
-		/*
-		if ((bits & FieldsWriter::FIELD_IS_BINARY) != 0) {
-			int32_t fieldLen = fieldsStream->readVInt();
-            FieldsReader::FieldsStreamHolder* subStream = _CLNEW FieldsReader::FieldsStreamHolder(fieldsStream, fieldLen);
-			uint8_t bits = Field::STORE_YES;
-			Field* f = _CLNEW Field(
-				fi->name,     // name
-                subStream, // read value
-                bits);
-
-          	doc->add(*f);
-
-			//now skip over the rest of the field
-			if ( fieldsStream->getFilePointer() + fieldLen == fieldsStream->length() ){
-				fieldsStream->seek(fieldsStream->getFilePointer() + fieldLen - 1); //set to eof
-				fieldsStream->readByte();
-			}else
-				fieldsStream->seek(fieldsStream->getFilePointer() + fieldLen);
-		}else{
-			uint8_t bits = Field::STORE_YES;
-			
-			if (fi->isIndexed && (bits & FieldsWriter::FIELD_IS_TOKENIZED)!=0 )
-				bits |= Field::INDEX_TOKENIZED;
-			else if (fi->isIndexed && (bits & FieldsWriter::FIELD_IS_TOKENIZED)==0 )
-				bits |= Field::INDEX_UNTOKENIZED;
-			else
-				bits |= Field::INDEX_NO;
-			
-			if (fi->storeTermVector) {
-				if (fi->storeOffsetWithTermVector) {
-					if (fi->storePositionWithTermVector) {
-						bits |= Field::TERMVECTOR_WITH_OFFSETS;
-						bits |= Field::TERMVECTOR_WITH_POSITIONS;
-					}else {
-						bits |= Field::TERMVECTOR_WITH_OFFSETS;
-					}
-				}else if (fi->storePositionWithTermVector) {
-					bits |= Field::TERMVECTOR_WITH_POSITIONS;
-				}else {
-					bits |= Field::TERMVECTOR_YES;
-				}
-			}else {
-				bits |= Field::TERMVECTOR_NO;
-			}
-			if ( (bits & FieldsWriter::FIELD_IS_COMPRESSED) != 0 ) {
-				bits |= Field::STORE_COMPRESS;
-				int32_t fieldLen = fieldsStream->readVInt();
-                FieldsStreamHolder* subStream = _CLNEW FieldsStreamHolder(fieldsStream, fieldLen);
-
-                //todo: we dont have gzip inputstream available, must alert user
-                //to somehow use a gzip inputstream
-                Field* f = _CLNEW Field(
-					fi->name,     // name
-	                subStream, // read value
-	                bits);
-
-	            f->setOmitNorms(fi->omitNorms);
-	          	doc->add(*f);
-					
-				//now skip over the rest of the field
-				if ( fieldsStream->getFilePointer() + fieldLen == fieldsStream->length() ){
-					fieldsStream->seek(fieldsStream->getFilePointer() + fieldLen - 1); //set to eof
-					fieldsStream->readByte();
-				}else
-					fieldsStream->seek(fieldsStream->getFilePointer() + fieldLen);
-	        }else {
-				TCHAR* fvalue = fieldsStream->readString();
-				Field* f = _CLNEW Field(
-					fi->name,     // name
-	                fvalue, // read value
-	                bits, false);
-				//_CLDELETE_LCARRAY(fvalue); //todo: could optimise this
-	          	f->setOmitNorms(fi->omitNorms);
-	          	doc->add(*f);
-	        }
-			
-		}
-		*/
 	}
 	return true;
 }
@@ -287,10 +208,10 @@ void FieldsReader::addFieldLazy(CL_NS(document)::Document& doc, const FieldInfo*
 		int32_t toRead = fieldsStream->readVInt();
 		int64_t pointer = fieldsStream->getFilePointer();
 		if (compressed) {
-			//was: doc.add(new Fieldable(fi.name, uncompress(b), Fieldable.Store.COMPRESS));
+			//was: doc.add(new Field(fi.name, uncompress(b), Field.Store.COMPRESS));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_COMPRESS, toRead, pointer));
 		} else {
-			//was: doc.add(new Fieldable(fi.name, b, Fieldable.Store.YES));
+			//was: doc.add(new Field(fi.name, b, Field.Store.YES));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_YES, toRead, pointer));
 		}
 		//Need to move the pointer ahead by toRead positions

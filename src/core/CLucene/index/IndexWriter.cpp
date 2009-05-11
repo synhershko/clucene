@@ -177,9 +177,12 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeD
   this->mergeExceptions = _CLNEW MergeExceptionsType;
   this->segmentsToOptimize = _CLNEW SegmentsToOptimizeType;
   this->mergePolicy = _CLNEW LogByteSizeMergePolicy();
+  this->localRollbackSegmentInfos = NULL;
   messageID = -1;
   maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
   infoStream = NULL;
+  this->mergeFactor = this->minMergeDocs = this->maxMergeDocs = 0;
+  this->commitLockTimeout =0;
   this->closeDir = closeDir;
   this->closed = this->closing = false;
   directory = d;
@@ -224,6 +227,8 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeD
     this->autoCommit = autoCommit;
     if (!autoCommit) {
       rollbackSegmentInfos = segmentInfos->clone();
+    }else{
+      rollbackSegmentInfos = NULL;
     }
 
     docWriter = _CLNEW DocumentsWriter(directory, this);

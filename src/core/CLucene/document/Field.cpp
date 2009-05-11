@@ -14,9 +14,6 @@
 CL_NS_USE(util)
 CL_NS_DEF(document)
 
-Fieldable::~Fieldable(){
-}
-
 Field::Field(const TCHAR* Name, Reader* reader, int config):
 	lazy(false)
 {
