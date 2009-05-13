@@ -425,15 +425,12 @@ std::string Misc::toString(const int32_t value){
 }
 std::string Misc::toString(const int64_t value){
   char buf[20];
-  _snprintf(buf,20,"%l",value);
+  TCHAR tbuf[20];
+  _i64tot(value, tbuf, 10);
+  STRCPY_TtoA(buf,tbuf,20);
   return buf;
 }
-std::string Misc::toString(const double value){
-  char buf[20];
-  _snprintf(buf,20,"%0.2f",value);
-  return buf;
-}
-std::string Misc::toString(const float value){
+std::string Misc::toString(const float_t value){
   char buf[20];
   _snprintf(buf,20,"%0.2f",value);
   return buf;

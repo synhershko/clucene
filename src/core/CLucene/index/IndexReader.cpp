@@ -28,10 +28,10 @@ CL_NS_DEF(index)
   class IndexReaderFindSegmentsFile: public SegmentInfos::FindSegmentsFile<uint64_t>{
   public:
 		IndexReaderFindSegmentsFile( CL_NS(store)::Directory* dir ):
-			FindSegmentsFile(dir){
+			SegmentInfos::FindSegmentsFile<uint64_t>(dir){
 		}
 		IndexReaderFindSegmentsFile( const char* dir ):
-			FindSegmentsFile(dir){
+			SegmentInfos::FindSegmentsFile<uint64_t>(dir){
 		}
     uint64_t doBody(const char* segmentFileName){
       return directory->fileModified(segmentFileName);

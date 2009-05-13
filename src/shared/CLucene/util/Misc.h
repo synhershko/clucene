@@ -57,8 +57,7 @@ CL_NS_DEF(util)
   static std::string toString(const int32_t value);
   static std::string toString(const int64_t value);
   static std::string toString(const bool value);
-  static std::string toString(const float value);
-  static std::string toString(const double value);
+  static std::string toString(const float_t value);
   static std::string toString(const TCHAR* s, int32_t len=-1);
 
 	#ifdef _UCS2

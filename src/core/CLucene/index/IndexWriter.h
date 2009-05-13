@@ -590,7 +590,7 @@ public:
   * prefixed with the identifying information for this
   * writer and the thread that's calling it.
   */
-  void message(std::string& message);
+  void message(std::string message);
 
   /**
    * Returns the current default infoStream for newly
@@ -1092,7 +1092,7 @@ public:
   /** Expert:  Return the total size of all index files currently cached in memory.
    * Useful for size management with flushRamDocs()
    */
-  int64_t IndexWriter::ramSizeInBytes();
+  int64_t ramSizeInBytes();
 
   /** Expert:  Return the number of documents whose segments are currently cached in memory.
   * Useful when calling flush()

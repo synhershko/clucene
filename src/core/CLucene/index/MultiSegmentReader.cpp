@@ -51,7 +51,7 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
   // the newest segments first.
 
   ArrayBase<IndexReader*>* readers = _CLNEW ObjectArray<IndexReader>(sis->size());
-  for (int i = sis->size()-1; i >= 0; i--) {
+  for (size_t i = sis->size()-1; i >= 0; i--) {
     try {
       readers->values[i] = SegmentReader::get(sis->info(i));
     } catch(CLuceneError& err) {
@@ -233,7 +233,7 @@ TermFreqVector* MultiSegmentReader::getTermFreqVector(int32_t n, const TCHAR* fi
 }
 void MultiSegmentReader::getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper){
   ensureOpen();
-  int i = readerIndex(docNumber);        // find segment num
+  int32_t i = readerIndex(docNumber);        // find segment num
   (*subReaders)[i]->getTermFreqVector(docNumber - starts[i], field, mapper);
 }
 
@@ -361,12 +361,12 @@ TermPositions* MultiSegmentReader::termPositions() {
 	return ret;
 }
 
-void MultiSegmentReader::setTermInfosIndexDivisor(int indexDivisor) {
+void MultiSegmentReader::setTermInfosIndexDivisor(int32_t indexDivisor) {
   for (size_t i = 0; i < subReaders->length; i++)
     (*subReaders)[i]->setTermInfosIndexDivisor(indexDivisor);
 }
 
-int MultiSegmentReader::getTermInfosIndexDivisor() {
+int32_t MultiSegmentReader::getTermInfosIndexDivisor() {
   if (subReaders->length > 0)
     return (*subReaders)[0]->getTermInfosIndexDivisor();
   else

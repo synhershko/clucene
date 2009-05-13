@@ -97,7 +97,7 @@ private:
      */
     void deleteCommitPoint();
 
-    int compareTo(NamedObject* obj);
+    int32_t compareTo(NamedObject* obj);
 
 		static const char* getClassName();
 		const char* getObjectName() const;
@@ -144,7 +144,7 @@ public:
   void deletePendingFiles();
 
   void setInfoStream(std::ostream* infoStream);
-  void message(std::string& message);
+  void message(std::string message);
   void decRef(const std::string& fileName);
   RefCount* getRefCount(const char* fileName);
 

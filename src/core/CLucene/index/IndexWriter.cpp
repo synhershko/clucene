@@ -90,9 +90,10 @@ void IndexWriter::ensureOpen()   {
   }
 }
 
-void IndexWriter::message(string& message) {
+void IndexWriter::message(string message) {
   if (infoStream != NULL){
-    (*infoStream) << "IW " << messageID << " [" << _LUCENE_CURRTHREADID << "]: " << message << "\n";
+    (*infoStream) << string("IW ") << Misc::toString(messageID) << string(" [")
+    						  << Misc::toString( (int32_t)(_LUCENE_CURRTHREADID) ) << string("]: ") << message << string("\n");
   }
 }
 

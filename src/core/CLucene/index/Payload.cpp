@@ -12,9 +12,11 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 Payload::Payload() : 
-  data(CL_NS(util)::ValueArray<uint8_t>(0))
+  data( * _CLNEW CL_NS(util)::ValueArray<uint8_t>(0))
 {
   // nothing to do
+  this->deleteData = true;
+  this->deleteArray = true;
 }
 Payload::Payload(CL_NS(util)::ValueArray<uint8_t>& _data, const int32_t offset, const int32_t length, bool deleteData):
   data(_data)
