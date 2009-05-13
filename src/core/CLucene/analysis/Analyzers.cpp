@@ -48,17 +48,16 @@ Token* CharTokenizer::next(Token*& token){
 			c = ioBuffer[bufferIndex++];
 		if (isTokenChar(c)) {                       // if it's a token TCHAR
 
-			if (length == 0)			  // start of token
-				start = offset-1;
+		if (length == 0)			  // start of token
+			start = offset-1;
 
-			buffer[length++] = normalize(c);          // buffer it, normalized
+		buffer[length++] = normalize(c);          // buffer it, normalized
 
-			if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
-				break;
+		if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
+			break;
 
 		} else if (length > 0)			  // at non-Letter w/ chars
 			break;					  // return 'em
-
 	}
 	buffer[length]=0;
 <<<<<<< HEAD:src/core/CLucene/analysis/Analyzers.cpp
