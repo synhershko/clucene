@@ -73,7 +73,7 @@ public:
 	ArrayBase(size_t length){
 		this->values = (T*)malloc(sizeof(T)*length);
 		this->length = length;
-    memset(this->values,0,sizeof(T)*length);
+		if ( length > 0 ) memset(this->values,0,sizeof(T)*length);
 	}
 	virtual ~ArrayBase(){
 	}
