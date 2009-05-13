@@ -58,17 +58,17 @@ Token::Token():
 {
   _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-  _termText = NULL;
+  _buffer = NULL;
 	bufferTextLen = 0;
 #else
-  _termText[0] = 0; //make sure null terminated
+  _buffer[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
 }
 
 Token::~Token(){
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-  free(_termText);
+  free(_buffer);
 #endif
 	_CLLDELETE(payload);
 }
@@ -82,10 +82,10 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 {
   _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-  _termText = NULL;
+  _buffer = NULL;
 	bufferTextLen = 0;
 #else
-  _termText[0] = 0; //make sure null terminated
+  _buffer[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
 	setText(text, 0);
@@ -140,9 +140,9 @@ void Token::setText(const TCHAR* text, int32_t l){
 		l=LUCENE_TOKEN_WORD_LENGTH;
 	}
 #endif
-	_tcsncpy(_termText,text,l+1);
+	_tcsncpy(_buffer,text,l);
   _termTextLen = l;
-	_termText[_termTextLen] = 0; //make sure null terminated
+	_buffer[_termTextLen] = 0; //make sure null terminated
 }
 
 void Token::setTermLength(int32_t len){
@@ -153,19 +153,19 @@ void Token::setTermLength(int32_t len){
 TCHAR* Token::resizeTermBuffer(size_t size){
 	if(bufferTextLen<size)
 		growBuffer(size);
-  return this->_termText;
+  return this->_buffer;
 }
 void Token::growBuffer(size_t size){
 	if(bufferTextLen>=size)
 		return;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-	if ( _termText == NULL ){
-		_termText = (TCHAR*)malloc( size * sizeof(TCHAR) );
-		*_termText = 0;
+	if ( _buffer == NULL ){
+		_buffer = (TCHAR*)malloc( size * sizeof(TCHAR) );
+		*_buffer = 0;
 	}else{
 		//use realloc. growBuffer is public, therefore could be called 
 		//without a subsequent call to overwriting the memory
-		_termText = (TCHAR*)realloc( _termText, size * sizeof(TCHAR) );
+		_buffer = (TCHAR*)realloc( _buffer, size * sizeof(TCHAR) );
 	}
 	bufferTextLen = size;
 #else
@@ -183,19 +183,19 @@ void Token::setPositionIncrement(int32_t posIncr) {
 int32_t Token::getPositionIncrement() const { return positionIncrement; }
 
 const TCHAR* Token::termText() const{
-	return (const TCHAR*) _termText; 
+	return (const TCHAR*) _buffer; 
 }
 TCHAR* Token::termBuffer() const{
-	return  _termText; 
+	return  _buffer; 
 }
 size_t Token::termTextLength() { 
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
-		_termTextLen = _tcslen(_termText);
+		_termTextLen = _tcslen(_buffer);
 	return _termTextLen; 
 }
 size_t Token::termLength() { 
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
-		_termTextLen = _tcslen(_termText);
+		_termTextLen = _tcslen(_buffer);
 	return _termTextLen; 
 }
 void Token::resetTermTextLen(){
@@ -204,8 +204,8 @@ void Token::resetTermTextLen(){
 TCHAR* Token::toString() const{
 	StringBuffer sb;
     sb.append(_T("("));
-	if (_termText)
-		sb.append( _termText );
+	if (_buffer)
+		sb.append( _buffer );
 	else
 		sb.append( _T("null") );
     sb.append(_T(","));
@@ -233,7 +233,7 @@ void Token::setPayload(CL_NS(index)::Payload* payload) {
 }
 void Token::clear() {
 	_CLDELETE(payload);
-	// Leave _termText to allow re-use
+	// Leave _buffer to allow re-use
 	_termTextLen = 0;
 	positionIncrement = 1;
 	// startOffset = endOffset = 0;
