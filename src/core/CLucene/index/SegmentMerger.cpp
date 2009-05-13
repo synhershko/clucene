@@ -24,8 +24,8 @@ CL_NS_USE(document)
 CL_NS_USE(store)
 CL_NS_DEF(index)
 
-const uint8_t SegmentMerger::NORMS_HEADER[] = {'N','R','M',-1}; 
-const int32_t SegmentMerger::NORMS_HEADER_length = 4;
+const uint8_t SegmentMerger::NORMS_HEADER[] = {'N','R','M', (uint8_t)-1}; 
+const int SegmentMerger::NORMS_HEADER_length = 4;
 int32_t SegmentMerger::MAX_RAW_MERGE_DOCS = 4192;
 
 void SegmentMerger::init(){

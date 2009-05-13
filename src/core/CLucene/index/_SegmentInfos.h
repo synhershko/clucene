@@ -358,7 +358,7 @@ CL_NS_DEF(index)
 		void add(SegmentInfo* info, int32_t pos=-1);
 		SegmentInfo* elementAt(int32_t pos);
 		void setElementAt(SegmentInfo* si, int32_t pos);
-		inline void clear();
+		void clear();
     
 		void insert(SegmentInfos* infos);
 		void insert(SegmentInfo* info);
@@ -499,7 +499,7 @@ CL_NS_DEF(index)
     		FindSegmentsFile( const char* dir ){
 	        this->directory = NULL;
           this->fileDirectory = dir;
-          this->result = NULL;
+          this->result = 0;
         }
         ~FindSegmentsFile(){
         }

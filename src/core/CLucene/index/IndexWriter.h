@@ -590,7 +590,7 @@ public:
   * prefixed with the identifying information for this
   * writer and the thread that's calling it.
   */
-  void message(std::string& message);
+  void message(std::string message);
 
   /**
    * Returns the current default infoStream for newly

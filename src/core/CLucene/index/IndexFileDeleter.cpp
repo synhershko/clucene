@@ -78,12 +78,14 @@ int32_t IndexFileDeleter::CommitPoint::compareTo(NamedObject* obj) {
 
 void IndexFileDeleter::setInfoStream(std::ostream* infoStream) {
 	this->infoStream = infoStream;
-	if (infoStream != NULL)
-	  message( string("setInfoStream deletionPolicy=") + policy->getObjectName() );
+	if (infoStream != NULL){
+		string msg = string("setInfoStream deletionPolicy=") + policy->getObjectName();
+	  message( msg );
+	}
 }
 
-void IndexFileDeleter::message(string& message) {
-	(*infoStream) << "IFD [" << _LUCENE_CURRTHREADID << "]: " << message << "\n";
+void IndexFileDeleter::message(string message) {
+	(*infoStream) << string("IFD [") << Misc::toString( (int32_t)(_LUCENE_CURRTHREADID) ) << string("]: ") << message << string("\n");
 }
 
 
@@ -421,7 +423,7 @@ void IndexFileDeleter::incRef(const vector<string>& files) {
     const string& fileName = files[i];
     RefCount* rc = getRefCount(fileName.c_str());
     if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-      message(string("  IncRef \"") + fileName + "\": pre-incr count is " + Misc::toString(rc->count));
+      message(string("  IncRef \"") + fileName + "\": pre-incr count is " + Misc::toString((int32_t)rc->count));
     }
     rc->IncRef();
   }
@@ -437,7 +439,7 @@ void IndexFileDeleter::decRef(const vector<string>& files) {
 void IndexFileDeleter::decRef(const string& fileName) {
   RefCount* rc = getRefCount(fileName.c_str());
   if (infoStream != NULL && VERBOSE_REF_COUNTS) {
-    message(string("  DecRef \"") + fileName + "\": pre-decr count is " + Misc::toString(rc->count));
+    message(string("  DecRef \"") + fileName + "\": pre-decr count is " + Misc::toString((int32_t)rc->count));
   }
   if (0 == rc->DecRef()) {
     // This file is no int32_t64_ter referenced by any past

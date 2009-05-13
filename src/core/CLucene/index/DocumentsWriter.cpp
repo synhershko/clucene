@@ -604,8 +604,8 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
 
     (*infoStream) << string("  oldRAMSize=") << Misc::toString(numBytesUsed) << 
 				string(" newFlushedSize=") << Misc::toString(newSegmentSize) << 
-        string(" docs/MB=") << Misc::toString(numDocsInRAM/(newSegmentSize/1024.0/1024.0)) << 
-        string(" new/old=") << Misc::toString(100.0*newSegmentSize/numBytesUsed) << string("%\n");
+        string(" docs/MB=") << Misc::toString((float_t)(numDocsInRAM/(newSegmentSize/1024.0/1024.0))) << 
+        string(" new/old=") << Misc::toString((float_t)(100.0*newSegmentSize/numBytesUsed)) << string("%\n");
   }
 
   resetPostingsData();
@@ -1312,9 +1312,9 @@ void DocumentsWriter::balanceRAM() {
     }
 
     if (infoStream != NULL){
-      (*infoStream) << "    after free: freedMB=" + Misc::toString((startBytesAlloc-numBytesAlloc)/1024.0/1024.0 ) + 
-        " usedMB=" + Misc::toString(numBytesUsed/1024.0/1024.0) + 
-        " allocMB=" + Misc::toString(numBytesAlloc/1024.0/1024.0) << string("\n");
+      (*infoStream) << "    after free: freedMB=" + Misc::toString((float_t)((startBytesAlloc-numBytesAlloc)/1024.0/1024.0)) + 
+        " usedMB=" + Misc::toString((float_t)(numBytesUsed/1024.0/1024.0)) + 
+        " allocMB=" + Misc::toString((float_t)(numBytesAlloc/1024.0/1024.0)) << string("\n");
     }
 
   } else {
@@ -1325,9 +1325,9 @@ void DocumentsWriter::balanceRAM() {
     // flush.
     if (numBytesUsed > flushTrigger) {
 	    if (infoStream != NULL){
-        (*infoStream) << string("  RAM: now flush @ usedMB=") << Misc::toString(numBytesUsed/1024.0/1024.0) <<
-            string(" allocMB=") << Misc::toString(numBytesAlloc/1024.0/1024.0) <<
-            string(" triggerMB=") << Misc::toString(flushTrigger/1024.0/1024.0) << string("\n");
+        (*infoStream) << string("  RAM: now flush @ usedMB=") << Misc::toString((float_t)(numBytesUsed/1024.0/1024.0)) <<
+            string(" allocMB=") << Misc::toString((float_t)(numBytesAlloc/1024.0/1024.0)) <<
+            string(" triggerMB=") << Misc::toString((float_t)(flushTrigger/1024.0/1024.0)) << string("\n");
 	    }
 
       bufferIsFull = true;

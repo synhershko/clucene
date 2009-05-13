@@ -19,8 +19,14 @@ class SegmentMergeQueue;
 
 class MultiSegmentReader:public DirectoryIndexReader{
   static int32_t readerIndex(const int32_t n, int32_t* starts, int32_t numSubReaders);
+public:
+  typedef CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
+    CL_NS(util)::Compare::TChar,
+    CL_NS(util)::Equals::TChar,
+    CL_NS(util)::Deletor::tcArray,
+    CL_NS(util)::Deletor::vArray<uint8_t> > NormsCacheType;
 private:
-	int readerIndex(int32_t n) const;
+	int32_t readerIndex(int32_t n) const;
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 
@@ -29,11 +35,6 @@ private:
 
   bool _hasDeletions;
   uint8_t* ones;
-  typedef CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
-    CL_NS(util)::Compare::TChar,
-    CL_NS(util)::Equals::TChar,
-    CL_NS(util)::Deletor::tcArray,
-    CL_NS(util)::Deletor::vArray<uint8_t> > NormsCacheType;
   NormsCacheType normsCache;
   int32_t _maxDoc;
   int32_t _numDocs;
@@ -52,6 +53,10 @@ protected:
 	void doDelete(const int32_t n);
   DirectoryIndexReader* doReopen(SegmentInfos* infos);
   
+  void initialize( CL_NS(util)::ArrayBase<IndexReader*>* subReaders);
+
+public:
+	
   /** Construct reading the named set of readers. */
   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
 
@@ -64,9 +69,6 @@ protected:
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache);
 
-  void initialize( CL_NS(util)::ArrayBase<IndexReader*>* subReaders);
-
-public:
 	virtual ~MultiSegmentReader();
 
 	/** Return an array of term frequency vectors for the specified document.
