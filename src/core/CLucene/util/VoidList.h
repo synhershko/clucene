@@ -49,8 +49,9 @@ public:
 	}
 
 	void set(int32_t i, _kt val) {
-		if ( dv ) 
+    if ( dv && i < base::size() ) 
 			_valueDeletor::doDelete((*this)[i]);
+    if ( i+1 > base::size() ) base::resize(i+1);
 		(*this)[i] = val;
 	}
 
@@ -89,12 +90,14 @@ public:
 	}
 
 	void remove(int32_t i, bool dontDelete=false){
-		iterator itr=base::begin();
-		itr+=i;
-		_kt key = *itr;
-		base::erase( itr );
-		if ( dv && !dontDelete ) 
-			_valueDeletor::doDelete(key);
+    if ( i < size() ){
+		  iterator itr=base::begin();
+		  itr+=i;
+		  _kt key = *itr;
+		  base::erase( itr );
+		  if ( dv && !dontDelete ) 
+			  _valueDeletor::doDelete(key);
+    }
 	}
 	void remove(iterator itr, bool dontDelete=false){
 		_kt key = *itr;

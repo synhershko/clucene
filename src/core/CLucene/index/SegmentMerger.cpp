@@ -143,7 +143,8 @@ void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::st
 
   bool ownFiles = false;
   if ( files == NULL ){
-    files = new vector<string>(IndexFileNames::COMPOUND_EXTENSIONS.length + 1);
+    files = new vector<string>;
+    files->reserve(IndexFileNames::COMPOUND_EXTENSIONS.length + 1);
     ownFiles = true;
   }
 
@@ -154,8 +155,6 @@ void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::st
         strcmp(ext,IndexFileNames::FIELDS_INDEX_EXTENSION) != 0 ) ){
 		  files->push_back ( string(segment) + "." + ext );
     }
-
-		files->push_back ( string(segment) + "." + IndexFileNames::COMPOUND_EXTENSIONS[i] );
 	}
 
     // Field norm files
@@ -163,6 +162,7 @@ void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::st
 		FieldInfo* fi = fieldInfos->fieldInfo(i);
 		if (fi->isIndexed && !fi->omitNorms) {
       files->push_back ( segment + "." + IndexFileNames::NORMS_EXTENSION );
+      break;
 		}
 	}
 
@@ -312,8 +312,6 @@ int32_t SegmentMerger::mergeFields() {
 
     // Used for bulk-reading raw bytes for stored fields
     ValueArray<int32_t> rawDocLengths(MAX_RAW_MERGE_DOCS);
-    assert(false);//do we need to null first?
-
 
     // merge field values
     FieldsWriter fieldsWriter(directory, segment.c_str(), fieldInfos);
