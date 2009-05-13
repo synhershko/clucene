@@ -1092,7 +1092,7 @@ public:
   /** Expert:  Return the total size of all index files currently cached in memory.
    * Useful for size management with flushRamDocs()
    */
-  int64_t IndexWriter::ramSizeInBytes();
+  int64_t ramSizeInBytes();
 
   /** Expert:  Return the number of documents whose segments are currently cached in memory.
   * Useful when calling flush()
