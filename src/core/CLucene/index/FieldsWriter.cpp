@@ -34,7 +34,7 @@ FieldsWriter::FieldsWriter(Directory* d, const char* segment, FieldInfos* fn):
 
   fieldsStream = d->createOutput ( Misc::segmentname(segment,".fdt").c_str() );
 
-	CND_CONDITION(indexStream != NULL,"fieldsStream is NULL");
+	CND_CONDITION(fieldsStream != NULL,"fieldsStream is NULL");
     
   indexStream = d->createOutput( Misc::segmentname(segment,".fdx").c_str() );
       
