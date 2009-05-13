@@ -66,9 +66,9 @@ private:
 	size_t bufferTextLen;
 
 	#ifndef LUCENE_TOKEN_WORD_LENGTH
-	TCHAR* _termText;				  ///< the text of the term
+	TCHAR* _buffer;				  ///< the text of the term
 	#else
-	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
+	TCHAR _buffer[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
 	#endif
 	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
 
