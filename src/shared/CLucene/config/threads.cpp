@@ -112,12 +112,12 @@ CL_NS_DEF(util)
 	#endif
 	
 	struct mutex_thread::Internal{
-    	pthread_mutex_t mtx;
-    	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
-    	pthread_t lockOwner;
-    	unsigned int lockCount;
-    	#endif
-    };
+  	pthread_mutex_t mtx;
+  	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
+  	pthread_t lockOwner;
+  	unsigned int lockCount;
+  	#endif
+  };
 
 	mutex_thread::mutex_thread(const mutex_thread& clone):
 		_internal(new Internal)
@@ -205,25 +205,24 @@ CL_NS_DEF(util)
 	}
 	
 	
-	class shared_condition::Internal{
+	struct shared_condition::Internal{
 	    pthread_cond_t condition;
 	    Internal(){
 	    	  pthread_cond_init (&condition, NULL);
 	    }
 	    ~Internal(){
-			  pthread_cond_destroy(&count_threshold_cv);
+			  pthread_cond_destroy(&condition);
 	    }
 	};
 	shared_condition::shared_condition(){
-		internal = new Internal;
+		_internal = new Internal;
 	}
 	shared_condition::~shared_condition(){
-		delete internal;
+		delete _internal;
 	}
 	void shared_condition::Wait(mutex_thread* shared_lock){
-		pthread_mutex_t* pmutex = shared_lock->_internal.mtx;
    	int res = 0;
-   	res = pthread_cond_wait(&_internal->condition, pmutex);
+   	res = pthread_cond_wait(&_internal->condition, &shared_lock->_internal->mtx);
    	assert(res == 0);
 	}
 	void shared_condition::NotifyAll(){

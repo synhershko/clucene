@@ -36,10 +36,10 @@ class CLuceneThreadIdCompare;
           typedef void* (luceneThreadStartRoutine)(void* lpThreadParameter );
           class CLUCENE_SHARED_EXPORT mutex_thread
           {
-          private:
-              struct Internal;
-              Internal* _internal;
           public:
+            struct Internal;
+            Internal* _internal;
+            
           	mutex_thread(const mutex_thread& clone);
           	mutex_thread();
           	~mutex_thread();
