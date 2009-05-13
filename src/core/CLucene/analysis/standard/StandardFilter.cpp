@@ -27,7 +27,7 @@ CL_NS_DEF2(analysis,standard)
     if (input->next(t)==NULL)
       return NULL;
 
-    TCHAR* text = t->_termText;
+    TCHAR* text = t->termBuffer();
     const int32_t textLength = t->termLength();
     const TCHAR* type = t->type();
 

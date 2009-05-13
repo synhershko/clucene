@@ -65,25 +65,28 @@ private:
 	int32_t positionIncrement;
 	size_t bufferTextLen;
 
-public:
 	#ifndef LUCENE_TOKEN_WORD_LENGTH
 	TCHAR* _termText;				  ///< the text of the term
 	#else
 	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
 	#endif
 	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
-	static const TCHAR* getDefaultType();
 
 	CL_NS(index)::Payload* payload;
 
+public:
+	static const TCHAR* getDefaultType();
+
 	Token();
 	~Token();
+
 	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	
 	size_t bufferLength();
 	void growBuffer(size_t size);
+  TCHAR* resizeTermBuffer(size_t size);
 	
 	/** Set the position increment.  This determines the position of this
 	* token relative to the previous Token in a TokenStream, used in
@@ -117,14 +120,14 @@ public:
 	*  altering the buffer be sure to call {@link
 	*  #setTermLength} to record the number of valid
 	*  characters that were placed into the termBuffer. */
-	const TCHAR* termBuffer() const;
+	TCHAR* termBuffer() const;
 	size_t termLength(); //< Length of the the termBuffer. See #termBuffer
 
 	_CL_DEPRECATED( termBuffer ) const TCHAR* termText() const; //< See #termBuffer()
 	_CL_DEPRECATED( termLength ) size_t termTextLength(); //< See #termLength
 
 	void resetTermTextLen(); //< Empties the termBuffer. See #termBuffer
-	void setText(const TCHAR* txt); //< Sets the termBuffer. See #termBuffer
+	void setText(const TCHAR* txt, int32_t len=-1); //< Sets the termBuffer. See #termBuffer
 
 	/**
 	* Returns this Token's starting offset, the position of the first character

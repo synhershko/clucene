@@ -842,13 +842,8 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
     size_t valueLength = _tcslen(stringValue);
     Token* token = localToken;
     token->clear();
-    TCHAR* termBuffer = token->_termText;
-    if (token->_termTextLen < valueLength){
-      token->growBuffer(valueLength);
-      termBuffer = token->_termText;
-    }
-    _tcsncpy(termBuffer,stringValue, valueLength);
-    token->setTermLength(valueLength);
+    
+    token->setText(stringValue,valueLength);
     token->setStartOffset(offset);
     token->setEndOffset(offset + valueLength);
     addPosition(token);
