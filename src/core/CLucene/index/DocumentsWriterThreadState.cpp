@@ -51,9 +51,9 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   postingsFreeListTS(ValueArray<Posting*>(256)),
   allFieldDataArray(ObjectArray<FieldData>(10)),
   postingsVectors(ValueArray<PostingVector*>(1)),
-  charPool( CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
-  postingsPool( ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
-  vectorsPool( ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) )
+  charPool( _CLNEW CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
+  postingsPool( _CLNEW ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
+  vectorsPool( _CLNEW ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) )
 {
   fieldDataHashMask = 15;
   postingsFreeCountTS = 0;
@@ -67,7 +67,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
 
   this->docBoost = 0.0;
   this->fieldGen = this->posUpto = this->maxPostingsVectors = this->numStoredFields = 0;
-  this->numAllFieldData = this->docID = NULL;
+  this->numAllFieldData = this->docID = 0;
   this->numFieldData = numVectorFields = this->proxUpto = this->freqUpto = this->offsetUpto = 0;
   this->localFieldsWriter = NULL;
   this->maxTermPrefix = NULL;
@@ -79,6 +79,12 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   this->freq = NULL;
 }
 
+DocumentsWriter::ThreadState::~ThreadState(){
+  _CLDELETE(postingsPool);
+  _CLDELETE(vectorsPool);
+  _CLDELETE(charPool);
+}
+
 void DocumentsWriter::ThreadState::resetPostings() {
   fieldGen = 0;
   maxPostingsVectors = 0;
@@ -87,8 +93,8 @@ void DocumentsWriter::ThreadState::resetPostings() {
     localFieldsWriter->close();
     _CLDELETE(localFieldsWriter);
   }
-  postingsPool.reset();
-  charPool.reset();
+  postingsPool->reset();
+  charPool->reset();
   _parent->recyclePostings(this->postingsFreeListTS, this->postingsFreeCountTS);
   this->postingsFreeCountTS = 0;
   for(int32_t i=0;i<numAllFieldData;i++) {
@@ -545,7 +551,7 @@ void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
 // USE ONLY FOR DEBUGGING!
 /*
   String getPostingText() {
-  TCHAR* text = charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  TCHAR* text = charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
   int32_t upto = p->textStart & CHAR_BLOCK_MASK;
   while((*text)[upto] != 0xffff)
   upto++;
@@ -555,7 +561,7 @@ void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
 
 bool DocumentsWriter::ThreadState::postingEquals(const TCHAR* tokenText, const int32_t tokenTextLen) {
 
-  const CL_NS(util)::ValueArray<TCHAR>* _text = charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  const CL_NS(util)::ValueArray<TCHAR>* _text = charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
   assert (_text != NULL);
   const CL_NS(util)::ValueArray<TCHAR>& text = *_text;
   int32_t pos = p->textStart & CHAR_BLOCK_MASK;
@@ -568,8 +574,8 @@ bool DocumentsWriter::ThreadState::postingEquals(const TCHAR* tokenText, const i
 }
 
 int32_t DocumentsWriter::ThreadState::comparePostings(Posting* p1, Posting* p2) {
-  const TCHAR* pos1 = (charPool.buffers[p1->textStart >> CHAR_BLOCK_SHIFT]->values) + (p1->textStart & CHAR_BLOCK_MASK);
-  const TCHAR* pos2 = (charPool.buffers[p2->textStart >> CHAR_BLOCK_SHIFT]->values) + (p2->textStart & CHAR_BLOCK_MASK);
+  const TCHAR* pos1 = (charPool->buffers[p1->textStart >> CHAR_BLOCK_SHIFT]->values) + (p1->textStart & CHAR_BLOCK_MASK);
+  const TCHAR* pos2 = (charPool->buffers[p2->textStart >> CHAR_BLOCK_SHIFT]->values) + (p2->textStart & CHAR_BLOCK_MASK);
   while(true) {
     const TCHAR c1 = *pos1++;
     const TCHAR c2 = *pos2++;
@@ -609,9 +615,9 @@ void DocumentsWriter::ThreadState::writeProxVInt(int32_t vi) {
 void DocumentsWriter::ThreadState::writeFreqByte(uint8_t b) {
   assert (freq != NULL);
   if ((*freq)[freqUpto] != 0) {
-    freqUpto = postingsPool.allocSlice((*freq), freqUpto);
-    freq = postingsPool.buffer;
-    p->freqUpto = postingsPool.tOffset;
+    freqUpto = postingsPool->allocSlice((*freq), freqUpto);
+    freq = postingsPool->buffer;
+    p->freqUpto = postingsPool->tOffset;
   }
   (*freq)[freqUpto++] = b;
 }
@@ -619,12 +625,12 @@ void DocumentsWriter::ThreadState::writeFreqByte(uint8_t b) {
 void DocumentsWriter::ThreadState::writeProxByte(uint8_t b) {
   assert (prox != NULL);
   if ((*prox)[proxUpto] != 0) {
-    proxUpto = postingsPool.allocSlice(*prox, proxUpto);
-    prox = postingsPool.buffer;
-    p->proxUpto = postingsPool.tOffset;
+    proxUpto = postingsPool->allocSlice(*prox, proxUpto);
+    prox = postingsPool->buffer;
+    p->proxUpto = postingsPool->tOffset;
     assert (prox != NULL);
   }
-  (*prox)[proxUpto++] = b;
+  prox->values[proxUpto++] = b;
   assert (proxUpto != prox->length);
 }
 
@@ -633,9 +639,9 @@ void DocumentsWriter::ThreadState::writeProxBytes(uint8_t* b, int32_t offset, in
   while(offset < offsetEnd) {
     if ((*prox)[proxUpto] != 0) {
       // End marker
-      proxUpto = postingsPool.allocSlice(*prox, proxUpto);
-      prox = postingsPool.buffer;
-      p->proxUpto = postingsPool.tOffset;
+      proxUpto = postingsPool->allocSlice(*prox, proxUpto);
+      prox = postingsPool->buffer;
+      p->proxUpto = postingsPool->tOffset;
     }
 
     prox->values[proxUpto++] = b[offset++];
@@ -655,9 +661,9 @@ void DocumentsWriter::ThreadState::writeOffsetVInt(int32_t vi) {
 void DocumentsWriter::ThreadState::writeOffsetByte(uint8_t b) {
   assert (offsets != NULL);
   if ((*offsets)[offsetUpto] != 0) {
-    offsetUpto = vectorsPool.allocSlice(*offsets, offsetUpto);
-    offsets = vectorsPool.buffer;
-    vector->offsetUpto = vectorsPool.tOffset;
+    offsetUpto = vectorsPool->allocSlice(*offsets, offsetUpto);
+    offsets = vectorsPool->buffer;
+    vector->offsetUpto = vectorsPool->tOffset;
   }
   (*offsets)[offsetUpto++] = b;
 }
@@ -674,9 +680,9 @@ void DocumentsWriter::ThreadState::writePosVInt(int32_t vi) {
 void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
   assert (pos != NULL);
   if ((*pos)[posUpto] != 0) {
-    posUpto = vectorsPool.allocSlice(*pos, posUpto);
-    pos = vectorsPool.buffer;
-    vector->posUpto = vectorsPool.tOffset;
+    posUpto = vectorsPool->allocSlice(*pos, posUpto);
+    pos = vectorsPool->buffer;
+    vector->posUpto = vectorsPool->tOffset;
   }
   (*pos)[posUpto++] = b;
 }
@@ -821,7 +827,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
         if (postingsVectorsUpto > threadState->maxPostingsVectors)
           threadState->maxPostingsVectors = postingsVectorsUpto;
         postingsVectorsUpto = 0;
-        threadState->vectorsPool.reset();
+        threadState->vectorsPool->reset();
       )
     }
   )
@@ -955,13 +961,13 @@ DocumentsWriter::PostingVector* DocumentsWriter::ThreadState::FieldData::addNewV
   const int32_t firstSize = levelSizeArray[0];
 
   if (doVectorPositions) {
-    const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
-    v->posStart = v->posUpto = threadState->vectorsPool.tOffset + upto;
+    const int32_t upto = threadState->vectorsPool->newSlice(firstSize);
+    v->posStart = v->posUpto = threadState->vectorsPool->tOffset + upto;
   }
 
   if (doVectorOffsets) {
-    const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
-    v->offsetStart = v->offsetUpto = threadState->vectorsPool.tOffset + upto;
+    const int32_t upto = threadState->vectorsPool->newSlice(firstSize);
+    v->offsetStart = v->offsetUpto = threadState->vectorsPool->tOffset + upto;
   }
 
   return v;
@@ -1028,7 +1034,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         // Now that we know doc freq for previous doc,
         // write it & lastDocCode
         threadState->freqUpto = threadState->p->freqUpto & BYTE_BLOCK_MASK;
-        threadState->freq = threadState->postingsPool.buffers[threadState->p->freqUpto >> BYTE_BLOCK_SHIFT];
+        threadState->freq = threadState->postingsPool->buffers[threadState->p->freqUpto >> BYTE_BLOCK_SHIFT];
         if (1 == threadState->p->docFreq)
           threadState->writeFreqVInt(threadState->p->lastDocCode | 1);
         else {
@@ -1082,7 +1088,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
       }
 
       const int32_t textLen1 = 1+tokenTextLen;
-      if (textLen1 + threadState->charPool.tUpto > CHAR_BLOCK_SIZE) {
+      if (textLen1 + threadState->charPool->tUpto > CHAR_BLOCK_SIZE) {
         if (textLen1 > CHAR_BLOCK_SIZE) {
           // Just skip this term, to remain as robust as
           // possible during indexing.  A TokenFilter
@@ -1099,16 +1105,16 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
           position++;
           return;
         }
-        threadState->charPool.nextBuffer();
+        threadState->charPool->nextBuffer();
       }
-      TCHAR* text = threadState->charPool.buffer->values;
-      TCHAR* textUpto = text+ threadState->charPool.tUpto;
+      TCHAR* text = threadState->charPool->buffer->values;
+      TCHAR* textUpto = text+ threadState->charPool->tUpto;
 
       // Pull next free Posting from free list
       threadState->p = threadState->postingsFreeListTS[--threadState->postingsFreeCountTS];
       assert(threadState->p != NULL);
-      threadState->p->textStart = textUpto + threadState->charPool.tOffset - text;
-      threadState->charPool.tUpto += textLen1;
+      threadState->p->textStart = textUpto + threadState->charPool->tOffset - text;
+      threadState->charPool->tUpto += textLen1;
 
       _tcsncpy(textUpto, tokenText, tokenTextLen);
       textUpto[tokenTextLen] = 0xffff;
@@ -1124,11 +1130,11 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
       // Init first slice for freq & prox streams
       const int32_t firstSize = levelSizeArray[0];
 
-      const int32_t upto1 = threadState->postingsPool.newSlice(firstSize);
-      threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool.tOffset + upto1;
+      const int32_t upto1 = threadState->postingsPool->newSlice(firstSize);
+      threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool->tOffset + upto1;
 
-      const int32_t upto2 = threadState->postingsPool.newSlice(firstSize);
-      threadState->p->proxStart = threadState->p->proxUpto = threadState->postingsPool.tOffset + upto2;
+      const int32_t upto2 = threadState->postingsPool->newSlice(firstSize);
+      threadState->p->proxStart = threadState->p->proxUpto = threadState->postingsPool->tOffset + upto2;
 
       threadState->p->lastDocCode = threadState->docID << 1;
       threadState->p->lastDocID = threadState->docID;
@@ -1146,7 +1152,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
     }
 
     threadState->proxUpto = threadState->p->proxUpto & BYTE_BLOCK_MASK;
-    threadState->prox = threadState->postingsPool.buffers[threadState->p->proxUpto >> BYTE_BLOCK_SHIFT];
+    threadState->prox = threadState->postingsPool->buffers[threadState->p->proxUpto >> BYTE_BLOCK_SHIFT];
     assert (threadState->prox != NULL);
 
     if (payload != NULL && payload->length() > 0) {
@@ -1163,14 +1169,14 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
 
     if (doVectorPositions) {
       threadState->posUpto = threadState->vector->posUpto & BYTE_BLOCK_MASK;
-      threadState->pos = threadState->vectorsPool.buffers[threadState->vector->posUpto >> BYTE_BLOCK_SHIFT];
+      threadState->pos = threadState->vectorsPool->buffers[threadState->vector->posUpto >> BYTE_BLOCK_SHIFT];
       threadState->writePosVInt(proxCode);
       threadState->vector->posUpto = threadState->posUpto + (threadState->vector->posUpto & BYTE_BLOCK_NOT_MASK);
     }
 
     if (doVectorOffsets) {
       threadState->offsetUpto = threadState->vector->offsetUpto & BYTE_BLOCK_MASK;
-      threadState->offsets = threadState->vectorsPool.buffers[threadState->vector->offsetUpto >> BYTE_BLOCK_SHIFT];
+      threadState->offsets = threadState->vectorsPool->buffers[threadState->vector->offsetUpto >> BYTE_BLOCK_SHIFT];
       threadState->writeOffsetVInt(offsetStartCode);
       threadState->writeOffsetVInt(offsetEnd-offsetStart);
       threadState->vector->lastOffset = offsetEnd;
@@ -1194,7 +1200,7 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
   for(int32_t i=0;i<postingsHashSize;i++) {
     p0 = postingsHash[i];
     if (p0 != NULL) {
-      start = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT]->values + (p0->textStart & CHAR_BLOCK_MASK);
+      start = threadState->charPool->buffers[p0->textStart >> CHAR_BLOCK_SHIFT]->values + (p0->textStart & CHAR_BLOCK_MASK);
       pos = start;
       while( *pos != 0xffff)
         pos++;
@@ -1254,7 +1260,7 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
 
     int32_t prefix = 0;
     //todo: use pointer here...
-    const CL_NS(util)::ValueArray<TCHAR>* text2 = threadState->charPool.buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
+    const CL_NS(util)::ValueArray<TCHAR>* text2 = threadState->charPool->buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
     const int32_t start2 = posting->textStart & CHAR_BLOCK_MASK;
     int32_t pos2 = start2;
 
@@ -1263,7 +1269,7 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
     if (lastPosting == NULL)
       prefix = 0;
     else {
-      const CL_NS(util)::ValueArray<TCHAR>* text1 = threadState->charPool.buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT];
+      const CL_NS(util)::ValueArray<TCHAR>* text1 = threadState->charPool->buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT];
       const int32_t start1 = lastPosting->textStart & CHAR_BLOCK_MASK;
       int32_t pos1 = start1;
       while(true) {
@@ -1291,12 +1297,12 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
     threadState->tvfLocal->writeVInt(freq);
 
     if (doVectorPositions) {
-      reader->init(&threadState->vectorsPool, vector->posStart, vector->posUpto);
+      reader->init(threadState->vectorsPool, vector->posStart, vector->posUpto);
       reader->writeTo(threadState->tvfLocal);
     }
 
     if (doVectorOffsets) {
-      reader->init(&threadState->vectorsPool, vector->offsetStart, vector->offsetUpto);
+      reader->init(threadState->vectorsPool, vector->offsetStart, vector->offsetUpto);
       reader->writeTo(threadState->tvfLocal);
     }
   }

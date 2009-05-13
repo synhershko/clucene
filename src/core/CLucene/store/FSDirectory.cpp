@@ -401,7 +401,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
 		if ( fileStat(directory.c_str(),&fstat) != 0 || !(fstat.st_mode & S_IFDIR) ){
 	      char tmp[1024];
-	      _snprintf(tmp,1024,"%s not a directory", directory);
+	      _snprintf(tmp,1024,"%s not a directory", directory.c_str());
 	      _CLTHROWA(CL_ERR_IO,tmp);
 		}
 
@@ -521,7 +521,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   void FSDirectory::touchFile(const char* name){
 	  CND_PRECONDITION(directory[0]!=0,"directory is not open");
     char buffer[CL_MAX_DIR];
-    _snprintf(buffer,CL_MAX_DIR,"%s%s%s",directory,PATH_DELIMITERA,name);
+    _snprintf(buffer,CL_MAX_DIR,"%s%s%s",directory.c_str(),PATH_DELIMITERA,name);
 	
     int32_t r = _cl_open(buffer, O_RDWR, _S_IWRITE);
 	if ( r < 0 )

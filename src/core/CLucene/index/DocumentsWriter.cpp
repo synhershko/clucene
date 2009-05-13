@@ -94,7 +94,7 @@ DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter
 
 	numBufferedDeleteTerms = 0;
   copyByteBuffer = _CL_NEWARRAY(uint8_t, 4096);
-  *copyByteBuffer = NULL;
+  *copyByteBuffer = 0;
 
   this->closed = this->flushPending = false;
   _files = NULL;
@@ -114,7 +114,7 @@ void DocumentsWriter::setInfoStream(std::ostream* infoStream) {
   this->infoStream = infoStream;
 }
 
-void DocumentsWriter::setRAMBufferSizeMB(double mb) {
+void DocumentsWriter::setRAMBufferSizeMB(float_t mb) {
   if (mb == IndexWriter::DISABLE_AUTO_FLUSH) {
     ramBufferSize = IndexWriter::DISABLE_AUTO_FLUSH;
   } else {
@@ -161,7 +161,8 @@ std::string DocumentsWriter::closeDocStore() {
   const std::vector<string>& flushedFiles = files();
 
   if (infoStream != NULL)
-    (*infoStream) << "\ncloseDocStore: " << flushedFiles.size() << " files to flush to segment " << docStoreSegment << " numDocs=" << numDocsInStore << "\n";
+    (*infoStream) << string("\ncloseDocStore: ") << Misc::toString((int32_t)flushedFiles.size()) << string(" files to flush to segment ") << 
+    docStoreSegment << string(" numDocs=") << Misc::toString(numDocsInStore) << string("\n");
 
   if (flushedFiles.size() > 0) {
     _CLDELETE(_files);
@@ -247,7 +248,7 @@ void DocumentsWriter::abort(AbortException* ae) {
   try {
 
     if (infoStream != NULL)
-      (*infoStream) << "docWriter: now abort\n";
+      (*infoStream) << string("docWriter: now abort\n");
 
     // Forcefully remove waiting ThreadStates from line
     for(int32_t i=0;i<numWaiting;i++)
@@ -427,7 +428,7 @@ int32_t DocumentsWriter::flush(bool _closeDocStore) {
   assert ( numDocsInRAM > 0 );
 
   if (infoStream != NULL)
-    (*infoStream) << "\nflush postings as segment " << segment << " numDocs=" << numDocsInRAM << "\n";
+    (*infoStream) << string("\nflush postings as segment ") << segment << string(" numDocs=") << Misc::toString(numDocsInRAM) << string("\n");
 
   bool success = false;
 
@@ -601,10 +602,10 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
   if (infoStream != NULL) {
     const int64_t newSegmentSize = segmentSize(segmentName);
 
-    (*infoStream) << "  oldRAMSize=" << numBytesUsed << 
-				" newFlushedSize=" << newSegmentSize << 
-        " docs/MB=" << Misc::toString(numDocsInRAM/(newSegmentSize/1024.0/1024.0)) << 
-        " new/old=" << Misc::toString(100.0*newSegmentSize/numBytesUsed) << "%\n";
+    (*infoStream) << string("  oldRAMSize=") << Misc::toString(numBytesUsed) << 
+				string(" newFlushedSize=") << Misc::toString(newSegmentSize) << 
+        string(" docs/MB=") << Misc::toString(numDocsInRAM/(newSegmentSize/1024.0/1024.0)) << 
+        string(" new/old=") << Misc::toString(100.0*newSegmentSize/numBytesUsed) << string("%\n");
   }
 
   resetPostingsData();
@@ -1253,13 +1254,13 @@ void DocumentsWriter::balanceRAM() {
 
   if (numBytesAlloc > freeTrigger) {
     if (infoStream != NULL)
-      (*infoStream) << "  RAM: now balance allocations: usedMB=" << toMB(numBytesUsed) +
-                         " vs trigger=" << toMB(flushTrigger) <<
-                         " allocMB=" << toMB(numBytesAlloc) <<
-                         " vs trigger=" << toMB(freeTrigger) <<
-                         " postingsFree=" << toMB(this->postingsFreeCountDW*POSTING_NUM_BYTE) <<
-                         " byteBlockFree=" << toMB(freeByteBlocks.size()*BYTE_BLOCK_SIZE) <<
-                         " charBlockFree=" << toMB(freeCharBlocks.size()*CHAR_BLOCK_SIZE*CHAR_NUM_BYTE) << "\n";
+      (*infoStream) << string("  RAM: now balance allocations: usedMB=") << toMB(numBytesUsed) +
+                         string(" vs trigger=") << toMB(flushTrigger) <<
+                         string(" allocMB=") << toMB(numBytesAlloc) <<
+                         string(" vs trigger=") << toMB(freeTrigger) <<
+                         string(" postingsFree=") << toMB(this->postingsFreeCountDW*POSTING_NUM_BYTE) <<
+                         string(" byteBlockFree=") << toMB(freeByteBlocks.size()*BYTE_BLOCK_SIZE) <<
+                         string(" charBlockFree=") << toMB(freeCharBlocks.size()*CHAR_BLOCK_SIZE*CHAR_NUM_BYTE) << string("\n");
 
     // When we've crossed 100% of our target Postings
     // RAM usage, try to free up until we're back down
@@ -1279,7 +1280,7 @@ void DocumentsWriter::balanceRAM() {
         // Nothing else to free -- must flush now.
         bufferIsFull = true;
         if (infoStream != NULL)
-          (*infoStream) <<"    nothing to free; now set bufferIsFull\n";
+          (*infoStream) << string("    nothing to free; now set bufferIsFull\n");
         break;
       }
 
@@ -1313,7 +1314,7 @@ void DocumentsWriter::balanceRAM() {
     if (infoStream != NULL){
       (*infoStream) << "    after free: freedMB=" + Misc::toString((startBytesAlloc-numBytesAlloc)/1024.0/1024.0 ) + 
         " usedMB=" + Misc::toString(numBytesUsed/1024.0/1024.0) + 
-        " allocMB=" + Misc::toString(numBytesAlloc/1024.0/1024.0) << "\n";
+        " allocMB=" + Misc::toString(numBytesAlloc/1024.0/1024.0) << string("\n");
     }
 
   } else {
@@ -1324,9 +1325,9 @@ void DocumentsWriter::balanceRAM() {
     // flush.
     if (numBytesUsed > flushTrigger) {
 	    if (infoStream != NULL){
-        (*infoStream) << "  RAM: now flush @ usedMB=" << Misc::toString(numBytesUsed/1024.0/1024.0) <<
-            " allocMB=" << Misc::toString(numBytesAlloc/1024.0/1024.0) <<
-            " triggerMB=" << Misc::toString(flushTrigger/1024.0/1024.0) << "\n";
+        (*infoStream) << string("  RAM: now flush @ usedMB=") << Misc::toString(numBytesUsed/1024.0/1024.0) <<
+            string(" allocMB=") << Misc::toString(numBytesAlloc/1024.0/1024.0) <<
+            string(" triggerMB=") << Misc::toString(flushTrigger/1024.0/1024.0) << string("\n");
 	    }
 
       bufferIsFull = true;
@@ -1379,15 +1380,15 @@ bool DocumentsWriter::FieldMergeState::nextTerm(){
   p = (*postings)[postingUpto];
   docID = 0;
 
-  text = field->threadState->charPool.buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  text = field->threadState->charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
   textOffset = p->textStart & CHAR_BLOCK_MASK;
 
   if (p->freqUpto > p->freqStart)
-    freq.init(&field->threadState->postingsPool, p->freqStart, p->freqUpto);
+    freq.init(field->threadState->postingsPool, p->freqStart, p->freqUpto);
   else
     freq.bufferOffset = freq.upto = freq.endIndex = 0;
 
-  prox.init(&field->threadState->postingsPool, p->proxStart, p->proxUpto);
+  prox.init(field->threadState->postingsPool, p->proxStart, p->proxUpto);
 
   // Should always be true
   bool result = nextDoc();
@@ -1539,7 +1540,7 @@ void DocumentsWriter::ByteSliceReader::seek(const int64_t pos) {_CLTHROWA(CL_ERR
 void DocumentsWriter::ByteSliceReader::close() {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 
 DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize):
-    BlockPool(_parent, _blockSize)
+    BlockPool<uint8_t>(_parent, _blockSize)
 {
   this->trackAllocations = _trackAllocations;
 }
