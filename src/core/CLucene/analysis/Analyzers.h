@@ -344,9 +344,9 @@ public:
  */
 class CLUCENE_EXPORT KeywordTokenizer: public Tokenizer {
 private:
-    LUCENE_STATIC_CONSTANT(int, DEFAULT_BUFFER_SIZE = 256);
-    bool done;
-    int bufferSize;
+  LUCENE_STATIC_CONSTANT(int, DEFAULT_BUFFER_SIZE = 256);
+  bool done;
+  int bufferSize;
 public:
   KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize=-1);
   Token* next(Token* token);

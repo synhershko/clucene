@@ -8,6 +8,7 @@
 #include "Analyzers.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/Misc.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
@@ -150,7 +151,7 @@ LowerCaseFilter::~LowerCaseFilter(){
 Token* LowerCaseFilter::next(Token* t){
 	if (input->next(t)==NULL)
 		return NULL;
- 	stringCaseFold( t->_termText );
+ 	stringCaseFold( t->termBuffer() );
 	return t;
 }
 
@@ -210,7 +211,10 @@ Token* StopFilter::next(Token* token) {
 	// return the first non-stop word found
 	int32_t skippedPositions = 0;
 	while (input->next(token)){
-		TCHAR* termText = ignoreCase ? stringCaseFold(token->_termText) : token->_termText;
+		TCHAR* termText = token->termBuffer();
+    if ( ignoreCase ){
+      stringCaseFold(token->termBuffer());
+    }
 		if (stopWords->find(termText)==stopWords->end()){
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
@@ -491,35 +495,37 @@ TokenStream* KeywordAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(
 KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 	Tokenizer(input)
 {
-    this->done = false;
+  this->done = false;
 	if ( bufferSize < 0 )
-		this->bufferSize = DEFAULT_BUFFER_SIZE;
+	this->bufferSize = DEFAULT_BUFFER_SIZE;
 }
 KeywordTokenizer::~KeywordTokenizer(){
 }
 
 Token* KeywordTokenizer::next(Token* token){
-    if (!done) {
-      done = true;
-	    int32_t rd;
-	    const TCHAR* buffer=0;
-      while (true) {
-        rd = input->read(buffer, 1, bufferSize);
-        if (rd == -1) 
-			break;
-		  token->growBuffer(token->_termTextLen +rd+1);
-
-		  uint32_t cp = rd;
-		  if ( token->_termTextLen + cp > token->bufferLength() )
-			  cp = token->bufferLength() -  token->_termTextLen;
-		    _tcsncpy(token->_termText+token->_termTextLen,buffer,cp);
-		    token->_termTextLen+=rd;
+  if (!done) {
+    done = true;
+    int32_t upto = 0;
+    int32_t rd;
+    token->clear();
+    TCHAR* termBuffer=token->termBuffer();
+    const TCHAR* readBuffer=NULL;
+assert(false);//test me
+    while (true) {
+      rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
+      if (rd == -1) 
+		    break;
+      if ( upto == token->bufferLength() ){
+        termBuffer = token->resizeTermBuffer(token->bufferLength() + 8);
       }
-	    token->_termText[token->_termTextLen]=0;
-	    token->set(token->_termText,0,token->_termTextLen);
-	    return token;
+	    _tcsncpy(termBuffer + upto, readBuffer, rd);
+      upto += rd;
     }
-    return NULL;
+    termBuffer[upto]=0;
+    token->setTermLength(upto);
+    return token;
+  }
+  return NULL;
 }
 void KeywordTokenizer::reset(CL_NS(util)::Reader* input)
 {
