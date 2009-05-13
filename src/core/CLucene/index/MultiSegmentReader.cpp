@@ -51,7 +51,7 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
   // the newest segments first.
 
   ArrayBase<IndexReader*>* readers = _CLNEW ObjectArray<IndexReader>(sis->size());
-  for (size_t i = sis->size()-1; i >= 0; i--) {
+  for (int32_t i = (int32_t)sis->size()-1; i >= 0; i--) {
     try {
       readers->values[i] = SegmentReader::get(sis->info(i));
     } catch(CLuceneError& err) {
