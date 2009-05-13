@@ -18,7 +18,6 @@ CL_NS_DEF(util)
    			a[i] = value;
    		}
    	}
-	   	
 		static void sort(_type* a, int32_t alen, int32_t fromIndex, int32_t toIndex){
 			CND_PRECONDITION(fromIndex < toIndex,"fromIndex >= toIndex");
 			CND_PRECONDITION(fromIndex >= 0,"fromIndex < 0");

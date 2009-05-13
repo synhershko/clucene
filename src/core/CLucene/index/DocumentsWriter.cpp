@@ -66,7 +66,7 @@ int32_t DocumentsWriter::BYTES_PER_INT = 4;
 
 const int32_t DocumentsWriter::POINTER_NUM_BYTE = 4;
 const int32_t DocumentsWriter::INT_NUM_BYTE = 4;
-const int32_t DocumentsWriter::CHAR_NUM_BYTE = 2;
+const int32_t DocumentsWriter::CHAR_NUM_BYTE = 2; //TODO: adjust for c++...
 
 const int32_t DocumentsWriter::MAX_TERM_LENGTH = DocumentsWriter::CHAR_BLOCK_SIZE-1;
 	
@@ -103,7 +103,7 @@ DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter
   infoStream = NULL;
   fieldsWriter = NULL;
   tvx = tvf = tvd = NULL;
-  postingsFreeCount = postingsAllocCount = numWaiting = pauseThreads = abortCount = 0;
+  postingsFreeCountDW = postingsAllocCountDW = numWaiting = pauseThreads = abortCount = 0;
   docStoreOffset = nextDocID = numDocsInRAM = numDocsInStore = nextWriteDocID = 0;
 }
 DocumentsWriter::~DocumentsWriter(){
@@ -472,7 +472,7 @@ void DocumentsWriter::createCompoundFile(const std::string& segment)
 
   // Perform the merge
   cfsWriter->close();
-_CLDELETE(cfsWriter);
+  _CLDELETE(cfsWriter);
 }
 
 bool DocumentsWriter::setFlushPending() {
@@ -518,7 +518,7 @@ void DocumentsWriter::writeNorms(const std::string& segmentName, int32_t totalNu
     }
   } _CLFINALLY (
     normsOut->close();
-  _CLDELETE(normsOut);
+    _CLDELETE(normsOut);
   )
 }
 
@@ -553,7 +553,6 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
 
   // Sort by field name
   std::sort(allFields.begin(),allFields.end(),ThreadState::FieldData::sort);
-  assert(allFields.size() < 3);//test me
   const int32_t numAllFields = allFields.size();
 
   skipListWriter = _CLNEW DefaultSkipListWriter(termsOut->skipInterval,
@@ -615,13 +614,13 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
   numDocsInRAM = 0;
   _CLDELETE(_files);
 
-  // Maybe downsize postingsFreeList array
-  if (postingsFreeList.length > 1.5*postingsFreeCount) {
-    int32_t newSize = postingsFreeList.length;
-    while(newSize > 1.25*postingsFreeCount) {
+  // Maybe downsize this->postingsFreeListDW array
+  if (this->postingsFreeListDW.length > 1.5*this->postingsFreeCountDW) {
+    int32_t newSize = this->postingsFreeListDW.length;
+    while(newSize > 1.25*this->postingsFreeCountDW) {
       newSize = (int32_t) (newSize*0.8);
     }
-    postingsFreeList.resize(newSize);
+    this->postingsFreeListDW.resize(newSize);
   }
 
 }
@@ -664,7 +663,7 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
   const int32_t fieldNumber = (*fields)[0]->fieldInfo->number;
   int32_t numFields = fields->length;
 
-  ObjectArray<FieldMergeState> mergeStates(numFields);
+  ValueArray<FieldMergeState*> mergeStates(numFields);
 
   for(int32_t i=0;i<numFields;i++) {
     FieldMergeState* fms = mergeStates.values[i] = _CLNEW FieldMergeState();
@@ -706,10 +705,9 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
 
     int32_t lastDoc = 0;
 
-    const CL_NS(util)::ValueArray<TCHAR>* text = termStates[0]->text;
-    const int32_t start = termStates[0]->textOffset;
-    int32_t pos = start;
-    while((*text)[pos] != 0xffff)
+    const TCHAR* start = termStates[0]->text->values + termStates[0]->textOffset;
+    const TCHAR* pos = start;
+    while(*pos != 0xffff)
       pos++;
 
     int64_t freqPointer = freqOut->getFilePointer();
@@ -809,7 +807,7 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
 
     // Write term
     termInfo.set(df, freqPointer, proxPointer, (int32_t) (skipPointer - freqPointer));
-    termsOut->add(fieldNumber, text->values, start, pos-start, &termInfo);
+    termsOut->add(fieldNumber, start, pos-start, &termInfo);
   }
 }
 
@@ -923,7 +921,7 @@ bool DocumentsWriter::updateDocument(Document* doc, Analyzer* analyzer, Term* de
       } _CLFINALLY (
         // This call is synchronized but fast
         finishDocument(state);
-	)
+	    )
       success = true;
     } _CLFINALLY (
       if (!success) {
@@ -942,8 +940,8 @@ bool DocumentsWriter::updateDocument(Document* doc, Analyzer* analyzer, Term* de
         // keeps indexing as "all or none" (atomic) when
         // adding a document:
         addDeleteDocID(state->docID);
-	}
-  )
+	    }
+    )
   } catch (AbortException& ae) {
     abort(&ae);
   }
@@ -976,7 +974,7 @@ void DocumentsWriter::clearBufferedDeletes() {
     resetPostingsData();
 }
 
-bool DocumentsWriter::bufferDeleteTerms(const ObjectArray<Term>* terms) {
+bool DocumentsWriter::bufferDeleteTerms(const ArrayBase<Term*>* terms) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
   while(pauseThreads != 0 || flushPending)
     CONDITION_WAIT(THIS_LOCK, THIS_WAIT_CONDITION)
@@ -1143,27 +1141,29 @@ void DocumentsWriter::getPostings(ValueArray<Posting*>& postings) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
   numBytesUsed += postings.length * POSTING_NUM_BYTE;
   int32_t numToCopy;
-  if (postingsFreeCount < postings.length)
-    numToCopy = postingsFreeCount;
+  if (this->postingsFreeCountDW < postings.length)
+    numToCopy = this->postingsFreeCountDW;
   else
     numToCopy = postings.length;
 
-  const int32_t start = postingsFreeCount-numToCopy;
-  memcpy(postings.values, postingsFreeList.values+start, sizeof(Posting*)*numToCopy);
-  postingsFreeCount -= numToCopy;
+  const int32_t start = this->postingsFreeCountDW-numToCopy;
+  if ( numToCopy > 0 ){
+    memcpy(postings.values, this->postingsFreeListDW.values+start, sizeof(Posting*)*numToCopy);
+  }
+  this->postingsFreeCountDW -= numToCopy;
 
   // Directly allocate the remainder if any
   if (numToCopy < postings.length) {
     const int32_t extra = postings.length - numToCopy;
-    const int32_t newPostingsAllocCount = postingsAllocCount + extra;
-    if (newPostingsAllocCount > postingsFreeList.length)
-      postingsFreeList.resize((int32_t) (1.25 * newPostingsAllocCount));
+    const int32_t newPostingsAllocCount = this->postingsAllocCountDW + extra;
+    if (newPostingsAllocCount > this->postingsFreeListDW.length)
+      this->postingsFreeListDW.resize((int32_t) (1.25 * newPostingsAllocCount));
 
     balanceRAM();
     for(size_t i=numToCopy;i<postings.length;i++) {
       postings.values[i] = _CLNEW Posting();
       numBytesAlloc += POSTING_NUM_BYTE;
-      postingsAllocCount++;
+      this->postingsAllocCountDW++;
     }
   }
 }
@@ -1173,9 +1173,10 @@ void DocumentsWriter::recyclePostings(ValueArray<Posting*>& postings, int32_t nu
   // Move all Postings from this ThreadState back to our
   // free list.  We pre-allocated this array while we were
   // creating Postings to make sure it's large enough
-  assert (postingsFreeCount + numPostings <= postingsFreeList.length);
-  memcpy (postingsFreeList.values + postingsFreeCount, postings.values, numPostings * sizeof(Posting*));
-  postingsFreeCount += numPostings;
+  assert (this->postingsFreeCountDW + numPostings <= this->postingsFreeListDW.length);
+  if ( numPostings > 0 ) 
+    memcpy (this->postingsFreeListDW.values + this->postingsFreeCountDW, postings.values, numPostings * sizeof(Posting*));
+  this->postingsFreeCountDW += numPostings;
 }
 
 ValueArray<uint8_t>* DocumentsWriter::getByteBlock(bool trackAllocations) {
@@ -1195,7 +1196,7 @@ ValueArray<uint8_t>* DocumentsWriter::getByteBlock(bool trackAllocations) {
   return b;
 }
 
-void DocumentsWriter::recycleBlocks(ObjectArray<ValueArray<uint8_t> >& blocks, int32_t end) {
+void DocumentsWriter::recycleBlocks(ArrayBase<ValueArray<uint8_t>* >& blocks, int32_t end) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
   ValueArray<uint8_t>* block;
   for(int32_t i=1;i<end;i++){
@@ -1221,7 +1222,7 @@ ValueArray<TCHAR>* DocumentsWriter::getCharBlock() {
   return c;
 }
 
-void DocumentsWriter::recycleBlocks(ObjectArray<ValueArray<TCHAR> >& blocks, int32_t numBlocks) {
+void DocumentsWriter::recycleBlocks(ArrayBase<ValueArray<TCHAR>* >& blocks, int32_t numBlocks) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 
   for(int32_t i=0;i<numBlocks;i++){
@@ -1256,7 +1257,7 @@ void DocumentsWriter::balanceRAM() {
                          " vs trigger=" << toMB(flushTrigger) <<
                          " allocMB=" << toMB(numBytesAlloc) <<
                          " vs trigger=" << toMB(freeTrigger) <<
-                         " postingsFree=" << toMB(postingsFreeCount*POSTING_NUM_BYTE) <<
+                         " postingsFree=" << toMB(this->postingsFreeCountDW*POSTING_NUM_BYTE) <<
                          " byteBlockFree=" << toMB(freeByteBlocks.size()*BYTE_BLOCK_SIZE) <<
                          " charBlockFree=" << toMB(freeCharBlocks.size()*CHAR_BLOCK_SIZE*CHAR_NUM_BYTE) << "\n";
 
@@ -1274,7 +1275,7 @@ void DocumentsWriter::balanceRAM() {
     // (freeLevel)
 
     while(numBytesAlloc > freeLevel) {
-      if (0 == freeByteBlocks.size() && 0 == freeCharBlocks.size() && 0 == postingsFreeCount) {
+      if (0 == freeByteBlocks.size() && 0 == freeCharBlocks.size() && 0 == this->postingsFreeCountDW) {
         // Nothing else to free -- must flush now.
         bufferIsFull = true;
         if (infoStream != NULL)
@@ -1288,31 +1289,32 @@ void DocumentsWriter::balanceRAM() {
       }
 
       if ((1 == iter % 3) && freeCharBlocks.size() > 0) {
-        freeCharBlocks.remove(freeCharBlocks.size()-1);
+        freeCharBlocks.remove(freeCharBlocks.size()-1, true); //TODO: this will leak...
         numBytesAlloc -= CHAR_BLOCK_SIZE * CHAR_NUM_BYTE;
       }
 
-      if ((2 == iter % 3) && postingsFreeCount > 0) {
+      if ((2 == iter % 3) && this->postingsFreeCountDW > 0) {
         int32_t numToFree;
-        if (postingsFreeCount >= postingsFreeChunk)
+        if (this->postingsFreeCountDW >= postingsFreeChunk)
           numToFree = postingsFreeChunk;
         else
-          numToFree = postingsFreeCount;
-        memset( postingsFreeList.values + postingsFreeCount-numToFree, 0, postingsFreeCount * sizeof(Posting));
-        assert(false);//test me
-        postingsFreeCount -= numToFree;
-        postingsAllocCount -= numToFree;
+          numToFree = this->postingsFreeCountDW;
+        for ( size_t i = this->postingsFreeCountDW-numToFree;i< this->postingsFreeListDW.length; i++ ){
+          _CLDELETE(this->postingsFreeListDW.values[i]);
+        }
+        this->postingsFreeCountDW -= numToFree;
+        this->postingsAllocCountDW -= numToFree;
         numBytesAlloc -= numToFree * POSTING_NUM_BYTE;
       }
 
       iter++;
     }
 
-  if (infoStream != NULL){
-    (*infoStream) << "    after free: freedMB=" + Misc::toString((startBytesAlloc-numBytesAlloc)/1024.0/1024.0 ) + 
-      " usedMB=" + Misc::toString(numBytesUsed/1024.0/1024.0) + 
-      " allocMB=" + Misc::toString(numBytesAlloc/1024.0/1024.0) << "\n";
-  }
+    if (infoStream != NULL){
+      (*infoStream) << "    after free: freedMB=" + Misc::toString((startBytesAlloc-numBytesAlloc)/1024.0/1024.0 ) + 
+        " usedMB=" + Misc::toString(numBytesUsed/1024.0/1024.0) + 
+        " allocMB=" + Misc::toString(numBytesAlloc/1024.0/1024.0) << "\n";
+    }
 
   } else {
     // If we have not crossed the 100% mark, but have
@@ -1545,11 +1547,11 @@ CL_NS(util)::ValueArray<uint8_t>* DocumentsWriter::ByteBlockPool::getNewBlock(){
     return parent->getByteBlock(trackAllocations);
 }
 int32_t DocumentsWriter::ByteBlockPool::newSlice(const int32_t size) {
-  if (byteUpto > BYTE_BLOCK_SIZE-size)
+  if (tUpto > BYTE_BLOCK_SIZE-size)
     nextBuffer();
-  const int32_t upto = byteUpto;
-  byteUpto += size;
-  (*buffer)[byteUpto-1] = 16;
+  const int32_t upto = tUpto;
+  tUpto += size;
+  buffer->values[tUpto-1] = 16;
   return upto;
 }
 
@@ -1559,15 +1561,13 @@ int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8
   const int32_t newLevel = nextLevelArray[level];
   const int32_t newSize = levelSizeArray[newLevel];
     
-  printf("%d. %d, %d\n", (int32_t)slice[upto], (int32_t)level, (int32_t)(204&15));
-  assert(false);
   // Maybe allocate another block
-  if (byteUpto > BYTE_BLOCK_SIZE-newSize)
+  if (tUpto > BYTE_BLOCK_SIZE-newSize)
     nextBuffer();
 
-  const int32_t newUpto = byteUpto;
-  const uint32_t offset = newUpto + byteOffset;
-  byteUpto += newSize;
+  const int32_t newUpto = tUpto;
+  const uint32_t offset = newUpto + tOffset;
+  tUpto += newSize;
 
   // Copy forward the past 3 bytes (which we are about
   // to overwrite with the forwarding address):
@@ -1582,7 +1582,7 @@ int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8
   slice.values[upto] = (uint8_t) offset;
     
   // Write new level:
-  buffer->values[byteUpto-1] = (uint8_t) (16|newLevel);
+  buffer->values[tUpto-1] = (uint8_t) (16|newLevel);
 
   return newUpto+3;
 }

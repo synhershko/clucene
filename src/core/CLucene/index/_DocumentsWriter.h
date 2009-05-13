@@ -233,11 +233,11 @@ private:
     CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<T> > buffers;
     int32_t numBuffer;
 
-    int32_t bufferUpto;                        // Which buffer we are upto
-    int32_t byteUpto;             // Where we are in head buffer
+    int32_t bufferUpto;           // Which buffer we are upto
+    int32_t tUpto;             // Where we are in head buffer
+    int32_t tOffset;          // Current head offset
 	  int32_t blockSize;
 
-    int32_t byteOffset;          // Current head offset
 
     DocumentsWriter* parent;
   public:
@@ -249,8 +249,8 @@ private:
 	    this->blockSize = _blockSize;
       this->parent = _parent;
       bufferUpto = -1;
-      byteUpto = blockSize;
-      byteOffset = -blockSize;
+      tUpto = blockSize;
+      tOffset = -blockSize;
       buffer = NULL;
       numBuffer = 0;
     }
@@ -261,8 +261,8 @@ private:
     void reset() {
       parent->recycleBlocks(buffers, 1+bufferUpto);
       bufferUpto = -1;
-      byteUpto = blockSize;
-      byteOffset = -blockSize;
+      tUpto = blockSize;
+      tOffset = -blockSize;
     }
 
     void nextBuffer() {
@@ -273,8 +273,8 @@ private:
       buffer = buffers.values[1+bufferUpto] = getNewBlock();
       bufferUpto++;
 
-      byteUpto = 0;
-      byteOffset += blockSize;
+      tUpto = 0;
+      tOffset += blockSize;
     }
 
     friend class DocumentsWriter::ThreadState;
@@ -392,9 +392,9 @@ private:
   static const int32_t CHAR_NUM_BYTE;
 
   // Holds free pool of Posting instances
-  CL_NS(util)::ValueArray<Posting> postingsFreeList;
-  int32_t postingsFreeCount;
-  int32_t postingsAllocCount;
+  CL_NS(util)::ValueArray<Posting*> postingsFreeListDW;
+  int32_t postingsFreeCountDW;
+  int32_t postingsAllocCountDW;
 
   CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<TCHAR>*, CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<TCHAR> > > freeCharBlocks;
 
@@ -559,8 +559,8 @@ private:
     };
 
   private:
-    CL_NS(util)::ValueArray<Posting*> postingsFreeList;           // Free Posting instances
-    int32_t postingsFreeCount;
+    CL_NS(util)::ValueArray<Posting*> postingsFreeListTS;           // Free Posting instances
+    int32_t postingsFreeCountTS;
 
     CL_NS(util)::ValueArray<int64_t> vectorFieldPointers;
     CL_NS(util)::ValueArray<int32_t> vectorFieldNumbers;
@@ -877,7 +877,7 @@ public:
   // Reset buffered deletes.
   void clearBufferedDeletes();
 
-  bool bufferDeleteTerms(const CL_NS(util)::ObjectArray<Term>* terms);
+  bool bufferDeleteTerms(const CL_NS(util)::ArrayBase<Term*>* terms);
 
   bool bufferDeleteTerm(Term* term);
 
@@ -935,7 +935,7 @@ public:
   CL_NS(util)::ValueArray<uint8_t>* getByteBlock(bool trackAllocations);
 
   /* Return a uint8_t[] to the pool */
-  void recycleBlocks(CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<uint8_t> >& blocks, int32_t end);
+  void recycleBlocks(CL_NS(util)::ArrayBase< CL_NS(util)::ValueArray<uint8_t>* >& blocks, int32_t end);
 
   /* Initial chunk size of the shared char[] blocks used to
      store term text */
@@ -949,7 +949,7 @@ public:
   CL_NS(util)::ValueArray<TCHAR>* getCharBlock();
 
   /* Return a char[] to the pool */
-  void recycleBlocks(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<TCHAR> >& blocks, int32_t numBlocks);
+  void recycleBlocks(CL_NS(util)::ArrayBase<CL_NS(util)::ValueArray<TCHAR>* >& blocks, int32_t numBlocks);
 
   std::string toMB(int64_t v);
 

@@ -413,7 +413,7 @@ public:
   *  If no such fields existed, the method returns null.
   * @throws IOException
   */
-  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
+  CL_NS(util)::ArrayBase<TermFreqVector*>* getTermFreqVectors(int32_t docNumber);
 
   static const char* getClassName();
   const char* getObjectName() const;

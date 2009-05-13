@@ -43,7 +43,7 @@ private:
   int32_t skipInterval;
   
   // for every skip level a different buffer is used 
-  CL_NS(util)::ObjectArray<CL_NS(store)::RAMOutputStream>* skipBuffer;
+  CL_NS(util)::ArrayBase<CL_NS(store)::RAMOutputStream*>* skipBuffer;
 
 
   /**

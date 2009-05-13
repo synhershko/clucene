@@ -113,7 +113,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
   }
 
   void TermVectorsWriter::addTerm(const TCHAR* termText, int32_t freq, 
-	  ValueArray<int32_t>* positions, ObjectArray<TermVectorOffsetInfo>* offsets) {
+	  ValueArray<int32_t>* positions, ArrayBase<TermVectorOffsetInfo*>* offsets) {
     if (!isDocumentOpen()) 
 		_CLTHROWA(CL_ERR_InvalidState,"Cannot add terms when document is not open");
     if (!isFieldOpen())
@@ -123,7 +123,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
   }
 
   void TermVectorsWriter::addTermInternal(const TCHAR* termText, int32_t freq,
-	  ValueArray<int32_t>* positions, ObjectArray<TermVectorOffsetInfo>* offsets) {
+	  ValueArray<int32_t>* positions, ArrayBase<TermVectorOffsetInfo*>* offsets) {
     TVTerm* term = _CLNEW TVTerm();
     term->setTermText(termText);
     term->freq = freq;
@@ -132,7 +132,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
     terms.push_back(term);
   }
 
-  void TermVectorsWriter::addAllDocVectors(ObjectArray<TermFreqVector>& vectors){
+  void TermVectorsWriter::addAllDocVectors(ArrayBase<TermFreqVector*>& vectors){
 	openDocument();
 
 	for (size_t i = 0; i < vectors.length; ++i) {

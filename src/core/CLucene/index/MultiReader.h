@@ -26,9 +26,9 @@ private:
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 
-  void init(CL_NS(util)::ObjectArray<IndexReader>* subReaders, bool closeSubReaders);
+  void init(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders);
 protected:
-	CL_NS(util)::ObjectArray<IndexReader>* subReaders;
+	CL_NS(util)::ArrayBase<IndexReader*>* subReaders;
 	int32_t* starts;			  // 1st docno for each segment
 
 	void doSetNorm(int32_t n, const TCHAR* field, uint8_t value);
@@ -45,7 +45,7 @@ public:
 	* @param subReaders set of (sub)readers
 	* @throws IOException
 	*/
-	MultiReader(CL_NS(util)::ObjectArray<IndexReader>* subReaders, bool closeSubReaders=true);
+	MultiReader(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders=true);
 
 	~MultiReader();
 
@@ -82,7 +82,7 @@ public:
   *  in a given vectorized field.
   *  If no such fields existed, the method returns null.
   */
-  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t n);
+  CL_NS(util)::ArrayBase<TermFreqVector*>* getTermFreqVectors(int32_t n);
 
   bool isOptimized();
 

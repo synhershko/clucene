@@ -715,7 +715,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  void deleteDocuments(const CL_NS(util)::ObjectArray<Term>* terms);
+  void deleteDocuments(const CL_NS(util)::ArrayBase<Term*>* terms);
 
   /**
    * Updates a document by first deleting the document(s)

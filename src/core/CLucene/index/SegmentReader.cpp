@@ -768,7 +768,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
         newReader = SegmentReader::get(infos, infos->info(0), false);
       }
     } else {
-      ObjectArray<IndexReader>* readers = _CLNEW ObjectArray<IndexReader>(1);
+      ArrayBase<IndexReader*>* readers = _CLNEW ObjectArray<IndexReader>(1);
       readers->values[0] = this;
       return _CLNEW MultiSegmentReader(_directory, infos, closeDirectory, readers, NULL, NULL);
     }
@@ -899,7 +899,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 		return termVectorsReader->get(docNumber, field);
   }
 
-  ObjectArray<TermFreqVector>* SegmentReader::getTermFreqVectors(int32_t docNumber) {
+  ArrayBase<TermFreqVector*>* SegmentReader::getTermFreqVectors(int32_t docNumber) {
     ensureOpen();
     if (termVectorsReaderOrig == NULL)
       return NULL;

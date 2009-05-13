@@ -106,11 +106,11 @@ CL_NS_DEF(index)
     _tcsncpy(termTextBuffer, term->text(), length);
 assert(false);//check...
 
-    add(fieldInfos->fieldNumber(term->field()), termTextBuffer, 0, length, ti);
+    add(fieldInfos->fieldNumber(term->field()), termTextBuffer, length, ti);
   }
 
   // Currently used only by assert statement
-  int32_t TermInfosWriter::compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t start, int32_t length) {
+  int32_t TermInfosWriter::compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t length) {
     int32_t pos = 0;
 
     if (lastFieldNumber != fieldNumber) {
@@ -125,7 +125,7 @@ assert(false);//check...
 
     while(pos < length && pos < lastTermTextLength) {
       const TCHAR c1 = lastTermText[pos];
-      const TCHAR c2 = termText[pos + start];
+      const TCHAR c2 = termText[pos];
       if (c1 < c2)
         return -1;
       else if (c1 > c2)
@@ -143,16 +143,16 @@ assert(false);//check...
       return 0;
   }
 
-	void TermInfosWriter::add(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength, const TermInfo* ti) {
+	void TermInfosWriter::add(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength, const TermInfo* ti) {
 	//Func - Writes a Term and TermInfo to the outputstream
 	//Pre  - Term must be lexicographically greater than all previous Terms added.
     //       Pointers of TermInfo ti (freqPointer and proxPointer) must be positive and greater than all previous.
 
-    CND_PRECONDITION(compareToLastTerm(fieldNumber, termText, termTextStart, termTextLength) < 0 ||
+    CND_PRECONDITION(compareToLastTerm(fieldNumber, termText, termTextLength) < 0 ||
       (isIndex && termTextLength == 0 && lastTermTextLength == 0),
       (string("Terms are out of order: field=")  + Misc::toString(fieldInfos->fieldName(fieldNumber)) + " (number " + Misc::toString(fieldNumber) + ")" +
       " lastField=" + Misc::toString(fieldInfos->fieldName(lastFieldNumber)) + " (number " + Misc::toString(lastFieldNumber) + ")" +
-      " text=" + Misc::toString(termText+termTextStart, termTextLength) + " lastText=" + Misc::toString(lastTermText, lastTermTextLength)
+      " text=" + Misc::toString(termText, termTextLength) + " lastText=" + Misc::toString(lastTermText, lastTermTextLength)
       ).c_str() );
       
     CND_PRECONDITION(ti->freqPointer >= lastTi->freqPointer, ("freqPointer out of order (" + Misc::toString(ti->freqPointer) + " < " + Misc::toString(lastTi->freqPointer) + ")").c_str());
@@ -160,11 +160,11 @@ assert(false);//check...
 
 		if (!isIndex && size % indexInterval == 0){
       //add an index term
-      other->add(lastFieldNumber, lastTermText, 0, lastTermTextLength, lastTi);                      // add an index term
+      other->add(lastFieldNumber, lastTermText, lastTermTextLength, lastTi);                      // add an index term
 		}
 
 		//write term
-		writeTerm(fieldNumber, termText, termTextStart, termTextLength);				      
+		writeTerm(fieldNumber, termText, termTextLength);				      
 		// write doc freq
 		output->writeVInt(ti->docFreq);		  
 		//write pointers
@@ -186,7 +186,7 @@ assert(false);//check...
       lastTermText = (TCHAR*)realloc(lastTermText, sizeof(TCHAR) * lastTermTextBufLen);
     }
     if ( termText != NULL )
-      _tcsncpy(lastTermText,termText+termTextStart,termTextLength);
+      _tcsncpy(lastTermText,termText,termTextLength);
     else
       *lastTermText = 0;
 
@@ -219,13 +219,13 @@ assert(false);//check...
 		   }
 	}
 
-  void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength){
+  void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength){
 
     // Compute prefix in common with last term:
     int32_t start = 0;
     const int32_t limit = termTextLength < lastTermTextLength ? termTextLength : lastTermTextLength;
     while(start < limit) {
-      if (termText[termTextStart+start] != lastTermText[start])
+      if (termText[start] != lastTermText[start])
         break;
       start++;
     }
@@ -234,7 +234,7 @@ assert(false);//check...
 
     output->writeVInt(start);                     // write shared prefix length
     output->writeVInt(length);                  // write delta length
-    output->writeChars(termText+start+termTextStart, length);  // write delta chars
+    output->writeChars(termText+start, length);  // write delta chars
     output->writeVInt(fieldNumber); // write field num
   }
 

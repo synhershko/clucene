@@ -45,13 +45,13 @@ public:
 	}
 };
 
-MultiReader::MultiReader(CL_NS(util)::ObjectArray<IndexReader>* subReaders, bool closeSubReaders)
+MultiReader::MultiReader(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders)
 {
 	this->_internal = _CLNEW Internal();
   this->init(subReaders, closeSubReaders);
 }
 
-void MultiReader::init(CL_NS(util)::ObjectArray<IndexReader>* _subReaders, bool closeSubReaders){
+void MultiReader::init(CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
   this->subReaders = _subReaders;
   starts = _CL_NEWARRAY(int32_t, subReaders->length + 1);    // build starts array
   _internal->decrefOnClose = _CL_NEWARRAY(bool, subReaders->length);
@@ -93,7 +93,7 @@ IndexReader* MultiReader::reopen() {
   ensureOpen();
 
   bool reopened = false;
-  ObjectArray<IndexReader>* newSubReaders = _CLNEW ObjectArray<IndexReader>(subReaders->length);
+  ArrayBase<IndexReader*>* newSubReaders = _CLNEW ObjectArray<IndexReader>(subReaders->length);
   bool* newDecrefOnClose = _CL_NEWARRAY(bool,subReaders->length);
 
   bool success = false;
@@ -147,7 +147,7 @@ IndexReader* MultiReader::reopen() {
   )
 }
 
-ObjectArray<TermFreqVector>* MultiReader::getTermFreqVectors(int32_t n){
+ArrayBase<TermFreqVector*>* MultiReader::getTermFreqVectors(int32_t n){
     ensureOpen();
 	int32_t i = readerIndex(n);        // find segment num
 	return (*subReaders)[i]->getTermFreqVectors(n - starts[i]); // dispatch to segment

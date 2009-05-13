@@ -694,7 +694,7 @@ void IndexWriter::deleteDocuments(Term* term) {
   }
 }
 
-void IndexWriter::deleteDocuments(const ObjectArray<Term>* terms) {
+void IndexWriter::deleteDocuments(const ArrayBase<Term*>* terms) {
   ensureOpen();
   try {
     bool doFlush = docWriter->bufferDeleteTerms(terms);
