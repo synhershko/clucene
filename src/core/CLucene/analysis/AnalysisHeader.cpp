@@ -56,12 +56,12 @@ Token::Token():
 	positionIncrement (1),
 	payload(NULL)
 {
-    _termTextLen = 0;
+  _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-    _termText = NULL;
+  _termText = NULL;
 	bufferTextLen = 0;
 #else
-    _termText[0] = 0; //make sure null terminated
+  _termText[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
 }
@@ -80,12 +80,12 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 	positionIncrement (1),
 	payload(NULL)
 {
-    _termTextLen = 0;
+  _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-    _termText = NULL;
+  _termText = NULL;
 	bufferTextLen = 0;
 #else
-    _termText[0] = 0; //make sure null terminated
+  _termText[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
 	setText(text);
@@ -128,11 +128,12 @@ void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const
 }
 
 void Token::setText(const TCHAR* text){
-	_termTextLen = _tcslen(text);
+	size_t l = _tcslen(text);
 	
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-	growBuffer(_termTextLen+1);
-	_tcsncpy(_termText,text,_termTextLen+1);
+	if(bufferTextLen < l+1)
+	  growBuffer(l+1);
+	_tcsncpy(_termText,text,l);
 #else
 	if ( _termTextLen > LUCENE_TOKEN_WORD_LENGTH ){
     	//in the case where this occurs, we will leave the endOffset as it is
@@ -141,6 +142,7 @@ void Token::setText(const TCHAR* text){
 	}
 	_tcsncpy(_termText,text,_termTextLen+1);
 #endif
+  _termTextLen = l;
 	_termText[_termTextLen] = 0; //make sure null terminated
 }
 
@@ -176,7 +178,6 @@ void Token::setPositionIncrement(int32_t posIncr) {
 
 int32_t Token::getPositionIncrement() const { return positionIncrement; }
 
-// Returns the Token's term text. 
 const TCHAR* Token::termText() const{
 	return (const TCHAR*) _termText; 
 }
