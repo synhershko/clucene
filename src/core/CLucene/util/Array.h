@@ -7,6 +7,8 @@
 #ifndef _lucene_util_Array_
 #define _lucene_util_Array_
 
+#include <stdlib.h>
+
 CL_NS_DEF(util)
 
 template<typename T>

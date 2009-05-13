@@ -432,7 +432,7 @@ std::string Misc::toString(const int64_t value){
 }
 std::string Misc::toString(const float_t value){
   char buf[20];
-  _snprintf(buf,20,"%0.2f",value);
+  _snprintf(buf,20,"%0.2f",(double)value);
   return buf;
 }
 
