@@ -88,7 +88,7 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
   _termText[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
-	setText(text);
+	setText(text, 0);
 }
 
 size_t Token::bufferLength(){ 
@@ -124,24 +124,23 @@ void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const
 	_endOffset   = end;
 	_type        = (typ==NULL?getDefaultType():typ);
 	positionIncrement = 1;
-	setText(text);
+	setText(text, end-start);
 }
 
-void Token::setText(const TCHAR* text){
-	size_t l = _tcslen(text);
+void Token::setText(const TCHAR* text, int32_t l){
+	if ( l < 0 ) l = _tcslen(text);
 	
 #ifndef LUCENE_TOKEN_WORD_LENGTH
 	if(bufferTextLen < l+1)
 	  growBuffer(l+1);
-	_tcsncpy(_termText,text,l);
 #else
 	if ( _termTextLen > LUCENE_TOKEN_WORD_LENGTH ){
     	//in the case where this occurs, we will leave the endOffset as it is
     	//since the actual word still occupies that space.
-		_termTextLen=LUCENE_TOKEN_WORD_LENGTH;
+		l=LUCENE_TOKEN_WORD_LENGTH;
 	}
-	_tcsncpy(_termText,text,_termTextLen+1);
 #endif
+	_tcsncpy(_termText,text,l+1);
   _termTextLen = l;
 	_termText[_termTextLen] = 0; //make sure null terminated
 }
@@ -150,6 +149,11 @@ void Token::setTermLength(int32_t len){
   if(bufferTextLen<len)
     this->growBuffer(len);
   this->_termTextLen = len;
+}
+TCHAR* Token::resizeTermBuffer(size_t size){
+	if(bufferTextLen<size)
+		growBuffer(size);
+  return this->_termText;
 }
 void Token::growBuffer(size_t size){
 	if(bufferTextLen>=size)
@@ -181,8 +185,8 @@ int32_t Token::getPositionIncrement() const { return positionIncrement; }
 const TCHAR* Token::termText() const{
 	return (const TCHAR*) _termText; 
 }
-const TCHAR* Token::termBuffer() const{
-	return (const TCHAR*) _termText; 
+TCHAR* Token::termBuffer() const{
+	return  _termText; 
 }
 size_t Token::termTextLength() { 
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer

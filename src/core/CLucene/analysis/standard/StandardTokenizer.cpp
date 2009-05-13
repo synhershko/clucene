@@ -170,7 +170,7 @@ CL_NS_DEF2(analysis,standard)
     ** a complete number, but this function will recurse to read the "1.3",
     ** generating a single HOST token "192.168.1.3". */
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
     TokenTypes tokenType;
     bool decExhausted;
     if (previousNumber != NULL) {
@@ -254,43 +254,43 @@ CL_NS_DEF2(analysis,standard)
 
   Token* StandardTokenizer::ReadAlphaNum(const TCHAR prev, Token* t) {
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
-	if (  str.len < LUCENE_MAX_WORD_LEN ){
-		str.appendChar(prev);
-		int ch = prev;
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
+	  if (  str.len < LUCENE_MAX_WORD_LEN ){
+		  str.appendChar(prev);
+		  int ch = prev;
 
-		CONSUME_WORD;
-		if (!EOS && str.len < LUCENE_MAX_WORD_LEN-1 ) { //still have space for 1 more character?
-			switch(ch) { /* What follows the first alphanum segment? */
-				case '.':
-					str.appendChar('.');
-					return ReadDotted(&str, CL_NS2(analysis,standard)::UNKNOWN,t);
-				case '\'':
-					str.appendChar('\'');
-					return ReadApostrophe(&str,t);
-				case '@':
-					str.appendChar('@');
-					return ReadAt(&str,t);
-				case '&':
-					str.appendChar('&');
-					return ReadCompany(&str,t);
-				/* default: fall through to end of this function. */
-			}
-		}
-	}
-	return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
+		  CONSUME_WORD;
+		  if (!EOS && str.len < LUCENE_MAX_WORD_LEN-1 ) { //still have space for 1 more character?
+			  switch(ch) { /* What follows the first alphanum segment? */
+				  case '.':
+					  str.appendChar('.');
+					  return ReadDotted(&str, CL_NS2(analysis,standard)::UNKNOWN,t);
+				  case '\'':
+					  str.appendChar('\'');
+					  return ReadApostrophe(&str,t);
+				  case '@':
+					  str.appendChar('@');
+					  return ReadAt(&str,t);
+				  case '&':
+					  str.appendChar('&');
+					  return ReadCompany(&str,t);
+				  /* default: fall through to end of this function. */
+			  }
+		  }
+	  }
+	  return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
   }
   
   Token* StandardTokenizer::ReadCJK(const TCHAR prev, Token* t) {
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
-	if ( str.len < LUCENE_MAX_WORD_LEN ){
-		str.appendChar(prev);
-		int ch = prev;
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
+	  if ( str.len < LUCENE_MAX_WORD_LEN ){
+		  str.appendChar(prev);
+		  int ch = prev;
 
-		CONSUME_CJK;
-	}
-	return setToken(t,&str,CL_NS2(analysis,standard)::CJK);
+		  CONSUME_CJK;
+	  }
+	  return setToken(t,&str,CL_NS2(analysis,standard)::CJK);
   }
   
 
