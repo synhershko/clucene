@@ -10,7 +10,6 @@
 //checks that adding more than the min_merge value goes ok...
 //checks for a mem leak that used to occur
 void testIWmergeSegments1(CuTest *tc){
-	IndexWriter::setDefaultInfoStream(&std::cout);
 	RAMDirectory ram;
 	SimpleAnalyzer a;
 
@@ -23,7 +22,7 @@ void testIWmergeSegments1(CuTest *tc){
 	ndx.setMergeFactor(2);
 	TCHAR fld[1000];
 	for ( int i=0;i<1000;i++ ){
-        English::IntToEnglish(i,fld,1000);
+    English::IntToEnglish(i,fld,1000);
 
 		Document doc;
 		
@@ -48,6 +47,6 @@ CuSuite *testindexwriter(void)
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
 
-    return suite; 
+  return suite; 
 }
 // EOF
