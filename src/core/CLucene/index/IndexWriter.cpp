@@ -179,6 +179,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeD
   this->segmentsToOptimize = _CLNEW SegmentsToOptimizeType;
   this->mergePolicy = _CLNEW LogByteSizeMergePolicy();
   this->localRollbackSegmentInfos = NULL;
+  this->stopMerges = false;
   messageID = -1;
   maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
   infoStream = NULL;
