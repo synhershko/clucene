@@ -265,7 +265,7 @@ string Misc::segmentname( const char* segment, const char* ext, const int32_t x 
   ret += ext;
   if ( x!=-1 ){
     char buf[10];
-    itoa(x,buf,10);
+    _snprintf(buf,10,"%d",x,10);
     ret += buf;
   }
 
@@ -428,7 +428,12 @@ std::string Misc::toString(const int64_t value){
   _snprintf(buf,20,"%l",value);
   return buf;
 }
-std::string Misc::toString(const float_t value){
+std::string Misc::toString(const double value){
+  char buf[20];
+  _snprintf(buf,20,"%0.2f",value);
+  return buf;
+}
+std::string Misc::toString(const float value){
   char buf[20];
   _snprintf(buf,20,"%0.2f",value);
   return buf;

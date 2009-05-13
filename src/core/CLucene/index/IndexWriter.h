@@ -1099,7 +1099,8 @@ public:
   */
   int32_t numRamDocs();
 
-
+	/** for testing only */
+  virtual bool testPoint(const char* name);
 private:
 	class LockWith2;
 	class LockWithCFS;
@@ -1169,7 +1170,6 @@ private:
   int32_t getBufferedDeleteTermsSize();
   int32_t getNumBufferedDeleteTerms();
   SegmentInfo* newestSegment();
-  virtual bool testPoint(const char* name);
 
   void waitForClose();
   void deletePartialSegmentsFile();

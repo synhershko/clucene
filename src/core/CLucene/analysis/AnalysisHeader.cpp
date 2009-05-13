@@ -155,7 +155,7 @@ void Token::growBuffer(size_t size){
 #ifndef LUCENE_TOKEN_WORD_LENGTH
 	if ( _termText == NULL ){
 		_termText = (TCHAR*)malloc( size * sizeof(TCHAR) );
-		*_termText = NULL;
+		*_termText = 0;
 	}else{
 		//use realloc. growBuffer is public, therefore could be called 
 		//without a subsequent call to overwriting the memory

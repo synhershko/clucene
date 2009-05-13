@@ -44,7 +44,7 @@ public:
 
 	void flush();
 
-	inline void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
+	void writeField(FieldInfo* fi, CL_NS(document)::Field* field);
 
 	void close();
 

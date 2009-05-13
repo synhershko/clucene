@@ -94,19 +94,19 @@ CL_NS_DEF(store)
 		virtual void close();
 
 		int64_t length() const;
-        /** Resets this to an empty buffer. */
-        void reset();
-  	    /** Copy the current contents of this buffer to the named output. */
-        void writeTo(IndexOutput* output);
+    /** Resets this to an empty buffer. */
+    void reset();
+    /** Copy the current contents of this buffer to the named output. */
+    void writeTo(IndexOutput* output);
         
-    	inline void writeByte(const uint8_t b);
-    	void writeBytes(const uint8_t* b, const int32_t len);
+  	void writeByte(const uint8_t b);
+  	void writeBytes(const uint8_t* b, const int32_t len);
 
-    	void seek(const int64_t pos);
-    	
-    	void flush();
-    	
-    	int64_t getFilePointer() const;
+  	void seek(const int64_t pos);
+  	
+  	void flush();
+  	
+  	int64_t getFilePointer() const;
     	
 		const char* getObjectName();
 		static const char* getClassName();   	

@@ -206,102 +206,10 @@ private:
    * we use this when tokenizing the string value from a
    * Field. */
   typedef CL_NS(util)::StringReader ReusableStringReader;
-
-  class ThreadState;
-  class FieldMergeState;
-  class ByteSliceReader;
-  
-  /* Class that Posting and PostingVector use to write uint8_t
-   * streams into shared fixed-size uint8_t[] arrays.  The idea
-   * is to allocate slices of increasing lengths For
-   * example, the first slice is 5 bytes, the next slice is
-   * 14, etc.  We start by writing our bytes into the first
-   * 5 bytes.  When we hit the end of the slice, we allocate
-   * the next slice and then write the address of the new
-   * slice into the last 4 bytes of the previous slice (the
-   * "forwarding address").
-   *
-   * Each slice is filled with 0's initially, and we mark
-   * the end with a non-zero uint8_t.  This way the methods
-   * that are writing into the slice don't need to record
-   * its length and instead allocate a new slice once they
-   * hit a non-zero uint8_t. */
-  template<typename T>
-  class BlockPool {
-  protected:
-    CL_NS(util)::ValueArray<T>* buffer;                              // Current head buffer
-    CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<T> > buffers;
-    int32_t numBuffer;
-
-    int32_t bufferUpto;           // Which buffer we are upto
-    int32_t tUpto;             // Where we are in head buffer
-    int32_t tOffset;          // Current head offset
-	  int32_t blockSize;
-
-
-    DocumentsWriter* parent;
-  public:
-    virtual CL_NS(util)::ValueArray<T>* getNewBlock() = 0;
-
-    BlockPool(DocumentsWriter* _parent, int32_t _blockSize):
-      buffers(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<T> >(10))
-    {
-	    this->blockSize = _blockSize;
-      this->parent = _parent;
-      bufferUpto = -1;
-      tUpto = blockSize;
-      tOffset = -blockSize;
-      buffer = NULL;
-      numBuffer = 0;
-    }
-	  ~BlockPool(){
-		  buffers.deleteValues();
-	  }
-
-    void reset() {
-      parent->recycleBlocks(buffers, 1+bufferUpto);
-      bufferUpto = -1;
-      tUpto = blockSize;
-      tOffset = -blockSize;
-    }
-
-    void nextBuffer() {
-      if (1+bufferUpto == buffers.length) {
-      	//expand the number of buffers
-        buffers.resize( (int32_t)(buffers.length * 1.5));
-      }
-      buffer = buffers.values[1+bufferUpto] = getNewBlock();
-      bufferUpto++;
-
-      tUpto = 0;
-      tOffset += blockSize;
-    }
-
-    friend class DocumentsWriter::ThreadState;
-    friend class DocumentsWriter::FieldMergeState;
-    friend class DocumentsWriter::ByteSliceReader;
-  };
-  
-  class CharBlockPool: public BlockPool<TCHAR>{
-  public:
-    CharBlockPool(DocumentsWriter* _parent, int32_t _blockSize):
-        BlockPool(_parent, _blockSize)
-    {
-    }
-    CL_NS(util)::ValueArray<TCHAR>* getNewBlock(){
-        return parent->getCharBlock();
-    }
-  };
-  class ByteBlockPool: public BlockPool<uint8_t>{
-    bool trackAllocations;
-  public:
-    ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize);
-    CL_NS(util)::ValueArray<uint8_t>* getNewBlock();
-    int32_t newSlice(const int32_t size);
-    int32_t allocSlice(CL_NS(util)::ValueArray<uint8_t>& slice, const int32_t upto);
-  };
-
-
+  	
+  class ByteBlockPool;
+  class CharBlockPool;
+	class FieldMergeState;
 
   /* IndexInput that knows how to read the byte slices written
    * by Posting and PostingVector.  We read the bytes in
@@ -452,8 +360,7 @@ private:
   void addDeleteDocID(int32_t docId);
 
   CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<uint8_t>*, 
-    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > freeByteBlocks;
-
+  CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > freeByteBlocks;
 
 
   /** Per-thread state.  We keep a separate Posting hash and
@@ -586,9 +493,9 @@ private:
     ReusableStringReader* stringReader;
 
 
-    ByteBlockPool postingsPool;
-    ByteBlockPool vectorsPool;
-    CharBlockPool charPool;
+    ByteBlockPool* postingsPool;
+    ByteBlockPool* vectorsPool;
+    CharBlockPool* charPool;
 
     // Current posting we are working on
     Posting* p;
@@ -656,6 +563,7 @@ private:
 
 
 	  ThreadState(DocumentsWriter* _parent);
+	  ~ThreadState();
 
     /** Initializes shared state for this new document */
     void init(CL_NS(document)::Document* doc, int32_t docID);
@@ -710,6 +618,102 @@ private:
 
     friend class FieldMergeState;
   };
+
+  /* Class that Posting and PostingVector use to write uint8_t
+   * streams into shared fixed-size uint8_t[] arrays.  The idea
+   * is to allocate slices of increasing lengths For
+   * example, the first slice is 5 bytes, the next slice is
+   * 14, etc.  We start by writing our bytes into the first
+   * 5 bytes.  When we hit the end of the slice, we allocate
+   * the next slice and then write the address of the new
+   * slice into the last 4 bytes of the previous slice (the
+   * "forwarding address").
+   *
+   * Each slice is filled with 0's initially, and we mark
+   * the end with a non-zero uint8_t.  This way the methods
+   * that are writing into the slice don't need to record
+   * its length and instead allocate a new slice once they
+   * hit a non-zero uint8_t. */
+  template<typename T>
+  class BlockPool {
+  protected:
+    int32_t numBuffer;
+
+    int32_t bufferUpto;           // Which buffer we are upto
+	  int32_t blockSize;
+
+    DocumentsWriter* parent;
+  public:
+    CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<T> > buffers;
+    int32_t tOffset;          // Current head offset
+    int32_t tUpto;             // Where we are in head buffer
+    CL_NS(util)::ValueArray<T>* buffer;                              // Current head buffer
+
+    virtual CL_NS(util)::ValueArray<T>* getNewBlock() = 0;
+
+    BlockPool(DocumentsWriter* _parent, int32_t _blockSize):
+      buffers(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<T> >(10))
+    {
+	    this->blockSize = _blockSize;
+      this->parent = _parent;
+      bufferUpto = -1;
+      tUpto = blockSize;
+      tOffset = -blockSize;
+      buffer = NULL;
+      numBuffer = 0;
+    }
+	  virtual ~BlockPool(){
+		  buffers.deleteValues();
+	  }
+
+    void reset() {
+      parent->recycleBlocks(buffers, 1+bufferUpto);
+      bufferUpto = -1;
+      tUpto = blockSize;
+      tOffset = -blockSize;
+    }
+
+    void nextBuffer() {
+      if (1+bufferUpto == buffers.length) {
+      	//expand the number of buffers
+        buffers.resize( (int32_t)(buffers.length * 1.5));
+      }
+      buffer = buffers.values[1+bufferUpto] = getNewBlock();
+      bufferUpto++;
+
+      tUpto = 0;
+      tOffset += blockSize;
+    }
+
+		friend class DocumentsWriter;
+    friend class DocumentsWriter::ThreadState;
+    friend class DocumentsWriter::ThreadState::FieldData;
+    friend class DocumentsWriter::FieldMergeState;
+    friend class DocumentsWriter::ByteSliceReader;
+  };
+  
+  class CharBlockPool: public BlockPool<TCHAR>{
+  public:
+    CharBlockPool(DocumentsWriter* _parent, int32_t _blockSize):
+        BlockPool<TCHAR>(_parent, _blockSize)
+    {
+    }
+    CL_NS(util)::ValueArray<TCHAR>* getNewBlock(){
+        return parent->getCharBlock();
+    }
+    friend class DocumentsWriter::FieldMergeState;
+  };
+  class ByteBlockPool: public BlockPool<uint8_t>{
+    bool trackAllocations;
+  public:
+    ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize);
+    CL_NS(util)::ValueArray<uint8_t>* getNewBlock();
+    int32_t newSlice(const int32_t size);
+    int32_t allocSlice(CL_NS(util)::ValueArray<uint8_t>& slice, const int32_t upto);
+    	
+    friend class DocumentsWriter::ThreadState;
+  };
+
 
 
   // Max # ThreadState instances; if there are more threads
@@ -771,9 +775,9 @@ public:
   void setInfoStream(std::ostream* infoStream);
 
   /** Set how much RAM we can use before flushing. */
-  void setRAMBufferSizeMB(double mb);
+  void setRAMBufferSizeMB(float_t mb);
 
-  double getRAMBufferSizeMB();
+  float_t getRAMBufferSizeMB();
 
   /** Set max buffered docs, which means we will flush by
    *  doc count instead of by RAM usage. */

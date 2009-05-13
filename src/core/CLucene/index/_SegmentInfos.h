@@ -485,7 +485,7 @@ CL_NS_DEF(index)
           result = doBody(segmentFileName);
           return true;
         } catch (CLuceneError& err) {
-          result = NULL;
+          result = 0;
           ret_err.set(err.number(),err.what());
         }
         return false;
@@ -494,7 +494,7 @@ CL_NS_DEF(index)
     		FindSegmentsFile( CL_NS(store)::Directory* dir ){
 	        this->directory = dir;
           this->fileDirectory = NULL;
-          this->result = NULL;
+          this->result = 0;
         }
     		FindSegmentsFile( const char* dir ){
 	        this->directory = NULL;

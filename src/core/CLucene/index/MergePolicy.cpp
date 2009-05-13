@@ -96,8 +96,10 @@ std::string MergePolicy::MergeSpecification::segString(CL_NS(store)::Directory* 
 const float_t LogMergePolicy::LEVEL_LOG_SPAN = 0.75;
 
 void LogMergePolicy::message(const string& message) {
-  if (writer != NULL)
-    writer->message( string("LMP: ") + message );
+  if (writer != NULL){
+  	string msg = "LMP: " + message;
+    writer->message( msg );
+  }
 }
 int32_t LogMergePolicy::getMergeFactor(){
   return mergeFactor;

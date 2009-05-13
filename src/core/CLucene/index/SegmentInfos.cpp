@@ -369,7 +369,7 @@ string SegmentInfo::segString(Directory* dir) {
 	   if ((normGen.values == NULL && preLockless) || (normGen.values != NULL && normGen[fieldNumber] == CHECK_DIR)) {
 		   // Must fallback to directory file exists check:
 		   char fileName[255]; // todo: try to see if we can put less than 255
-		   cl_sprintf(fileName, 255, "%s.s%d", name, fieldNumber);
+		   cl_sprintf(fileName, 255, "%s.s%d", name.c_str(), fieldNumber);
 		   return dir->fileExists(fileName);
 	   } else if (normGen.values == NULL || normGen[fieldNumber] == NO) {
 		   return false;
@@ -394,7 +394,7 @@ string SegmentInfo::segString(Directory* dir) {
 			   }
 
 			   char pattern[255]; // todo: make better size estimation for this
-			   cl_sprintf(pattern, 255, "%s.s", name);
+			   cl_sprintf(pattern, 255, "%s.s", name.c_str());
 			   size_t patternLength = strlen(pattern);
 			   for(size_t i = 0; result[i] != NULL; i++){
 				   if(strncmp(result[i], pattern, strlen(pattern)) == 0 && isdigit(result[i][patternLength])) {
