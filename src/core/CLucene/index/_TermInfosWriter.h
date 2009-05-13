@@ -95,7 +95,7 @@ class TermInfo;
 	private:
         /** Helps constructors to initialize instances */
 		void initialise(CL_NS(store)::Directory* directory, const char* segment, int32_t interval, bool IsIndex);
-		void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength);
+		void writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength);
 	};
 CL_NS_END
 #endif
