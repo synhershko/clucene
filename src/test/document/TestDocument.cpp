@@ -116,8 +116,9 @@ public:
 	
     //use big file
     CL_NS(util)::FileInputStream input(factbook);
-    CL_NS(util)::SimpleInputStreamReader sreader(&input, SimpleInputStreamReader::ASCII);
-    doc.add( *_CLNEW Field(_T("fileField"), &sreader, 
+    &input;
+    doc.add( *_CLNEW Field(_T("fileField"), 
+        _CLNEW FileReader(factbook, SimpleInputStreamReader::ASCII),
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
