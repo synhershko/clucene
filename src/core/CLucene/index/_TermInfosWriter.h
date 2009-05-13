@@ -41,7 +41,7 @@ class TermInfo;
 		//inititalize
 		TermInfosWriter(CL_NS(store)::Directory* directory, const char* segment, FieldInfos* fis, int32_t interval, bool isIndex);
 
-    int32_t compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t start, int32_t length);
+    int32_t compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t length);
 	public:
     /** Expert: The maximum number of skip levels. Smaller values result in 
     * slightly smaller indexes, but slower skipping in big posting lists.
@@ -87,7 +87,7 @@ class TermInfo;
     /** Adds a new <<fieldNumber, termText>, TermInfo> pair to the set.
     Term must be lexicographically greater than all previous Terms added.
     TermInfo pointers must be positive and greater than all previous.*/
-		void add(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength, const TermInfo* ti);
+		void add(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength, const TermInfo* ti);
 
 		/** Called to complete TermInfos creation. */
 		void close();
@@ -95,7 +95,7 @@ class TermInfo;
 	private:
         /** Helps constructors to initialize instances */
 		void initialise(CL_NS(store)::Directory* directory, const char* segment, int32_t interval, bool IsIndex);
-		void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextStart, int32_t termTextLength);
+		void TermInfosWriter::writeTerm(int32_t fieldNumber, const TCHAR* termText, int32_t termTextLength);
 	};
 CL_NS_END
 #endif

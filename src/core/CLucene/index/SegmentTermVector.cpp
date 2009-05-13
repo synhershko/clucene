@@ -119,8 +119,12 @@ void SegmentTermVector::indexesOf(const TCHAR** terms, const int32_t start, cons
 
 
     
-SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, ValueArray<int32_t>* termFreqs, ObjectArray< ValueArray<int32_t> >* _positions, ObjectArray< ObjectArray<TermVectorOffsetInfo> >* _offsets)
-			: SegmentTermVector(field,terms,termFreqs),offsets(_offsets),positions(_positions)
+SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, ValueArray<int32_t>* termFreqs, 
+  ArrayBase< ValueArray<int32_t>* >* _positions, 
+  ArrayBase< ArrayBase<TermVectorOffsetInfo*>* >* _offsets)
+	: SegmentTermVector(field,terms,termFreqs),
+  offsets(_offsets),
+  positions(_positions)
 {
 }
 SegmentTermPositionVector::~SegmentTermPositionVector(){
@@ -135,7 +139,7 @@ TermPositionVector* SegmentTermPositionVector::__asTermPositionVector(){
 	return this;
 }
 
-ObjectArray<TermVectorOffsetInfo>* SegmentTermPositionVector::getOffsets(const size_t index) {
+ArrayBase<TermVectorOffsetInfo*>* SegmentTermPositionVector::getOffsets(const size_t index) {
 	if(offsets == NULL)
 		return NULL;
 	if (index >=0 && index < offsets->length)

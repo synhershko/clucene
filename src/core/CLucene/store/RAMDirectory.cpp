@@ -386,29 +386,26 @@ CL_NS_DEF(store)
     uint8_t buf[CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE];
 
     for (size_t i=0;i<names.size();++i ){
-		if ( !CL_NS(index)::IndexReader::isLuceneFile(names[i].c_str()))
-            continue;
-            
-        // make place on ram disk
-        IndexOutput* os = createOutput(names[i].c_str());
-        // read current file
-        IndexInput* is = dir->openInput(names[i].c_str());
-        // and copy to ram disk
-        //todo: this could be a problem when copying from big indexes... 
-        int64_t len = is->length();
-        int64_t readCount = 0;
-        while (readCount < len) {
-            int32_t toRead = (int32_t)(readCount + CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE > len ? len - readCount : CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
-            is->readBytes(buf, toRead);
-            os->writeBytes(buf, toRead);
-            readCount += toRead;
-        }
-        
-        // graceful cleanup
-        is->close();
-        _CLDELETE(is);
-        os->close();
-        _CLDELETE(os);
+      // make place on ram disk
+      IndexOutput* os = createOutput(names[i].c_str());
+      // read current file
+      IndexInput* is = dir->openInput(names[i].c_str());
+      // and copy to ram disk
+      //todo: this could be a problem when copying from big indexes... 
+      int64_t len = is->length();
+      int64_t readCount = 0;
+      while (readCount < len) {
+          int32_t toRead = (int32_t)(readCount + CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE > len ? len - readCount : CL_NS(store)::BufferedIndexOutput::BUFFER_SIZE);
+          is->readBytes(buf, toRead);
+          os->writeBytes(buf, toRead);
+          readCount += toRead;
+      }
+      
+      // graceful cleanup
+      is->close();
+      _CLDELETE(is);
+      os->close();
+      _CLDELETE(os);
     }
     if (closeDir)
        dir->close();
@@ -416,13 +413,15 @@ CL_NS_DEF(store)
   RAMDirectory::RAMDirectory(Directory* dir):
    Directory(),files( _CLNEW FileMap(true,true) )
   {
-	setLockFactory( _CLNEW SingleInstanceLockFactory() );
+    this->sizeInBytes = 0;
+	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
     _copyFromDir(dir,false);    
   }
   
    RAMDirectory::RAMDirectory(const char* dir):
       Directory(),files( _CLNEW FileMap(true,true) )
    {
+      this->sizeInBytes = 0;
       Directory* fsdir = FSDirectory::getDirectory(dir,false);
       try{
          _copyFromDir(fsdir,false);

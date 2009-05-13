@@ -39,7 +39,7 @@ private:
   int32_t _numDocs;
 
 protected:
-	CL_NS(util)::ObjectArray<IndexReader>* subReaders;
+	CL_NS(util)::ArrayBase<IndexReader*>* subReaders;
 	int32_t* starts;			  // 1st docno for each segment
 
 	void doSetNorm(int32_t n, const TCHAR* field, uint8_t value);
@@ -60,11 +60,11 @@ protected:
       CL_NS(store)::Directory* directory, 
       SegmentInfos* sis,
       bool closeDirectory,
-      CL_NS(util)::ObjectArray<IndexReader>* oldReaders, 
+      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders, 
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache);
 
-  void initialize( CL_NS(util)::ObjectArray<IndexReader>* subReaders);
+  void initialize( CL_NS(util)::ArrayBase<IndexReader*>* subReaders);
 
 public:
 	virtual ~MultiSegmentReader();
@@ -76,7 +76,7 @@ public:
 	*  If no such fields existed, the method returns null.
 	*/
   TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field=NULL);
-  CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
+  CL_NS(util)::ArrayBase<TermFreqVector*>* getTermFreqVectors(int32_t docNumber);
   void getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper);
   void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper);
   bool isOptimized();
@@ -104,7 +104,7 @@ public:
 	TermPositions* termPositions();
 
   void getFieldNames (FieldOption fldOption, StringArrayWithDeletor& retarray);
-	static void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray, CL_NS(util)::ObjectArray<IndexReader>* subReaders);
+	static void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray, CL_NS(util)::ArrayBase<IndexReader*>* subReaders);
 
   void setTermInfosIndexDivisor(int32_t indexDivisor);
   int32_t getTermInfosIndexDivisor();
@@ -120,9 +120,9 @@ public:
 
 class MultiTermDocs:public virtual TermDocs {
 protected:
-  CL_NS(util)::ObjectArray<TermDocs>* readerTermDocs;
+  CL_NS(util)::ArrayBase<TermDocs*>* readerTermDocs;
 
-  CL_NS(util)::ObjectArray<IndexReader>* subReaders;
+  CL_NS(util)::ArrayBase<IndexReader*>* subReaders;
   const int32_t* starts;
   Term* term;
 
@@ -132,10 +132,10 @@ protected:
   TermDocs* current;              // == segTermDocs[pointer]
   TermDocs* termDocs(const int32_t i); //< internal use only
   virtual TermDocs* termDocs(IndexReader* reader);
-  void init(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* starts);
+  void init(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, const int32_t* starts);
 public:
   MultiTermDocs();
-  MultiTermDocs(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* s);
+  MultiTermDocs(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, const int32_t* s);
   virtual ~MultiTermDocs();
 
   int32_t doc() const;
@@ -167,7 +167,7 @@ private:
 public:
   //Constructor
   //Opens all enumerations of all readers
-  MultiTermEnum(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* starts, const Term* t);
+  MultiTermEnum(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, const int32_t* starts, const Term* t);
 
   //Destructor
   ~MultiTermEnum();
@@ -198,7 +198,7 @@ class MultiTermPositions:public MultiTermDocs,public TermPositions {
 protected:
   TermDocs* termDocs(IndexReader* reader);
 public:
-  MultiTermPositions(CL_NS(util)::ObjectArray<IndexReader>* subReaders, const int32_t* s);
+  MultiTermPositions(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, const int32_t* s);
   ~MultiTermPositions() {};
   int32_t nextPosition();
 

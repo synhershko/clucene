@@ -208,7 +208,7 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
 }
 
 
-ObjectArray<TermFreqVector>* TermVectorsReader::get(const int32_t docNum){
+ArrayBase<TermFreqVector*>* TermVectorsReader::get(const int32_t docNum){
 	ObjectArray<TermFreqVector>* result = NULL;
     // Check if no term vectors are available for this segment at all
     if (tvx != NULL) {
@@ -509,11 +509,9 @@ void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const i
 	this->storingPositions = storePositions;
 	if(storePositions){
 		positions = _CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
-		positions->initArray();
 	}
 	if(storeOffsets){
-		offsets = _CLNEW ObjectArray< ObjectArray<TermVectorOffsetInfo> >(numTerms);
-		offsets->initArray();
+		offsets = _CLNEW ObjectArray< ArrayBase<TermVectorOffsetInfo*> >(numTerms);
 	}
 }
 

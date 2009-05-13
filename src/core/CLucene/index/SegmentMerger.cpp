@@ -392,7 +392,7 @@ void SegmentMerger::mergeVectors(){
 				if (reader->isDeleted(docNum))
 					continue;
 
-				ObjectArray<TermFreqVector>* tmp = reader->getTermFreqVectors(docNum);
+				ArrayBase<TermFreqVector*>* tmp = reader->getTermFreqVectors(docNum);
         if ( tmp != NULL ){
 					termVectorsWriter->addAllDocVectors(*tmp);
 				  _CLLDELETE(tmp);

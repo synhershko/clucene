@@ -148,7 +148,7 @@ public:
      * @param index The position in the array to get the offsets from
      * @return An array of TermVectorOffsetInfo objects or the empty list
      */ 
-     virtual CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* getOffsets(const size_t index) = 0;
+     virtual CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* getOffsets(const size_t index) = 0;
      
      virtual ~TermPositionVector(){
 	 }

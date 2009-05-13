@@ -290,8 +290,9 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 			  f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
+      TCHAR* str = fieldsStream->readString();
 			f = _CLNEW Field(fi->name,     // name
-				fieldsStream->readString(), // read value
+				str, // read value
 				bits, false);
 			f->setOmitNorms(fi->omitNorms);
 		}

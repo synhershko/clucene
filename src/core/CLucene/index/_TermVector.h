@@ -66,7 +66,7 @@ private:
 		
 		int32_t freq;
 		CL_NS(util)::ValueArray<int32_t>* positions;
-		CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* offsets;
+		CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* offsets;
 
 		const TCHAR* getTermText() const;
 		size_t getTermTextLen();
@@ -83,7 +83,7 @@ private:
 	int64_t currentDocPointer;
 
 	void addTermInternal(const TCHAR* termText, const int32_t freq, 
-		CL_NS(util)::ValueArray<int32_t>* positions, CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* offsets);
+		CL_NS(util)::ValueArray<int32_t>* positions, CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* offsets);
 
 	void writeField();
 	void writeDoc();
@@ -136,7 +136,7 @@ public:
 	* @param vectors
 	* @throws IOException
 	*/
-	void addAllDocVectors(CL_NS(util)::ObjectArray<TermFreqVector>& vectors);
+	void addAllDocVectors(CL_NS(util)::ArrayBase<TermFreqVector*>& vectors);
 
 	/** Add term to the field's term vector. Field must already be open.
 	*  Terms should be added in
@@ -146,7 +146,7 @@ public:
 	* @throws IllegalStateException if document or field is not open
 	*/
 	void addTerm(const TCHAR* termText, int32_t freq, 
-		CL_NS(util)::ValueArray<int32_t>* positions = NULL, CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* offsets = NULL);
+		CL_NS(util)::ValueArray<int32_t>* positions = NULL, CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* offsets = NULL);
 };
 
 /**
@@ -249,7 +249,7 @@ public:
 	* @return All term frequency vectors
 	* @throws IOException if there is an error reading the term vector files 
 	*/
-	CL_NS(util)::ObjectArray<TermFreqVector>* get(const int32_t docNum);
+	CL_NS(util)::ArrayBase<TermFreqVector*>* get(const int32_t docNum);
 	//bool get(int32_t docNum, CL_NS(util)::ObjectArray<TermFreqVector*>& result);
 
 	void get(const int32_t docNumber, TermVectorMapper* mapper);
@@ -282,13 +282,13 @@ public:
 
 class SegmentTermPositionVector: public SegmentTermVector, public TermPositionVector {
 protected:
-	CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<int32_t> >* positions;
-	CL_NS(util)::ObjectArray< CL_NS(util)::ObjectArray<TermVectorOffsetInfo> >* offsets;
+	CL_NS(util)::ArrayBase< CL_NS(util)::ValueArray<int32_t>* >* positions;
+	CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* >* offsets;
 	static CL_NS(util)::ValueArray<int32_t> EMPTY_TERM_POS;
 public:
 	SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, CL_NS(util)::ValueArray<int32_t>* termFreqs,
-		CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<int32_t> >* _positions,
-		CL_NS(util)::ObjectArray< CL_NS(util)::ObjectArray<TermVectorOffsetInfo> >* _offsets);
+		CL_NS(util)::ArrayBase< CL_NS(util)::ValueArray<int32_t>* >* _positions,
+		CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* >* _offsets);
 	~SegmentTermPositionVector();
 
 	/**
@@ -298,7 +298,7 @@ public:
 	* @return An array of TermVectorOffsetInfo objects or the empty list
 	* @see org.apache.lucene.analysis.Token
 	*/
-	CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* getOffsets(const size_t index);
+	CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* getOffsets(const size_t index);
 
 	/**
 	* Returns an array of positions in which the term is found.
@@ -405,8 +405,8 @@ class ParallelArrayTermVectorMapper : public TermVectorMapper
 private:
 	TCHAR** terms;
 	CL_NS(util)::ValueArray<int32_t>* termFreqs;
-	CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<int32_t> >* positions;
-	CL_NS(util)::ObjectArray< CL_NS(util)::ObjectArray<TermVectorOffsetInfo> >* offsets;
+	CL_NS(util)::ArrayBase< CL_NS(util)::ValueArray<int32_t>* >* positions;
+	CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* >* offsets;
 	int32_t currentPosition;
 	bool storingOffsets;
 	bool storingPositions;

@@ -32,6 +32,7 @@
 #include "_FieldsWriter.h"
 #include "_DocumentsWriter.h"
 #include <assert.h>
+#include <iostream>
 
 CL_NS_USE(util)
 CL_NS_USE(store)
@@ -47,7 +48,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataHash(ObjectArray<FieldData>(16)),
   vectorFieldPointers(ValueArray<int64_t>(10)),
   vectorFieldNumbers(ValueArray<int32_t>(10)),
-  postingsFreeList(ValueArray<Posting*>(256)),
+  postingsFreeListTS(ValueArray<Posting*>(256)),
   allFieldDataArray(ObjectArray<FieldData>(10)),
   postingsVectors(ValueArray<PostingVector*>(1)),
   charPool( CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
@@ -55,7 +56,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   vectorsPool( ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) )
 {
   fieldDataHashMask = 15;
-  postingsFreeCount = 0;
+  postingsFreeCountTS = 0;
   stringReader = _CLNEW ReusableStringReader(_T(""),0,false);
 
   isIdle = true;
@@ -84,12 +85,12 @@ void DocumentsWriter::ThreadState::resetPostings() {
   doFlushAfter = false;
   if (localFieldsWriter != NULL) {
     localFieldsWriter->close();
-    localFieldsWriter = NULL;
+    _CLDELETE(localFieldsWriter);
   }
   postingsPool.reset();
   charPool.reset();
-  _parent->recyclePostings(postingsFreeList, postingsFreeCount);
-  postingsFreeCount = 0;
+  _parent->recyclePostings(this->postingsFreeListTS, this->postingsFreeCountTS);
+  this->postingsFreeCountTS = 0;
   for(int32_t i=0;i<numAllFieldData;i++) {
     FieldData* fp = allFieldDataArray[i];
     fp->lastGen = -1;
@@ -214,15 +215,13 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
       fieldDataHash.values[hashPos] = fp;
 
       if (numAllFieldData == allFieldDataArray.length) {
-        int32_t newSize = (int32_t) (allFieldDataArray.length*1.5);
-        int32_t newHashSize = fieldDataHash.length*2;
+        allFieldDataArray.resize( (int32_t) (allFieldDataArray.length*1.5) );
 
-        ObjectArray<FieldData> newArray(newSize);
-        ObjectArray<FieldData> newHashArray(newHashSize);
-        memcpy(newArray.values, allFieldDataArray.values, sizeof(FieldData) * numAllFieldData);
+        fieldDataHash.resize( fieldDataHash.length*2 );
+        ObjectArray<FieldData>& newHashArray = fieldDataHash;;
 
         // Rehash
-        fieldDataHashMask = newSize-1;
+        fieldDataHashMask = allFieldDataArray.length-1;
         for(size_t j=0;j<fieldDataHash.length;j++) {
           FieldData* fp0 = fieldDataHash[j];
           while(fp0 != NULL) {
@@ -234,9 +233,6 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
             fp0 = nextFP0;
           }
         }
-
-        allFieldDataArray = newArray;
-        fieldDataHash = newHashArray;
       }
       allFieldDataArray.values[numAllFieldData++] = fp;
     } else {
@@ -572,13 +568,11 @@ bool DocumentsWriter::ThreadState::postingEquals(const TCHAR* tokenText, const i
 }
 
 int32_t DocumentsWriter::ThreadState::comparePostings(Posting* p1, Posting* p2) {
-  const CL_NS(util)::ValueArray<TCHAR>& text1 = *charPool.buffers[p1->textStart >> CHAR_BLOCK_SHIFT];
-  int32_t pos1 = p1->textStart & CHAR_BLOCK_MASK;
-  const CL_NS(util)::ValueArray<TCHAR>& text2 = *charPool.buffers[p2->textStart >> CHAR_BLOCK_SHIFT];
-  int32_t pos2 = p2->textStart & CHAR_BLOCK_MASK;
+  const TCHAR* pos1 = (charPool.buffers[p1->textStart >> CHAR_BLOCK_SHIFT]->values) + (p1->textStart & CHAR_BLOCK_MASK);
+  const TCHAR* pos2 = (charPool.buffers[p2->textStart >> CHAR_BLOCK_SHIFT]->values) + (p2->textStart & CHAR_BLOCK_MASK);
   while(true) {
-    const TCHAR c1 = text1[pos1++];
-    const TCHAR c2 = text2[pos2++];
+    const TCHAR c1 = *pos1++;
+    const TCHAR c2 = *pos2++;
     if (c1 < c2)
       if (0xffff == c2)
         return 1;
@@ -617,7 +611,7 @@ void DocumentsWriter::ThreadState::writeFreqByte(uint8_t b) {
   if ((*freq)[freqUpto] != 0) {
     freqUpto = postingsPool.allocSlice((*freq), freqUpto);
     freq = postingsPool.buffer;
-    p->freqUpto = postingsPool.byteOffset;
+    p->freqUpto = postingsPool.tOffset;
   }
   (*freq)[freqUpto++] = b;
 }
@@ -627,7 +621,7 @@ void DocumentsWriter::ThreadState::writeProxByte(uint8_t b) {
   if ((*prox)[proxUpto] != 0) {
     proxUpto = postingsPool.allocSlice(*prox, proxUpto);
     prox = postingsPool.buffer;
-    p->proxUpto = postingsPool.byteOffset;
+    p->proxUpto = postingsPool.tOffset;
     assert (prox != NULL);
   }
   (*prox)[proxUpto++] = b;
@@ -641,7 +635,7 @@ void DocumentsWriter::ThreadState::writeProxBytes(uint8_t* b, int32_t offset, in
       // End marker
       proxUpto = postingsPool.allocSlice(*prox, proxUpto);
       prox = postingsPool.buffer;
-      p->proxUpto = postingsPool.byteOffset;
+      p->proxUpto = postingsPool.tOffset;
     }
 
     prox->values[proxUpto++] = b[offset++];
@@ -663,7 +657,7 @@ void DocumentsWriter::ThreadState::writeOffsetByte(uint8_t b) {
   if ((*offsets)[offsetUpto] != 0) {
     offsetUpto = vectorsPool.allocSlice(*offsets, offsetUpto);
     offsets = vectorsPool.buffer;
-    vector->offsetUpto = vectorsPool.byteOffset;
+    vector->offsetUpto = vectorsPool.tOffset;
   }
   (*offsets)[offsetUpto++] = b;
 }
@@ -682,7 +676,7 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
   if ((*pos)[posUpto] != 0) {
     posUpto = vectorsPool.allocSlice(*pos, posUpto);
     pos = vectorsPool.buffer;
-    vector->posUpto = vectorsPool.byteOffset;
+    vector->posUpto = vectorsPool.tOffset;
   }
   (*pos)[posUpto++] = b;
 }
@@ -715,7 +709,7 @@ void DocumentsWriter::ThreadState::FieldData::resetPostingArrays() {
   if (!postingsCompacted)
     compactPostings();
   _parent->recyclePostings(this->postingsHash, numPostings);
-  memset(postingsHash.values, 0, postingsHash.length & sizeof(Posting));
+  memset(postingsHash.values, 0, postingsHash.length * sizeof(Posting*));
   postingsCompacted = false;
   numPostings = 0;
 }
@@ -768,7 +762,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
   const int32_t maxFieldLength = _parent->writer->getMaxFieldLength();
 
   const int32_t limit = fieldCount;
-  const ObjectArray<Field>& docFieldsFinal = docFields;
+  const ArrayBase<Field*>& docFieldsFinal = docFields;
 
   bool doWriteVectors = true;
 
@@ -962,12 +956,12 @@ DocumentsWriter::PostingVector* DocumentsWriter::ThreadState::FieldData::addNewV
 
   if (doVectorPositions) {
     const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
-    v->posStart = v->posUpto = threadState->vectorsPool.byteOffset + upto;
+    v->posStart = v->posUpto = threadState->vectorsPool.tOffset + upto;
   }
 
   if (doVectorOffsets) {
     const int32_t upto = threadState->vectorsPool.newSlice(firstSize);
-    v->offsetStart = v->offsetUpto = threadState->vectorsPool.byteOffset + upto;
+    v->offsetStart = v->offsetUpto = threadState->vectorsPool.tOffset + upto;
   }
 
   return v;
@@ -989,9 +983,11 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
   int32_t downto = tokenTextLen;
   while (downto > 0)
     code = (code*31) + tokenText[--downto];
-
-  // System.out.println("  addPosition: buffer=" + new String(tokenText, 0, tokenTextLen) + " pos=" + position + " offsetStart=" + (offset+token->startOffset()) + " offsetEnd=" + (offset + token->endOffset()) + " docID=" + docID + " doPos=" + doVectorPositions + " doOffset=" + doVectorOffsets);
-
+/*
+  std::cout << "  addPosition: buffer=" << Misc::toString(tokenText).substr(0,tokenTextLen) << " pos=" << position 
+            << " offsetStart=" << (offset+token->startOffset()) << " offsetEnd=" << (offset + token->endOffset()) 
+            << " docID=" << threadState->docID << " doPos=" << doVectorPositions << " doOffset=" << doVectorOffsets << "\n";
+*/
   int32_t hashPos = code & postingsHashMask;
 
   assert (!postingsCompacted);
@@ -1023,9 +1019,10 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
     if (threadState->p != NULL) {       // term seen since last flush
 
       if (threadState->docID != threadState->p->lastDocID) { // term not yet seen in this doc
-
-        // System.out.println("    seen before (new docID=" + docID + ") freqUpto=" + p->freqUpto +" proxUpto=" + p->proxUpto);
-
+/*
+        std::cout << "    seen before (new docID=" << threadState->docID << ") freqUpto=" << threadState->p->freqUpto
+                  << " proxUpto=" << threadState->p->proxUpto << "\n";
+*/
         assert (threadState->p->docFreq > 0);
 
         // Now that we know doc freq for previous doc,
@@ -1058,7 +1055,8 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         threadState->p->lastDocID = threadState->docID;
 
       } else {                                // term already seen in this doc
-        // System.out.println("    seen before (same docID=" + docID + ") proxUpto=" + p->proxUpto);
+        // std::cout << "    seen before (same docID=" << threadState->docID << ") proxUpto=" << threadState->p->proxUpto << "\n";
+
         threadState->p->docFreq++;
 
         proxCode = position - threadState->p->lastPosition;
@@ -1075,16 +1073,16 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         }
       }
     } else {            // term not seen before
-      // System.out.println("    never seen docID=" + docID);
+      //std::cout << "    never seen docID=" << threadState->docID << "\n";
 
       // Refill?
-      if (0 == threadState->postingsFreeCount) {
-        _parent->getPostings(threadState->postingsFreeList);
-        threadState->postingsFreeCount = threadState->postingsFreeList.length;
+      if (0 == threadState->postingsFreeCountTS) {
+        _parent->getPostings(threadState->postingsFreeListTS);
+        threadState->postingsFreeCountTS = threadState->postingsFreeListTS.length;
       }
 
       const int32_t textLen1 = 1+tokenTextLen;
-      if (textLen1 + threadState->charPool.byteUpto > CHAR_BLOCK_SIZE) {
+      if (textLen1 + threadState->charPool.tUpto > CHAR_BLOCK_SIZE) {
         if (textLen1 > CHAR_BLOCK_SIZE) {
           // Just skip this term, to remain as robust as
           // possible during indexing.  A TokenFilter
@@ -1103,17 +1101,17 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         }
         threadState->charPool.nextBuffer();
       }
-      ValueArray<TCHAR>* text = threadState->charPool.buffer;
-      const int32_t textUpto = threadState->charPool.byteUpto;
+      TCHAR* text = threadState->charPool.buffer->values;
+      TCHAR* textUpto = text+ threadState->charPool.tUpto;
 
       // Pull next free Posting from free list
-      threadState->p = threadState->postingsFreeList[--threadState->postingsFreeCount];
+      threadState->p = threadState->postingsFreeListTS[--threadState->postingsFreeCountTS];
+      assert(threadState->p != NULL);
+      threadState->p->textStart = textUpto + threadState->charPool.tOffset - text;
+      threadState->charPool.tUpto += textLen1;
 
-      threadState->p->textStart = textUpto + threadState->charPool.byteOffset;
-      threadState->charPool.byteUpto += textLen1;
-
-      _tcsncpy(text->values, tokenText, tokenTextLen);
-      (*text)[textUpto+tokenTextLen] = 0xffff;
+      _tcsncpy(textUpto, tokenText, tokenTextLen);
+      textUpto[tokenTextLen] = 0xffff;
 
       assert (postingsHash[hashPos] == NULL);
 
@@ -1127,10 +1125,10 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
       const int32_t firstSize = levelSizeArray[0];
 
       const int32_t upto1 = threadState->postingsPool.newSlice(firstSize);
-      threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool.byteOffset + upto1;
+      threadState->p->freqStart = threadState->p->freqUpto = threadState->postingsPool.tOffset + upto1;
 
       const int32_t upto2 = threadState->postingsPool.newSlice(firstSize);
-      threadState->p->proxStart = threadState->p->proxUpto = threadState->postingsPool.byteOffset + upto2;
+      threadState->p->proxStart = threadState->p->proxUpto = threadState->postingsPool.tOffset + upto2;
 
       threadState->p->lastDocCode = threadState->docID << 1;
       threadState->p->lastDocID = threadState->docID;
@@ -1188,21 +1186,21 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
   const int32_t newMask = newSize-1;
 
   ValueArray<Posting*> newHash(newSize);
-  int32_t hashPos, code, pos, start;
-  const CL_NS(util)::ValueArray<TCHAR>* text;
+  int32_t hashPos, code;
+  const TCHAR* pos = NULL;
+  const TCHAR* start = NULL;
   Posting* p0;
 
   for(int32_t i=0;i<postingsHashSize;i++) {
     p0 = postingsHash[i];
     if (p0 != NULL) {
-      start = p0->textStart & CHAR_BLOCK_MASK;
-      text = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT];
+      start = threadState->charPool.buffers[p0->textStart >> CHAR_BLOCK_SHIFT]->values + (p0->textStart & CHAR_BLOCK_MASK);
       pos = start;
-      while( (*text)[pos] != 0xffff)
+      while( *pos != 0xffff)
         pos++;
       code = 0;
       while (pos > start)
-        code = (code*31) + (*text)[--pos];
+        code = (code*31) + *--pos;
 
       hashPos = code & newMask;
       assert (hashPos >= 0);
@@ -1255,6 +1253,7 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
     const int32_t freq = posting->docFreq;
 
     int32_t prefix = 0;
+    //todo: use pointer here...
     const CL_NS(util)::ValueArray<TCHAR>* text2 = threadState->charPool.buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
     const int32_t start2 = posting->textStart & CHAR_BLOCK_MASK;
     int32_t pos2 = start2;
@@ -1268,6 +1267,7 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
       const int32_t start1 = lastPosting->textStart & CHAR_BLOCK_MASK;
       int32_t pos1 = start1;
       while(true) {
+//todo: use pointer here...
         const TCHAR c1 = (*text1)[pos1];
         const TCHAR c2 = (*text2)[pos2];
         if (c1 != c2 || c1 == 0xffff) {

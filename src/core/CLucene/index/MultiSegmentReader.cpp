@@ -23,7 +23,7 @@ CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-void MultiSegmentReader::initialize(CL_NS(util)::ObjectArray<IndexReader>* _subReaders){
+void MultiSegmentReader::initialize(CL_NS(util)::ArrayBase<IndexReader*>* _subReaders){
   this->subReaders = _subReaders;
 
   _maxDoc        = 0;
@@ -50,7 +50,7 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
   // reverse because IndexWriter merges & deletes
   // the newest segments first.
 
-  ObjectArray<IndexReader>* readers = _CLNEW ObjectArray<IndexReader>(sis->size());
+  ArrayBase<IndexReader*>* readers = _CLNEW ObjectArray<IndexReader>(sis->size());
   for (int i = sis->size()-1; i >= 0; i--) {
     try {
       readers->values[i] = SegmentReader::get(sis->info(i));
@@ -77,7 +77,7 @@ MultiSegmentReader::MultiSegmentReader(
       CL_NS(store)::Directory* directory, 
       SegmentInfos* infos,
       bool closeDirectory,
-      CL_NS(util)::ObjectArray<IndexReader>* oldReaders, 
+      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders, 
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache):
   DirectoryIndexReader(directory, infos, closeDirectory)
@@ -92,7 +92,7 @@ MultiSegmentReader::MultiSegmentReader(
     }
   }
   
-  ObjectArray<IndexReader>* newReaders = _CLNEW ObjectArray<IndexReader>(infos->size());
+  ArrayBase<IndexReader*>* newReaders = _CLNEW ObjectArray<IndexReader>(infos->size());
   
   // remember which readers are shared between the old and the re-opened
   // MultiSegmentReader - we have to incRef those readers
@@ -220,7 +220,7 @@ const char* MultiTermEnum::getClassName(){ return "MultiTermEnum"; }
   }
 
 
-ObjectArray<TermFreqVector>* MultiSegmentReader::getTermFreqVectors(int32_t n){
+ArrayBase<TermFreqVector*>* MultiSegmentReader::getTermFreqVectors(int32_t n){
   ensureOpen();
 	int32_t i = readerIndex(n);        // find segment num
 	return (*subReaders)[i]->getTermFreqVectors(n - starts[i]); // dispatch to segment
@@ -441,7 +441,7 @@ void MultiSegmentReader::doClose() {
 	}
 }
 
-void MultiSegmentReader::getFieldNames(FieldOption fieldNames, StringArrayWithDeletor& retarray, CL_NS(util)::ObjectArray<IndexReader>* subReaders) {
+void MultiSegmentReader::getFieldNames(FieldOption fieldNames, StringArrayWithDeletor& retarray, CL_NS(util)::ArrayBase<IndexReader*>* subReaders) {
   // maintain a unique set of field names
   for (size_t i = 0; i < subReaders->length; i++) {
     IndexReader* reader = (*subReaders)[i];
@@ -491,7 +491,7 @@ const char* MultiSegmentReader::getObjectName() const{
 
 
 
-void MultiTermDocs::init(ObjectArray<IndexReader>* r, const int32_t* s){
+void MultiTermDocs::init(ArrayBase<IndexReader*>* r, const int32_t* s){
 	subReaders       = r;
 	starts        = s;
 	base          = 0;
@@ -502,7 +502,7 @@ void MultiTermDocs::init(ObjectArray<IndexReader>* r, const int32_t* s){
 
 	//Check if there are subReaders
 	if(subReaders != NULL && subReaders->length > 0){
-	  readerTermDocs = _CLNEW ObjectArray<TermDocs>(subReaders->length);
+	  readerTermDocs = _CLNEW ValueArray<TermDocs*>(subReaders->length);
 	}
 }
 MultiTermDocs::MultiTermDocs(){
@@ -516,7 +516,7 @@ MultiTermDocs::MultiTermDocs(){
 	init(NULL,NULL);
 }
 
-MultiTermDocs::MultiTermDocs(ObjectArray<IndexReader>* r, const int32_t* s){
+MultiTermDocs::MultiTermDocs(ArrayBase<IndexReader*>* r, const int32_t* s){
 //Func - Constructor
 //Pre  - if r is NULL then rLen must be 0 else if r != NULL then rLen > 0
 //       s != NULL
@@ -637,21 +637,21 @@ void MultiTermDocs::close() {
 
 	//Check if readerTermDocs is valid
 	if (readerTermDocs){
-        TermDocs* curTD = NULL;
-        //iterate through the readerTermDocs array
-        for (size_t i = 0; i < subReaders->length; i++) {
-            //Retrieve the i-th TermDocs instance
-            curTD = (*readerTermDocs)[i];
-            
-            //Check if it is a valid pointer
-            if (curTD != NULL) {
-                //Close it
-                curTD->close();
-                _CLDELETE(curTD);
-            }
-        }
+    TermDocs* curTD = NULL;
+    //iterate through the readerTermDocs array
+    for (size_t i = 0; i < subReaders->length; i++) {
+        //Retrieve the i-th TermDocs instance
+        curTD = (*readerTermDocs)[i];
         
-        _CLDELETE_ARRAY(readerTermDocs);
+        //Check if it is a valid pointer
+        if (curTD != NULL) {
+            //Close it
+            curTD->close();
+            _CLDELETE(curTD);
+        }
+    }
+    
+    _CLDELETE_ARRAY(readerTermDocs);
 	}
 	
 	//current previously pointed to a member of readerTermDocs; ensure that
@@ -682,7 +682,7 @@ TermDocs* MultiTermDocs::termDocs(const int32_t i) {
 }
 
 
-MultiTermEnum::MultiTermEnum(ObjectArray<IndexReader>* subReaders, const int32_t *starts, const Term* t){
+MultiTermEnum::MultiTermEnum(ArrayBase<IndexReader*>* subReaders, const int32_t *starts, const Term* t){
 //Func - Constructor
 //       Opens all enumerations of all readers
 //Pre  - readers != NULL and contains an array of IndexReader instances each responsible for
@@ -846,7 +846,7 @@ void MultiTermEnum::close() {
 
 
 
-MultiTermPositions::MultiTermPositions(ObjectArray<IndexReader>* r, const int32_t* s){
+MultiTermPositions::MultiTermPositions(ArrayBase<IndexReader*>* r, const int32_t* s){
 //Func - Constructor
 //Pre  - if r is NULL then rLen must be 0 else if r != NULL then rLen > 0
 //       s != NULL

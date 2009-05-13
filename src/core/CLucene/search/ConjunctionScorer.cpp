@@ -33,7 +33,6 @@ CL_NS_DEF(search)
 
   void ConjunctionScorer::sortScorers() {
     // move scorers to an array
-    assert(false);//test this...
     std::sort(scorers->begin(),scorers->end(), Scorer::sort);
   }
 
