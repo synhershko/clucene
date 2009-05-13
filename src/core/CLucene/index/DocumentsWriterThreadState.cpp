@@ -8,7 +8,7 @@
 
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexOutput.h"
-#include "CLucene/store/_RAMdirectory.h"
+#include "CLucene/store/_RAMDirectory.h"
 #include "CLucene/util/Array.h"
 #include "CLucene/util/_Arrays.h"
 #include "CLucene/util/Misc.h"
