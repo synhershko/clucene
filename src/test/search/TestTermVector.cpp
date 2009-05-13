@@ -21,7 +21,7 @@ void testTermPositionVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-		  ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+		  ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
 		  CLUCENE_ASSERT(vector != NULL);
 		  CLUCENE_ASSERT(vector->length== 1);
 		  vector->deleteValues();
@@ -49,7 +49,7 @@ void testTermVectors(CuTest *tc) {
       
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+        ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
         CLUCENE_ASSERT(vector != NULL);
         CLUCENE_ASSERT(vector->length == 1);
 		vector->deleteValues();
