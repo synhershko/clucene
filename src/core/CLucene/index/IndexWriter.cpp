@@ -1788,7 +1788,6 @@ void IndexWriter::merge(MergePolicy::OneMerge* _merge)
 
         } _CLFINALLY (
           RunningMergesType::iterator itr = runningMerges->find(_merge);
-          assert(false);//check this...
           if ( itr != runningMerges->end() ) runningMerges->remove( itr );
           // Optimize may be waiting on the final optimize
           // merge to finish; and finishMerges() may be
@@ -2006,7 +2005,7 @@ void IndexWriter::mergeFinish(MergePolicy::OneMerge* _merge) {
 
   const SegmentInfos* sourceSegments = _merge->segments;
   const int32_t end = sourceSegments->size();
-  for(int32_t i=0;i<end;i++){
+  for(int32_t i=0;i<end;i++){//todo: use iterator
     MergingSegmentsType::iterator itr = mergingSegments->find(sourceSegments->info(i));
     if ( itr != mergingSegments->end() ) mergingSegments->remove(itr);
   }

@@ -587,7 +587,8 @@ string SegmentInfo::segString(Directory* dir) {
   //Pre  - i >= 0
   //Post - A reference to the i-th SegmentInfo instance has been returned
 
-      CND_PRECONDITION(i >= 0, "i contains negative number");
+      CND_PRECONDITION(i >= 0 && i < infos.size(), "i is out of bounds");
+size_t len = infos.size();
 
 	  //Get the i-th SegmentInfo instance
       SegmentInfo *ret = infos[i];
@@ -716,14 +717,17 @@ string SegmentInfo::segString(Directory* dir) {
       if ( *itr == info ){
         return c;
       }
+      itr++;
     }
     return -1;
   }
 	void SegmentInfos::range(size_t from, size_t to, SegmentInfos& ret) const{
     segmentInfosType::const_iterator itr = infos.begin();
     itr+= from;
-    for (size_t i=0;i<to;i++){
+    for (size_t i=0;i<to && itr != infos.end();i++){
       ret.infos.push_back(*itr);
+
+      itr++;
     }
   }
   void SegmentInfos::remove(size_t index){
