@@ -1,2 +1,6 @@
-cmake .
+#!/bin/bash
 
+PWD=`dirname $0`
+PWD=`cd $PWD && pwd`
+
+cmake $PWD
