@@ -25,6 +25,11 @@ MergePolicy::OneMerge::OneMerge(SegmentInfos* segments, bool _useCompoundFile):
   if (0 == segments->size())
     _CLTHROWA(CL_ERR_Runtime,"segments must include at least one segment");
   this->segments = segments;
+  this->info = NULL;
+  this->segmentsClone = NULL;
+  this->mergeGen = 0;
+  this->maxNumSegmentsOptimize = 0;
+  aborted = mergeDocStores = optimize = increfDone = registerDone = isExternal = false;
 }
 
 const char* MergePolicy::OneMerge::getClassName(){
@@ -136,6 +141,8 @@ LogMergePolicy::LogMergePolicy(){
   this->mergeFactor = DEFAULT_MERGE_FACTOR;
   this->_useCompoundFile = true;
   this->_useCompoundDocStore = true;
+  this->writer = NULL;
+  this->minMergeSize = this->maxMergeSize = 0;
 }
 
 void LogMergePolicy::setMergeFactor(int32_t mergeFactor) {
