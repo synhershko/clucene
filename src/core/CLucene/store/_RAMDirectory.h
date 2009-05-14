@@ -27,8 +27,6 @@ CL_NS_DEF(store)
 		};
 
 
-		// TODO: Should move to ArrayList ?
-		//CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
 		CL_NS(util)::CLVector<RAMFileBuffer*,CL_NS(util)::Deletor::Object<RAMFileBuffer> > buffers;
 
 
