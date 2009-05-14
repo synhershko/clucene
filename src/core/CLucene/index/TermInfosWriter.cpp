@@ -100,11 +100,14 @@ CL_NS_DEF(index)
 	
   void TermInfosWriter::add(Term* term, TermInfo* ti){
     const size_t length = term->textLength();
-    if (termTextBufferLen < length){
-      termTextBuffer = (TCHAR*)realloc(termTextBuffer, sizeof(TCHAR) * ((int32_t)(length*1.25)) );
+    if ( termTextBuffer == NULL ){
+      termTextBufferLen = (int32_t)(length*1.25);
+      termTextBuffer = (TCHAR*)malloc(sizeof(TCHAR) * termTextBufferLen);
+    }else if (termTextBufferLen < length){
+      termTextBufferLen = (int32_t)(length*1.25);
+      termTextBuffer = (TCHAR*)realloc(termTextBuffer, sizeof(TCHAR) * termTextBufferLen);
     }
     _tcsncpy(termTextBuffer, term->text(), length);
-assert(false);//check...
 
     add(fieldInfos->fieldNumber(term->field()), termTextBuffer, length, ti);
   }
@@ -123,6 +126,7 @@ assert(false);//check...
         return cmp;
     }
 
+    //TODO: is this just a _tcsncmp???
     while(pos < length && pos < lastTermTextLength) {
       const TCHAR c1 = lastTermText[pos];
       const TCHAR c2 = termText[pos];

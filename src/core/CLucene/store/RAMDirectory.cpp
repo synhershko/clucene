@@ -14,6 +14,7 @@
 #include "CLucene/index/IndexReader.h"
 //#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(store)
@@ -222,6 +223,7 @@ CL_NS_DEF(store)
 		  currentBuffer = file->getBuffer( currentBufferIndex );
 		  bufferLength = file->getBufferLen(currentBufferIndex);
 	  }
+    assert(bufferLength >=0);//
 	  
 	  bufferPosition = 0;
 	  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
@@ -351,6 +353,7 @@ CL_NS_DEF(store)
 		  int64_t bufLen = _length - bufferStart;
 		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : static_cast<int32_t>(bufLen);
 	  }	  
+    assert (bufferLength >=0);
   }
   
 

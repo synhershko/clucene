@@ -588,7 +588,6 @@ string SegmentInfo::segString(Directory* dir) {
   //Post - A reference to the i-th SegmentInfo instance has been returned
 
       CND_PRECONDITION(i >= 0 && i < infos.size(), "i is out of bounds");
-size_t len = infos.size();
 
 	  //Get the i-th SegmentInfo instance
       SegmentInfo *ret = infos[i];
