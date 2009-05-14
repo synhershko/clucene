@@ -215,7 +215,7 @@ class LogMergePolicy: public MergePolicy {
 protected:
   virtual int64_t size(SegmentInfo* info) = 0;
   int64_t minMergeSize;
-  int64_t maxMergeSize;
+  uint64_t maxMergeSize;
 
 public:
   LogMergePolicy();

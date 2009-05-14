@@ -1781,7 +1781,7 @@ void IndexWriter::merge(MergePolicy::OneMerge* _merge)
           }
 
           // This merge (and, generally, any change to the
-          // segments) may now enable _CLNEW merges, so we call
+          // segments) may now enable new merges, so we call
           // merge policy & update pending merges.
           if (success && !_merge->isAborted() && !closed && !closing)
             updatePendingMerges(_merge->maxNumSegmentsOptimize, _merge->optimize);

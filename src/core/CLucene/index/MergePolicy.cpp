@@ -442,11 +442,11 @@ const float_t LogByteSizeMergePolicy::DEFAULT_MIN_MERGE_MB = 1.6;
 
 /** Default maximum segment size.  A segment of this size
  *  or larger will never be merged.  @see setMaxMergeMB */
-const float_t LogByteSizeMergePolicy::DEFAULT_MAX_MERGE_MB = (double)LUCENE_INT64_MAX_SHOULDBE;
+const float_t LogByteSizeMergePolicy::DEFAULT_MAX_MERGE_MB = (float_t)LUCENE_INT64_MAX_SHOULDBE;
 
 LogByteSizeMergePolicy::LogByteSizeMergePolicy() {
   minMergeSize = (int64_t) (DEFAULT_MIN_MERGE_MB*1024*1024);
-  maxMergeSize = (int64_t) (DEFAULT_MAX_MERGE_MB*1024*1024);
+  maxMergeSize = (uint64_t) (DEFAULT_MAX_MERGE_MB); //*1024*1024
 }
 
 /** <p>Determines the largest segment (measured by total
@@ -461,7 +461,7 @@ LogByteSizeMergePolicy::LogByteSizeMergePolicy() {
  *  used to check whether a segment is too large for
  *  merging (it's either or).</p>*/
 void LogByteSizeMergePolicy::setMaxMergeMB(float_t mb) {
-  maxMergeSize = (int64_t) (mb*1024*1024);
+  maxMergeSize = (uint64_t) (mb*1024*1024);
 }
 
 /** Returns the largest segment (meaured by total byte
