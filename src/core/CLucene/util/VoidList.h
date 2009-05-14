@@ -90,14 +90,14 @@ public:
 	}
 
 	void remove(int32_t i, bool dontDelete=false){
-    if ( i < size() ){
+	    if ( i < base::size() ){
 		  iterator itr=base::begin();
 		  itr+=i;
 		  _kt key = *itr;
 		  base::erase( itr );
 		  if ( dv && !dontDelete ) 
 			  _valueDeletor::doDelete(key);
-    }
+	    }
 	}
 	void remove(iterator itr, bool dontDelete=false){
 		_kt key = *itr;
