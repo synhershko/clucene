@@ -53,11 +53,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		__wcsintrntype::iterator itr = StringIntern_stringPool.find((TCHAR*)str);
 		if ( itr==StringIntern_stringPool.end() ){
-#ifdef _UCS2
-			TCHAR* ret = lucenewcsdup(str);
-#else
-			TCHAR* ret = lucenestrdup(str);
-#endif
+			TCHAR* ret = STRDUP_TtoT(str);
 			StringIntern_stringPool[ret]= 1;
 			return ret;
 		}else{
@@ -95,7 +91,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		__strintrntype::iterator itr = StringIntern_stringaPool.find((char*)str);
 		if ( itr==StringIntern_stringaPool.end() ){
-			char* ret = (use_provided) ? const_cast<char*>(str) : lucenestrdup(str);
+			char* ret = (use_provided) ? const_cast<char*>(str) : STRDUP_AtoA(str);
 			StringIntern_stringaPool[ret] = count;
 			return ret;
 		}else{
@@ -123,43 +119,4 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 		}
 		return false;
 	}
-
-	/* removed because of multi-threading problems...
-	__wcsintrntype::iterator CLStringIntern::internitr(const TCHAR* str){
-		if ( str[0] == 0 ){
-			if ( !StringIntern_blanksinitd ){
-				StringIntern_stringPool.put(LUCENE_BLANK_STRING,1);
-				StringIntern_wblank=stringPool.find(str); 
-				StringIntern_blanksinitd=true;
-			}
-			return StringIntern_wblank;
-		}
-		__wcsintrntype::iterator itr = StringIntern_stringPool.find(str);
-		if (itr==StringIntern_stringPool.end()){
-#ifdef _UCS2
-			TCHAR* ret = lucenewcsdup(str);
-#else
-			TCHAR* ret = lucenestrdup(str);
-#endif
-			StringIntern_stringPool.put(ret,1);
-			return StringIntern_stringPool.find(str);
-		}else{
-			(itr->second)++;
-			return itr;
-		}
-	}
-	bool CLStringIntern::uninternitr(__wcsintrntype::iterator itr){
-		if ( itr!=StringIntern_stringPool.end() ){
-			if ( itr==StringIntern_wblank )
-				return false;	
-			if ( (itr->second) == 1 ){
-				StringIntern_stringPool.removeitr(itr);
-				return true;
-			}else
-				(itr->second)--;
-		}
-		return false;
-	}
-*/
-
 CL_NS_END

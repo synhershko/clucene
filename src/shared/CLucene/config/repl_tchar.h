@@ -104,21 +104,18 @@
  
 #endif //HAVE_TCHAR_H
 
-//new [] based strdup. if we change to using malloc, then we have to free strings (not delete[])
-CLUCENE_SHARED_EXPORT char* lucenestrdup(const char* v);
 #ifdef _UCS2
-    #define stringDuplicate(x) lucenewcsdup(x)
-    CLUCENE_SHARED_EXPORT wchar_t* lucenewcsdup(const wchar_t* v);
+    #define stringDuplicate(x) _tcsdup(x)
 #else
-    #define stringDuplicate(x) lucenestrdup(x)
+    #define stringDuplicate(x) strdup(x)
 #endif
 
 
 #define STRCPY_AtoA(target,src,len) strncpy(target,src,len)
-#define STRDUP_AtoA(x) lucenestrdup(x)
+#define STRDUP_AtoA(x) strdup(x)
 
 #if defined(_UCS2)
-	#define STRDUP_WtoW(x) lucenewcsdup(x)
+	#define STRDUP_WtoW(x) _tcsdup(x)
     #define STRDUP_TtoT STRDUP_WtoW
     #define STRDUP_WtoT STRDUP_WtoW
     #define STRDUP_TtoW STRDUP_WtoW

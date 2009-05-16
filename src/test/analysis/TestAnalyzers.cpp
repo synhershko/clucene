@@ -211,7 +211,7 @@
     
 	  _CLDELETE(a);
 
-	  TCHAR* testString = new TCHAR[10];
+	  TCHAR testString[10];
 	  _tcscpy(testString, _T("test"));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
 	  _tcscpy(testString, _T("test "));
@@ -234,7 +234,6 @@
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("tes"));
 	  _tcscpy(testString, _T(" t est "));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("t"));
-	  delete[] testString;
   }
   
 CuSuite *testanalyzers(void)

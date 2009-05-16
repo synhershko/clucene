@@ -13,7 +13,7 @@
 
 CL_NS_DEF(queryParser)
 
-typedef CL_NS(util)::CLHashMap<const TCHAR*,
+typedef CL_NS(util)::CLHashMap<TCHAR*,
                                float_t,
                                CL_NS(util)::Compare::TChar,
                                CL_NS(util)::Equals::TChar,
@@ -27,13 +27,13 @@ typedef CL_NS(util)::CLHashMap<const TCHAR*,
      */
     class CLUCENE_EXPORT MultiFieldQueryParser: public QueryParser
     {
-	protected:
-		const TCHAR** fields;
-        BoostMap* boosts;
+	  protected:
+		  const TCHAR** fields;
+      BoostMap* boosts;
     public:
     	LUCENE_STATIC_CONSTANT(uint8_t, NORMAL_FIELD=0);
-		LUCENE_STATIC_CONSTANT(uint8_t, REQUIRED_FIELD=1);
-		LUCENE_STATIC_CONSTANT(uint8_t, PROHIBITED_FIELD=2);
+		  LUCENE_STATIC_CONSTANT(uint8_t, REQUIRED_FIELD=1);
+		  LUCENE_STATIC_CONSTANT(uint8_t, PROHIBITED_FIELD=2);
     
         /**
         * Creates a MultiFieldQueryParser.

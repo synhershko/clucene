@@ -62,7 +62,7 @@ class CLuceneThreadIdCompare;
 						void Wait(mutex_thread* shared_lock);
         		void NotifyAll();
 					};
-    
+
     	#elif defined(_CL_HAVE_WIN32_THREADS)
         	#define _LUCENE_THREADID_TYPE uint64_t
     	    #define _LUCENE_THREAD_FUNC(name, argName) void __stdcall name(void* argName) //< use this macro to correctly define the thread start routine
