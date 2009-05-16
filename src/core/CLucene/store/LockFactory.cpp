@@ -54,7 +54,11 @@ SingleInstanceLockFactory::~SingleInstanceLockFactory()
 
 LuceneLock* SingleInstanceLockFactory::makeLock( const char* lockName )
 {
+#ifdef _CL_DISABLE_MULTITHREADING
+  return _CLNEW SingleInstanceLock( locks, NULL, lockName );
+#else
 	return _CLNEW SingleInstanceLock( locks, &locks_LOCK, lockName );
+#endif
 }
 
 void SingleInstanceLockFactory::clearLock( const char* lockName )

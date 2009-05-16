@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -41,12 +41,12 @@ CL_NS_DEF(store)
 
   RAMFile::RAMFile( RAMDirectory* _directory )
   {
-     length = 0;  
+     length = 0;
 	 lastModified = Misc::currentTimeMillis();
 	 this->directory = _directory;
 	 sizeInBytes = 0;
   }
-  
+
   RAMFile::~RAMFile(){
   }
 
@@ -55,25 +55,25 @@ CL_NS_DEF(store)
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  return length;
   }
-  
+
   void RAMFile::setLength( int64_t length )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  this->length = length;
   }
-  
+
   uint64_t RAMFile::getLastModified()
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  return lastModified;
   }
-  
+
   void RAMFile::setLastModified( const uint64_t lastModified )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  this->lastModified = lastModified;
   }
-  
+
   uint8_t* RAMFile::addBuffer( const int32_t size )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
@@ -88,23 +88,23 @@ CL_NS_DEF(store)
 	  }
 	  return buffer;
   }
-  
+
   uint8_t* RAMFile::getBuffer( const int32_t index )
   {
 	  SCOPED_LOCK_MUTEX(THIS_LOCK);
 	  return buffers[index]->_buffer;
   }
-  
+
   int32_t RAMFile::numBuffers() const
   {
 	  return buffers.size();
   }
-  
+
   uint8_t* RAMFile::newBuffer( const int32_t size )
   {
 	  return _CL_NEWARRAY( uint8_t, size );
   }
-  
+
   int64_t RAMFile::getSizeInBytes() const
   {
 	  if ( directory != NULL ) {
@@ -113,7 +113,7 @@ CL_NS_DEF(store)
 	  }
 	  return 0;
   }
-  
+
 
   RAMOutputStream::~RAMOutputStream(){
 	  if ( deleteFile ){
@@ -132,7 +132,7 @@ CL_NS_DEF(store)
 	  bufferLength(0)
   {
   }
-  
+
   RAMOutputStream::RAMOutputStream():
     file(_CLNEW RAMFile),
     deleteFile(true),
@@ -178,15 +178,15 @@ CL_NS_DEF(store)
 		  currentBufferIndex = (int32_t)(pos / BUFFER_SIZE);
 		  switchCurrentBuffer();
 	  }
-	  
+
 	  bufferPosition = (int32_t)( pos % BUFFER_SIZE );
   }
-  
+
   int64_t RAMOutputStream::length() const {
     return file->getLength();
   }
 
-  void RAMOutputStream::writeByte( const uint8_t b ) {  
+  void RAMOutputStream::writeByte( const uint8_t b ) {
 	  if ( bufferPosition == bufferLength ) {
 		  currentBufferIndex++;
 		  switchCurrentBuffer();
@@ -196,26 +196,26 @@ CL_NS_DEF(store)
 
   void RAMOutputStream::writeBytes( const uint8_t* b, const int32_t len ) {
 	  int32_t srcOffset = 0;
-	  
+
 	  while ( srcOffset != len ) {
 		  if ( bufferPosition == bufferLength ) {
 			  currentBufferIndex++;
 			  switchCurrentBuffer();
 		  }
-		  
+
 		  int32_t remainInSrcBuffer = len - srcOffset;
 		  int32_t bytesInBuffer = bufferLength - bufferPosition;
 		  int32_t bytesToCopy = bytesInBuffer >= remainInSrcBuffer ? remainInSrcBuffer : bytesInBuffer;
-		  
+
 		  memcpy( currentBuffer+bufferPosition, b+srcOffset, bytesToCopy * sizeof(uint8_t) );
-		  
+
 		  srcOffset += bytesToCopy;
 		  bufferPosition += bytesToCopy;
-	  }	  	  
+	  }
   }
-  
+
   void RAMOutputStream::switchCurrentBuffer() {
-	  
+
 	  if ( currentBufferIndex == file->numBuffers() ) {
 		  currentBuffer = file->addBuffer( BUFFER_SIZE );
 		  bufferLength = BUFFER_SIZE;
@@ -224,45 +224,45 @@ CL_NS_DEF(store)
 		  bufferLength = file->getBufferLen(currentBufferIndex);
 	  }
     assert(bufferLength >=0);//
-	  
+
 	  bufferPosition = 0;
 	  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
   }
 
 
-  
+
   void RAMOutputStream::setFileLength() {
 	  int64_t pointer = bufferStart + bufferPosition;
 	  if ( pointer > file->getLength() ) {
 		  file->setLength( pointer );
 	  }
   }
-  
+
   void RAMOutputStream::flush() {
 	  file->setLastModified( Misc::currentTimeMillis() );
 	  setFileLength();
   }
-  
+
   int64_t RAMOutputStream::getFilePointer() const {
 	  return currentBufferIndex < 0 ? 0 : bufferStart + bufferPosition;
   }
-  
-  
+
+
   RAMInputStream::RAMInputStream(RAMFile* f):
-  	file(f), 
-  	currentBuffer(NULL), 
-  	currentBufferIndex(-1), 
-  	bufferPosition(0), 
-  	bufferStart(0), 
-  	bufferLength(0) 
+  	file(f),
+  	currentBuffer(NULL),
+  	currentBufferIndex(-1),
+  	bufferPosition(0),
+  	bufferStart(0),
+  	bufferLength(0)
   {
     _length = f->getLength();
-    
+
     if ( _length/BUFFER_SIZE >= 0x7FFFFFFFL ) {
     	// TODO: throw exception
-    }    
+    }
   }
-  
+
   RAMInputStream::RAMInputStream(const RAMInputStream& other):
     IndexInput(other)
   {
@@ -274,27 +274,27 @@ CL_NS_DEF(store)
     bufferStart = other.bufferStart;
     bufferLength = other.bufferLength;
   }
-  
+
   RAMInputStream::~RAMInputStream(){
       RAMInputStream::close();
   }
-  
+
   IndexInput* RAMInputStream::clone() const
   {
     RAMInputStream* ret = _CLNEW RAMInputStream(*this);
     return ret;
   }
-  
+
   int64_t RAMInputStream::length() const {
     return _length;
   }
-  
-  const char* RAMInputStream::getDirectoryType() const{ 
-	  return RAMDirectory::getClassName(); 
+
+  const char* RAMInputStream::getDirectoryType() const{
+	  return RAMDirectory::getClassName();
   }
 	const char* RAMIndexInput::getObjectName() const{ return getClassName(); }
 	const char* RAMIndexInput::getClassName(){ return "RAMIndexInput"; }
-  
+
   uint8_t RAMInputStream::readByte()
   {
 	  if ( bufferPosition >= bufferLength ) {
@@ -303,34 +303,33 @@ CL_NS_DEF(store)
 	  }
 	  return currentBuffer[bufferPosition++];
   }
-  
-  void RAMInputStream::readBytes( uint8_t* dest, const int32_t len ) {
-	  
-	  int32_t destOffset = 0;
-	  int32_t remainder = len;
-	  
-	  while ( remainder > 0 ) {
+
+  void RAMInputStream::readBytes( uint8_t* _dest, const int32_t _len ) {
+
+	  uint8_t* dest = _dest;
+	  int32_t len = _len;
+
+	  while ( len > 0 ) {
 		  if ( bufferPosition >= bufferLength ) {
 			  currentBufferIndex++;
 			  switchCurrentBuffer();
 		  }
-		  
+
 		  int32_t remainInBuffer = bufferLength - bufferPosition;
 		  int32_t bytesToCopy = len < remainInBuffer ? len : remainInBuffer;
-		  
-		  memcpy( dest+destOffset, currentBuffer+bufferPosition, bytesToCopy * sizeof(uint8_t) );
-		  
-		  destOffset += bytesToCopy;
-		  remainder -= bytesToCopy;
+		  memcpy( dest, currentBuffer+bufferPosition, bytesToCopy * sizeof(uint8_t) );
+
+		  dest += bytesToCopy;
+		  len -= bytesToCopy;
 		  bufferPosition += bytesToCopy;
 	  }
-	  
+
   }
-  
+
   int64_t RAMInputStream::getFilePointer() const {
 	  return currentBufferIndex < 0 ? 0 : bufferStart + bufferPosition;
   }
-  
+
   void RAMInputStream::seek( const int64_t pos ) {
 	  if ( currentBuffer == NULL || pos < bufferStart || pos >= bufferStart + BUFFER_SIZE ) {
 		  currentBufferIndex = (int32_t)( pos / BUFFER_SIZE );
@@ -338,10 +337,10 @@ CL_NS_DEF(store)
 	  }
 	  bufferPosition = (int32_t)(pos % BUFFER_SIZE);
   }
-  
+
   void RAMInputStream::close() {
   }
-  
+
   void RAMInputStream::switchCurrentBuffer() {
 	  if ( currentBufferIndex >= file->numBuffers() ) {
 		  // end of file reached, no more buffers left
@@ -352,10 +351,10 @@ CL_NS_DEF(store)
 		  bufferStart = (int64_t)BUFFER_SIZE * (int64_t)currentBufferIndex;
 		  int64_t bufLen = _length - bufferStart;
 		  bufferLength = bufLen > BUFFER_SIZE ? BUFFER_SIZE : static_cast<int32_t>(bufLen);
-	  }	  
+	  }
     assert (bufferLength >=0);
   }
-  
+
 
 
 
@@ -375,7 +374,7 @@ CL_NS_DEF(store)
     this->sizeInBytes = 0;
 	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
   }
-    
+
   RAMDirectory::~RAMDirectory(){
    //todo: should call close directory?
 	  _CLDELETE( lockFactory );
@@ -394,7 +393,7 @@ CL_NS_DEF(store)
       // read current file
       IndexInput* is = dir->openInput(names[i].c_str());
       // and copy to ram disk
-      //todo: this could be a problem when copying from big indexes... 
+      //todo: this could be a problem when copying from big indexes...
       int64_t len = is->length();
       int64_t readCount = 0;
       while (readCount < len) {
@@ -403,7 +402,7 @@ CL_NS_DEF(store)
           os->writeBytes(buf, toRead);
           readCount += toRead;
       }
-      
+
       // graceful cleanup
       is->close();
       _CLDELETE(is);
@@ -418,9 +417,9 @@ CL_NS_DEF(store)
   {
     this->sizeInBytes = 0;
 	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
-    _copyFromDir(dir,false);    
+    _copyFromDir(dir,false);
   }
-  
+
    RAMDirectory::RAMDirectory(const char* dir):
       Directory(),files( _CLNEW FileMap(true,true) )
    {
@@ -496,7 +495,7 @@ CL_NS_DEF(store)
     files->put(STRDUP_AtoA(to), file);
   }
 
-  
+
   void RAMDirectory::touchFile(const char* name) {
     RAMFile* file = NULL;
     {

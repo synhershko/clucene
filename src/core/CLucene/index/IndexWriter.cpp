@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -50,7 +50,7 @@ const int32_t IndexWriter::DEFAULT_MAX_BUFFERED_DELETE_TERMS = DISABLE_AUTO_FLUS
 const int32_t IndexWriter::DEFAULT_MAX_MERGE_DOCS = LogDocMergePolicy::DEFAULT_MAX_MERGE_DOCS;
 const int32_t IndexWriter::DEFAULT_MERGE_FACTOR = LogMergePolicy::DEFAULT_MERGE_FACTOR;
 
-DEFINE_MUTEX(IndexWriter::MESSAGE_ID_LOCK);
+DEFINE_MUTEX(IndexWriter::MESSAGE_ID_LOCK)
 int32_t IndexWriter::MESSAGE_ID = 0;
 const int32_t IndexWriter::MAX_TERM_LENGTH = DocumentsWriter::MAX_TERM_LENGTH;
 
@@ -63,7 +63,7 @@ public:
   // Apply buffered delete terms to the segment just flushed from ram
   // apply appropriately so that a delete term is only applied to
   // the documents buffered before it, not those buffered after it.
-  void applyDeletesSelectively(const DocumentsWriter::TermNumMapType& deleteTerms, 
+  void applyDeletesSelectively(const DocumentsWriter::TermNumMapType& deleteTerms,
     const std::vector<int32_t>& deleteIds,IndexReader* reader);
 
   // Apply buffered delete terms to this reader.
@@ -320,11 +320,11 @@ int32_t IndexWriter::getMaxFieldLength() {
 void IndexWriter::setMaxBufferedDocs(int32_t maxBufferedDocs) {
   ensureOpen();
   if (maxBufferedDocs != DISABLE_AUTO_FLUSH && maxBufferedDocs < 2)
-    _CLTHROWA(CL_ERR_IllegalArgument, 
+    _CLTHROWA(CL_ERR_IllegalArgument,
         "maxBufferedDocs must at least be 2 when enabled");
   if (maxBufferedDocs == DISABLE_AUTO_FLUSH
       && getRAMBufferSizeMB() == DISABLE_AUTO_FLUSH)
-    _CLTHROWA(CL_ERR_IllegalArgument, 
+    _CLTHROWA(CL_ERR_IllegalArgument,
         "at least one of ramBufferSize and maxBufferedDocs must be enabled");
   docWriter->setMaxBufferedDocs(maxBufferedDocs);
   pushMaxBufferedDocs();
@@ -355,10 +355,10 @@ int32_t IndexWriter::getMaxBufferedDocs() {
 
 void IndexWriter::setRAMBufferSizeMB(float_t mb) {
   if (mb != DISABLE_AUTO_FLUSH && mb <= 0.0)
-    _CLTHROWA(CL_ERR_IllegalArgument, 
+    _CLTHROWA(CL_ERR_IllegalArgument,
         "ramBufferSize should be > 0.0 MB when enabled");
   if (mb == DISABLE_AUTO_FLUSH && getMaxBufferedDocs() == DISABLE_AUTO_FLUSH)
-    _CLTHROWA(CL_ERR_IllegalArgument, 
+    _CLTHROWA(CL_ERR_IllegalArgument,
         "at least one of ramBufferSize and maxBufferedDocs must be enabled");
   docWriter->setRAMBufferSizeMB(mb);
   if (infoStream != NULL){
@@ -374,7 +374,7 @@ void IndexWriter::setMaxBufferedDeleteTerms(int32_t maxBufferedDeleteTerms) {
   ensureOpen();
   if (maxBufferedDeleteTerms != DISABLE_AUTO_FLUSH
       && maxBufferedDeleteTerms < 1)
-    _CLTHROWA(CL_ERR_IllegalArgument, 
+    _CLTHROWA(CL_ERR_IllegalArgument,
         "maxBufferedDeleteTerms must at least be 1 when enabled");
   docWriter->setMaxBufferedDeleteTerms(maxBufferedDeleteTerms);
   if (infoStream != NULL)
@@ -530,7 +530,7 @@ void IndexWriter::closeInternal(bool waitForMerges) {
       _CLDELETE(docWriter);
       deleter->close();
     }
-    
+
     if (closeDir)
       directory->close();
 
@@ -577,7 +577,7 @@ bool IndexWriter::flushDocStores() {
     )
 
     useCompoundDocStore = mergePolicy->useCompoundDocStore(segmentInfos);
-    
+
     if (useCompoundDocStore && !docStoreSegment.empty()) {
       // Now build compound doc store file
 
@@ -591,7 +591,7 @@ bool IndexWriter::flushDocStores() {
         const int32_t size = files.size();
         for(int32_t i=0;i<size;i++)
           cfsWriter.addFile(files[i].c_str());
-    
+
         // Perform the merge
         cfsWriter.close();
 
@@ -608,7 +608,7 @@ bool IndexWriter::flushDocStores() {
 
           if (infoStream != NULL)
             message("hit exception building compound file doc store for segment " + docStoreSegment);
-          
+
           // Rollback to no compound file
           for(int32_t i=0;i<numSegments;i++) {
             SegmentInfo* si = segmentInfos->info(i);
@@ -777,7 +777,7 @@ string IndexWriter::newSegmentName() {
     // name that was previously returned which can cause
     // problems at least with ConcurrentMergeScheduler.
     commitPending = true;
-    
+
     char buf[10];
     Misc::longToBase(segmentInfos->counter++, 36,buf);
     return string("_") + buf;
@@ -805,7 +805,7 @@ void IndexWriter::optimize(int32_t maxNumSegments, bool doWait) {
     const int32_t numSegments = segmentInfos->size();
     for(int32_t i=0;i<numSegments;i++)
       segmentsToOptimize->push_back(segmentInfos->info(i));
-    
+
     // Now mark all pending & running merges as optimize
     // merge:
     PendingMergesType::iterator it = pendingMerges->begin();
@@ -842,7 +842,7 @@ void IndexWriter::optimize(int32_t maxNumSegments, bool doWait) {
             MergePolicy::OneMerge* _merge = (*mergeExceptions)[0];
             if (_merge->optimize) {
               CLuceneError tmp(_merge->getException());
-              CLuceneError err(tmp.number(), 
+              CLuceneError err(tmp.number(),
                 (string("background merge hit exception: ") + _merge->segString(directory) +  ":"  + tmp.what() ).c_str(), false );
               throw err;
             }
@@ -1091,7 +1091,7 @@ void IndexWriter::finishMerges(bool waitForMerges) {
       it++;
     }
     pendingMerges->clear();
-    
+
     for(RunningMergesType::iterator it = runningMerges->begin();
         it != runningMerges->end(); it++ ){
       MergePolicy::OneMerge* _merge = *it;
@@ -1162,7 +1162,6 @@ void IndexWriter::addIndexes(Directory** dirs){
           SegmentInfos sis;	  // read infos from dir
           sis.read(dirs[i]);
           for (int32_t j = 0; j < sis.size(); j++) {
-            const SegmentInfo* info = sis.info(j);
             segmentInfos->insert(sis.info(j));	  // add each info
           }
         }
@@ -1304,7 +1303,7 @@ void IndexWriter::copyExternalSegments() {
 void IndexWriter::doAfterFlush(){
 }
 
-void IndexWriter::flush() {  
+void IndexWriter::flush() {
   flush(true, false);
 }
 
@@ -1380,7 +1379,7 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
       // We must separately flush the doc store
       if (infoStream != NULL)
         message("  flush shared docStore segment " + docStoreSegment);
-    
+
       docStoreIsCompoundFile = flushDocStores();
       _flushDocStores = false;
     }
@@ -1414,7 +1413,7 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
           }
 
           int32_t flushedDocCount = docWriter->flush(_flushDocStores);
-        
+
           newSegment = _CLNEW SegmentInfo(segment.c_str(),
                                        flushedDocCount,
                                        directory, false, true,
@@ -1439,7 +1438,7 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
 
           if (infoStream != NULL)
             message("hit exception flushing segment " + segment);
-              
+
           if (flushDeletes) {
 
             // Carefully check if any partial .del files
@@ -1457,11 +1456,11 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
             // SegmentInfo instances:
             segmentInfos->clear();
             segmentInfos->insert(rollback);
-            
+
           } else {
             // Remove segment we added, if any:
-            if ( newSegment != NULL && 
-                segmentInfos->size() > 0 && 
+            if ( newSegment != NULL &&
+                segmentInfos->size() > 0 &&
                 segmentInfos->info(segmentInfos->size()-1) == newSegment)
               segmentInfos->remove(segmentInfos->size()-1);
           }
@@ -1497,7 +1496,7 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
 
         deleter->checkpoint(segmentInfos, autoCommit);
       }
-    
+
       ret = true;
     }
 
@@ -1529,7 +1528,7 @@ int32_t IndexWriter::ensureContiguousMerge(MergePolicy::OneMerge* _merge) {
     _CLTHROWA(CL_ERR_Merge, (string("could not find segment ") + _merge->segments->info(0)->name + " in current segments").c_str());
 
   const int32_t numSegments = segmentInfos->size();
-  
+
   const int32_t numSegmentsToMerge = _merge->segments->size();
   for(int32_t i=0;i<numSegmentsToMerge;i++) {
     const SegmentInfo* info = _merge->segments->info(i);
@@ -1632,7 +1631,7 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
           }
         } else
           docUpto += docCount - previousDeletes.count();
-      
+
       } else if (currentInfo->hasDeletions()) {
         // This segment had no deletes before but now it
         // does:
@@ -1671,14 +1670,14 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
   // has been closed and is in now compound format (but
   // wasn't when we started), then we will switch to the
   // compound format as well:
-  const string mergeDocStoreSegment = _merge->info->getDocStoreSegment(); 
+  const string mergeDocStoreSegment = _merge->info->getDocStoreSegment();
   if ( !mergeDocStoreSegment.empty() && !_merge->info->getDocStoreIsCompoundFile()) {
     const int32_t size = segmentInfos->size();
     for(int32_t i=0;i<size;i++) {
       const SegmentInfo* info = segmentInfos->info(i);
       const string docStoreSegment = info->getDocStoreSegment();
       if ( !docStoreSegment.empty() &&
-          docStoreSegment.compare(mergeDocStoreSegment)==0 && 
+          docStoreSegment.compare(mergeDocStoreSegment)==0 &&
           info->getDocStoreIsCompoundFile()) {
         _merge->info->setDocStoreIsCompoundFile(true);
         break;
@@ -1922,7 +1921,7 @@ void IndexWriter::_mergeInit(MergePolicy::OneMerge* _merge) {
       mergeDocStores = true;
     else
       next = si->getDocStoreOffset() + si->docCount;
-    
+
     // If the segment comes from a different directory
     // we must merge
     if (lastDir != si->dir)
@@ -1943,7 +1942,7 @@ void IndexWriter::_mergeInit(MergePolicy::OneMerge* _merge) {
     docStoreSegment.clear();
     docStoreIsCompoundFile = false;
   } else {
-    SegmentInfo* si = sourceSegments->info(0);        
+    SegmentInfo* si = sourceSegments->info(0);
     docStoreOffset = si->getDocStoreOffset();
     docStoreSegment = si->getDocStoreSegment();
     docStoreIsCompoundFile = si->getDocStoreIsCompoundFile();
@@ -2015,11 +2014,11 @@ void IndexWriter::mergeFinish(MergePolicy::OneMerge* _merge) {
 }
 
 int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
-  
+
   _merge->checkAborted(directory);
 
   const string mergedName = _merge->info->name;
-  
+
   SegmentMerger* merger = NULL;
 
   int32_t mergedDocCount = 0;
@@ -2032,7 +2031,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
     message("merging " + _merge->segString(directory));
 
   merger = _CLNEW SegmentMerger(this, mergedName.c_str(), _merge);
-  
+
   // This is try/finally to make sure merger's readers are
   // closed:
 
@@ -2080,7 +2079,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
     return 0;
 
   if (_merge->useCompoundFile) {
-    
+
     success = false;
     bool skip = false;
     const string compoundFileName = mergedName + "." + IndexFileNames::COMPOUND_FILE_EXTENSION;
@@ -2139,7 +2138,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
             checkpoint();
             success = true;
           } _CLFINALLY (
-            if (!success) {  
+            if (!success) {
               if (infoStream != NULL)
                 message(string("hit exception checkpointing compound file during merge"));
 
@@ -2150,7 +2149,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
               deleter->deleteFile(compoundFileName.c_str());
             }
           )
-    
+
           // Give deleter a chance to remove files now.
           deleter->checkpoint(segmentInfos, autoCommit);
         }
@@ -2193,8 +2192,8 @@ void IndexWriter::applyDeletes(bool flushedNewSegment) {
   const vector<int32_t>* bufferedDeleteDocIDs = docWriter->getBufferedDeleteDocIDs();
 
   if (infoStream != NULL)
-    message( string("flush ") + Misc::toString(docWriter->getNumBufferedDeleteTerms()) + 
-          " buffered deleted terms and " + Misc::toString((int32_t)bufferedDeleteDocIDs->size()) + 
+    message( string("flush ") + Misc::toString(docWriter->getNumBufferedDeleteTerms()) +
+          " buffered deleted terms and " + Misc::toString((int32_t)bufferedDeleteDocIDs->size()) +
           " deleted docIDs on " + Misc::toString((int32_t)segmentInfos->size()) + " segments.");
 
   if (flushedNewSegment) {
@@ -2259,7 +2258,7 @@ int32_t IndexWriter::getNumBufferedDeleteTerms() {
   return docWriter->getNumBufferedDeleteTerms();
 }
 
-void IndexWriter::Internal::applyDeletesSelectively(const DocumentsWriter::TermNumMapType& deleteTerms, 
+void IndexWriter::Internal::applyDeletesSelectively(const DocumentsWriter::TermNumMapType& deleteTerms,
   const vector<int32_t>& deleteIds, IndexReader* reader)
 {
   DocumentsWriter::TermNumMapType::const_iterator iter = deleteTerms.begin();

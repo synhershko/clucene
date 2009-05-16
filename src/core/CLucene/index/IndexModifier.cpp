@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -34,10 +34,10 @@ void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) 
 	open = false;
 
 	useCompoundFile = true;
-	int32_t maxBufferedDocs = IndexWriter::DEFAULT_MAX_BUFFERED_DOCS;
+	this->maxBufferedDocs = IndexWriter::DEFAULT_MAX_BUFFERED_DOCS;
 	this->maxFieldLength = IndexWriter::DEFAULT_MAX_FIELD_LENGTH;
-	int32_t mergeFactor = IndexWriter::DEFAULT_MERGE_FACTOR;
-	
+	this->mergeFactor = IndexWriter::DEFAULT_MERGE_FACTOR;
+
 	this->directory = _CL_POINTER(directory);
 	createIndexReader();
 	open = true;
@@ -92,7 +92,7 @@ void IndexModifier::flush() {
 }
 
 void IndexModifier::addDocument(Document* doc, Analyzer* docAnalyzer) {
-	SCOPED_LOCK_MUTEX(directory->THIS_LOCK) 
+	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	assureOpen();
 	createIndexWriter();
 	if (docAnalyzer != NULL)
@@ -134,7 +134,7 @@ void IndexModifier::optimize() {
 void IndexModifier::setUseCompoundFile(bool useCompoundFile) {
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	assureOpen();
-	if (indexWriter != NULL) 
+	if (indexWriter != NULL)
 		indexWriter->setUseCompoundFile(useCompoundFile);
 	this->useCompoundFile = useCompoundFile;
 }
@@ -215,7 +215,7 @@ int64_t IndexModifier::getCurrentVersion() const{
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	return IndexReader::getCurrentVersion(directory);
 }
-	
+
 TermDocs* IndexModifier::termDocs(Term* term){
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
 	assureOpen();

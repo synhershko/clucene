@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -25,15 +25,15 @@ CL_NS_USE(document)
 CL_NS_USE(search)
 CL_NS_DEF(index)
 
- SegmentReader::Norm::Norm(IndexInput* instrm, bool _useSingleNormStream, int32_t n, int64_t ns, SegmentReader* r, const char* seg): 
-	number(n), 
+ SegmentReader::Norm::Norm(IndexInput* instrm, bool _useSingleNormStream, int32_t n, int64_t ns, SegmentReader* r, const char* seg):
+	number(n),
 	normSeek(ns),
-	_this(r), 
-	segment(seg), 
-	in(instrm),
-	bytes(NULL), 
+	_this(r),
+	segment(seg),
   useSingleNormStream(_useSingleNormStream),
-	dirty(false){
+	dirty(false),
+	in(instrm),
+	bytes(NULL){
   //Func - Constructor
   //Pre  - instrm is a valid reference to an IndexInput
   //Post - A Norm instance has been created with an empty bytes array
@@ -46,11 +46,11 @@ CL_NS_DEF(index)
   SegmentReader::Norm::~Norm() {
   //Func - Destructor
   //Pre  - true
-  //Post - The IndexInput in has been deleted (and closed by its destructor) 
+  //Post - The IndexInput in has been deleted (and closed by its destructor)
   //       and the array too.
 
       //Close and destroy the inputstream in-> The inputstream will be closed
-      // by its destructor. Note that the IndexInput 'in' actually is a pointer!!!!!  
+      // by its destructor. Note that the IndexInput 'in' actually is a pointer!!!!!
       if ( in != _this->singleNormStream )
     	  _CLDELETE(in);
 
@@ -298,7 +298,7 @@ CL_NS_DEF(index)
 
       _CLDELETE(_fieldInfos);
       _CLDELETE(fieldsReader);
-      _CLDELETE(tis);	      
+      _CLDELETE(tis);
       _CLDELETE(freqStream);
       _CLDELETE(proxStream);
       _CLDELETE(deletedDocs);
@@ -336,7 +336,7 @@ CL_NS_DEF(index)
     normsDirty = false;
     undeleteAll = false;
   }
-  
+
   void SegmentReader::doClose() {
   //Func - Closes all streams to the files of a single segment
   //Pre  - fieldsReader != NULL
@@ -410,11 +410,11 @@ CL_NS_DEF(index)
       return deletedDocs != NULL;
   }
 
-  //static 
+  //static
   bool SegmentReader::usesCompoundFile(SegmentInfo* si) {
     return si->getUseCompoundFile();
   }
-  
+
   //static
   bool SegmentReader::hasSeparateNorms(SegmentInfo* si) {
     return si->hasSeparateNorms();
@@ -433,13 +433,13 @@ CL_NS_DEF(index)
 	//synchronized
   void SegmentReader::doDelete(const int32_t docNum){
   //Func - Marks document docNum as deleted
-  //Pre  - docNum >=0 and DocNum < maxDoc() 
-  //       docNum contains the number of the document that must be 
+  //Pre  - docNum >=0 and DocNum < maxDoc()
+  //       docNum contains the number of the document that must be
   //       marked deleted
   //Post - The document identified by docNum has been marked deleted
 
       SCOPED_LOCK_MUTEX(THIS_LOCK)
-      
+
      CND_PRECONDITION(docNum >= 0, "docNum is a negative number");
      CND_PRECONDITION(docNum < maxDoc(), "docNum is bigger than the total number of documents");
 
@@ -473,7 +473,7 @@ CL_NS_DEF(index)
   }
 
   TermEnum* SegmentReader::terms() {
-  //Func - Returns an enumeration of all the Terms and TermInfos in the set. 
+  //Func - Returns an enumeration of all the Terms and TermInfos in the set.
   //Pre  - tis != NULL
   //Post - An enumeration of all the Terms and TermInfos in the set has been returned
 
@@ -484,10 +484,10 @@ CL_NS_DEF(index)
   }
 
   TermEnum* SegmentReader::terms(const Term* t) {
-  //Func - Returns an enumeration of terms starting at or after the named term t 
+  //Func - Returns an enumeration of terms starting at or after the named term t
   //Pre  - t != NULL
   //       tis != NULL
-  //Post - An enumeration of terms starting at or after the named term t 
+  //Post - An enumeration of terms starting at or after the named term t
 
       CND_PRECONDITION(t   != NULL, "t is NULL");
       CND_PRECONDITION(tis != NULL, "tis is NULL");
@@ -505,7 +505,7 @@ CL_NS_DEF(index)
       SCOPED_LOCK_MUTEX(THIS_LOCK)
 
       ensureOpen();
-    
+
       CND_PRECONDITION(n >= 0, "n is a negative number");
 
 	  //Check if the n-th document has been marked deleted
@@ -524,7 +524,7 @@ CL_NS_DEF(index)
   //Post - true has been returned if document n has been deleted otherwise fralse
 
       SCOPED_LOCK_MUTEX(THIS_LOCK)
-      
+
       CND_PRECONDITION(n >= 0, "n is a negative number");
 
 	  //Is document n deleted
@@ -534,7 +534,7 @@ CL_NS_DEF(index)
   }
 
   TermDocs* SegmentReader::termDocs() {
-  //Func - Returns an unpositioned TermDocs enumerator. 
+  //Func - Returns an unpositioned TermDocs enumerator.
   //Pre  - true
   //Post - An unpositioned TermDocs enumerator has been returned
 
@@ -543,7 +543,7 @@ CL_NS_DEF(index)
   }
 
   TermPositions* SegmentReader::termPositions() {
-  //Func - Returns an unpositioned TermPositions enumerator. 
+  //Func - Returns an unpositioned TermPositions enumerator.
   //Pre  - true
   //Post - An unpositioned TermPositions enumerator has been returned
 
@@ -581,7 +581,7 @@ CL_NS_DEF(index)
 
         ensureOpen();
 
-	  //Get the number of all the documents in the segment including the ones that have 
+	  //Get the number of all the documents in the segment including the ones that have
 	  //been marked deleted
       int32_t n = maxDoc();
 
@@ -640,10 +640,10 @@ void SegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor&
 				v=true;
 			else if (fi->isIndexed && fi->storeTermVector && (fldOption & IndexReader::INDEXED_WITH_TERMVECTOR) )
 				v=true;
-			else if (fi->storePositionWithTermVector && fi->storeOffsetWithTermVector == false && 
+			else if (fi->storePositionWithTermVector && fi->storeOffsetWithTermVector == false &&
 					(fldOption & IndexReader::TERMVECTOR_WITH_POSITION))
 				v=true;
-			else if (fi->storeOffsetWithTermVector && fi->storePositionWithTermVector == false && 
+			else if (fi->storeOffsetWithTermVector && fi->storePositionWithTermVector == false &&
 					(fldOption & IndexReader::TERMVECTOR_WITH_OFFSET) )
 				v=true;
 			else if ((fi->storeOffsetWithTermVector && fi->storePositionWithTermVector) &&
@@ -709,7 +709,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
   }
 
   uint8_t* SegmentReader::fakeNorms() {
-    if (ones==NULL) 
+    if (ones==NULL)
 		ones=createFakeNorms(maxDoc());
     return ones;
   }
@@ -780,16 +780,16 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
   uint8_t* SegmentReader::norms(const TCHAR* field) {
   //Func - Returns the bytes array that holds the norms of a named field
-  //Pre  - field != NULL and contains the name of the field for which the norms 
+  //Pre  - field != NULL and contains the name of the field for which the norms
   //       must be retrieved
-  //Post - If there was norm for the named field then a bytes array has been allocated 
+  //Post - If there was norm for the named field then a bytes array has been allocated
   //       and returned containing the norms for that field. If the named field is unknown NULL is returned.
 
     CND_PRECONDITION(field != NULL, "field is NULL");
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
     uint8_t* bytes = getNorms(field);
-    if (bytes==NULL) 
+    if (bytes==NULL)
 		bytes=fakeNorms();
     return bytes;
   }
@@ -807,13 +807,13 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
 
   string SegmentReader::SegmentName(const char* ext, const int32_t x){
-  //Func - Returns an allocated buffer in which it creates a filename by 
+  //Func - Returns an allocated buffer in which it creates a filename by
   //       concatenating segment with ext and x
   //Pre    ext != NULL and holds the extension
   //       x contains a number
-  //Post - A buffer has been instantiated an when x = -1 buffer contains the concatenation of 
+  //Post - A buffer has been instantiated an when x = -1 buffer contains the concatenation of
   //       segment and ext otherwise buffer contains the contentation of segment, ext and x
-      
+
 	  CND_PRECONDITION(ext     != NULL, "ext is NULL");
 
     return Misc::segmentname(segment.c_str(),ext,x);
@@ -821,7 +821,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
   void SegmentReader::openNorms(Directory* cfsDir, int32_t readBufferSize) {
   //Func - Open all norms files for all fields
-  //       Creates for each field a norm Instance with an open inputstream to 
+  //       Creates for each field a norm Instance with an open inputstream to
   //       a corresponding norm file ready to be read
   //Pre  - true
   //Post - For each field a norm instance has been created with an open inputstream to
@@ -891,7 +891,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
  		if ( field != NULL ){
 			// Check if this field is invalid or has no stored term vector
 			FieldInfo* fi = _fieldInfos->fieldInfo(field);
-			if (fi == NULL || !fi->storeTermVector || termVectorsReaderOrig == NULL ) 
+			if (fi == NULL || !fi->storeTermVector || termVectorsReaderOrig == NULL )
 				return NULL;
 		}
 		TermVectorsReader* termVectorsReader = getTermVectorsReader();
@@ -904,11 +904,11 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     ensureOpen();
     if (termVectorsReaderOrig == NULL)
       return NULL;
-    
+
     TermVectorsReader* termVectorsReader = getTermVectorsReader();
     if (termVectorsReader == NULL)
       return NULL;
-    
+
 	  return termVectorsReader->get(docNumber);
   }
 
@@ -1047,7 +1047,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
         clone->deletedDocs = this->deletedDocs;
       }
 
-      clone->_norms;
       if (!normsUpToDate) {
         // load norms
         for (size_t i = 0; i < fieldNormsChanged.length; i++) {
@@ -1165,7 +1164,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
       norm->dirty = norm->rollbackDirty;
     }
   }
-  
+
   const char* SegmentReader::getClassName(){
     return "SegmentReader";
   }

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -66,12 +66,12 @@ string SegmentInfo::segString(Directory* dir) {
     string(this->dir == dir ? "" : "x") +
     Misc::toString(docCount) + docStore;
 }
-   SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input): 
+   SegmentInfo::SegmentInfo(CL_NS(store)::Directory* _dir, int32_t format, CL_NS(store)::IndexInput* input):
      _sizeInBytes(-1)
    {
 	   this->dir = _dir;
 
-	   {	
+	   {
 		   char aname[CL_MAX_PATH];
        input->readString(aname, CL_MAX_PATH);
 		   this->name = aname;
@@ -162,7 +162,7 @@ string SegmentInfo::segString(Directory* dir) {
        normGen.length = numFields;
 
 		   if (preLockless) {
-			   // Do nothing: thus leaving normGen[k]==CHECK_DIR (==0), so that later we know  
+			   // Do nothing: thus leaving normGen[k]==CHECK_DIR (==0), so that later we know
 			   // we have to check filesystem for norm files, because this is prelockless.
 
 		   } else {
@@ -202,7 +202,7 @@ string SegmentInfo::segString(Directory* dir) {
       // Already cached:
       return _files;
     }
-    
+
     bool useCompoundFile = getUseCompoundFile();
 
     if (useCompoundFile) {
@@ -238,7 +238,7 @@ string SegmentInfo::segString(Directory* dir) {
       _files.push_back(delFileName);
     }
 
-    // Careful logic for norms files    
+    // Careful logic for norms files
     if (normGen.values != NULL) {
       for(size_t i=0;i<normGen.length;i++) {
         int64_t gen = normGen[i];
@@ -361,7 +361,7 @@ string SegmentInfo::segString(Directory* dir) {
 		   return NULL;
 	   } else {
 		   // If delGen is CHECK_DIR, it's the pre-lockless-commit file format
-		   return IndexFileNames::fileNameFromGeneration(name.c_str(), (string(".") + IndexFileNames::DELETES_EXTENSION).c_str(), delGen); 
+		   return IndexFileNames::fileNameFromGeneration(name.c_str(), (string(".") + IndexFileNames::DELETES_EXTENSION).c_str(), delGen);
 	   }
    }
 
@@ -378,7 +378,7 @@ string SegmentInfo::segString(Directory* dir) {
 	   }
    }
 
-   bool SegmentInfo::hasSeparateNorms() const {  
+   bool SegmentInfo::hasSeparateNorms() const {
 	   if (normGen.values == NULL) {
 		   if (!preLockless) {
 			   // This means we were created w/ LOCKLESS code and no
@@ -454,7 +454,7 @@ string SegmentInfo::segString(Directory* dir) {
 	   }
 
 	   if (hasSingleNormFile) {
-		   // case 2: lockless (or nrm file exists) - single file for all norms 
+		   // case 2: lockless (or nrm file exists) - single file for all norms
 		   cl_sprintf(prefix, 10, ".%s", IndexFileNames::NORMS_EXTENSION);
 		   return IndexFileNames::fileNameFromGeneration(name.c_str(), prefix, WITHOUT_GEN);
 	   }
@@ -492,8 +492,8 @@ string SegmentInfo::segString(Directory* dir) {
 	   clearFiles();
    }
 
-   const string& SegmentInfo::getDocStoreSegment() const { 
-     return docStoreSegment; 
+   const string& SegmentInfo::getDocStoreSegment() const {
+     return docStoreSegment;
    }
 
    void SegmentInfo::setDocStoreOffset(const int32_t offset) {
@@ -564,7 +564,7 @@ string SegmentInfo::segString(Directory* dir) {
   //       all SegmentInfo instances it manages when the instance is destroyed or not
   //       true -> must delete, false may not delete
   //Post - An instance of SegmentInfos has been created.
-  
+
       //initialize counter to 0
       counter = 0;
       version = Misc::currentTimeMillis();
@@ -581,7 +581,7 @@ string SegmentInfo::segString(Directory* dir) {
 	  //Clear the list of SegmentInfo instances - make sure everything is deleted
       infos.clear();
   }
-  
+
   SegmentInfo* SegmentInfos::info(int32_t i) const {
   //Func - Returns a reference to the i-th SegmentInfo in the list.
   //Pre  - i >= 0
@@ -604,7 +604,6 @@ string SegmentInfo::segString(Directory* dir) {
 	  }
 
 	  int64_t max = -1;
-	  int32_t i = 0;
 
     vector<string>::iterator itr = files.begin();
 		const char* file;
@@ -678,7 +677,7 @@ string SegmentInfo::segString(Directory* dir) {
 	size_t range = end - from;
 	  if ( from >= 0 && (infos.size() - from) >= range) { // Make sure we actually need to remove
 		segmentInfosType::iterator itr,bitr=infos.begin()+from,eitr=infos.end();
-		size_t count = 0;	
+		size_t count = 0;
 		for(itr=bitr;itr!=eitr && count < range;++itr, count++) {
 				_CLLDELETE((*itr));
 			}
@@ -744,7 +743,7 @@ string SegmentInfo::segString(Directory* dir) {
 
 	  generation = generationFromSegmentsFileName( segmentFileName );
 	  lastGeneration = generation;
-	  
+
 	  try {
 		  int32_t format = input->readInt();
 		  if(format < 0){     // file contains explicit format info
@@ -787,7 +786,7 @@ string SegmentInfo::segString(Directory* dir) {
 	  generation = lastGeneration = -1;
 
 	  FindSegmentsRead find(directory);
-	  
+
 	  //todo: see if we can do better than allocating a new SegmentInfos...
 	  find.run();
   }
@@ -819,7 +818,7 @@ string SegmentInfo::segString(Directory* dir) {
       output->writeInt(size()); // write infos
       for (int32_t i = 0; i < size(); i++) {
         info(i)->write(output);
-      }         
+      }
     }_CLFINALLY (
       try {
         output->close();
@@ -849,7 +848,7 @@ string SegmentInfo::segString(Directory* dir) {
       // It's OK if we fail to write this file since it's
       // used only as one of the retry fallbacks.
     }
-    
+
     lastGeneration = generation;
   }
 
@@ -902,7 +901,7 @@ string SegmentInfo::segString(Directory* dir) {
 
     // We have three methods for determining the current
     // generation.  We try the first two in parallel, and
-    // fall back to the third when necessary. 
+    // fall back to the third when necessary.
 
     while( true ) {
 
@@ -1002,7 +1001,7 @@ string SegmentInfo::segString(Directory* dir) {
         if (gen == -1) {
           // Neither approach found a generation
           _CLTHROWA(CL_ERR_IO, "No segments* file found"); //todo: add folder name (directory->toString())
-        } 
+        }
       }
 
       // Third method (fallback if first & second methods
@@ -1087,7 +1086,7 @@ string SegmentInfo::segString(Directory* dir) {
       }
     }
   }
-  SegmentInfos::FindSegmentsRead::FindSegmentsRead( CL_NS(store)::Directory* dir ) : 
+  SegmentInfos::FindSegmentsRead::FindSegmentsRead( CL_NS(store)::Directory* dir ) :
     SegmentInfos::FindSegmentsFile<bool>(dir) {
   }
   bool SegmentInfos::FindSegmentsRead::doBody( const char* segmentFileName ) {
@@ -1103,7 +1102,7 @@ string SegmentInfo::segString(Directory* dir) {
     return true;
   }
 
-  SegmentInfos::FindSegmentsVersion::FindSegmentsVersion( CL_NS(store)::Directory* dir ) : 
+  SegmentInfos::FindSegmentsVersion::FindSegmentsVersion( CL_NS(store)::Directory* dir ) :
     SegmentInfos::FindSegmentsFile<int64_t>(dir) {
   }
 

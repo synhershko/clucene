@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -69,7 +69,7 @@ public:
 	CL_NS(store)::IndexInput* clone() const;
 
 	int64_t length() const { return _length; }
-	
+
 	const char* getDirectoryType() const{ return CompoundFileReader::getClassName(); }
   const char* getObjectName() const{ return getClassName(); }
   static const char* getClassName() { return "CSIndexInput"; }
@@ -93,7 +93,7 @@ CSIndexInput::CSIndexInput(CL_NS(store)::IndexInput* base, const int64_t fileOff
    this->fileOffset = fileOffset;
    this->_length = length;
 }
-	
+
 void CSIndexInput::readInternal(uint8_t* b, const int32_t len)
 {
    SCOPED_LOCK_MUTEX(base->THIS_LOCK)
@@ -102,7 +102,7 @@ void CSIndexInput::readInternal(uint8_t* b, const int32_t len)
    if(start + len > _length)
       _CLTHROWA(CL_ERR_IO,"read past EOF");
    base->seek(fileOffset + start);
-   base->readBytes(b, len /*todo: , false*/);
+   base->readBytes(b, len, false);
 }
 CSIndexInput::~CSIndexInput(){
 }
@@ -286,15 +286,15 @@ public:
 		CL_NS(util)::Compare::Char,CL_NS(util)::Deletor::acArray> ids;
 
 	typedef CL_NS(util)::CLLinkedList<WriterFileEntry*,
-		CL_NS(util)::Deletor::Object<WriterFileEntry> > EntriesType;	
+		CL_NS(util)::Deletor::Object<WriterFileEntry> > EntriesType;
 	EntriesType* entries;
 
 	bool merged;
   SegmentMerger::CheckAbort* checkAbort;
 
   Internal():
-    entries(_CLNEW EntriesType(true)),
-    ids(true)
+    ids(true),
+    entries(_CLNEW EntriesType(true))
   {
 
   }
@@ -421,7 +421,7 @@ void CompoundFileWriter::copyFile(WriterFileEntry* source, IndexOutput* os, uint
           is->readBytes(buffer, len);
           os->writeBytes(buffer, len);
           remainder -= len;
-          
+
           if (_internal->checkAbort != NULL)
             // Roughly every 2 MB we will check if
             // it's time to abort
