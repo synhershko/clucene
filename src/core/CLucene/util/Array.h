@@ -107,6 +107,7 @@ public:
     }
     if ( newSize == 0 ){
       free(values);
+      values = NULL;
     }else{
       if ( values == NULL ){
 		    values = (T*)malloc(sizeof(T)*newSize);

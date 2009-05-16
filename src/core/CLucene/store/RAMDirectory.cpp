@@ -316,7 +316,7 @@ CL_NS_DEF(store)
 		  }
 		  
 		  int32_t remainInBuffer = bufferLength - bufferPosition;
-		  int32_t bytesToCopy = len < remainInBuffer ? len : remainInBuffer;
+		  int32_t bytesToCopy = cl_min(remainder,remainInBuffer);
 		  
 		  memcpy( dest+destOffset, currentBuffer+bufferPosition, bytesToCopy * sizeof(uint8_t) );
 		  
