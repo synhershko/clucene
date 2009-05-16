@@ -117,7 +117,7 @@ CL_NS_DEF(index)
          }
 #endif
          //Delete the arrays
-         _CLDELETE_ARRAY(indexTerms);
+         delete [] indexTerms;
          _CLDELETE_ARRAY(indexInfos);
      }
 
@@ -322,8 +322,8 @@ CL_NS_DEF(index)
       try {
           indexTermsLength = (size_t)indexEnum->size;
 
-		  //Instantiate an block of Term's,so that each one doesn't have to be new'd
-          indexTerms    = _CL_NEWARRAY(Term,indexTermsLength);
+		      //Instantiate an block of Term's,so that each one doesn't have to be new'd
+          indexTerms    = new Term[indexTermsLength];
           CND_CONDITION(indexTerms != NULL,"No memory could be allocated for indexTerms");//Check if is indexTerms is a valid array
 
 		  //Instantiate an big block of TermInfo's, so that each one doesn't have to be new'd
@@ -340,9 +340,9 @@ CL_NS_DEF(index)
               indexEnum->getTermInfo(&indexInfos[i]);
               indexPointers[i] = indexEnum->indexPointer;
 
-			  for (int32_t j = 1; j < indexDivisor; j++)
-				  if (!indexEnum->next())
-					  break;
+			        for (int32_t j = 1; j < indexDivisor; j++)
+				        if (!indexEnum->next())
+					        break;
           }
     }_CLFINALLY(
           indexEnum->close(); 

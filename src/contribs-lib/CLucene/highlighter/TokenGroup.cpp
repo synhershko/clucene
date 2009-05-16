@@ -26,11 +26,12 @@ TokenGroup::TokenGroup(void)
 	numTokens=0;
 	startOffset=0;
 	endOffset=0;
-	tokens = _CL_NEWARRAY(Token, MAX_NUM_TOKENS_PER_GROUP);
+	tokens = new Token[MAX_NUM_TOKENS_PER_GROUP];
 }
 
 TokenGroup::~TokenGroup(void)
 {
+	delete[] tokens;
 }
 
 void TokenGroup::addToken(Token* token, float_t score)

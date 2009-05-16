@@ -227,10 +227,10 @@ CL_NS_DEF(search)
       BitSet* bits = filter != NULL ? filter->bits(reader) : NULL;
       HitQueue* hq = _CLNEW HitQueue(nDocs);
 
-	  //Check hq has been allocated properly
-	  CND_CONDITION(hq != NULL, "Could not allocate memory for HitQueue hq");
-
-	  int32_t* totalHits = _CL_NEWARRAY(int32_t,1);
+		  //Check hq has been allocated properly
+		  CND_CONDITION(hq != NULL, "Could not allocate memory for HitQueue hq");
+	
+		  int32_t* totalHits = _CL_NEWARRAY(int32_t,1);
       totalHits[0] = 0;
 
       SimpleTopDocsCollector hitCol(bits,hq,totalHits,nDocs,0.0f);
@@ -239,7 +239,7 @@ CL_NS_DEF(search)
 
       int32_t scoreDocsLength = hq->size();
 
-		ScoreDoc* scoreDocs = _CL_NEWARRAY(ScoreDoc,scoreDocsLength);
+		ScoreDoc* scoreDocs = new ScoreDoc[scoreDocsLength];
 
 		for (int32_t i = scoreDocsLength-1; i >= 0; --i)	  // put docs in array
 			scoreDocs[i] = hq->pop();
@@ -247,13 +247,13 @@ CL_NS_DEF(search)
       int32_t totalHitsInt = totalHits[0];
 
       _CLDELETE(hq);
-	  if ( bits != NULL && filter->shouldDeleteBitSet(bits) )
-		_CLDELETE(bits);
-      _CLDELETE_ARRAY(totalHits);
-	  Query* wq = weight->getQuery();
-	  if ( query != wq ) //query was re-written
-		  _CLLDELETE(wq);
-	  _CLDELETE(weight);
+		  if ( bits != NULL && filter->shouldDeleteBitSet(bits) )
+				_CLDELETE(bits);
+	    _CLDELETE_ARRAY(totalHits);
+		  Query* wq = weight->getQuery();
+		  if ( query != wq ) //query was re-written
+			  _CLLDELETE(wq);
+		  _CLDELETE(weight);
 
       return _CLNEW TopDocs(totalHitsInt, scoreDocs, scoreDocsLength);
   }

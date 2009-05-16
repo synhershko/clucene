@@ -91,10 +91,10 @@ HitQueue::HitQueue(const int32_t maxSize){
 	_size = 0;
     this->maxSize = maxSize;
 	int32_t heapSize = maxSize + 1;
-	heap = _CL_NEWARRAY(ScoreDoc,heapSize);
+	heap = new ScoreDoc[heapSize];
 }
 HitQueue::~HitQueue(){
-	_CLDELETE_ARRAY(heap);
+	delete [] heap;
 }
 
 bool HitQueue::lessThan(struct ScoreDoc& hitA, struct ScoreDoc& hitB){

@@ -84,7 +84,7 @@ DEFINE_DWORD()
 
 
 CHECK_REQUIRED_FUNCTIONS(  printf strftime wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
-                           wcscmp wcsncmp wcscspn )
+                           wcscmp wcsncmp wcscspn wcsdup )
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
 CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow 
