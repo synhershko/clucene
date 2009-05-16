@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -102,8 +102,8 @@ CL_NS_DEF(index)
 
   IndexReader* IndexReader::open(const char* path, bool closeDirectoryOnCleanup, IndexDeletionPolicy* deletionPolicy){
   //Func - Static method.
-  //       Returns an IndexReader reading the index in an FSDirectory in the named path. 
-  //Pre  - path != NULL and contains the path of the index for which an IndexReader must be 
+  //       Returns an IndexReader reading the index in an FSDirectory in the named path.
+  //Pre  - path != NULL and contains the path of the index for which an IndexReader must be
   //       instantiated
   //       closeDir indicates if the directory needs to be closed
   //Post - An IndexReader has been returned that reads tnhe index located at path
@@ -121,8 +121,8 @@ CL_NS_DEF(index)
 
   IndexReader* IndexReader::open( Directory* directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy){
   //Func - Static method.
-  //       Returns an IndexReader reading the index in an FSDirectory in the named path. 
-  //Pre  - directory represents a directory 
+  //       Returns an IndexReader reading the index in an FSDirectory in the named path.
+  //Pre  - directory represents a directory
   //       closeDir indicates if the directory needs to be closed
   //Post - An IndexReader has been returned that reads the index located at directory
 
@@ -152,7 +152,7 @@ CL_NS_DEF(index)
     assert (refCount > 0);
     refCount++;
   }
-  
+
   void IndexReader::acquireWriteLock(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     /* NOOP */
@@ -167,7 +167,7 @@ CL_NS_DEF(index)
     }
     refCount--;
   }
-  
+
   CL_NS(document)::Document* IndexReader::document(const int32_t n){
     CL_NS(document)::Document* ret = _CLNEW CL_NS(document)::Document;
     if (!document(n,*ret) )
@@ -177,7 +177,7 @@ CL_NS_DEF(index)
 
   uint64_t IndexReader::lastModified(const char* directory2) {
   //Func - Static method
-  //       Returns the time the index in the named directory was last modified. 
+  //       Returns the time the index in the named directory was last modified.
   //Pre  - directory != NULL and contains the path name of the directory to check
   //Post - The last modified time of the index has been returned
 
@@ -220,7 +220,7 @@ CL_NS_DEF(index)
 
   uint64_t IndexReader::lastModified(Directory* directory2) {
   //Func - Static method
-  //       Returns the time the index in this directory was last modified. 
+  //       Returns the time the index in this directory was last modified.
   //Pre  - directory contains a valid reference
   //Post - The last modified time of the index has been returned
     IndexReaderFindSegmentsFile runner(directory2);
@@ -268,11 +268,11 @@ CL_NS_DEF(index)
   //Func - Returns an enumeration of all the documents which contain
   //       term. For each document, the document number, the frequency of
   //       the term in that document is also provided, for use in search scoring.
-  //       Thus, this method implements the mapping: 
+  //       Thus, this method implements the mapping:
   //
   //       Term => <docNum, freq>*
   //	   The enumeration is ordered by document number.  Each document number
-  //       is greater than all that precede it in the enumeration. 
+  //       is greater than all that precede it in the enumeration.
   //Pre  - term != NULL
   //Post - A reference to TermDocs containing an enumeration of all found documents
   //       has been returned
@@ -289,16 +289,16 @@ CL_NS_DEF(index)
   }
 
   TermPositions* IndexReader::termPositions(Term* term){
-  //Func - Returns an enumeration of all the documents which contain  term. For each 
-  //       document, in addition to the document number and frequency of the term in 
-  //       that document, a list of all of the ordinal positions of the term in the document 
+  //Func - Returns an enumeration of all the documents which contain  term. For each
+  //       document, in addition to the document number and frequency of the term in
+  //       that document, a list of all of the ordinal positions of the term in the document
   //       is available.  Thus, this method implements the mapping:
   //
   //       Term => <docNum, freq,<pos 1, pos 2, ...pos freq-1>>*
   //
   //       This positional information faciliates phrase and proximity searching.
-  //       The enumeration is ordered by document number.  Each document number is greater than 
-  //       all that precede it in the enumeration. 
+  //       The enumeration is ordered by document number.  Each document number is greater than
+  //       all that precede it in the enumeration.
   //Pre  - term != NULL
   //Post - A reference to TermPositions containing an enumeration of all found documents
   //       has been returned
@@ -313,23 +313,27 @@ CL_NS_DEF(index)
 	  //return the enumeration
       return _termPositions;
   }
-  
+
   bool IndexReader::document(int32_t n, CL_NS(document)::Document* doc){
   	return document(n, *doc);
   }
+  bool IndexReader::document(int32_t n, CL_NS(document)::Document& doc){
+    ensureOpen();
+    return document(n, doc, NULL);
+  }
 
-  void IndexReader::deleteDoc(const int32_t docNum){ 
-    deleteDocument(docNum); 
+  void IndexReader::deleteDoc(const int32_t docNum){
+    deleteDocument(docNum);
   }
-  int32_t IndexReader::deleteTerm(Term* term){ 
-    return deleteDocuments(term); 
+  int32_t IndexReader::deleteTerm(Term* term){
+    return deleteDocuments(term);
   }
-  
+
   void IndexReader::deleteDocument(const int32_t docNum) {
-  //Func - Deletes the document numbered docNum.  Once a document is deleted it will not appear 
-  //       in TermDocs or TermPostitions enumerations. Attempts to read its field with the document 
-  //       method will result in an error.  The presence of this document may still be reflected in 
-  //       the docFreq statistic, though this will be corrected eventually as the index is further modified.  
+  //Func - Deletes the document numbered docNum.  Once a document is deleted it will not appear
+  //       in TermDocs or TermPostitions enumerations. Attempts to read its field with the document
+  //       method will result in an error.  The presence of this document may still be reflected in
+  //       the docFreq statistic, though this will be corrected eventually as the index is further modified.
   //Pre  - docNum >= 0
   //Post - If successful the document identified by docNum has been deleted. If no writelock
   //       could be obtained an exception has been thrown stating that the index was locked or has no write access
@@ -370,17 +374,17 @@ CL_NS_DEF(index)
   }
 
   int32_t IndexReader::deleteDocuments(Term* term) {
-  //Func - Deletes all documents containing term. This is useful if one uses a 
-  //       document field to hold a unique ID string for the document.  Then to delete such  
-  //       a document, one merely constructs a term with the appropriate field and the unique 
-  //       ID string as its text and passes it to this method.  
+  //Func - Deletes all documents containing term. This is useful if one uses a
+  //       document field to hold a unique ID string for the document.  Then to delete such
+  //       a document, one merely constructs a term with the appropriate field and the unique
+  //       ID string as its text and passes it to this method.
   //Pre  - term != NULL
   //Post - All documents containing term have been deleted. The number of deleted documents
   //       has been returned
 
       CND_PRECONDITION(term != NULL, "term is NULL");
       ensureOpen();
-    
+
 	  //Search for the documents contain term
       TermDocs* docs = termDocs(term);
 
@@ -388,7 +392,7 @@ CL_NS_DEF(index)
 	  if ( docs == NULL ){
           return 0;
 	  }
-    
+
 	  //initialize
 	  int32_t Counter = 0;
       try {
@@ -409,13 +413,13 @@ CL_NS_DEF(index)
 	//Return the number of deleted documents
     return Counter;
   }
-  
+
 
   void IndexReader::close() {
   //Func - Closes files associated with this index and also saves any new deletions to disk.
   //       No other methods should be called after this has been called.
   //Pre  - true
-  //Post - All files associated with this index have been deleted and new deletions have been 
+  //Post - All files associated with this index have been deleted and new deletions have been
   //       saved to disk
     SCOPED_LOCK_MUTEX(THIS_LOCK)
 
@@ -429,9 +433,9 @@ CL_NS_DEF(index)
       closed = true;
     }
   }
-   
+
   bool IndexReader::isLocked(Directory* directory) {
-  //Func - Static method 
+  //Func - Static method
   //       Checks if the index in the directory is currently locked.
   //Pre  - directory is a valid reference to a directory to check for a lock
   //Post - Returns true if the index in the named directory is locked otherwise false
@@ -445,7 +449,7 @@ CL_NS_DEF(index)
   }
 
   bool IndexReader::isLocked(const char* directory) {
-  //Func - Static method 
+  //Func - Static method
   //       Checks if the index in the named directory is currently locked.
   //Pre  - directory != NULL and contains the directory to check for a lock
   //Post - Returns true if the index in the named directory is locked otherwise false
@@ -459,7 +463,7 @@ CL_NS_DEF(index)
 
 	  return ret;
   }
-  
+
 bool IndexReader::hasNorms(const TCHAR* field) {
 	// backward compatible implementation.
 	// SegmentReader has an efficient implementation.
@@ -479,7 +483,7 @@ void IndexReader::unlock(const char* path){
   //       Caution: this should only be used by failure recovery code,
   //       when it is known that no other process nor thread is in fact
   //       currently accessing this index.
-  //Pre  - directory is a valid reference to a directory 
+  //Pre  - directory is a valid reference to a directory
   //Post - The directory has been forcibly unlocked
       LuceneLock* lock = directory->makeLock("write.lock");
       lock->release();
@@ -533,18 +537,18 @@ bool IndexReader::isLuceneFile(const char* filename){
 	else if ( strncmp(ext,".f",2)==0 ){
 		const char* n = ext+2;
 		if ( *n && _istdigit(*n) )
-			return true;	
+			return true;
 	}
 
 	return false;
 }
 
-CL_NS(store)::Directory* IndexReader::getDirectory() { 
+CL_NS(store)::Directory* IndexReader::getDirectory() {
     return directory();
 }
 
 	void IndexReader::addCloseCallback(CloseCallback callback, void* parameter){
-		_internal->closeCallbacks.put(callback, parameter);	
+		_internal->closeCallbacks.put(callback, parameter);
 	}
 
 CL_NS_END

@@ -125,7 +125,7 @@ private:
    * default delete policy (KeepOnlyLastCommitDeletionPolicy).
    * Other policies may leave commit points live for longer
    * in which case this list would be longer than 1: */
-  CL_NS(util)::CLArrayList<IndexCommitPoint*> commits;
+  std::vector<IndexCommitPoint*> commits;
 
   /* Holds files we had incref'd from the previous
    * non-commit checkpoint: */

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -24,7 +24,7 @@ public:
 	virtual ~MemReader(){
 		_CLDELETE_ARRAY(this->value);
 	}
-	
+
     int32_t read(const signed char*& start, int32_t min, int32_t max){
 		start = this->value + pos;
 		int32_t r = max>min?max:min;
@@ -66,7 +66,7 @@ public:
   void TestDateTools(CuTest *tc) {
 	  TCHAR* t = CL_NS(document)::DateTools::timeToString( Misc::currentTimeMillis() , CL_NS(document)::DateTools::MILLISECOND_FORMAT);
 	  _CLDELETE_ARRAY(t);
-	  
+
 	  TCHAR buf[30];
 	  const TCHAR* xpt = _T("19700112102054321");
 	  int64_t vv = (int64_t)987654321;
@@ -93,31 +93,30 @@ public:
 
     const char* areaderString = "a string reader field";
     const TCHAR* treaderString = _T("a string reader field");
-    int readerStringLen = strlen(areaderString);
+    size_t readerStringLen = strlen(areaderString);
 
 	  SimpleAnalyzer an;
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
     //use binary utf8
     ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString));
-    doc.add( *_CLNEW Field(_T("utf8Field"), b , 
+    doc.add( *_CLNEW Field(_T("utf8Field"), b ,
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
 
     //use reader
-    doc.add( *_CLNEW Field(_T("readerField"),_CLNEW StringReader (treaderString), 
+    doc.add( *_CLNEW Field(_T("readerField"),_CLNEW StringReader (treaderString),
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
 
     //done adding documents, now try and read them back
     writer.optimize();
-	
+
     //use big file
     CL_NS(util)::FileInputStream input(factbook);
-    &input;
-    doc.add( *_CLNEW Field(_T("fileField"), 
+    doc.add( *_CLNEW Field(_T("fileField"),
         _CLNEW FileReader(factbook, SimpleInputStreamReader::ASCII),
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
@@ -128,7 +127,7 @@ public:
     writer.close();
 
     IndexReader* reader = IndexReader::open(&ram);
-    
+
     //now check binary stream
     reader->document(0, doc);
     f = doc.getField(_T("utf8Field"));
@@ -178,5 +177,5 @@ CuSuite *testdocument(void)
 	SUITE_ADD_TEST(suite, TestFields);
 	SUITE_ADD_TEST(suite, TestBinaryDocument);
 	SUITE_ADD_TEST(suite, TestDateTools);
-    return suite; 
+    return suite;
 }

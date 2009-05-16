@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -252,24 +252,23 @@ return (false);
 
 //internal static function shared for clucene
 string Misc::segmentname( const char* segment, const char* ext, const int32_t x ){
-//Func -  Returns an allocated buffer in which it creates a filename by 
+//Func -  Returns an allocated buffer in which it creates a filename by
 //       concatenating segment with ext and x
 //Pre    ext != NULL and holds the extension
 //       x contains a number
-//Post - A buffer has been instantiated an when x = -1 buffer contains the concatenation of 
+//Post - A buffer has been instantiated an when x = -1 buffer contains the concatenation of
 //       segment and ext otherwise buffer contains the contentation of segment, ext and x
 
 	CND_PRECONDITION(ext != NULL, "ext is NULL");
 
-  string ret = segment;
-  ret += ext;
-  if ( x!=-1 ){
-    char buf[10];
-    _snprintf(buf,10,"%d",x,10);
-    ret += buf;
-  }
 
-  return ret;
+  if ( x!=-1 ){
+    char buf[30];
+    _snprintf(buf,10,"%d",x);
+    return string(segment) + ext + buf;
+  }else{
+    return string(segment) + ext;
+  }
 }
 void Misc::segmentname(char* buffer,int32_t bufferLen, const char* Segment, const char* ext, const int32_t x){
 //Func - Static Method
@@ -292,7 +291,7 @@ void Misc::segmentname(char* buffer,int32_t bufferLen, const char* Segment, cons
 }
 
 
-//static 
+//static
 int32_t Misc::stringDifference(const TCHAR* s1, const int32_t len1, const TCHAR* s2, const int32_t len2) {
 	int32_t len = len1 < len2 ? len1 : len2;
 	for (int32_t i = 0; i < len; i++)
@@ -325,7 +324,7 @@ TCHAR* Misc::stringTrim(TCHAR* text) {
 		_tcsncpy(text, text+i, j-i);
 		text[j-i] = 0;
 	}
-	
+
 	return text;
 }
 
@@ -356,7 +355,7 @@ TCHAR* Misc::wordTrim(TCHAR* text) {
 		_tcsncpy(text, text+i, j-i);
 		text[j-i] = 0;
 	}
-	
+
 	return text;
 }
 
@@ -375,19 +374,19 @@ size_t Misc::longToBase( int64_t value, int32_t base, char* retval ) {
 
     memcpy( retval, ptr, end - ptr );
     retval[end-ptr] = 0;
-    
+
     return end-ptr;
 }
 
 int64_t Misc::base36ToLong( const char* value ) {
 	char* ptr = (char*)value;
 	int64_t lval = 0;
-	
+
 	while ( *ptr != '\0' ) {
 		lval = isdigit(*ptr) ? ( 36 * lval ) + ( *ptr - '0' ) : ( 36 * lval ) + ( *ptr - 'a' + 10 );
 		ptr++;
 	}
-	
+
 	return lval;
 }
 

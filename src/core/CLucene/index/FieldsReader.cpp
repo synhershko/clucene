@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -121,7 +121,7 @@ bool FieldsReader::doc(int32_t n, Document& doc, const CL_NS(document)::FieldSel
 	indexStream->seek((n + docStoreOffset) * 8L);
 	int64_t position = indexStream->readLong();
 	fieldsStream->seek(position);
-    
+
 	int32_t numFields = fieldsStream->readVInt();
 	for (int32_t i = 0; i < numFields; i++) {
 		const int32_t fieldNumber = fieldsStream->readVInt();
@@ -175,7 +175,7 @@ CL_NS(store)::IndexInput* FieldsReader::rawDocs(int32_t* lengths, const int32_t 
 		int64_t offset;
 		const int32_t docID = docStoreOffset + startDocID + count + 1;
 		CND_CONDITION( docID <= numTotalDocs, "invalid docID");
-		if (docID < numTotalDocs) 
+		if (docID < numTotalDocs)
 			offset = indexStream->readLong();
 		else
 			offset = fieldsStream->length();
@@ -277,17 +277,17 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 
 		Field* f = NULL;
 		if (compressed) {
-			bits |= Field::STORE_COMPRESS;
-			const int32_t toRead = fieldsStream->readVInt();
+      bits |= Field::STORE_COMPRESS;
+      const int32_t toRead = fieldsStream->readVInt();
       ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>(toRead);
       fieldsStream->readBytes(b->values,toRead);
 
-			//todo: we dont have gzip inputstream available, must alert user
-			//to somehow use a gzip inputstream
-			f = _CLNEW Field(fi->name,      // field name
-				//todo: new String(uncompress(subStream->getStream()), "UTF-8"), // uncompress the value and add as string
-				b, bits);
-			  f->setOmitNorms(fi->omitNorms);
+      //todo: we dont have gzip inputstream available, must alert user
+      //to somehow use a gzip inputstream
+      f = _CLNEW Field(fi->name,      // field name
+        //todo: new String(uncompress(subStream->getStream()), "UTF-8"), // uncompress the value and add as string
+        b, bits);
+      f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
       TCHAR* str = fieldsStream->readString();
@@ -403,7 +403,7 @@ CL_NS(analysis)::TokenStream* FieldsReader::LazyField::tokenStreamValue() const 
 
 
 /** The value of the field as a String, or null.  If null, the Reader value,
-* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
+* binary value, or TokenStream value is used.  Exactly one of stringValue(),
 * readerValue(), binaryValue(), and tokenStreamValue() must be set. */
 const TCHAR* FieldsReader::LazyField::stringValue() {
 	parent->ensureOpen();
@@ -480,7 +480,7 @@ FieldsReader::FieldForMerge::FieldForMerge(void* _value, ValueType _type, const 
 	//this->isIndexed = fi->isIndexed;
 
 	if (fi->omitNorms) bits |= INDEX_NONORMS;
-	//this->omitNorms = fi->omitNorms;   
+	//this->omitNorms = fi->omitNorms;
 
 	if (fi->storeOffsetWithTermVector) bits |= TERMVECTOR_WITH_OFFSETS;
 	if (fi->storePositionWithTermVector) bits |= TERMVECTOR_WITH_POSITIONS;

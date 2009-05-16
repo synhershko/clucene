@@ -1,7 +1,7 @@
  /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -53,7 +53,7 @@ CL_NS_USE(util)
     }
     return i;
   }
-  
+
   void IndexInput::skipChars( const int32_t count) {
 	for (int32_t i = 0; i < count; i++) {
 		TCHAR b = readByte();
@@ -79,7 +79,7 @@ CL_NS_USE(util)
   	return ret;
   }
   #endif
-	
+
   int32_t IndexInput::readString(TCHAR* buffer, const int32_t maxLength){
     int32_t len = readVInt();
 		int32_t ml=maxLength-1;
@@ -101,7 +101,7 @@ CL_NS_USE(util)
 
    TCHAR* IndexInput::readString(){
     int32_t len = readVInt();
-      
+
     if ( len == 0){
       return stringDuplicate(LUCENE_BLANK_STRING);
     }
@@ -111,6 +111,11 @@ CL_NS_USE(util)
     ret[len] = 0;
 
     return ret;
+  }
+
+  void IndexInput::readBytes( uint8_t* b, const int32_t len, bool useBuffer) {
+    // Default to ignoring useBuffer entirely
+    readBytes(b, len);
   }
 
   void IndexInput::readChars( TCHAR* buffer, const int32_t start, const int32_t len) {
@@ -148,7 +153,7 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
   BufferedIndexInput::BufferedIndexInput(const BufferedIndexInput& other):
   	IndexInput(other),
     buffer(NULL),
-	bufferSize(other.bufferSize),
+    bufferSize(other.bufferSize),
     bufferStart(other.bufferStart),
     bufferLength(other.bufferLength),
     bufferPosition(other.bufferPosition)
@@ -158,23 +163,61 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     **   if ( clone.buffer != NULL) { */
     if (other.bufferLength != 0 && other.buffer != NULL) {
       buffer = _CL_NEWARRAY(uint8_t,bufferLength);
-	  memcpy(buffer,other.buffer,bufferLength * sizeof(uint8_t));
+      memcpy(buffer,other.buffer,bufferLength * sizeof(uint8_t));
     }
   }
 
-	//todo: support an extra parameter: bool useBuffer (as per JLucene)
   void BufferedIndexInput::readBytes(uint8_t* b, const int32_t len){
-    if (len < bufferSize) {
-      for (int32_t i = 0; i < len; ++i)		  // read byte-by-byte
-        b[i] = readByte();
-    } else {					  // read all-at-once
-      int64_t start = getFilePointer();
-      seekInternal(start);
-      readInternal(b, len);
+    readBytes(b, len, true);
+  }
+  void BufferedIndexInput::readBytes(uint8_t* _b, const int32_t _len, bool useBuffer){
+    int32_t len = _len;
+    uint8_t* b = _b;
 
-      bufferStart = start + len;		  // adjust stream variables
-      bufferPosition = 0;
-      bufferLength = 0;				  // trigger refill() on read
+    if(len <= (bufferLength-bufferPosition)){
+      // the buffer contains enough data to satisfy this request
+      if(len>0) // to allow b to be null if len is 0...
+        memcpy(b, buffer + bufferPosition, len);
+      bufferPosition+=len;
+    } else {
+      // the buffer does not have enough data. First serve all we've got.
+      int32_t available = bufferLength - bufferPosition;
+      if(available > 0){
+        memcpy(b, buffer + bufferPosition, available);
+        b += available;
+        len -= available;
+        bufferPosition += available;
+      }
+      // and now, read the remaining 'len' bytes:
+      if (useBuffer && len<bufferSize){
+        // If the amount left to read is small enough, and
+        // we are allowed to use our buffer, do it in the usual
+        // buffered way: fill the buffer and copy from it:
+        refill();
+        if(bufferLength<len){
+          // Throw an exception when refill() could not read len bytes:
+          memcpy(b, buffer, bufferLength);
+          _CLTHROWA(CL_ERR_IO, "read past EOF");
+        } else {
+          memcpy(b, buffer, len);
+          bufferPosition=len;
+        }
+      } else {
+        // The amount left to read is larger than the buffer
+        // or we've been asked to not use our buffer -
+        // there's no performance reason not to read it all
+        // at once. Note that unlike the previous code of
+        // this function, there is no need to do a seek
+        // here, because there's no need to reread what we
+        // had in the buffer.
+        int64_t after = bufferStart+bufferPosition+len;
+        if(after > length())
+          _CLTHROWA(CL_ERR_IO, "read past EOF");
+        readInternal(b, len);
+        bufferStart = after;
+        bufferPosition = 0;
+        bufferLength = 0;                    // trigger refill() on read
+      }
     }
   }
 
@@ -195,7 +238,7 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     }
   }
   void BufferedIndexInput::close(){
-	_CLDELETE_ARRAY(buffer);
+    _CLDELETE_ARRAY(buffer);
     bufferLength = 0;
     bufferPosition = 0;
     bufferStart = 0;
@@ -212,7 +255,7 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     if (end > length())				  // don't read past EOF
       end = length();
     bufferLength = (int32_t)(end - start);
-    if (bufferLength == 0)
+    if (bufferLength <= 0)
       _CLTHROWA(CL_ERR_IO, "IndexInput read past EOF");
 
     if (buffer == NULL){
@@ -226,33 +269,33 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
   }
 
   void BufferedIndexInput::setBufferSize( int32_t newSize ) {
-	  
+
 	  if ( newSize != bufferSize ) {
 		  bufferSize = newSize;
 		  if ( buffer != NULL ) {
-			  
+
 			  uint8_t* newBuffer = _CL_NEWARRAY( uint8_t, newSize );
 			  int32_t leftInBuffer = bufferLength - bufferPosition;
 			  int32_t numToCopy;
-			  
+
 			  if ( leftInBuffer > newSize ) {
 				  numToCopy = newSize;
 			  } else {
 				  numToCopy = leftInBuffer;
 			  }
-			  
+
 			  memcpy( (void*)newBuffer, (void*)(buffer + bufferPosition), numToCopy );
-			  
+
 			  bufferStart += bufferPosition;
 			  bufferPosition = 0;
 			  bufferLength = numToCopy;
-			  
+
 			  _CLDELETE_ARRAY( buffer );
 			  buffer = newBuffer;
-			  
+
 		  }
 	  }
-	  
+
   }
 
 CL_NS_END

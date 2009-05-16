@@ -1,13 +1,13 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 /*
 * this is a monolithic file that can be used to compile clucene using one source file.
 * it simplifies some build processes by avoiding static & dynamic compalation pitfalls.
-* 
+*
 * note: when creating a project add either this file, or all the other .cpp files, not both!
 */
 #include "CLucene/StdHeader.cpp"
@@ -20,17 +20,27 @@
 #include "CLucene/document/DateField.cpp"
 #include "CLucene/document/DateTools.cpp"
 #include "CLucene/document/Document.cpp"
+#include "CLucene/document/FieldSelector.cpp"
 #include "CLucene/document/NumberTools.cpp"
 #include "CLucene/document/Field.cpp"
 #include "CLucene/index/CompoundFile.cpp"
-#include "CLucene/index/DocumentWriter.cpp"
+#include "CLucene/index/DirectoryIndexReader.cpp"
+#include "CLucene/index/DocumentsWriter.cpp"
+#include "CLucene/index/DocumentsWriterThreadState.cpp"
 #include "CLucene/index/FieldInfos.cpp"
 #include "CLucene/index/FieldsReader.cpp"
 #include "CLucene/index/FieldsWriter.cpp"
+#include "CLucene/index/IndexFileDeleter.cpp"
+#include "CLucene/index/IndexFileNameFilter.cpp"
 #include "CLucene/index/IndexFileNames.cpp"
+#include "CLucene/index/IndexModifier.cpp"
 #include "CLucene/index/IndexWriter.cpp"
 #include "CLucene/index/IndexReader.cpp"
+#include "CLucene/index/MergePolicy.cpp"
+#include "CLucene/index/MergeScheduler.cpp"
 #include "CLucene/index/MultiReader.cpp"
+#include "CLucene/index/MultiSegmentReader.cpp"
+#include "CLucene/index/Payload.cpp"
 #include "CLucene/index/SegmentInfos.cpp"
 #include "CLucene/index/SegmentMergeInfo.cpp"
 #include "CLucene/index/SegmentMergeQueue.cpp"
@@ -40,6 +50,8 @@
 #include "CLucene/index/SegmentTermEnum.cpp"
 #include "CLucene/index/SegmentTermPositions.cpp"
 #include "CLucene/index/SegmentTermVector.cpp"
+#include "CLucene/index/SkipListReader.cpp"
+#include "CLucene/index/SkipListWriter.cpp"
 #include "CLucene/index/Term.cpp"
 #include "CLucene/index/Terms.cpp"
 #include "CLucene/index/TermInfo.cpp"

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #define _CL__CND_DEBUG
@@ -37,7 +37,7 @@ void _Cnd_OutDebug( const char* FormattedMsg, const char* StrTitle, const char* 
 
 void __cnd_FormatDebug( const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal ) {
 	char M[512];
-    char* StrTitle = NULL;
+    const char* StrTitle = NULL;
 
 	if( Mes2 )
 		_snprintf(M,512,"file:%s line:%d\n%s",File,Line,Mes2);

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef __CONDITION_H
@@ -15,16 +15,6 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
 */
 
 #ifdef _CL__CND_DEBUG	/* Don't include the debug code */
-    #ifndef CND_STR_DEFINES
-        #define CND_STR_DEFINES
-        #define CND_STR_PRECONDITION								1
-        #define CND_STR_CONDITION									2
-        #define CND_STR_WARNING										3
-        #define CND_STR_MESSAGE										4
-        #define CND_STR_DEBUGMESSAGE								5
-        #define CND_STR_EXIT										6
-    #endif
-
     /* _CL__CND_DEBUG defined, include debug code */
 
 	#ifdef _CND_NODEBUGTEXT
@@ -46,7 +36,7 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
 	//be better customised to the host application.
 	//Here is the default implementation:
 	void _Cnd_OutDebug( const char* FormattedMsg, const char* StrTitle, const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal );
-	
+
 	void CLUCENE_SHARED_EXPORT __cnd_FormatDebug( const char* File, int32_t Line, int32_t Title, const char* Mes2, int32_t fatal );
 	#define CND__EXIT(file,line,title,mes2)						{__cnd_FormatDebug(file,line,title,mes2,1);}
 	#define CND__EXITCONDITION(cond,file,line,title,mes2)		{if(!(cond)){__cnd_FormatDebug(file,line,title,mes2,1);}}
@@ -58,6 +48,16 @@ To enable condition debugging uncomment _CND_DEBUG in CLConfig.h
     #define CND_WARNING(cond,usermessage)
     #define CND_MESSAGE(cond,usermessage)
     #define CND_DEBUGMESSAGE(usermessage)
+#endif
+
+#ifndef CND_STR_DEFINES
+    #define CND_STR_DEFINES
+    #define CND_STR_PRECONDITION								1
+    #define CND_STR_CONDITION									2
+    #define CND_STR_WARNING										3
+    #define CND_STR_MESSAGE										4
+    #define CND_STR_DEBUGMESSAGE								5
+    #define CND_STR_EXIT										6
 #endif
 
 //cnd-debug exit command

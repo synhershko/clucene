@@ -69,7 +69,9 @@ CL_NS_DEF(store)
    SingleInstanceLock::SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName )
    {
 	   this->locks = locks;
+#ifndef _CL_DISABLE_MULTITHREADING
 	   this->locks_LOCK = locks_LOCK;
+#endif
 	   this->lockName = lockName;
    }
    SingleInstanceLock::~SingleInstanceLock(){

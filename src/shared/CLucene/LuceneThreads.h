@@ -15,6 +15,7 @@ class CLuceneThreadIdCompare;
 	#define SCOPED_LOCK_MUTEX(theMutex)
 	#define DEFINE_MUTEX(x)
 	#define DEFINE_MUTABLE_MUTEX(x)
+	#define DEFINE_CONDITION(x)
 	#define STATIC_DEFINE_MUTEX(x)
 	#define CONDITION_WAIT(theMutex, theCondition)
 	#define CONDITION_NOTIFYALL(theCondition)
@@ -24,7 +25,7 @@ class CLuceneThreadIdCompare;
 	#define _LUCENE_THREAD_FUNC_RETURN(val) return (int)val;
 	#define _LUCENE_THREAD_CREATE(func, arg) (*func)(arg)
 	#define _LUCENE_THREAD_JOIN(value) //nothing to do...
-
+	#define _LUCENE_THREADMUTEX void*
 #else
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)
 		//do nothing

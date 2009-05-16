@@ -51,6 +51,7 @@ CL_NS_USE(util)
 		* This reduces number of file handles we need, and it means
 		* we dont have to use file tell (which is slow) before doing
 		* a read.
+    * TODO: get rid of this and use a shared io handle or something like that...
 		*/
 		class SharedHandle: LUCENE_REFBASE{
 		public:
@@ -145,7 +146,9 @@ CL_NS_USE(util)
       else
       	error.set(CL_ERR_IO, "Could not open file");
 	  }
+#ifndef _CL_DISABLE_MULTITHREADING
     delete handle->THIS_LOCK;
+#endif
 	  _CLDELETE(handle);
 	  return false;
   }
@@ -169,7 +172,7 @@ CL_NS_USE(util)
     _fpos = 0;
     strcpy(this->path,path);
 
-#ifdef _LUCENE_THREADMUTEX
+#ifndef _CL_DISABLE_MULTITHREADING
 	  THIS_LOCK = new _LUCENE_THREADMUTEX;
 #endif
   }
@@ -197,7 +200,7 @@ CL_NS_USE(util)
   }
   void FSDirectory::FSIndexInput::close()  {
 	BufferedIndexInput::close();
-#ifdef _LUCENE_THREADMUTEX
+#ifndef _CL_DISABLE_MULTITHREADING
 	if ( handle != NULL ){
 		//here we have a bit of a problem... we need to lock the handle to ensure that we can
 		//safely delete the handle... but if we delete the handle, then the scoped unlock, 
