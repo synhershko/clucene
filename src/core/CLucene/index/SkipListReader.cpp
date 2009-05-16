@@ -27,6 +27,12 @@ MultiLevelSkipListReader::MultiLevelSkipListReader(IndexInput* _skipStream, cons
 	memset(this->skipDoc,0,sizeof(int32_t) * maxSkipLevels);
 	memset(this->childPointer,0,sizeof(int32_t) * maxSkipLevels);
 	
+  this->numberOfLevelsToBuffer = 0;
+  this->numberOfSkipLevels = 0;
+  this->docCount = 0;
+  this->lastDoc = 0;
+  this->lastChildPointer = 0;
+  this->haveSkipped = false;
 	this->skipStream[0] = _skipStream;
 	this->inputIsBuffered = _skipStream->instanceOf(BufferedIndexInput::getClassName());
 	this->skipInterval[0] = _skipInterval;
@@ -125,10 +131,11 @@ void MultiLevelSkipListReader::close() {
 void MultiLevelSkipListReader::init(const int64_t _skipPointer, const int32_t df) {
 	this->skipPointer[0] = _skipPointer;
 	this->docCount = df;
-	memset(skipDoc,0,sizeof(int32_t) * numberOfSkipLevels);
-	memset(numSkipped,0,sizeof(int32_t) * numberOfSkipLevels);
-	memset(childPointer,0,sizeof(int64_t) * numberOfSkipLevels);
-	memset(skipStream + 1,0,sizeof(int64_t) * numberOfSkipLevels - 1);
+	memset(skipDoc,0,sizeof(int32_t) * maxNumberOfSkipLevels);
+	memset(numSkipped,0,sizeof(int32_t) * maxNumberOfSkipLevels);
+	memset(childPointer,0,sizeof(int64_t) * maxNumberOfSkipLevels);
+  if ( numberOfSkipLevels > 1 ) 
+    memset(skipStream + 1,0,sizeof(int64_t) * maxNumberOfSkipLevels - 1);
 	haveSkipped = false;
 }
 
@@ -240,6 +247,13 @@ DefaultSkipListReader::DefaultSkipListReader(CL_NS(store)::IndexInput* _skipStre
 	freqPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
 	proxPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
 	payloadLength = _CL_NEWARRAY(int32_t,maxSkipLevels);
+  memset(freqPointer,0, sizeof(int64_t) * maxSkipLevels);
+  memset(proxPointer,0, sizeof(int64_t) * maxSkipLevels);
+  memset(payloadLength,0, sizeof(int32_t) * maxSkipLevels);
+  this->lastFreqPointer = 0;
+  this->lastProxPointer = 0;
+  this->lastPayloadLength = 0;
+  this->currentFieldStoresPayloads = false;
 }
 
 DefaultSkipListReader::~DefaultSkipListReader(){
@@ -254,7 +268,7 @@ void DefaultSkipListReader::init(const int64_t _skipPointer, const int64_t freqB
 	lastFreqPointer = freqBasePointer;
 	lastProxPointer = proxBasePointer;
 
-	for (int32_t j=0; j<numberOfSkipLevels; j++){
+	for (int32_t j=0; j<maxNumberOfSkipLevels; j++){
 		freqPointer[j] = freqBasePointer;
 		proxPointer[j] = proxBasePointer;
 		payloadLength[j] = 0;
