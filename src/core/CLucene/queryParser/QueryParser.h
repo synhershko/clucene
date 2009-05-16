@@ -243,7 +243,7 @@ protected:
 class CLUCENE_EXPORT QueryParser : public QueryParserBase
 {
 private:
-	const TCHAR* field;
+	TCHAR* field;
 	TokenList* tokens;
 public:
 	/**

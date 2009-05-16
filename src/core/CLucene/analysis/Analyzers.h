@@ -290,7 +290,7 @@ class CLUCENE_EXPORT PerFieldAnalyzerWrapper : public Analyzer {
 private:
     Analyzer* defaultAnalyzer;
     
-    typedef CL_NS(util)::CLHashMap<const TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
+    typedef CL_NS(util)::CLHashMap<TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
     	CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::tcArray,CL_NS(util)::Deletor::Void<Analyzer> > AnalyzerMapType;
     AnalyzerMapType* analyzerMap;
 public:

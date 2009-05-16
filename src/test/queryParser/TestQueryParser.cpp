@@ -85,7 +85,7 @@ void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* 
 	if ( q == NULL )
 		return;
 
-	const TCHAR* s = q->toString(_T("field"));
+	TCHAR* s = q->toString(_T("field"));
 	int ret = _tcscmp(s,result);
 	_CLDELETE_CARRAY(s);
 	_CLDELETE(q);
@@ -180,7 +180,7 @@ void testSimple(CuTest *tc) {
 	// try creating a query and make sure it uses AND
 	Query* bq = qp->parse(_T("term1 term2"));
 	CLUCENE_ASSERT( bq != NULL );
-	const TCHAR* s = bq->toString(_T("field"));
+	TCHAR* s = bq->toString(_T("field"));
 	if ( _tcscmp(s,_T("+term1 +term2")) != 0 ) {
 		CuFail(tc, _T("FAILED Query /term1 term2/ yielded /%s/, expecting +term1 +term2\n"), s);
 	}

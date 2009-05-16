@@ -34,7 +34,7 @@ private:
 
 	CL_NS(store)::IndexInput* stream;
 
-    typedef CL_NS(util)::CLHashMap<const char*,ReaderFileEntry*,
+    typedef CL_NS(util)::CLHashMap<char*,ReaderFileEntry*,
 		CL_NS(util)::Compare::Char,
 		CL_NS(util)::Equals::Char,
 		CL_NS(util)::Deletor::acArray,

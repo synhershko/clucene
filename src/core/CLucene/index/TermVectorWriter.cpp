@@ -309,7 +309,7 @@ const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
 		return termTextLen; 
 	}
 	void TermVectorsWriter::TVTerm::setTermText(const TCHAR* val){ 
-        _CLDELETE_CARRAY(termText);
+    _CLDELETE_CARRAY(termText);
 		termText = STRDUP_TtoT(val);
 		termTextLen = -1;
 

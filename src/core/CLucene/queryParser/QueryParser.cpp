@@ -44,7 +44,7 @@ CL_NS_DEF(queryParser)
 	//Pre  - true
 	//Post - The instance has been destroyed
 
-        _CLDELETE_CARRAY(field);
+        	_CLDELETE_CARRAY(field);
 	}
 
     //static
@@ -244,7 +244,7 @@ CL_NS_DEF(queryParser)
 
 		Query* q = NULL;
 		const TCHAR* sfield = field;
-		bool delField = false;
+    TCHAR* tmp = NULL;
 
 		QueryToken *DelToken = NULL;
 
@@ -256,9 +256,8 @@ CL_NS_DEF(queryParser)
 			CND_CONDITION(DelToken != NULL,"DelToken is NULL");
 			_CLDELETE(DelToken);
 
-			TCHAR* tmp = STRDUP_TtoT(term->Value);
+			tmp = STRDUP_TtoT(term->Value);
 			discardEscapeChar(tmp);
-			delField = true;
 			sfield = tmp;
 			_CLDELETE(term);
 		}else{
@@ -293,8 +292,7 @@ CL_NS_DEF(queryParser)
 			q = MatchTerm(sfield);
 		}
 
-	  if ( delField )
-		  _CLDELETE_CARRAY(sfield);
+	  _CLDELETE_CARRAY(tmp);
 	  return q;
 	}
 

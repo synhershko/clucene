@@ -13,12 +13,12 @@
 CL_NS_DEF(store)
 
 
-class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray>
+class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char>
 {
 public:
-	LocksType(bool del)
+	LocksType()
 	{
-		setDoDelete(del);
+		setDoDelete(false);
 	}
 	virtual ~LocksType(){
 	}

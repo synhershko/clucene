@@ -62,8 +62,8 @@
 #else
   class CLUCENE_EXPORT CLuceneError
   {
-	char* _awhat;
-	TCHAR* _twhat;
+    char* _awhat;
+    TCHAR* _twhat;
   	int error_number;
   public:
     CLuceneError();

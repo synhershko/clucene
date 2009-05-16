@@ -279,7 +279,7 @@ CL_NS_DEF(search)
         CND_PRECONDITION(field != NULL,"field is NULL");
 
         StringBuffer buffer;
-        const TCHAR* b = MultiTermQuery::toString(field);
+        TCHAR* b = MultiTermQuery::toString(field);
     
         buffer.append ( b );
        _CLDELETE_CARRAY(b);

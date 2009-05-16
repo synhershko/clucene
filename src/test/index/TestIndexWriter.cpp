@@ -13,11 +13,9 @@ void testIWmergeSegments1(CuTest *tc){
 	RAMDirectory ram;
 	SimpleAnalyzer a;
 
-  IndexWriter::setDefaultInfoStream(&std::cout);
-  /* TODO: enable
-  IndexWriter ndx2(&ram,&a,true);
+  	IndexWriter ndx2(&ram,&a,true);
 	ndx2.close(); //test immediate closing bug reported
-	*/
+	
 	IndexWriter ndx(&ram,&a,true); //set create to false
 
 	ndx.setUseCompoundFile(false);

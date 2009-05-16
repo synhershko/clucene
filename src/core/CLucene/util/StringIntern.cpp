@@ -1,4 +1,4 @@
-/*------------------------------------------------------------------------------
+  /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
 * 
 * Distributable under the terms of either the Apache License (Version 2.0) or 
@@ -8,8 +8,8 @@
 #include "_StringIntern.h"
 CL_NS_DEF(util)
 
-typedef CL_NS(util)::CLHashMap<const TCHAR*,int,CL_NS(util)::Compare::TChar,CL_NS(util)::Equals::TChar,CL_NS(util)::Deletor::tcArray, CL_NS(util)::Deletor::DummyInt32 > __wcsintrntype;
-typedef CL_NS(util)::CLHashMap<const char*,int,CL_NS(util)::Compare::Char,CL_NS(util)::Equals::Char,CL_NS(util)::Deletor::acArray, CL_NS(util)::Deletor::DummyInt32 > __strintrntype;
+typedef CL_NS(util)::CLHashMap<TCHAR*,int,CL_NS(util)::Compare::TChar,CL_NS(util)::Equals::TChar,CL_NS(util)::Deletor::tcArray, CL_NS(util)::Deletor::DummyInt32 > __wcsintrntype;
+typedef CL_NS(util)::CLHashMap<char*,int,CL_NS(util)::Compare::Char,CL_NS(util)::Equals::Char,CL_NS(util)::Deletor::acArray, CL_NS(util)::Deletor::DummyInt32 > __strintrntype;
 __wcsintrntype StringIntern_stringPool(true);
 __strintrntype StringIntern_stringaPool(true);
 
@@ -51,7 +51,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
-		__wcsintrntype::iterator itr = StringIntern_stringPool.find(str);
+		__wcsintrntype::iterator itr = StringIntern_stringPool.find((TCHAR*)str);
 		if ( itr==StringIntern_stringPool.end() ){
 #ifdef _UCS2
 			TCHAR* ret = lucenewcsdup(str);
@@ -74,7 +74,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
-		__wcsintrntype::iterator itr = StringIntern_stringPool.find(str);
+		__wcsintrntype::iterator itr = StringIntern_stringPool.find((TCHAR*)str);
 		if ( itr != StringIntern_stringPool.end() ){
 			if ( (itr->second) == 1 ){
 				StringIntern_stringPool.removeitr(itr);
@@ -93,13 +93,13 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
-		__strintrntype::iterator itr = StringIntern_stringaPool.find(str);
+		__strintrntype::iterator itr = StringIntern_stringaPool.find((char*)str);
 		if ( itr==StringIntern_stringaPool.end() ){
 			char* ret = (use_provided) ? const_cast<char*>(str) : lucenestrdup(str);
 			StringIntern_stringaPool[ret] = count;
 			return ret;
 		}else{
-			if (use_provided) _CLDELETE_CaARRAY(str); // delete the provided string if already exists
+			if (use_provided) _CLDELETE_LCaARRAY((char*)str); // delete the provided string if already exists
 			(itr->second) = (itr->second) + count;
 			return itr->first;
 		}
@@ -113,7 +113,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
 
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
 
-		__strintrntype::iterator itr = StringIntern_stringaPool.find(str);
+		__strintrntype::iterator itr = StringIntern_stringaPool.find((char*)str);
 		if ( itr!=StringIntern_stringaPool.end() ){
 			if ( (itr->second) == count ){
 				StringIntern_stringaPool.removeitr(itr);

@@ -245,11 +245,30 @@ void CuAssertTrue(CuTest* tc, int condition)
 	CuFail(tc, _T("assert failed"));
 }
 
-void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, const TCHAR* actual, bool bDelActual)
+void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, TCHAR* actual, bool bDelActual){
+  CuString* message;
+  if (_tcscmp(expected, actual) == 0) {
+    if (bDelActual) _CLDELETE_LCARRAY(actual);
+    return;
+  }
+  message = CuStringNew();
+  if (preMessage) {
+    CuStringAppend(message, preMessage);
+    CuStringAppend(message, _T(" : ") );
+  }
+  CuStringAppend(message, _T("expected\n---->\n"));
+  CuStringAppend(message, expected);
+  CuStringAppend(message, _T("\n<----\nbut saw\n---->\n"));
+  CuStringAppend(message, actual);
+  if (bDelActual) _CLDELETE_LCARRAY(actual);
+  CuStringAppend(message, _T("\n<----"));
+  CuFail(tc, message->buffer);
+  CuStringFree(message);
+}
+void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, const TCHAR* actual)
 {
 	CuString* message;
 	if (_tcscmp(expected, actual) == 0) {
-		if (bDelActual) _CLDELETE_LCARRAY(actual);
 		return;
 	}
 	message = CuStringNew();
@@ -261,7 +280,6 @@ void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expecte
 	CuStringAppend(message, expected);
 	CuStringAppend(message, _T("\n<----\nbut saw\n---->\n"));
 	CuStringAppend(message, actual);
-	if (bDelActual) _CLDELETE_LCARRAY(actual);
 	CuStringAppend(message, _T("\n<----"));
 	CuFail(tc, message->buffer);
 	CuStringFree(message);

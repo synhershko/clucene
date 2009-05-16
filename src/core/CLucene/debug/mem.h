@@ -33,20 +33,20 @@
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 //6.0
-	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete[] const_cast<TCHAR*>(x); x=NULL;}
-	#define _CLDELETE_CaARRAY(x) if (x!=NULL){delete[] const_cast<char*>(x); x=NULL;}
-	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete[] const_cast<TCHAR*>(x);}
-	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){delete[] const_cast<char*>(x);}
+	#define _CLDELETE_CARRAY(x) if (x!=NULL){free(x); x=NULL;}
+	#define _CLDELETE_CaARRAY(x) if (x!=NULL){free(x); x=NULL;}
+	#define _CLDELETE_LCARRAY(x) if (x!=NULL){free(x);}
+	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){free(x);}
 #endif
 
 //TODO: start using malloc, instead of new[], this is necessary for the Array code, that uses malloc.
 //Macro for creating new arrays
-#define _CL_NEWARRAY(type,size) new type[size]
-#define _CLDELETE_ARRAY(x) if (x!=NULL){delete [] x; x=NULL;}
-#define _CLDELETE_LARRAY(x) if (x!=NULL){delete [] x;}
+#define _CL_NEWARRAY(type,size) (type*)malloc(sizeof(type) * size)
+#define _CLDELETE_ARRAY(x) if (x!=NULL){free(x); x=NULL;}
+#define _CLDELETE_LARRAY(x) if (x!=NULL){free(x);}
 #ifndef _CLDELETE_CARRAY
-	#define _CLDELETE_CARRAY(x) if (x!=NULL){delete [] x; x=NULL;}
-	#define _CLDELETE_LCARRAY(x) if (x!=NULL){delete [] x;}
+	#define _CLDELETE_CARRAY(x) if (x!=NULL){free(x); x=NULL;}
+	#define _CLDELETE_LCARRAY(x) if (x!=NULL){free(x);}
 #endif
 
 //a shortcut for deleting a carray and all its contents

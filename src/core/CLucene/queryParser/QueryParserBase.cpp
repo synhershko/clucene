@@ -146,7 +146,7 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 	TokenStream* source = analyzer->tokenStream(field, &reader);
 	CND_CONDITION(source != NULL,"source is NULL");
 
-	StringArrayConstWithDeletor v;
+	StringArrayWithDeletor v;
 
 	Token t;
 	int positionCount = 0;
@@ -182,7 +182,7 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 				if (positionCount == 1) {
 					// no phrase query:
 					BooleanQuery* q = _CLNEW BooleanQuery( true ); //todo: disableCoord=true here, but not implemented in BooleanQuery
-					StringArrayConst::iterator itr = v.begin();
+					StringArrayWithDeletor::iterator itr = v.begin();
 					while ( itr != v.end() ){
 						Term* t = _CLNEW Term(field, *itr);
 						q->add(_CLNEW TermQuery(t),true, false,false);//should occur...
@@ -197,7 +197,7 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 				PhraseQuery* q = _CLNEW PhraseQuery;
 				q->setSlop(phraseSlop);
 
-				StringArrayConst::iterator itr = v.begin();
+				StringArrayWithDeletor::iterator itr = v.begin();
 				while ( itr != v.end() ){
 					const TCHAR* data = *itr;
 					Term* t = _CLNEW Term(field, data);

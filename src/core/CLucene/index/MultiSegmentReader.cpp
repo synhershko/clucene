@@ -159,7 +159,7 @@ MultiSegmentReader::MultiSegmentReader(
   if (oldNormsCache != NULL) {
     NormsCacheType::iterator it = oldNormsCache->begin();
     while (it != oldNormsCache->end()) {
-      const TCHAR* field = it->first;
+      TCHAR* field = it->first;
       if (!hasNorms(field)) {
         continue;
       }
@@ -286,7 +286,7 @@ uint8_t* MultiSegmentReader::norms(const TCHAR* field){
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 	uint8_t* bytes;
-	bytes = normsCache.get(field);
+	bytes = normsCache.get((TCHAR*)field);
 	if (bytes != NULL){
 	  return bytes;				  // cache hit
 	}
@@ -311,7 +311,7 @@ uint8_t* MultiSegmentReader::norms(const TCHAR* field){
 void MultiSegmentReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
-	uint8_t* bytes = normsCache.get(field);
+	uint8_t* bytes = normsCache.get((TCHAR*)field);
 	if (bytes==NULL && !hasNorms(field)) 
 		bytes=fakeNorms();
     
@@ -326,7 +326,7 @@ void MultiSegmentReader::norms(const TCHAR* field, uint8_t* result) {
 
 
 void MultiSegmentReader::doSetNorm(int32_t n, const TCHAR* field, uint8_t value){
-	normsCache.remove(field);                         // clear cache
+	normsCache.removeitr( normsCache.find((TCHAR*)field) );                         // clear cache
 	int32_t i = readerIndex(n);                           // find segment num
 	(*subReaders)[i]->setNorm(n-starts[i], field, value); // dispatch
 }
