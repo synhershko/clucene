@@ -112,7 +112,6 @@ CL_NS_DEF(index)
 #ifdef _DEBUG
          for ( int32_t i=0; i<indexTermsLength;++i ){
           if ( indexTerms[i].__cl_refcount != 1 ){
-          	printf("%d\n", indexTerms[i].__cl_refcount);
             CND_PRECONDITION(indexTerms[i].__cl_refcount==1,"TermInfosReader term was references more than internally");
           }
          }

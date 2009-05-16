@@ -11,13 +11,11 @@
 #include "CLucene/util/Array.h"
 CL_CLASS_DEF(search,Similarity)
 CL_CLASS_DEF(store,Lock)
-CL_CLASS_DEF(store,TransactionalRAMDirectory)
 CL_CLASS_DEF(analysis,Analyzer)
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(store,LuceneLock)
 CL_CLASS_DEF(document,Document)
 
-//#include "CLucene/store/TransactionalRAMDirectory.h"
 #include "MergePolicy.h"
 #include "CLucene/LuceneThreads.h"
 

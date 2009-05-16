@@ -14,7 +14,7 @@
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
 
-typedef CL_NS(util)::CLSetList<TCHAR*, CL_NS(util)::Compare::TChar> CLTCSetList;
+typedef CL_NS(util)::CLSetList<TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
 
 /** A Token is an occurence of a term from the text of a field.  It consists of
   a term's text, the start and end offset of the term in the text of the field,

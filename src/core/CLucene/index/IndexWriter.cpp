@@ -14,7 +14,6 @@
 
 #include "CLucene/store/_Lock.h"
 #include "CLucene/store/_RAMDirectory.h"
-#include "CLucene/store/_TransactionalRAMDirectory.h"
 #include "CLucene/store/FSDirectory.h"
 #include "CLucene/util/Array.h"
 #include "CLucene/util/PriorityQueue.h"

@@ -83,8 +83,8 @@ string SegmentInfo::segString(Directory* dir) {
 		   if (format <= SegmentInfos::FORMAT_SHARED_DOC_STORE) {
 			   docStoreOffset = input->readInt();
 			   if (docStoreOffset != -1) {
-				   char* aname = new char[CL_MAX_PATH];
-           input->readString(aname, CL_MAX_PATH);
+				   char aname[CL_MAX_PATH];
+			           input->readString(aname, CL_MAX_PATH);
 				   docStoreSegment = aname;
 				   docStoreIsCompoundFile = (1 == input->readByte());
 			   } else {

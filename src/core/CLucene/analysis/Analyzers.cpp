@@ -195,8 +195,7 @@ void StopFilter::setEnablePositionIncrementsDefault(const bool defaultValue) {
 bool StopFilter::getEnablePositionIncrements() const { return enablePositionIncrements; }
 void StopFilter::setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
 		
-void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
-							   , const bool _ignoreCase)
+void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords, const bool _ignoreCase)
 {
   TCHAR* tmp;
 	if ( _ignoreCase ){

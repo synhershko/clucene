@@ -30,7 +30,7 @@ CL_NS_DEF2(analysis,snowball)
   SnowballAnalyzer::SnowballAnalyzer(const TCHAR* language, const TCHAR** stopWords) {
     this->language = STRDUP_TtoT(language);
 
-    stopSet = _CLNEW CLTCSetList;
+    stopSet = _CLNEW CLTCSetList(true);
 	StopFilter::fillStopTable(stopSet,stopWords);
   }
 
