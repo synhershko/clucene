@@ -134,7 +134,7 @@ CL_NS_DEF(search)
     }
 
     int32_t scoreDocsLen = hq->size();
-	scoreDocs = _CL_NEWARRAY(ScoreDoc, scoreDocsLen);
+		scoreDocs = new ScoreDoc[scoreDocsLen];
 	{//MSVC 6 scope fix
 		for (int32_t i = scoreDocsLen-1; i >= 0; --i)	  // put docs in array
 	  		scoreDocs[i] = hq->pop();

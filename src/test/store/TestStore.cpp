@@ -105,8 +105,8 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 	CL_NS(store)::LuceneLock* lf = store->makeLock("testlock");
 	TCHAR* ts = lf->toString();
 	CLUCENE_ASSERT(_tcscmp(ts,_T("fail")));
-    _CLDELETE_CARRAY(ts);
-    _CLDELETE(lf);
+  _CLDELETE_CARRAY(ts);
+  _CLDELETE(lf);
 	
 	store->close();
 	_CLDECDELETE(store);

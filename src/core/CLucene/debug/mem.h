@@ -39,9 +39,8 @@
 	#define _CLDELETE_LCaARRAY(x) if (x!=NULL){free(x);}
 #endif
 
-//TODO: start using malloc, instead of new[], this is necessary for the Array code, that uses malloc.
 //Macro for creating new arrays
-#define _CL_NEWARRAY(type,size) (type*)malloc(sizeof(type) * size)
+#define _CL_NEWARRAY(type,size) (type*)calloc(size, sizeof(type))
 #define _CLDELETE_ARRAY(x) if (x!=NULL){free(x); x=NULL;}
 #define _CLDELETE_LARRAY(x) if (x!=NULL){free(x);}
 #ifndef _CLDELETE_CARRAY

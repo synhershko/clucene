@@ -42,7 +42,7 @@ CL_NS_DEF(search)
   //Post - The instance has been destroyed
 
       _CLDELETE(bucketTable);
-	  _CLDELETE_ARRAY(coordFactors);
+	  	_CLDELETE_ARRAY(coordFactors);
       _CLDELETE(scorers);
   }
 
@@ -247,11 +247,11 @@ CL_NS_DEF(search)
     scorer(scr),
     first(NULL)
   {
-	buckets = _CL_NEWARRAY(Bucket,BucketTable_SIZE);
+		buckets = new Bucket[BucketTable_SIZE];
   }
   BooleanScorer::BucketTable::~BucketTable(){
-	clear();
-	_CLDELETE_ARRAY(buckets);
+		clear();
+		delete [] buckets;
   }
 
   void BooleanScorer::BucketTable::clear(){
