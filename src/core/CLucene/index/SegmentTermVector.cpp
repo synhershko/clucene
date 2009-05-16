@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -43,7 +43,7 @@ TCHAR* SegmentTermVector::toString() const{
 
 	int32_t i=0;
 	while ( terms && terms[i] != NULL ){
-		if (i>0) 
+		if (i>0)
 			sb.append(_T(", "));
 		sb.append(terms[i]);
 		sb.appendChar('/');
@@ -118,13 +118,13 @@ void SegmentTermVector::indexesOf(const TCHAR** terms, const int32_t start, cons
 }
 
 
-    
-SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, ValueArray<int32_t>* termFreqs, 
-  ArrayBase< ValueArray<int32_t>* >* _positions, 
+
+SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, ValueArray<int32_t>* termFreqs,
+  ArrayBase< ValueArray<int32_t>* >* _positions,
   ArrayBase< ArrayBase<TermVectorOffsetInfo*>* >* _offsets)
 	: SegmentTermVector(field,terms,termFreqs),
-  offsets(_offsets),
-  positions(_positions)
+  positions(_positions),
+  offsets(_offsets)
 {
 }
 SegmentTermPositionVector::~SegmentTermPositionVector(){

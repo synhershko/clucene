@@ -58,7 +58,7 @@ const int32_t DocumentsWriter::BYTE_BLOCK_NOT_MASK = ~BYTE_BLOCK_MASK;
 const int32_t DocumentsWriter::CHAR_BLOCK_SHIFT = 14;
 const int32_t DocumentsWriter::CHAR_BLOCK_SIZE = (int32_t)pow(2.0, CHAR_BLOCK_SHIFT);
 const int32_t DocumentsWriter::CHAR_BLOCK_MASK = CHAR_BLOCK_SIZE - 1;
-	
+
 int32_t DocumentsWriter::OBJECT_HEADER_BYTES = 8;
 int32_t DocumentsWriter::OBJECT_POINTER_BYTES = 4;    // TODO: should be 8 on 64-bit platform
 int32_t DocumentsWriter::BYTES_PER_CHAR = 2;
@@ -69,7 +69,7 @@ const int32_t DocumentsWriter::INT_NUM_BYTE = 4;
 const int32_t DocumentsWriter::CHAR_NUM_BYTE = 2; //TODO: adjust for c++...
 
 const int32_t DocumentsWriter::MAX_TERM_LENGTH = DocumentsWriter::CHAR_BLOCK_SIZE-1;
-	
+
 
 
 AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
@@ -79,13 +79,14 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 }
 
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
-	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>)
+  bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
+	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) )
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
   this->directory = directory;
   this->writer = writer;
+  this->bufferIsFull = false;
   fieldInfos = _CLNEW FieldInfos();
 
 	maxBufferedDeleteTerms = IndexWriter::DEFAULT_MAX_BUFFERED_DELETE_TERMS;
@@ -161,7 +162,7 @@ std::string DocumentsWriter::closeDocStore() {
   const std::vector<string>& flushedFiles = files();
 
   if (infoStream != NULL)
-    (*infoStream) << string("\ncloseDocStore: ") << Misc::toString((int32_t)flushedFiles.size()) << string(" files to flush to segment ") << 
+    (*infoStream) << string("\ncloseDocStore: ") << Misc::toString((int32_t)flushedFiles.size()) << string(" files to flush to segment ") <<
     docStoreSegment << string(" numDocs=") << Misc::toString(numDocsInStore) << string("\n");
 
   if (flushedFiles.size() > 0) {
@@ -231,7 +232,7 @@ const std::vector<std::string>& DocumentsWriter::files() {
 
 void DocumentsWriter::setAborting() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   abortCount++;
 }
 
@@ -382,7 +383,7 @@ void DocumentsWriter::resetPostingsData() {
 // Returns true if an abort is in progress
 bool DocumentsWriter::pauseAllThreads() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   pauseThreads++;
   while(!allThreadsIdle()) {
     CONDITION_WAIT(THIS_LOCK, THIS_WAIT_CONDITION)
@@ -392,7 +393,7 @@ bool DocumentsWriter::pauseAllThreads() {
 
 void DocumentsWriter::resumeAllThreads() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   pauseThreads--;
   assert ( pauseThreads >= 0 );
   if (0 == pauseThreads){
@@ -478,7 +479,7 @@ void DocumentsWriter::createCompoundFile(const std::string& segment)
 
 bool DocumentsWriter::setFlushPending() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   if (flushPending)
     return false;
   else {
@@ -489,7 +490,7 @@ bool DocumentsWriter::setFlushPending() {
 
 void DocumentsWriter::clearFlushPending() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   flushPending = false;
 }
 
@@ -602,9 +603,9 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
   if (infoStream != NULL) {
     const int64_t newSegmentSize = segmentSize(segmentName);
 
-    (*infoStream) << string("  oldRAMSize=") << Misc::toString(numBytesUsed) << 
-				string(" newFlushedSize=") << Misc::toString(newSegmentSize) << 
-        string(" docs/MB=") << Misc::toString((float_t)(numDocsInRAM/(newSegmentSize/1024.0/1024.0))) << 
+    (*infoStream) << string("  oldRAMSize=") << Misc::toString(numBytesUsed) <<
+				string(" newFlushedSize=") << Misc::toString(newSegmentSize) <<
+        string(" docs/MB=") << Misc::toString((float_t)(numDocsInRAM/(newSegmentSize/1024.0/1024.0))) <<
         string(" new/old=") << Misc::toString((float_t)(100.0*newSegmentSize/numBytesUsed)) << string("%\n");
   }
 
@@ -815,7 +816,7 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
 
 void DocumentsWriter::close() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-	
+
   closed = true;
   CONDITION_NOTIFYALL(THIS_WAIT_CONDITION)
 }
@@ -1175,7 +1176,7 @@ void DocumentsWriter::recyclePostings(ValueArray<Posting*>& postings, int32_t nu
   // free list.  We pre-allocated this array while we were
   // creating Postings to make sure it's large enough
   assert (this->postingsFreeCountDW + numPostings <= this->postingsFreeListDW.length);
-  if ( numPostings > 0 ) 
+  if ( numPostings > 0 )
     memcpy (this->postingsFreeListDW.values + this->postingsFreeCountDW, postings.values, numPostings * sizeof(Posting*));
   this->postingsFreeCountDW += numPostings;
 }
@@ -1312,8 +1313,8 @@ void DocumentsWriter::balanceRAM() {
     }
 
     if (infoStream != NULL){
-      (*infoStream) << "    after free: freedMB=" + Misc::toString((float_t)((startBytesAlloc-numBytesAlloc)/1024.0/1024.0)) + 
-        " usedMB=" + Misc::toString((float_t)(numBytesUsed/1024.0/1024.0)) + 
+      (*infoStream) << "    after free: freedMB=" + Misc::toString((float_t)((startBytesAlloc-numBytesAlloc)/1024.0/1024.0)) +
+        " usedMB=" + Misc::toString((float_t)(numBytesUsed/1024.0/1024.0)) +
         " allocMB=" + Misc::toString((float_t)(numBytesAlloc/1024.0/1024.0)) << string("\n");
     }
 
@@ -1405,7 +1406,7 @@ bool DocumentsWriter::FieldMergeState::nextDoc() {
       termFreq = p->docFreq;
       p->lastDocCode = -1;
       return true;
-    } else 
+    } else
       // EOF
       return false;
   }
@@ -1561,7 +1562,7 @@ int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8
   assert(level < 10);
   const int32_t newLevel = nextLevelArray[level];
   const int32_t newSize = levelSizeArray[newLevel];
-    
+
   // Maybe allocate another block
   if (tUpto > BYTE_BLOCK_SIZE-newSize)
     nextBuffer();
@@ -1581,7 +1582,7 @@ int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8
   slice.values[upto-2] = (uint8_t) (offset >> 16);
   slice.values[upto-1] = (uint8_t) (offset >> 8);
   slice.values[upto] = (uint8_t) offset;
-    
+
   // Write new level:
   buffer->values[tUpto-1] = (uint8_t) (16|newLevel);
 

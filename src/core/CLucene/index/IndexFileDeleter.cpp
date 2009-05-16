@@ -16,6 +16,8 @@ bool IndexFileDeleter::VERBOSE_REF_COUNTS = false;
 
 IndexFileDeleter::CommitPoint::CommitPoint(IndexFileDeleter* _this, SegmentInfos* segmentInfos){
   this->_this = _this;
+  this->deleted = false;
+  this->gen = 0;
 	segmentsFileName = segmentInfos->getCurrentSegmentFileName();
 	int32_t size = segmentInfos->size();
 	files.push_back(segmentsFileName);
@@ -92,36 +94,36 @@ void IndexFileDeleter::message(string message) {
 IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* policy, SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter){
 	this->docWriter = docWriter;
 	this->infoStream = infoStream;
-	
+
 	if (infoStream != NULL)
 	  message( string("init: current segments file is \"") + segmentInfos->getCurrentSegmentFileName() + "\"; deletionPolicy=" + policy->getObjectName());
-	
+
 	this->policy = policy;
 	this->directory = directory;
-	
+  CommitPoint* currentCommitPoint = NULL;
+
 	// First pass: walk the files and initialize our ref
 	// counts:
 	int64_t currentGen = segmentInfos->getGeneration();
 	const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
-	
+
 	vector<string> files;
   directory->list(&files);
   if (files.empty() )
 	  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str());
-	
-	CommitPoint* currentCommitPoint = NULL;
-	
+
+
 	for(size_t i=0;i<files.size();i++) {
-	
+
 	  string& fileName = files[i];
-	
+
     if (filter->accept(NULL, fileName.c_str()) && !fileName.compare(IndexFileNames::SEGMENTS_GEN) == 0) {
-	
+
 	    // Add this file to refCounts with initial count 0:
 	    getRefCount(fileName.c_str());
-	
+
 	    if ( strncmp(fileName.c_str(), IndexFileNames::SEGMENTS, strlen(IndexFileNames::SEGMENTS)) == 0 ) {
-	
+
 	      // This is a commit (segments or segments_N), and
 	      // it's valid (<= the max gen).  Load it, then
 	      // incref all files it refers to:
@@ -161,7 +163,7 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	    }
 	  }
 	}
-	
+
 	if (currentCommitPoint == NULL) {
 	  // We did not in fact see the segments_N file
 	  // corresponding to the segmentInfos that was passed
@@ -184,11 +186,11 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
     commits.push_back(currentCommitPoint);
 	  incRef(&sis, true);
 	}
-	
+
 	// We keep commits list in sorted order (oldest to newest):
   assert(commits.size() < 3);//test this...
   std::sort(commits.begin(), commits.end(), CommitPoint::sort);
-	
+
 	// Now delete anything with ref count at 0.  These are
 	// presumably abandoned files eg due to crash of
 	// IndexWriter.
@@ -204,18 +206,18 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	  }
     it++;
 	}
-	
+
 	// Finally, give policy a chance to remove things on
 	// startup:
 	policy->onInit(commits);
-	
+
 	// It's OK for the onInit to remove the current commit
-	// point32_t; we just have to checkpoint our in-memory
+	// point; we just have to checkpoint our in-memory
 	// SegmentInfos to protect those files that it uses:
 	if (currentCommitPoint->deleted) {
 	  checkpoint(segmentInfos, false);
 	}
-	
+
 	deleteCommits();
 }
 
@@ -289,10 +291,10 @@ void IndexFileDeleter::refresh(const char* segmentName) {
 
   for(size_t i=0;i<files.size();i++) {
     string& fileName = files[i];
-    if (filter->accept(NULL, fileName.c_str()) &&
-        (segmentName==NULL || fileName.compare(0,segmentPrefix1.length(),segmentPrefix1) == 0 || fileName.compare(0,segmentPrefix2.length(),segmentPrefix2)==0 &&
-        refCounts.find((char*)fileName.c_str())== refCounts.end() &&
-        fileName.compare(IndexFileNames::SEGMENTS_GEN)!=0) ){
+    if ( filter->accept(NULL, fileName.c_str()) &&
+        ( (segmentName==NULL || fileName.compare(0,segmentPrefix1.length(),segmentPrefix1) == 0 || fileName.compare(0,segmentPrefix2.length(),segmentPrefix2)==0)
+          && refCounts.find((char*)fileName.c_str())== refCounts.end() && fileName.compare(IndexFileNames::SEGMENTS_GEN)!=0) ){
+
       // Unreferenced file, so remove it
       if (infoStream != NULL) {
         message( string("refresh [prefix=") + segmentName + "]: removing newly created unreferenced file \"" + fileName + "\"");
@@ -348,7 +350,7 @@ void IndexFileDeleter::deletePendingFiles() {
 void IndexFileDeleter::checkpoint(SegmentInfos* segmentInfos, bool isCommit) {
 
   if (infoStream != NULL) {
-    message(string("now checkpoint \"") + segmentInfos->getCurrentSegmentFileName() + "\" [" + 
+    message(string("now checkpoint \"") + segmentInfos->getCurrentSegmentFileName() + "\" [" +
       Misc::toString(segmentInfos->size()) + " segments ; isCommit = " + Misc::toString(isCommit) + "]");
   }
 
@@ -498,14 +500,14 @@ void IndexFileDeleter::deleteFile(const char* fileName)
       throw e;
     }
 	  if (directory->fileExists(fileName)) {
-	
+
 	    // Some operating systems (e.g. Windows) don't
 	    // permit a file to be deleted while it is opened
 	    // for read (e.g. by another process or thread). So
 	    // we assume that when a delete fails it is because
 	    // the file is open in another process, and queue
 	    // the file for subsequent deletion.
-	
+
 	    if (infoStream != NULL) {
 	      message(string("IndexFileDeleter: unable to remove file \"") + fileName + "\": " + e.what() + "; Will re-try later.");
 	    }

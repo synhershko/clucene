@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_IndexReader_
@@ -39,7 +39,7 @@ class TermVectorMapper;
  document in the index.  These document numbers are ephemeral--they may change
  as documents are added to and deleted from an index.  Clients should thus not
  rely on a given document having the same number between sessions.
- 
+
  <p> An IndexReader can be opened on a directory for which an IndexWriter is
  opened already, but it cannot be used to delete documents from the index then.
 
@@ -117,14 +117,14 @@ protected:
 public:
 	//Callback for classes that need to know if IndexReader is closing.
 	typedef void (*CloseCallback)(IndexReader*, void*);
-	
+
   /** Internal use. Implements commit */
   virtual void doCommit() = 0;
   /** Internal use. */
 	class Internal;
   /** Internal use. */
 	Internal* _internal;
-	
+
 
   /**
    * Constants describing field properties, for example used for
@@ -236,8 +236,8 @@ public:
    * @throws IOException if there is a low-level IO error
    */
 	CLUCENE_LOCAL_DECL virtual void commit();
-	
-	
+
+
 	/** Undeletes all documents currently marked as deleted in this index.
    *
    * @throws StaleReaderException if the index has changed
@@ -258,7 +258,7 @@ public:
 	* @see IndexReader.FieldOption
 	*/
 	virtual void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray) = 0;
-	
+
 	/** Returns the byte-encoded normalization factor for the named field of
 	* every document.  This is used by the search code to score documents.
 	*
@@ -268,8 +268,8 @@ public:
 	* @memory The values are cached, so don't delete the returned byte array.
 	*/
 	virtual uint8_t* norms(const TCHAR* field) = 0;
-	
-	
+
+
 	/** Reads the byte-encoded normalization factor for the named field of every
 	*  document.  This is used by the search code to score documents.
 	*
@@ -292,7 +292,7 @@ public:
     * @throws IOException if there is a low-level IO error
     */
     void setNorm(int32_t doc, const TCHAR* field, float_t value);
-  
+
     /** Expert: Resets the normalization factor for the named field of the named
     * document.  The norm represents the product of the field's {@link
     * Field#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
@@ -311,10 +311,10 @@ public:
     */
     void setNorm(int32_t doc, const TCHAR* field, uint8_t value);
 
-	/// Release the write lock, if needed. 
+	/// Release the write lock, if needed.
     virtual ~IndexReader();
 
-	/** 
+	/**
 	* Returns the time the index in the named directory was last modified.
 	* Do not use this to check whether the reader is still up-to-date, use
 	* {@link #isCurrent()} instead.
@@ -323,8 +323,8 @@ public:
 	*/
 	static uint64_t lastModified(const char* directory);
 
-	/** 
-	* Returns the time the index in the named directory was last modified. 
+	/**
+	* Returns the time the index in the named directory was last modified.
 	* Do not use this to check whether the reader is still up-to-date, use
 	* {@link #isCurrent()} instead.
    * @throws CorruptIndexException if the index is corrupt
@@ -332,24 +332,24 @@ public:
 	*/
 	static uint64_t lastModified(CL_NS(store)::Directory* directory);
 
-	
+
 	/**
 	* Reads version number from segments files. The version number is
 	* initialized with a timestamp and then increased by one for each change of
 	* the index.
-	* 
+	*
 	* @param directory where the index resides.
 	* @return version number.
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
 	*/
 	static int64_t getCurrentVersion(CL_NS(store)::Directory* directory);
-	
+
 	/**
    * Reads version number from segments files. The version number is
    * initialized with a timestamp and then increased by one for each change of
    * the index.
-   * 
+   *
    * @param directory where the index resides.
    * @return version number.
    * @throws CorruptIndexException if the index is corrupt
@@ -415,7 +415,7 @@ public:
    * @throws UnsupportedOperationException unless overridden in subclass
    */
   virtual bool isOptimized();
-  
+
   /**
    *  Return an array of term frequency vectors for the specified document.
    *  The array contains a vector for each vectorized field in the document.
@@ -524,14 +524,11 @@ public:
   * object should be new or just cleared.
   * @throws CorruptIndexException if the index is corrupt
   * @throws IOException if there is a low-level IO error
-  */ 
-  bool document(int32_t n, CL_NS(document)::Document& doc){
-    ensureOpen();
-    return document(n, doc, NULL);
-  }
+  */
+  bool document(int32_t n, CL_NS(document)::Document& doc);
 
 	_CL_DEPRECATED( document(i, Document&) ) bool document(int32_t n, CL_NS(document)::Document*);
-	
+
 	_CL_DEPRECATED( document(i, document) ) CL_NS(document)::Document* document(const int32_t n);
 
 	/** Returns true if document <i>n</i> has been deleted */
@@ -574,7 +571,7 @@ public:
 	 * @memory Caller must clean up
 	 */
 	virtual TermPositions* termPositions() = 0;
-	
+
     /** Returns an enumeration of all the documents which contain
 	* <code>term</code>.  For each document, in addition to the document number
 	* and frequency of the term in that document, a list of all of the ordinal
@@ -637,7 +634,7 @@ public:
 	* the document.  Then to delete such a document, one merely constructs a
 	* term with the appropriate field and the unique ID string as its text and
 	* passes it to this method.
-	* See {@link #deleteDocument(int)} for information about when this deletion will 
+	* See {@link #deleteDocument(int)} for information about when this deletion will
 	* become effective.
 	* @return the number of documents deleted
   * @throws StaleReaderException if the index has changed
@@ -653,7 +650,7 @@ public:
 	///@deprecated. Use deleteDocuments instead.
 	_CL_DEPRECATED( deleteDocuments ) int32_t deleteTerm(Term* term);
 
-	/** 
+	/**
 	* Closes files associated with this index and also saves any new deletions to disk.
   * No other methods should be called after this has been called.
   * @throws IOException if there is a low-level IO error
@@ -665,7 +662,7 @@ public:
    * currently locked.
    * @param directory the directory to check for a lock
    * @throws IOException if there is a low-level IO error
-   */  
+   */
 	static bool isLocked(CL_NS(store)::Directory* directory);
 
   /**
@@ -673,7 +670,7 @@ public:
    * currently locked.
    * @param directory the directory to check for a lock
    * @throws IOException if there is a low-level IO error
-   */ 
+   */
 	static bool isLocked(const char* directory);
 
 

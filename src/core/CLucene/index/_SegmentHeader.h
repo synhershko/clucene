@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_SegmentHeader_
@@ -38,12 +38,12 @@ protected:
 	CL_NS(util)::BitSet* deletedDocs;
 	int32_t _doc;
 	int32_t _freq;
-	
+
 private:
 	int32_t skipInterval;
 	int32_t maxSkipLevels;
 	DefaultSkipListReader* skipListReader;
-	
+
 	int64_t freqBasePointer;
 	int64_t proxBasePointer;
 
@@ -73,7 +73,7 @@ public:
 
 	/** Optimized implementation. */
 	virtual bool skipTo(const int32_t target);
-	
+
 	virtual TermPositions* __asTermPositions();
 
 protected:
@@ -93,7 +93,7 @@ private:
 	// indicates whether the payload of the currend position has
 	// been read from the proxStream yet
 	bool needToLoadPayload;
-	
+
 	// these variables are being used to remember information
 	// for a lazy skip
 	int64_t lazySkipPointer;
@@ -147,7 +147,7 @@ public:
 
 	bool isPayloadAvailable() const;
 
-private:	
+private:
 	virtual TermDocs* __asTermDocs();
 	virtual TermPositions* __asTermPositions();
 
@@ -210,7 +210,7 @@ class SegmentReader: public DirectoryIndexReader {
   std::string segment;
   SegmentInfo* si;
   int32_t readBufferSize;
-	
+
 	//Indicates if there are documents marked as deleted
 	bool deletedDocsDirty;
 	bool normsDirty;
@@ -226,14 +226,14 @@ class SegmentReader: public DirectoryIndexReader {
     CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar,
     CL_NS(util)::Deletor::Dummy,
     Norm > NormsType;
-  NormsType _norms; 
-    
+    NormsType _norms;
+
 	uint8_t* ones;
 	uint8_t* fakeNorms();
 
   // optionally used for the .nrm file shared by multiple norms
 	CL_NS(store)::IndexInput* singleNormStream;
-	
+
 	// Compound File Reader when based on a compound file segment
 	CompoundFileReader* cfsReader;
   CompoundFileReader* storeCFSReader;
@@ -379,10 +379,10 @@ public:
     ///Returns the bytes array that holds the norms of a named field.
 	///Returns fake norms if norms aren't available
     uint8_t* norms(const TCHAR* field);
-	
+
     ///Reads the Norms for field from disk
 	void norms(const TCHAR* field, uint8_t* bytes);
-	
+
 	///concatenating segment with ext and x
   std::string SegmentName(const char* ext, const int32_t x=-1);
   ///Creates a filename in buffer by concatenating segment with ext and x
@@ -392,7 +392,7 @@ public:
 	* @see IndexReader#getFieldNames(IndexReader.FieldOption fldOption)
 	*/
 	void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray);
-    
+
   static bool usesCompoundFile(SegmentInfo* si);
 
 	/** Return a term frequency vector for the specified document and field. The
@@ -420,7 +420,7 @@ public:
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir, int32_t readBufferSize);
-	
+
 	///a bitVector that manages which documents have been deleted
 	CL_NS(util)::BitSet* deletedDocs;
 	///an IndexInput to the frequency file

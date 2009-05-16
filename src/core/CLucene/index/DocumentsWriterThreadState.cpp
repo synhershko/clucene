@@ -43,17 +43,17 @@ CL_NS_DEF(index)
 
 
 DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
-  _parent(__parent),
-  fieldDataArray(ObjectArray<FieldData>(8)),
-  fieldDataHash(ObjectArray<FieldData>(16)),
+  postingsFreeListTS(ValueArray<Posting*>(256)),
   vectorFieldPointers(ValueArray<int64_t>(10)),
   vectorFieldNumbers(ValueArray<int32_t>(10)),
-  postingsFreeListTS(ValueArray<Posting*>(256)),
-  allFieldDataArray(ObjectArray<FieldData>(10)),
+  fieldDataArray(ObjectArray<FieldData>(8)),
+  fieldDataHash(ObjectArray<FieldData>(16)),
   postingsVectors(ValueArray<PostingVector*>(1)),
-  charPool( _CLNEW CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
+  allFieldDataArray(ObjectArray<FieldData>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
-  vectorsPool( _CLNEW ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) )
+  vectorsPool( _CLNEW ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) ),
+  charPool( _CLNEW CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
+  _parent(__parent)
 {
   fieldDataHashMask = 15;
   postingsFreeCountTS = 0;
@@ -77,6 +77,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   this->offsets = NULL;
   this->pos = NULL;
   this->freq = NULL;
+  this->doFlushAfter = false;
 }
 
 DocumentsWriter::ThreadState::~ThreadState(){
@@ -690,15 +691,15 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
 
 
 DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
-  _parent(__parent),
   docFields(ObjectArray<Field>(1)),
-  localToken (_CLNEW Token),
+   _parent(__parent),
+ localToken (_CLNEW Token),
   vectorSliceReader(_CLNEW ByteSliceReader())
 {
   this->fieldCount = this->postingsHashSize = this->postingsHashHalfSize = this->postingsVectorsUpto = 0;
   this->postingsHashMask = this->offsetEnd = 0;
   this->offsetStartCode = this->offsetStart = this->numPostings = this->position = this->length = this->offset = 0;
-  this->boost = 0.0; 
+  this->boost = 0.0;
   this->next = NULL;
   this->lastGen = -1;
   this->fieldInfo = fieldInfo;
@@ -842,7 +843,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
     size_t valueLength = _tcslen(stringValue);
     Token* token = localToken;
     token->clear();
-    
+
     token->setText(stringValue,valueLength);
     token->setStartOffset(offset);
     token->setEndOffset(offset + valueLength);
@@ -887,7 +888,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
         position += (token->getPositionIncrement() - 1);
         addPosition(token);
         ++length;
-        
+
 				// Apply field truncation policy.
 				if (maxFieldLength != IndexWriter::FIELD_TRUNC_POLICY__WARN) {
 					// The client programmer has explicitly authorized us to
@@ -898,7 +899,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
 						break;
 					}
 				} else if (length > IndexWriter::DEFAULT_MAX_FIELD_LENGTH) {
-					const TCHAR* errMsgBase = 
+					const TCHAR* errMsgBase =
 						_T("Indexing a huge number of tokens from a single")
 						_T(" field (\"%s\", in this case) can cause CLucene")
 						_T(" to use memory excessively.")
@@ -909,7 +910,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
 						_T("  You should set this threshold via")
 						_T(" IndexReader::maxFieldLength (set to LUCENE_INT32_MAX")
 						_T(" to disable truncation, or a value to specify maximum number of fields).");
-					
+
 					TCHAR defaultMaxAsChar[34];
 					_i64tot(IndexWriter::DEFAULT_MAX_FIELD_LENGTH,
 						defaultMaxAsChar, 10
@@ -918,9 +919,9 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
 						+ _tcslen(fieldInfo->name)
 						+ _tcslen(defaultMaxAsChar);
 					TCHAR* errMsg = _CL_NEWARRAY(TCHAR,errMsgLen+1);
-					
+
 					_sntprintf(errMsg, errMsgLen,errMsgBase, fieldInfo->name, defaultMaxAsChar);
-					
+
 					_CLTHROWT_DEL(CL_ERR_Runtime,errMsg);
 				}
       }
@@ -985,8 +986,8 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
   while (downto > 0)
     code = (code*31) + tokenText[--downto];
 /*
-  std::cout << "  addPosition: buffer=" << Misc::toString(tokenText).substr(0,tokenTextLen) << " pos=" << position 
-            << " offsetStart=" << (offset+token->startOffset()) << " offsetEnd=" << (offset + token->endOffset()) 
+  std::cout << "  addPosition: buffer=" << Misc::toString(tokenText).substr(0,tokenTextLen) << " pos=" << position
+            << " offsetStart=" << (offset+token->startOffset()) << " offsetEnd=" << (offset + token->endOffset())
             << " docID=" << threadState->docID << " doPos=" << doVectorPositions << " doOffset=" << doVectorOffsets << "\n";
 */
   int32_t hashPos = code & postingsHashMask;
