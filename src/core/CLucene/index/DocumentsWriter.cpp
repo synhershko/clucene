@@ -86,7 +86,7 @@ DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter
   numBytesUsed = 0;
   this->directory = directory;
   this->writer = writer;
-  this->bufferIsFull = false;
+  this->hasNorms = this->bufferIsFull = false;
   fieldInfos = _CLNEW FieldInfos();
 
 	maxBufferedDeleteTerms = IndexWriter::DEFAULT_MAX_BUFFERED_DELETE_TERMS;
