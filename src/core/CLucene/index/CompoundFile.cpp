@@ -311,7 +311,7 @@ CompoundFileWriter::CompoundFileWriter(Directory* dir, const char* name, Segment
   _internal->merged = false;
   _internal->checkAbort = checkAbort;
   _internal->directory = dir;
-  _internal->fileName = STRDUP_AtoA(name);
+  _internal->fileName = name;
 }
 
 CompoundFileWriter::~CompoundFileWriter(){

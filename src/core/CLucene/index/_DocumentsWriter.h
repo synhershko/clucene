@@ -228,6 +228,7 @@ private:
     int32_t endIndex;
   public:
     ByteSliceReader();
+    ~ByteSliceReader();
     void init(ByteBlockPool* pool, int32_t startIndex, int32_t endIndex);
 
     uint8_t readByte();
@@ -300,11 +301,13 @@ private:
   static const int32_t CHAR_NUM_BYTE;
 
   // Holds free pool of Posting instances
-  CL_NS(util)::ValueArray<Posting*> postingsFreeListDW;
+  CL_NS(util)::ObjectArray<Posting> postingsFreeListDW;
   int32_t postingsFreeCountDW;
   int32_t postingsAllocCountDW;
 
-  CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<TCHAR>*, CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<TCHAR> > > freeCharBlocks;
+  typedef CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<TCHAR>*,
+    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<TCHAR> > > FreeCharBlocksType;
+  FreeCharBlocksType freeCharBlocks;
 
   /* We have three pools of RAM: Postings, uint8_t blocks
    * (holds freq/prox posting data) and char blocks (holds
@@ -359,8 +362,9 @@ private:
   // used when we hit a exception when adding a document
   void addDeleteDocID(int32_t docId);
 
-  CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<uint8_t>*, 
-  CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > freeByteBlocks;
+  typedef CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<uint8_t>*,
+    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > FreeByteBlocksType;
+  FreeByteBlocksType freeByteBlocks;
 
 
   /** Per-thread state.  We keep a separate Posting hash and
@@ -378,7 +382,7 @@ private:
       ThreadState* threadState;
 
       int32_t fieldCount;
-	    CL_NS(util)::ObjectArray<CL_NS(document)::Field> docFields;
+	    CL_NS(util)::ValueArray<CL_NS(document)::Field*> docFields;
 
       FieldData* next;
 
@@ -475,11 +479,11 @@ private:
     int32_t numStoredFields;                  // How many stored fields in current doc
     float_t docBoost;                       // Boost for current doc
 
-    CL_NS(util)::ObjectArray<FieldData> fieldDataArray;           // Fields touched by current doc
+    CL_NS(util)::ValueArray<FieldData*> fieldDataArray;           // Fields touched by current doc
     int32_t numFieldData;                     // How many fields in current doc
     int32_t numVectorFields;                  // How many vector fields in current doc
 
-    CL_NS(util)::ObjectArray<FieldData> fieldDataHash;            // Hash FieldData instances by field name
+    CL_NS(util)::ValueArray<FieldData*> fieldDataHash;            // Hash FieldData instances by field name
     int32_t fieldDataHashMask;
     TCHAR* maxTermPrefix;                 // Non-null prefix of a too-large term if this
                                           // doc has one
@@ -759,6 +763,7 @@ private:
     int32_t termFreq;
   public:
     FieldMergeState();
+    ~FieldMergeState();
     bool nextTerm();
     bool nextDoc();
 

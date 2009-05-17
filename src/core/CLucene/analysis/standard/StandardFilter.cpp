@@ -24,7 +24,7 @@ CL_NS_DEF2(analysis,standard)
   }
 
   Token* StandardFilter::next(Token*& t) {
-	t = input->next(t);
+    t = input->next(t);
     if (t == NULL)
       return NULL;
 
@@ -42,12 +42,12 @@ CL_NS_DEF2(analysis,standard)
       return t;
 
     } else if ( type == tokenImage[ACRONYM] ) {		  // remove dots
-		int32_t j = 0;
-		for ( int32_t i=0;i<textLength;i++ ){
-			if ( text[i] != '.' )
-				text[j++]=text[i];
-		}
-		text[j]=0;
+      int32_t j = 0;
+      for ( int32_t i=0;i<textLength;i++ ){
+        if ( text[i] != '.' )
+          text[j++]=text[i];
+      }
+      text[j]=0;
       return t;
 
     } else {

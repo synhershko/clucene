@@ -46,8 +46,8 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   postingsFreeListTS(ValueArray<Posting*>(256)),
   vectorFieldPointers(ValueArray<int64_t>(10)),
   vectorFieldNumbers(ValueArray<int32_t>(10)),
-  fieldDataArray(ObjectArray<FieldData>(8)),
-  fieldDataHash(ObjectArray<FieldData>(16)),
+  fieldDataArray(ValueArray<FieldData*>(8)),
+  fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ValueArray<PostingVector*>(1)),
   allFieldDataArray(ObjectArray<FieldData>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
@@ -225,7 +225,7 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
         allFieldDataArray.resize( (int32_t) (allFieldDataArray.length*1.5) );
 
         fieldDataHash.resize( fieldDataHash.length*2 );
-        ObjectArray<FieldData>& newHashArray = fieldDataHash;;
+        ValueArray<FieldData*>& newHashArray = fieldDataHash;
 
         // Rehash
         fieldDataHashMask = allFieldDataArray.length-1;
@@ -691,9 +691,9 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
 
 
 DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
-  docFields(ObjectArray<Field>(1)),
-   _parent(__parent),
- localToken (_CLNEW Token),
+  docFields(ValueArray<Field*>(1)),
+  _parent(__parent),
+  localToken (_CLNEW Token),
   vectorSliceReader(_CLNEW ByteSliceReader())
 {
   this->fieldCount = this->postingsHashSize = this->postingsHashHalfSize = this->postingsVectorsUpto = 0;

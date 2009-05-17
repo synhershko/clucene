@@ -134,7 +134,7 @@ CL_NS_DEF2(analysis,standard)
   Token* StandardTokenizer::next(Token*& t) {
     int ch=0;
 
-    bool bOwnsToken;
+    bool bOwnsToken=false;
     while (!EOS) {
       ch = readChar();
 

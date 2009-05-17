@@ -65,6 +65,9 @@ MultiLevelSkipListWriter::MultiLevelSkipListWriter(int32_t skipInterval, int32_t
     numberOfSkipLevels = maxSkipLevels;
   }
 }
+MultiLevelSkipListWriter::~MultiLevelSkipListWriter(){
+  _CLDELETE(skipBuffer);
+}
 
 void MultiLevelSkipListWriter::init() {
   skipBuffer = _CLNEW CL_NS(util)::ObjectArray<CL_NS(store)::RAMOutputStream>(numberOfSkipLevels);
@@ -164,5 +167,12 @@ DefaultSkipListWriter::DefaultSkipListWriter(int32_t skipInterval, int32_t numbe
   lastSkipFreqPointer =  _CL_NEWARRAY(int64_t,numberOfSkipLevels);
   lastSkipProxPointer =  _CL_NEWARRAY(int64_t,numberOfSkipLevels);
 }
-
+DefaultSkipListWriter::~DefaultSkipListWriter(){
+  _CLDELETE(freqOutput);
+  _CLDELETE(proxOutput);
+  _CLDELETE_ARRAY(lastSkipDoc);
+  _CLDELETE_ARRAY(lastSkipPayloadLength);
+  _CLDELETE_ARRAY(lastSkipFreqPointer);
+  _CLDELETE_ARRAY(lastSkipProxPointer);
+}
 CL_NS_END

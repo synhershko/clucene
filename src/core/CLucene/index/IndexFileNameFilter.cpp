@@ -7,6 +7,10 @@ CL_NS_DEF(index)
 
 IndexFileNameFilter* IndexFileNameFilter::singleton = _CLNEW IndexFileNameFilter();
 
+void IndexFileNameFilter::_shutdown(){
+  _CLDELETE(singleton);
+}
+
 IndexFileNameFilter::IndexFileNameFilter() {
 	size_t i;
 	for ( i = 0; i < IndexFileNames::INDEX_EXTENSIONS.length; ++i) {
@@ -20,7 +24,7 @@ IndexFileNameFilter::IndexFileNameFilter() {
 bool IndexFileNameFilter::accept(const char* dir, const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
-	if (i != -1) {
+	if (i != string::npos) {
 	  const char* extension = name + 1 + i;
 	  char* tmp;
 	  if (extensions.find(extension) != extensions.end()) {
@@ -45,7 +49,7 @@ bool IndexFileNameFilter::accept(const char* dir, const char* name) const {
 bool IndexFileNameFilter::isCFSFile(const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
-	if (i != -1) {
+	if (i != string::npos) {
 	  const char* extension = name + 1 + i;
 	  char* tmp;
 	  if (extensionsInCFS.find(extension) != extensionsInCFS.end() ) {

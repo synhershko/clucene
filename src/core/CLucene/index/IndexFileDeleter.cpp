@@ -91,7 +91,13 @@ void IndexFileDeleter::message(string message) {
 }
 
 
-IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* policy, SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter){
+IndexFileDeleter::~IndexFileDeleter(){
+  _CLDELETE(policy);
+}
+IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* policy,
+  SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter):
+  refCounts( RefCountsType(true,true) ), commits(CommitsType(true))
+{
 	this->docWriter = docWriter;
 	this->infoStream = infoStream;
 

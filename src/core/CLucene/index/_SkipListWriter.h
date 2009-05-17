@@ -68,7 +68,7 @@ protected:
   int32_t numberOfSkipLevels;
   
   MultiLevelSkipListWriter(int32_t skipInterval, int32_t maxSkipLevels, int32_t df);
-  
+  virtual ~MultiLevelSkipListWriter();
   void init();
 
   void resetSkip();
@@ -119,6 +119,7 @@ public:
 	
   DefaultSkipListWriter(int32_t skipInterval, int32_t numberOfSkipLevels, int32_t docCount, 
     CL_NS(store)::IndexOutput* freqOutput, CL_NS(store)::IndexOutput* proxOutput);
+  ~DefaultSkipListWriter();
   
   friend class SegmentMerger;
   friend class DocumentsWriter;

@@ -36,6 +36,8 @@ public:
    */
   bool isCFSFile(const char* name) const;
   static const IndexFileNameFilter* getFilter();
+
+  static void _shutdown();
 };
 
 

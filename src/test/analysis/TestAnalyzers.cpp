@@ -21,16 +21,13 @@
 
     t = ts->next(t);
     CLUCENE_ASSERT(t!=NULL);
-wprintf(L"term=%s\n", t->termBuffer());
 	  CLUCENE_ASSERT(_tcscmp( t->termBuffer(),buffer) == 0 );
 		
     last = pos+1;
   }
   CLUCENE_ASSERT( (t=ts->next(t))==NULL); //Test failed, more fields than expected.
+  _CLDELETE(t);
 
-if ( t != NULL )
-  wprintf(L"term=%s\n", t->termBuffer());
-  
 	 ts->close();
     _CLDELETE(reader);
     _CLDELETE(ts);

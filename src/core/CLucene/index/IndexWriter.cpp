@@ -80,6 +80,9 @@ IndexWriter::~IndexWriter(){
   _CLDELETE(runningMerges);
   _CLDELETE(mergeExceptions);
   _CLDELETE(segmentsToOptimize);
+  _CLDELETE(mergeScheduler);
+  _CLDELETE(mergePolicy);
+  _CLDELETE(deleter);
   delete _internal;
 }
 

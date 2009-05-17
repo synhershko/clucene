@@ -280,10 +280,8 @@ MergePolicy::MergeSpecification* LogMergePolicy::findMerges(SegmentInfos* infos,
 
   // Compute levels, which is just log (base mergeFactor)
   // of the size of each segment
-  float_t* levels = _CL_NEWARRAY(float_t,numSegments);
+  ValueArray<float_t> levels(numSegments);
   const float_t norm = log((float_t)mergeFactor);
-
-  const Directory* directory = writer->getDirectory();
 
   for(int32_t i=0;i<numSegments;i++) {
     SegmentInfo* info = infos->info(i);

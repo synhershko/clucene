@@ -80,7 +80,8 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
-	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) )
+	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
+  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true))
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -109,6 +110,13 @@ DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter
 }
 DocumentsWriter::~DocumentsWriter(){
   _CLDELETE(bufferedDeleteTerms);
+  _CLDELETE(skipListWriter);
+  _CLDELETE_ARRAY(copyByteBuffer);
+  _CLDELETE(_files);
+
+  for(size_t i=0;i<threadStates.length;i++) {
+    _CLDELETE(threadStates.values[i]);
+  }
 }
 
 void DocumentsWriter::setInfoStream(std::ostream* infoStream) {
@@ -358,7 +366,7 @@ void DocumentsWriter::abort(AbortException* ae) {
     if (ae != NULL)
       abortCount--;
     CONDITION_NOTIFYALL(THIS_WAIT_CONDITION)
-)
+  )
 }
 
 void DocumentsWriter::resetPostingsData() {
@@ -665,10 +673,11 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
   const int32_t fieldNumber = (*fields)[0]->fieldInfo->number;
   int32_t numFields = fields->length;
 
+  ObjectArray<FieldMergeState> mergeStatesData(numFields);
   ValueArray<FieldMergeState*> mergeStates(numFields);
 
   for(int32_t i=0;i<numFields;i++) {
-    FieldMergeState* fms = mergeStates.values[i] = _CLNEW FieldMergeState();
+    FieldMergeState* fms = mergeStatesData.values[i] = _CLNEW FieldMergeState();
     fms->field = (*fields)[i];
     fms->postings = fms->field->sortPostings();
 
@@ -678,6 +687,7 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
     bool result = fms->nextTerm();
     assert (result);
   }
+  memcpy(mergeStates.values,mergeStatesData.values,sizeof(FieldMergeState*) * numFields);
 
   const int32_t skipInterval = termsOut->skipInterval;
   currentFieldStorePayloads = (*fields)[0]->fieldInfo->storePayloads;
@@ -793,8 +803,9 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
           // as well
           upto = 0;
           for(int32_t i=0;i<numFields;i++)
-            if (mergeStates[i] != minState)
+            if (mergeStates[i] != minState){
               mergeStates.values[upto++] = mergeStates[i];
+            }
           numFields--;
           assert (upto == numFields);
         }
@@ -1373,6 +1384,8 @@ DocumentsWriter::FieldMergeState::FieldMergeState(){
   docID = 0;
   termFreq = 0;
 }
+DocumentsWriter::FieldMergeState::~FieldMergeState(){
+}
 bool DocumentsWriter::FieldMergeState::nextTerm(){
   postingUpto++;
   if (postingUpto == field->numPostings)
@@ -1431,6 +1444,8 @@ DocumentsWriter::ByteSliceReader::ByteSliceReader(){
   upto = 0;
   bufferOffset = 0;
   endIndex = 0;
+}
+DocumentsWriter::ByteSliceReader::~ByteSliceReader(){
 }
 const char* DocumentsWriter::ByteSliceReader::getDirectoryType() const{
   return "";

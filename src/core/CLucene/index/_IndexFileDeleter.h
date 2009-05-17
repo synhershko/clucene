@@ -120,12 +120,13 @@ private:
    * Maps String to RefCount (class below) instances: */
   RefCountsType refCounts;
 
+  typedef CL_NS(util)::CLVector<IndexCommitPoint*, CL_NS(util)::Deletor::Object<IndexCommitPoint*> > CommitsType;
   /* Holds all commits (segments_N) currently in the index.
    * This will have just 1 commit if you are using the
    * default delete policy (KeepOnlyLastCommitDeletionPolicy).
    * Other policies may leave commit points live for longer
    * in which case this list would be longer than 1: */
-  std::vector<IndexCommitPoint*> commits;
+   CommitsType commits;
 
   /* Holds files we had incref'd from the previous
    * non-commit checkpoint: */
@@ -169,6 +170,7 @@ public:
    * @throws IOException if there is a low-level IO error
    */
   IndexFileDeleter(CL_NS(store)::Directory* directory, IndexDeletionPolicy* policy, SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter);
+  ~IndexFileDeleter();
 
   /**
    * Writer calls this when it has hit an error and had to
