@@ -133,33 +133,35 @@ CL_NS_DEF2(analysis,standard)
 
   Token* StandardTokenizer::next(Token*& t) {
     int ch=0;
-	
-	bool bOwnsToken = (t==NULL);
-	if (bOwnsToken) //TODO: what's this for?
-		t = _CLNEW Token();
 
-	while (!EOS) {
+    bool bOwnsToken;
+    while (!EOS) {
       ch = readChar();
 
-	  if ( ch == 0 || ch == -1 ){
-		  continue;
-	  } else if (SPACE) {
+      bOwnsToken = (t==NULL);
+      if (bOwnsToken)
+        t = _CLNEW Token();
+
+      if ( ch == 0 || ch == -1 ){
+        continue;
+      } else if (SPACE) {
         continue;
       } else if (ALPHA || UNDERSCORE) {
         tokenStart = rdPos;
-        if(ReadAlphaNum(ch,t) != NULL) return t;
+        t = ReadAlphaNum(ch,t);
+        if ( t != NULL) return t;
       } else if (DIGIT || NEGATIVE_SIGN_ || DECIMAL) {
         tokenStart = rdPos;
         /* ReadNumber returns NULL if it fails to extract a valid number; in
         ** that case, we just continue. */
         if (ReadNumber(NULL, ch,t))
-          return t;
-	  } else if ( _CJK ){
-      	if ( ReadCJK(ch,t) )
-      		return t;
+        return t;
+      } else if ( _CJK ){
+        t = ReadCJK(ch,t);
+        if ( t != NULL ) return t;
       }
     }
-	if (bOwnsToken) _CLDELETE(t);
+    if (bOwnsToken) _CLDELETE(t);
     return NULL;
   }
 

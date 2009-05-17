@@ -24,7 +24,8 @@ CL_NS_DEF2(analysis,standard)
   }
 
   Token* StandardFilter::next(Token*& t) {
-    if (input->next(t) == NULL)
+	t = input->next(t);
+    if (t == NULL)
       return NULL;
 
     TCHAR* text = t->termBuffer();

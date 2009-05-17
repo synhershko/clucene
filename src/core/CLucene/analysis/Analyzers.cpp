@@ -50,13 +50,13 @@ Token* CharTokenizer::next(Token*& token){
 			c = ioBuffer[bufferIndex++];
 		if (isTokenChar(c)) {                       // if it's a token TCHAR
 
-		if (length == 0)			  // start of token
-			start = offset-1;
+      if (length == 0)			  // start of token
+        start = offset-1;
 
-		buffer[length++] = normalize(c);          // buffer it, normalized
+      buffer[length++] = normalize(c);          // buffer it, normalized
 
-		if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
-			break;
+      if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
+        break;
 
 		} else if (length > 0)			  // at non-Letter w/ chars
 			break;					  // return 'em
@@ -151,7 +151,8 @@ LowerCaseFilter::~LowerCaseFilter(){
 }
 
 Token* LowerCaseFilter::next(Token*& t){
-	if (input->next(t) == NULL)
+	t = input->next(t);
+	if (t == NULL)
 		return NULL;
  	stringCaseFold( t->termBuffer() );
 	return t;
@@ -221,9 +222,9 @@ Token* StopFilter::next(Token*& token) {
 	while (input->next(token)){
 		TCHAR* termText = token->termBuffer();
     if ( ignoreCase ){
-      stringCaseFold(token->termBuffer());
+      stringCaseFold(termText);
     }
-		if (stopWords->find(termText)==stopWords->end()){
+		if (stopWords->find(termText)!=stopWords->end()){
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
 			}
@@ -325,7 +326,7 @@ ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
 ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
 Token* ISOLatin1AccentFilter::next(Token*& token){
-	if ( input->next(token) ){
+	if ( input->next(token) != NULL ){
 		int32_t l = token->termLength();
 		const TCHAR* chars = token->termBuffer();
 		bool doProcess = false;

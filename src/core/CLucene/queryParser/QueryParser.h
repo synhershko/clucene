@@ -281,14 +281,15 @@ public:
     locale = _locale;
   }
 
-  /**
+  
   * Returns current locale, allowing access by subclasses.
   *
   Locale getLocale() const {
     return locale;
-  }*/
-
-  /**
+  }
+  */
+ 
+  /** 
   * Sets the default date resolution used by RangeQueries for fields for which no
   * specific date resolutions has been set. Field specific resolutions can be set
   * with {@link #setDateResolution(String, DateTools.Resolution)}.

@@ -7,7 +7,7 @@
 #ifndef _lucene_queryParser_FastCharStream_
 #define _lucene_queryParser_FastCharStream_
 
-CL_CLASS_DEF(util,Reader);
+CL_CLASS_DEF(util,Reader)
 
 CL_NS_DEF(queryParser)
 

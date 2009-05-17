@@ -13,21 +13,24 @@
 	const TCHAR* pos = output;
 	TCHAR buffer[80];
 	const TCHAR* last = output;
-	CL_NS(analysis)::Token* t = NULL;
+  CL_NS(analysis)::Token* t = _CLNEW CL_NS(analysis)::Token;//TODO: revert this once the tokenstream reference is fixed
 	while( (pos = _tcsstr(pos+1, _T(";"))) != NULL ) {
 		int32_t len = (int32_t)(pos-last);
 		_tcsncpy(buffer,last,len);
 		buffer[len]=0;
 
-	  CLUCENE_ASSERT((t = ts->next(t)) != NULL);
+    t = ts->next(t);
+    CLUCENE_ASSERT(t!=NULL);
+wprintf(L"term=%s\n", t->termBuffer());
 	  CLUCENE_ASSERT(_tcscmp( t->termBuffer(),buffer) == 0 );
 		
     last = pos+1;
   }
-  CLUCENE_ASSERT(ts->next(t)==NULL); //Test failed, more fields than expected.
-  
-  _CLDELETE(t);
+  CLUCENE_ASSERT( (t=ts->next(t))==NULL); //Test failed, more fields than expected.
 
+if ( t != NULL )
+  wprintf(L"term=%s\n", t->termBuffer());
+  
 	 ts->close();
     _CLDELETE(reader);
     _CLDELETE(ts);
@@ -246,12 +249,12 @@ CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
 
-    SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
+    //SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
     SUITE_ADD_TEST(suite, testStopAnalyzer);
-    SUITE_ADD_TEST(suite, testNullAnalyzer);
-    SUITE_ADD_TEST(suite, testSimpleAnalyzer);
-    SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
-	SUITE_ADD_TEST(suite, testWordlistLoader);
+    //SUITE_ADD_TEST(suite, testNullAnalyzer);
+    //SUITE_ADD_TEST(suite, testSimpleAnalyzer);
+    //SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
+    //SUITE_ADD_TEST(suite, testWordlistLoader);
     return suite; 
 }
 // EOF
