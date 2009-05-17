@@ -175,7 +175,7 @@ void _ThreadLocal::set ( void* t )
 		ThreadLocals* threadLocals = threadData->get(id);
 		if ( threadLocals == NULL ){
 			threadLocals = _CLNEW ThreadLocals;
-			threadData->put(id,threadLocals);
+      threadData->insert( std::pair<const _LUCENE_THREADID_TYPE, ThreadLocals*>(id,threadLocals));
 		}
 		threadLocals->add(this);
 	}

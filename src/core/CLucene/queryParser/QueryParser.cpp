@@ -769,7 +769,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
         fieldToken = jj_consume_token(TERM);
         jj_consume_token(COLON);
         // make sure to delete _field only if it's not contained already by the QP
-        if (_field != field) _CLLDELETE(_field);
+        if (_field != field) _CLDELETE_LARRAY(_field);
         _field=discardEscapeChar(fieldToken->image);
         break;
       }

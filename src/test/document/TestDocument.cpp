@@ -111,7 +111,7 @@ public:
     writer.addDocument(&doc);
     doc.clear();
 
-    //done adding documents, now try and read them back
+    //done adding a few documents, now try and add a few more...
     writer.optimize();
 
     //use big file

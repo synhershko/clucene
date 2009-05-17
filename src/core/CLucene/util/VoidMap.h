@@ -35,7 +35,7 @@ template<typename _kt, typename _vt,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLUCENE_INLINE_EXPORT __CLMap:public _base,LUCENE_BASE {
-private:
+protected:
 	bool dk;
 	bool dv;
 	typedef _base base;
@@ -78,22 +78,6 @@ public:
 		bool ret = itr!=base::end();
 		return ret;
 	}
-
-	///put the specified pair into the map. remove any old items first
-	///\param k the key
-	///\param v the value
-	void put(_kt k,_vt v){
-		//todo: check if this is always right!
-		//must should look through code, for
-		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
-			
-		//todo: replacing the old item might be quicker...
-		
-		base::insert(_pair(k,v));
-	}
-
 	
 	///using a non-const key, get a non-const value
 	_vt get( _kt k) const {
@@ -179,6 +163,20 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+  
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( dk || dv )
+			remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 #elif defined(_CL_HAVE_EXT_HASH_MAP)
  //ext/hash_map syntax
@@ -200,6 +198,19 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( dk || dv )
+			remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 
 #elif defined(_CL_HAVE_HASH_MAP)
@@ -222,6 +233,19 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( dk || dv )
+			remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 #endif
 
@@ -244,6 +268,19 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( dk || dv )
+			remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 
 
@@ -264,6 +301,19 @@ public:
 	{
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
+	}
+  
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( dk || dv )
+			remove(k);
+
+    base::
 	}
 };
 

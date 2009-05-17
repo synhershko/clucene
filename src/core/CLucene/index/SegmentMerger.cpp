@@ -53,6 +53,8 @@ SegmentMerger::SegmentMerger(IndexWriter* writer, const char* name, MergePolicy:
   if (merge != NULL)
     this->checkAbort = _CLNEW CheckAbort(merge, directory);
   this->termIndexInterval= writer->getTermIndexInterval();
+  this->mergedDocs = 0;
+  this->maxSkipLevels = 0;
 }
 
 SegmentMerger::~SegmentMerger(){
