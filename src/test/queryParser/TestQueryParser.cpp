@@ -31,7 +31,7 @@ public:
 			token->set( _T("phrase2"), savedStart, savedEnd);
 			return token;
 		}else{
-			while( input->next(token) ){
+			while( (token = input->next(token) ) != NULL ){
 				if ( _tcscmp(token->termBuffer(), _T("phrase")) == 0 ) {
 					inPhrase = true;
 					savedStart = token->startOffset();

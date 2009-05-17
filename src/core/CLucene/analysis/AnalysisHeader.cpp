@@ -124,7 +124,7 @@ void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const
 	_endOffset   = end;
 	_type        = (typ==NULL?getDefaultType():typ);
 	positionIncrement = 1;
-	setText(text, end-start);
+	setText(text);
 }
 
 void Token::setText(const TCHAR* text, int32_t l){
