@@ -451,11 +451,11 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           //mterms = terms;
 
           //we simply shorten the length of the array...
-
+        
         }
       }
       FieldCache::StringIndex* value = _CLNEW FieldCache::StringIndex (retArray, mterms,t);
-
+  	  
 	    FieldCacheAuto* fa = _CLNEW FieldCacheAuto(retLen,FieldCacheAuto::STRING_INDEX);
 	    fa->stringIndex = value;
 	    fa->ownContents=true;

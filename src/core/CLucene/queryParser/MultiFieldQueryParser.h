@@ -7,14 +7,13 @@
 #ifndef _lucene_queryParser_MultiFieldQueryParser_
 #define _lucene_queryParser_MultiFieldQueryParser_
 
-
 #include "QueryParser.h"
 #include "CLucene/util/VoidMap.h"
 
 
 CL_NS_DEF(queryParser)
 
-typedef CL_NS(util)::CLHashMap<const TCHAR*,
+typedef CL_NS(util)::CLHashMap<TCHAR*,
                                float_t,
                                CL_NS(util)::Compare::TChar,
                                CL_NS(util)::Equals::TChar,
@@ -61,6 +60,7 @@ public:
   */
   MultiFieldQueryParser(const TCHAR** _fields, CL_NS(analysis)::Analyzer* a, BoostMap* _boosts = NULL);
   virtual ~MultiFieldQueryParser();
+
 
 protected:
   CL_NS(search)::Query* getFieldQuery(const TCHAR* field, const TCHAR* queryText, const int32_t slop);

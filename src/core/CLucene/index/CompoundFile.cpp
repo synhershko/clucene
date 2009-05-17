@@ -334,7 +334,7 @@ void CompoundFileWriter::addFile(const char* file){
   if (file == NULL)
       _CLTHROWA(CL_ERR_NullPointer,"file cannot be null");
 
-  if (_internal->ids.find( (char*)file )!=_internal->ids.end()){
+  if (_internal->ids.find((char*)file)!=_internal->ids.end()){
      char buf[CL_MAX_PATH + 30];
      strcpy(buf,"File ");
      strncat(buf,file,CL_MAX_PATH);

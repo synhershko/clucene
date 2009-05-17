@@ -241,7 +241,7 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   TCHAR* terms[2];
   terms[0]=NULL;terms[1]=NULL;
   Token* t = NULL;
-  bool tret=true;
+  bool tret=false;
   bool from=true;
   while(tret)
   {

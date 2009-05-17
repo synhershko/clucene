@@ -85,7 +85,6 @@
         #define _tcsicmp strcasecmp
         #define _tcscspn strcspn
         #define _tcsdup strdup //string duplicate
-
         //converstion methods
         #define _tcstod strtod
         #define _tcstoi64 strtoll

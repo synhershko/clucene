@@ -129,7 +129,6 @@ void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const
 
 void Token::setText(const TCHAR* text, int32_t l){
 	if ( l < 0 ) l = _tcslen(text);
-
 #ifndef LUCENE_TOKEN_WORD_LENGTH
 	if(bufferTextLen < l+1)
 	  growBuffer(l+1);
@@ -196,7 +195,7 @@ size_t Token::termTextLength() {
 size_t Token::termLength() {
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
 		_termTextLen = _tcslen(_buffer);
-	return _termTextLen;
+	return _termTextLen; 
 }
 void Token::resetTermTextLen(){
 	_termTextLen=-1;

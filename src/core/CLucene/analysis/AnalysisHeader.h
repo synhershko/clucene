@@ -80,14 +80,13 @@ public:
 	Token();
 	~Token();
 
-	/// Constructs a Token with the given text, start and end offsets, & type.
+	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 
 	size_t bufferLength();
 	void growBuffer(size_t size);
   TCHAR* resizeTermBuffer(size_t size);
-
 	/** Set the position increment.  This determines the position of this
 	* token relative to the previous Token in a TokenStream, used in
 	* phrase searching.

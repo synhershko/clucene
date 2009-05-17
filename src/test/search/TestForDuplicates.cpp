@@ -15,7 +15,6 @@
       }
     }
   }
-
   void testSearchTestForDuplicatesRaw(CuTest *tc){
 		const int MAX_DOCS=1500;
 		const char *strBody[10] = {"test", "value", "why not", "computer", "clucene",
