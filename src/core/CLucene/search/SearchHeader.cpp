@@ -103,7 +103,7 @@ TopFieldDocs::TopFieldDocs (int32_t totalHits, FieldDoc** fieldDocs, int32_t sco
 {
 	this->fields = fields;
 	this->fieldDocs = fieldDocs;
-	this->scoreDocs = _CL_NEWARRAY(ScoreDoc,scoreDocsLen);
+	this->scoreDocs = new ScoreDoc[scoreDocsLen];
 	for (int32_t i=0;i<scoreDocsLen;i++ )
 		this->scoreDocs[i] = this->fieldDocs[i]->scoreDoc;
 }
@@ -137,7 +137,7 @@ TopDocs::~TopDocs(){
 //Pre  - true
 //Post - The instance has been destroyed
 
-	_CLDELETE_ARRAY(scoreDocs);
+	delete [] scoreDocs;
 }
 
 

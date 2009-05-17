@@ -20,7 +20,7 @@ class SegmentMergeQueue;
 class MultiSegmentReader:public DirectoryIndexReader{
   static int32_t readerIndex(const int32_t n, int32_t* starts, int32_t numSubReaders);
 public:
-  typedef CL_NS(util)::CLHashtable<const TCHAR*,uint8_t*,
+  typedef CL_NS(util)::CLHashtable<TCHAR*,uint8_t*,
     CL_NS(util)::Compare::TChar,
     CL_NS(util)::Equals::TChar,
     CL_NS(util)::Deletor::tcArray,

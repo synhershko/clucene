@@ -20,7 +20,7 @@ CL_NS_DEF(search)
 class CLUCENE_EXPORT RangeFilter: public Filter 
 {
 private:
-	const TCHAR* field;
+	TCHAR* field;
 	TCHAR* lowerValue;
 	TCHAR* upperValue;
 	bool   includeLower;

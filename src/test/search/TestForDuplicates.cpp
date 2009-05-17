@@ -8,7 +8,6 @@
 
   static void print_tHits( CuTest *tc, Hits* hits ) {
     CuMessageA(tc,"%d total results\n\n", hits->length());
-
     for (int32_t i = 0 ; i < hits->length(); i++) {
       if ( i < 10 || (i > 94 && i < 105) ) {
         const Document& d = hits->doc(i);
@@ -70,7 +69,7 @@
 		for (int32_t j = 0; j < result->length(); j++) {
 			doc = &result->doc(j);
 
-			id = (_ttoi(doc->get(_T("id")));
+			id = _ttoi(doc->get(_T("id")));
 			if ( resMap.find(id) ==resMap.end() ) {
 				resMap.insert( std::pair<int32_t,int32_t>(id, 1));
 				//printf("Inserted $d\n",id);

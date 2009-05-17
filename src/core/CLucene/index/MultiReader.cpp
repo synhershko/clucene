@@ -214,7 +214,7 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 	uint8_t* bytes;
-	bytes = _internal->normsCache.get(field);
+	bytes = _internal->normsCache.get((TCHAR*)field);
 	if (bytes != NULL){
 	  return bytes;				  // cache hit
 	}
@@ -239,7 +239,7 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
-	uint8_t* bytes = _internal->normsCache.get(field);
+	uint8_t* bytes = _internal->normsCache.get((TCHAR*)field);
 	if (bytes==NULL && !hasNorms(field)) 
 		bytes=fakeNorms();
     
@@ -254,7 +254,7 @@ void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 
 
 void MultiReader::doSetNorm(int32_t n, const TCHAR* field, uint8_t value){
-	_internal->normsCache.remove(field);                         // clear cache
+	_internal->normsCache.removeitr( _internal->normsCache.find((TCHAR*)field) );                         // clear cache
 	int32_t i = readerIndex(n);                           // find segment num
 	(*subReaders)[i]->setNorm(n-starts[i], field, value); // dispatch
 }

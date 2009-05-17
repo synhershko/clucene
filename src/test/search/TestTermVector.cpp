@@ -118,19 +118,19 @@ void testKnownSetOfDocuments(CuTest *tc) {
     const TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
     const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
     
-    typedef StringMap<const TCHAR*, int32_t> test4MapType;
-    test4MapType test4Map(NULL);
-    test4Map.add(_T("chocolate"), 3);
-    test4Map.add(_T("lab"), 2);
-    test4Map.add(_T("eating"), 1);
-    test4Map.add(_T("computer"), 1);
-    test4Map.add(_T("with"), 1);
-    test4Map.add(_T("a"), 1);
-    test4Map.add(_T("colored"), 1);
-    test4Map.add(_T("in"), 1);
-    test4Map.add(_T("an"), 1);
-    test4Map.add(_T("computer"), 1);
-    test4Map.add(_T("old"), 1);
+    typedef std::map<const TCHAR*, int32_t> test4MapType;
+    test4MapType test4Map;
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("chocolate"), 3) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("lab"), 2) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("eating"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("computer"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("with"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("a"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("colored"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("in"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("an"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("computer"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("old"), 1) );
     
     Document testDoc1;
     setupDoc(testDoc1, test1);
@@ -173,7 +173,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
           float_t tf = sim->tf(freq);
           float_t idf = sim->idf(term, &knownSearcher);
           //float_t qNorm = sim.queryNorm()
-			 idf += tf; //remove warning
+          idf += tf; //remove warning
           
           int termsCount=0;
           const TCHAR** terms = vector->getTerms();
@@ -183,7 +183,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
 
           //This is fine since we don't have stop words
           float_t lNorm = sim->lengthNorm(_T("field"), termsCount);
-			 lNorm ++;//remove warning
+          lNorm ++;//remove warning
 
           //float_t coord = sim.coord()
           //System.out.println("TF: " + tf + " IDF: " + idf + " LenNorm: " + lNorm);
@@ -216,7 +216,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
       //doc 3 should be the first hit b/c it is the shortest match
       CLUCENE_ASSERT(hits->length() == 3);
       float_t score = hits->score(0);
-		score++;
+      score++;
       
       CLUCENE_ASSERT(2==hits->id(0) );
       CLUCENE_ASSERT(3==hits->id(1) );
@@ -239,7 +239,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
         //_tprintf(_T("Term: %s, test4map.size()=%d\n"),term, test4Map.size());
         int32_t freq = (*freqs)[i];
         CLUCENE_ASSERT( _tcsstr(test4,term) != NULL );
-        test4MapType::iterator itr = test4Map.find(term);
+        test4MapType::const_iterator itr = test4Map.find(term);
         CLUCENE_ASSERT( itr != test4Map.end() );
         int32_t freqInt = itr->second;
         CLUCENE_ASSERT(freqInt == freq);        

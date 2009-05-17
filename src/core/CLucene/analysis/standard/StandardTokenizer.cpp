@@ -147,7 +147,7 @@ CL_NS_DEF2(analysis,standard)
         continue;
       } else if (ALPHA || UNDERSCORE) {
         tokenStart = rdPos;
-        if(ReadAlphaNum(ch,t))return t;
+        if(ReadAlphaNum(ch,t) != NULL) return t;
       } else if (DIGIT || NEGATIVE_SIGN_ || DECIMAL) {
         tokenStart = rdPos;
         /* ReadNumber returns NULL if it fails to extract a valid number; in

@@ -367,8 +367,6 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           _CLDELETE(termEnum);
         )
       }
-
-
 	    FieldCacheAuto* fa = _CLNEW FieldCacheAuto(retLen,FieldCacheAuto::STRING_ARRAY);
 	    fa->stringArray = retArray;
 	    fa->ownContents=true;

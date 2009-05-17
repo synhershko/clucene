@@ -51,7 +51,7 @@ CL_NS_USE(util)
 		* This reduces number of file handles we need, and it means
 		* we dont have to use file tell (which is slow) before doing
 		* a read.
-    * TODO: get rid of this and use a shared io handle or something like that...
+    * TODO: get rid of this and dup/fctnl or something like that...
 		*/
 		class SharedHandle: LUCENE_REFBASE{
 		public:

@@ -433,25 +433,25 @@ CL_NS_DEF(store)
 
   bool RAMDirectory::fileExists(const char* name) const {
     SCOPED_LOCK_MUTEX(files_mutex);
-    return files->exists(name);
+    return files->exists((char*)name);
   }
 
   int64_t RAMDirectory::fileModified(const char* name) const {
 	  SCOPED_LOCK_MUTEX(files_mutex);
-	  RAMFile* f = files->get(name);
+	  RAMFile* f = files->get((char*)name);
 	  return f->getLastModified();
   }
 
   int64_t RAMDirectory::fileLength(const char* name) const {
 	  SCOPED_LOCK_MUTEX(files_mutex);
-	  RAMFile* f = files->get(name);
-          return f->getLength();
+	  RAMFile* f = files->get((char*)name);
+    return f->getLength();
   }
 
 
   bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize) {
     SCOPED_LOCK_MUTEX(files_mutex);
-    RAMFile* file = files->get(name);
+    RAMFile* file = files->get((char*)name);
     if (file == NULL) { /* DSR:PROPOSED: Better error checking. */
 		  error.set(CL_ERR_IO, "[RAMDirectory::open] The requested file does not exist.");
 		  return false;
@@ -468,29 +468,29 @@ CL_NS_DEF(store)
 
   bool RAMDirectory::doDeleteFile(const char* name) {
     SCOPED_LOCK_MUTEX(files_mutex);
-    files->remove(name);
+    files->removeitr( files->find((char*)name) );
     return true;
   }
 
   void RAMDirectory::renameFile(const char* from, const char* to) {
 	SCOPED_LOCK_MUTEX(files_mutex);
-	FileMap::iterator itr = files->find(from);
+	FileMap::iterator itr = files->find((char*)from);
 
     /* DSR:CL_BUG_LEAK:
     ** If a file named $to already existed, its old value was leaked.
     ** My inclination would be to prevent this implicit deletion with an
     ** exception, but it happens routinely in CLucene's internals (e.g., during
     ** IndexWriter.addIndexes with the file named 'segments'). */
-    if (files->exists(to)) {
-      files->remove(to);
+    if (files->exists((char*)to)) {
+      files->removeitr( files->find((char*)to) );
     }
-	if ( itr == files->end() ){
-		char tmp[1024];
-		_snprintf(tmp,1024,"cannot rename %s, file does not exist",from);
-		_CLTHROWT(CL_ERR_IO,tmp);
-	}
-	CND_PRECONDITION(itr != files->end(), "itr==files->end()")
-	RAMFile* file = itr->second;
+    if ( itr == files->end() ){
+      char tmp[1024];
+      _snprintf(tmp,1024,"cannot rename %s, file does not exist",from);
+      _CLTHROWT(CL_ERR_IO,tmp);
+    }
+    CND_PRECONDITION(itr != files->end(), "itr==files->end()")
+    RAMFile* file = itr->second;
     files->removeitr(itr,false,true);
     files->put(STRDUP_AtoA(to), file);
   }
@@ -500,7 +500,7 @@ CL_NS_DEF(store)
     RAMFile* file = NULL;
     {
       SCOPED_LOCK_MUTEX(files_mutex);
-      file = files->get(name);
+      file = files->get((char*)name);
 	}
     const uint64_t ts1 = file->getLastModified();
     uint64_t ts2 = Misc::currentTimeMillis();
@@ -523,9 +523,9 @@ CL_NS_DEF(store)
 
     SCOPED_LOCK_MUTEX(files_mutex);
 
-    const char* n = files->getKey(name);
+    char* n = files->getKey((char*)name);
     if (n != NULL) {
-	   RAMFile* rf = files->get(name);
+	   RAMFile* rf = files->get((char*)name);
       _CLDELETE(rf);
     } else {
       n = STRDUP_AtoA(name);

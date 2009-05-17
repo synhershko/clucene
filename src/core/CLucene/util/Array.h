@@ -267,8 +267,6 @@ public:
     void deleteValues(){
         if ( this->values == NULL )
             return;
-		for (size_t i=0;i<this->length;i++)
-			_CLDELETE_CARRAY(this->values[i]);
 	    this->deleteArray();
 	}
 	virtual ~TCharConstArray(){
@@ -288,8 +286,6 @@ public:
     void deleteValues(){
         if ( this->values == NULL )
             return;
-		for (size_t i=0;i<this->length;i++)
-			_CLDELETE_CaARRAY(this->values[i]);
 	    this->deleteArray();
 	}
 	virtual ~CharConstArray(){

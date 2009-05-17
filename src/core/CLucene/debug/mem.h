@@ -31,22 +31,13 @@
 	#define LUCENE_BASE_CHECK(x)
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER < 1300)
-//6.0
-	#define _CLDELETE_CARRAY(x) delete[] const_cast<TCHAR*>(x); x=NULL;
-	#define _CLDELETE_CaARRAY(x) delete[] const_cast<char*>(x); x=NULL;
-	#define _CLDELETE_LCARRAY(x) delete[] const_cast<TCHAR*>(x);
-	#define _CLDELETE_LCaARRAY(x) delete[] const_cast<char*>(x);
-#endif
-
-//TODO: start using malloc, instead of new[], this is necessary for the Array code, that uses malloc.
 //Macro for creating new arrays
-#define _CL_NEWARRAY(type,size) new type[size]
-#define _CLDELETE_ARRAY(x) {delete[] x;x=NULL;}
-#define _CLDELETE_LARRAY(x) {delete[] x;}
+#define _CL_NEWARRAY(type,size) (type*)calloc(size, sizeof(type))
+#define _CLDELETE_ARRAY(x) {free(x); x=NULL;}
+#define _CLDELETE_LARRAY(x) {free(x);}
 #ifndef _CLDELETE_CARRAY
-	#define _CLDELETE_CARRAY(x) {delete[] x;x=NULL;}
-	#define _CLDELETE_LCARRAY(x) {delete[] x;}
+	#define _CLDELETE_CARRAY(x) {free(x); x=NULL;}
+	#define _CLDELETE_LCARRAY(x) {free(x);}
 #endif
 
 //a shortcut for deleting a carray and all its contents
@@ -64,8 +55,6 @@
 	#define _CLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; x=NULL; }
 	#define _CLLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; }
 #else
-	// Here we had a redundant check for NULL and LUCENE_BASE_CHECK(x), which were removed once the internal memory
-	// tracking code was put out
 	#define _CLDELETE(x) {delete x;x=NULL;}
 	#define _CLLDELETE(x) {delete x;}
 #endif

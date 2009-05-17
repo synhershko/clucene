@@ -22,14 +22,12 @@ CL_NS_DEF(index)
  * which defines the actual format of the skip data.
  */
 class MultiLevelSkipListReader : LUCENE_BASE {
-private:
-	// the maximum number of skip levels possible for this index
-	int32_t maxNumberOfSkipLevels;
-
 protected:
 	// number of levels in this skip list
 	int32_t numberOfSkipLevels;
 
+	// the maximum number of skip levels possible for this index
+	int32_t maxNumberOfSkipLevels;
 private:
 	// Expert: defines the number of top skip levels to buffer in memory.
 	// Reducing this number results in less memory usage, but possibly

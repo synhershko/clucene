@@ -14,7 +14,6 @@
 
 #include "CLucene/store/_Lock.h"
 #include "CLucene/store/_RAMDirectory.h"
-#include "CLucene/store/_TransactionalRAMDirectory.h"
 #include "CLucene/store/FSDirectory.h"
 #include "CLucene/util/Array.h"
 #include "CLucene/util/PriorityQueue.h"
@@ -186,7 +185,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeD
   this->mergeFactor = this->minMergeDocs = this->maxMergeDocs = 0;
   this->commitLockTimeout =0;
   this->closeDir = closeDir;
-  this->closed = this->closing = false;
+  this->commitPending = this->closed = this->closing = false;
   directory = d;
   analyzer = a;
   this->infoStream = defaultInfoStream;

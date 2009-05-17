@@ -37,6 +37,8 @@ Token* CharTokenizer::next(Token*& token){
 		offset++;
 		if (bufferIndex >= dataLen) {
 			dataLen = input->read(ioBuffer, 1, LUCENE_IO_BUFFER_SIZE );
+			if (dataLen == -1)
+				dataLen = 0;
 			bufferIndex = 0;
 		}
 		if (dataLen <= 0 ) {
@@ -60,14 +62,10 @@ Token* CharTokenizer::next(Token*& token){
 			break;					  // return 'em
 	}
 	buffer[length]=0;
-<<<<<<< HEAD:src/core/CLucene/analysis/Analyzers.cpp
-	if (token != NULL)
+	if (token != NULL) //TODO: why do this? the analysis contract says there will always be a token
 		token->set( buffer, start, start+length);
 	else
 		token = _CLNEW Token( buffer, start, start+length );
-=======
-	token->set( buffer, start, start+length);
->>>>>>> working...:src/core/CLucene/analysis/Analyzers.cpp
 	return token;
 }
 void CharTokenizer::reset(CL_NS(util)::Reader* input)
@@ -180,7 +178,7 @@ StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _s
 	ignoreCase(_ignoreCase)
 {
 	deleteStopTable = true;
-	stopWords = _CLNEW CLTCSetList(false);
+	stopWords = _CLNEW CLTCSetList(true);
 	fillStopTable( stopWords,_stopWords, _ignoreCase );
 }
 
@@ -200,15 +198,21 @@ void StopFilter::setEnablePositionIncrementsDefault(const bool defaultValue) {
 bool StopFilter::getEnablePositionIncrements() const { return enablePositionIncrements; }
 void StopFilter::setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
 		
-void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
-							   , const bool _ignoreCase)
+void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords, const bool _ignoreCase)
 {
-	if ( _ignoreCase )
-		for (int32_t i = 0; stopWords[i]!=NULL; i++)
-			stopTable->insert( stringCaseFold(const_cast<TCHAR*>(stopWords[i])) );
-	else
-		for (int32_t i = 0; stopWords[i]!=NULL; i++)
-			stopTable->insert( stopWords[i] );
+  TCHAR* tmp;
+	if ( _ignoreCase ){
+		for (int32_t i = 0; stopWords[i]!=NULL; i++){
+      tmp = STRDUP_TtoT(stopWords[i]);
+      stringCaseFold(tmp);
+			stopTable->insert( tmp );
+    }
+	}else{
+		for (int32_t i = 0; stopWords[i]!=NULL; i++){
+      tmp = STRDUP_TtoT(stopWords[i]);
+			stopTable->insert( tmp );
+    }
+  }
 }
 
 Token* StopFilter::next(Token*& token) {
@@ -233,7 +237,7 @@ Token* StopFilter::next(Token*& token) {
 }
 
 StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
-	stopTable(_CLNEW CLTCSetList)
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	if ( enc == NULL )
 		enc = "ASCII";
@@ -241,13 +245,13 @@ StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
 }
 
 StopAnalyzer::StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
-	stopTable(_CLNEW CLTCSetList)
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	WordlistLoader::getWordSet(stopwordsReader, stopTable, _bDeleteReader);
 }
 
 StopAnalyzer::StopAnalyzer():
-	stopTable(_CLNEW CLTCSetList(false))
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	StopFilter::fillStopTable(stopTable,ENGLISH_STOP_WORDS);
 }
@@ -256,7 +260,7 @@ StopAnalyzer::~StopAnalyzer()
 _CLDELETE(stopTable);
 }
 StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):
-	stopTable(_CLNEW CLTCSetList(false))
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	StopFilter::fillStopTable(stopTable,stopWords);
 }
@@ -289,7 +293,7 @@ void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* anal
 }
 
 TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader* reader) {
-    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get(fieldName));
+    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get((TCHAR*)fieldName));
     if (analyzer == NULL) {
       analyzer = defaultAnalyzer;
     }

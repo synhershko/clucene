@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -29,14 +29,14 @@ MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysi
 MultiFieldQueryParser::~MultiFieldQueryParser(){
 }
 
-//static 
+//static
 Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, Analyzer* analyzer)
 {
     BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
     int32_t i = 0;
 	while ( fields[i] != NULL ){
 		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+		if (q && ( !q->instanceOf(BooleanQuery::getClassName()) || ((BooleanQuery*)q)->getClauseCount() > 0)) {
 			//todo: Move to using BooleanClause::Occur
 			bQuery->add(q, true, false, false);
 		} else {
@@ -48,7 +48,7 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, An
     return bQuery;
 }
 
-//static 
+//static
 Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, const uint8_t* flags, Analyzer* analyzer)
 {
     BooleanQuery* bQuery = _CLNEW BooleanQuery( true );
@@ -56,7 +56,7 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, co
     while ( fields[i] != NULL )
     {
 		Query* q = QueryParser::parse(query, fields[i], analyzer);
-		if (q && (q->getQueryName()!=BooleanQuery::getClassName() || ((BooleanQuery*)q)->getClauseCount() > 0)) {
+		if (q && ( !q->instanceOf(BooleanQuery::getClassName()) || ((BooleanQuery*)q)->getClauseCount() > 0)) {
 			uint8_t flag = flags[i];
 			switch (flag)
 			{
@@ -94,12 +94,12 @@ Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText
 				//If the user passes a map of boosts
 				if (boosts != NULL) {
 					//Get the boost from the map and apply them
-                    BoostMap::const_iterator itr = boosts->find(fields[i]);					
+                    BoostMap::const_iterator itr = boosts->find(fields[i]);
                     if (itr != boosts->end()) {
 						q->setBoost(itr->second);
 					}
 				}
-				if (q->getQueryName() == PhraseQuery::getClassName()) {
+				if (q->instanceOf(PhraseQuery::getClassName()) ) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
 				//if (q instanceof MultiPhraseQuery) {

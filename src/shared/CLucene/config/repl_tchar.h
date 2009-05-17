@@ -43,6 +43,7 @@
         #define _tcsncmp wcsncmp //case sensitive compare two strings
         #define _tcscspn wcscspn //location of any of a set of character in a string
 
+        #define _tcsdup	wcsdup //string duplicate
         #ifdef _CL_HAVE_FUNCTION_WCSICMP
             #define _tcsicmp wcsicmp //* case insensitive compare two string
         #else
@@ -83,6 +84,7 @@
         #define _tcsncmp strncmp
         #define _tcsicmp strcasecmp
         #define _tcscspn strcspn
+        #define _tcsdup strdup //string duplicate
 
         //converstion methods
         #define _tcstod strtod
@@ -113,38 +115,40 @@
 #define STRDUP_AtoA(x) strdup(x)
 
 #if defined(_UCS2)
-	#define STRDUP_WtoW(x) wcsdup(x)
-    #define STRDUP_TtoT STRDUP_WtoW
-    #define STRDUP_WtoT STRDUP_WtoW
-    #define STRDUP_TtoW STRDUP_WtoW
+  #define stringDuplicate(x) _tcsdup(x)
+  #define STRDUP_WtoW(x) wcsdup(x)
+  #define STRDUP_TtoT STRDUP_WtoW
+  #define STRDUP_WtoT STRDUP_WtoW
+  #define STRDUP_TtoW STRDUP_WtoW
 
-    #define STRDUP_AtoW(x) CL_NS(util)::Misc::_charToWide(x)
-	#define STRDUP_AtoT STRDUP_AtoW
+  #define STRDUP_AtoW(x) CL_NS(util)::Misc::_charToWide(x)
+  #define STRDUP_AtoT STRDUP_AtoW
 
-    #define STRDUP_WtoA(x) CL_NS(util)::Misc::_wideToChar(x)
-	#define STRDUP_TtoA STRDUP_WtoA
+  #define STRDUP_WtoA(x) CL_NS(util)::Misc::_wideToChar(x)
+  #define STRDUP_TtoA STRDUP_WtoA
 
-    #define STRCPY_WtoW(target,src,len) _tcsncpy(target,src,len)
-	#define STRCPY_TtoW STRCPY_WtoW
-	#define STRCPY_WtoT STRCPY_WtoW
-	//#define _tcscpy STRCPY_WtoW
+  #define STRCPY_WtoW(target,src,len) _tcsncpy(target,src,len)
+  #define STRCPY_TtoW STRCPY_WtoW
+  #define STRCPY_WtoT STRCPY_WtoW
+  //#define _tcscpy STRCPY_WtoW
 
-    #define STRCPY_AtoW(target,src,len) CL_NS(util)::Misc::_cpycharToWide(src,target,len)
-    #define STRCPY_AtoT STRCPY_AtoW
+  #define STRCPY_AtoW(target,src,len) CL_NS(util)::Misc::_cpycharToWide(src,target,len)
+  #define STRCPY_AtoT STRCPY_AtoW
 
-    #define STRCPY_WtoA(target,src,len) CL_NS(util)::Misc::_cpywideToChar(src,target,len)
-    #define STRCPY_TtoA STRCPY_WtoA
+  #define STRCPY_WtoA(target,src,len) CL_NS(util)::Misc::_cpywideToChar(src,target,len)
+  #define STRCPY_TtoA STRCPY_WtoA
 #else
-    #define STRDUP_AtoT STRDUP_AtoA
-    #define STRDUP_TtoA STRDUP_AtoA
-    #define STRDUP_TtoT STRDUP_AtoA
+  #define stringDuplicate(x) strdup(x)
+  #define STRDUP_AtoT STRDUP_AtoA
+  #define STRDUP_TtoA STRDUP_AtoA
+  #define STRDUP_TtoT STRDUP_AtoA
 
-    #define STRDUP_WtoT(x) xxxxxxxxxxxxxxx //not possible
-    #define STRCPY_WtoT(target,src,len) xxxxxxxxxxxxxxx //not possible
+  #define STRDUP_WtoT(x) xxxxxxxxxxxxxxx //not possible
+  #define STRCPY_WtoT(target,src,len) xxxxxxxxxxxxxxx //not possible
 
-    #define STRCPY_AtoT STRCPY_AtoA
-    #define STRCPY_TtoA STRCPY_AtoA
-    //#define _tcscpy STRCPY_AtoA
+  #define STRCPY_AtoT STRCPY_AtoA
+  #define STRCPY_TtoA STRCPY_AtoA
+  //#define _tcscpy STRCPY_AtoA
 #endif
 
 

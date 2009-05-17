@@ -90,6 +90,7 @@ public:
     StringMap(bool delKey){
         this->delKey = delKey;
     }
+
     void remove(_K val){
         std::iterator<_K,_T,_Comparator> itr;
         itr = this->find(val);
@@ -101,7 +102,6 @@ public:
              _CLDELETE_CARRAY(v);
         }
     }
-    
     virtual ~StringMap(){
         while ( this->begin() != this->end() ){
             _K v = this->begin()->first;
@@ -111,7 +111,6 @@ public:
             }
         }
     }
-    
     void add(_K k, _T v){
         this->insert ( std::pair<_K,_T>(k,v) );
     }

@@ -275,7 +275,7 @@ CL_NS_DEF(search)
 			if (i>0)
 				buffer.appendChar(',');
 
-			const TCHAR* p = fields[i]->toString();
+			TCHAR* p = fields[i]->toString();
 			buffer.append(p);
 			_CLDELETE_CARRAY(p);
 			  

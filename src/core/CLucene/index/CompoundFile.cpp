@@ -211,7 +211,7 @@ bool CompoundFileReader::openInput(const char * id, CL_NS(store)::IndexInput *& 
 		return false;
 	}
 
-	const ReaderFileEntry* entry = entries->get(id);
+	const ReaderFileEntry* entry = entries->get((char*)id);
 	if (entry == NULL){
 		char buf[CL_MAX_PATH+26];
 		cl_sprintf(buf, CL_MAX_PATH+26, "No sub-file with id %s found", id);
@@ -234,7 +234,7 @@ void CompoundFileReader::list(vector<string>* names) const{
 }
 
 bool CompoundFileReader::fileExists(const char* name) const{
-   return entries->exists(name);
+   return entries->exists((char*)name);
 }
 
 int64_t CompoundFileReader::fileModified(const char* name) const{
@@ -254,7 +254,7 @@ void CompoundFileReader::renameFile(const char* from, const char* to){
 }
 
 int64_t CompoundFileReader::fileLength(const char* name) const{
-  ReaderFileEntry* e = entries->get(name);
+  ReaderFileEntry* e = entries->get((char*)name);
   if (e == NULL){
      char buf[CL_MAX_PATH + 30];
      strcpy(buf,"File ");
@@ -282,7 +282,7 @@ public:
 	CL_NS(store)::Directory* directory;
 	string fileName;
 
-	CL_NS(util)::CLHashSet<const char*,
+	CL_NS(util)::CLHashSet<char*,
 		CL_NS(util)::Compare::Char,CL_NS(util)::Deletor::acArray> ids;
 
 	typedef CL_NS(util)::CLLinkedList<WriterFileEntry*,
@@ -334,7 +334,7 @@ void CompoundFileWriter::addFile(const char* file){
   if (file == NULL)
       _CLTHROWA(CL_ERR_NullPointer,"file cannot be null");
 
-  if (_internal->ids.find(file)!=_internal->ids.end()){
+  if (_internal->ids.find( (char*)file )!=_internal->ids.end()){
      char buf[CL_MAX_PATH + 30];
      strcpy(buf,"File ");
      strncat(buf,file,CL_MAX_PATH);

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_queryParser_legacy_QueryParser_
@@ -49,7 +49,7 @@ protected:
 	LUCENE_STATIC_CONSTANT(int,  MOD_REQ=11);
 
 	CL_NS(analysis)::Analyzer* analyzer;
-	
+
 public:
 	QueryParserBase(CL_NS(analysis)::Analyzer* analyzer);
 	virtual ~QueryParserBase();
@@ -148,7 +148,7 @@ protected:
 	* return NULL to disallow
 	*/
     virtual CL_NS(search)::Query* GetPrefixQuery(const TCHAR* field, TCHAR* termStr);
-	
+
 	/**
 	* Factory method for generating a query. Called when parser
 	* parses an input term token that contains one or more wildcard
@@ -218,7 +218,7 @@ protected:
 * The syntax for query const TCHAR*s is as follows:
 * A Query is a series of clauses. A clause may be prefixed by:</p>
 * <ul>
-*	<li>a plus (+) or a minus (-) sign, indicating that the 
+*	<li>a plus (+) or a minus (-) sign, indicating that the
 *	clause is required or prohibited respectively; or</li>
 *	<li>a term followed by a colon, indicating the field to be searched.
 *	This enables one to construct queries which search multiple fields.</li>
@@ -227,7 +227,7 @@ protected:
 *	A clause may be either:</p>
 *	<ul>
 *	<li>a term, indicating all the documents that contain this term; or</li>
-*	<li>a nested query, enclosed in parentheses. Note that this may be 
+*	<li>a nested query, enclosed in parentheses. Note that this may be
 *	used with a +/- prefix to require any of a set of terms.</li>
 *	</ul>
 *	<p>
@@ -243,7 +243,7 @@ protected:
 class CLUCENE_EXPORT QueryParser : public QueryParserBase
 {
 private:
-	const TCHAR* field;
+	TCHAR* field;
 	TokenList* tokens;
 public:
 	/**
@@ -281,7 +281,7 @@ public:
 	* @return Returns the field.
 	*/
 	const TCHAR* getField();
-	
+
 	//deprecated functions
 	_CL_DEPRECATED( setLowercaseExpandedTerms ) void  setLowercaseWildcardTerms(bool lowercaseWildcardTerms);
 	_CL_DEPRECATED( getLowercaseExpandedTerms ) bool  getLowercaseWildcardTerms() const;

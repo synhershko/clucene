@@ -36,7 +36,7 @@ void SegmentMerger::init(){
   queue            = NULL;
   fieldInfos       = NULL;
   checkAbort       = NULL;
-	skipInterval=0;
+  skipInterval     = 0;
 }
 
 SegmentMerger::SegmentMerger(IndexWriter* writer, const char* name, MergePolicy::OneMerge* merge){
@@ -524,9 +524,7 @@ void SegmentMerger::mergeTermInfos(){
         top = queue->top();
       }
 		  match[matchSize]=NULL;
-
       int32_t df = mergeTermInfo(match, matchSize);		  // add new TermInfo
-
       if (checkAbort != NULL)
         checkAbort->work(df/3.0);
 		
@@ -783,6 +781,7 @@ void SegmentMerger::mergeNorms() {
 SegmentMerger::CheckAbort::CheckAbort(MergePolicy::OneMerge* merge, Directory* dir) {
   this->merge = merge;
   this->dir = dir;
+  this->workCount = 0;
 }
 
 void SegmentMerger::CheckAbort::work(float_t units){

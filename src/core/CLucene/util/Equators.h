@@ -189,9 +189,9 @@ public:
     class CLUCENE_INLINE_EXPORT tcArray: public AbstractDeletor{
     public:
     	void Delete(void* _arr){
-    		doDelete((const TCHAR*)_arr);
+    		doDelete((TCHAR*)_arr);
     	}
-    	static void doDelete(const TCHAR* arr){
+    	static void doDelete(TCHAR* arr){
     		_CLDELETE_CARRAY(arr);
     	}
     };
@@ -209,9 +209,9 @@ public:
 	class CLUCENE_INLINE_EXPORT acArray: public AbstractDeletor{
 	public:
 		void Delete(void* arr){
-			doDelete((const char*)arr);
+			doDelete((char*)arr);
 		}
-		static void doDelete(const char* arr){
+		static void doDelete(char* arr){
 			_CLDELETE_CaARRAY(arr);
 		}
 	};

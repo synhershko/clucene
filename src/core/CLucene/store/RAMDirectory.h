@@ -21,7 +21,7 @@ CL_NS_DEF(store)
 	*
 	*/
 	class CLUCENE_EXPORT RAMDirectory:public Directory{
-		typedef CL_NS(util)::CLHashMap<const char*,RAMFile*, 
+		typedef CL_NS(util)::CLHashMap<char*,RAMFile*,
 				CL_NS(util)::Compare::Char, CL_NS(util)::Equals::Char,
 				CL_NS(util)::Deletor::acArray , CL_NS(util)::Deletor::Object<RAMFile> > FileMap;
 	protected:

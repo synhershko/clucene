@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
@@ -14,34 +14,34 @@
 
 CL_NS_DEF(queryParser)
 
-const int64_t QueryParserTokenManager::jjbitVec2[]={0x0L, 0x0L, 0xffffffffffffffffL, 0xffffffffffffffffL};
+const int64_t QueryParserTokenManager::jjbitVec2[]={0x0L, 0x0L, _ILONGLONG(0xffffffffffffffff), _ILONGLONG(0xffffffffffffffff)};
 const int64_t QueryParserTokenManager::jjbitVec0[] = {
-	0xfffffffffffffffeL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL
+	_ILONGLONG(0xfffffffffffffffe), _ILONGLONG(0xffffffffffffffff), _ILONGLONG(0xffffffffffffffff), _ILONGLONG(0xffffffffffffffff)
 };
 const int32_t QueryParserTokenManager::jjnextStates[]={
-		15, 17, 18, 29, 32, 23, 33, 30, 20, 21, 32, 23, 33, 31, 34, 27, 
+		15, 17, 18, 29, 32, 23, 33, 30, 20, 21, 32, 23, 33, 31, 34, 27,
 		2, 4, 5, 0, 1
 };
 const TCHAR* QueryParserTokenManager::jjstrLiteralImages[]={
-		_T(""), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, _T("\53"), _T("\55)"), _T("\50)"), 
-		_T("\51"), _T("\72"), _T("\52"), _T("\136"), NULL, NULL, NULL, NULL, NULL, _T("\133"), _T("\173"), NULL, 
+		_T(""), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, _T("\53"), _T("\55)"), _T("\50)"),
+		_T("\51"), _T("\72"), _T("\52"), _T("\136"), NULL, NULL, NULL, NULL, NULL, _T("\133"), _T("\173"), NULL,
 		_T("\124\117"), _T("\135"), NULL, NULL, _T("\124\117"), _T("\175"), NULL, NULL
 };
 const TCHAR* QueryParserTokenManager::lexStateNames [] = {
-		_T("Boost"), 
-		_T("RangeEx"), 
-		_T("RangeIn"), 
+		_T("Boost"),
+		_T("RangeEx"),
+		_T("RangeIn"),
 		_T("DEFAULT")
 };
 const int32_t QueryParserTokenManager::jjnewLexState [] = {
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, 2, 1, 3, 
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, 2, 1, 3,
 		-1, 3, -1, -1, -1, 3, -1, -1
 };
 const int64_t QueryParserTokenManager::jjtoToken [] = {
-		0x1ffffff81L
+		_ILONGLONG(0x1ffffff81)
 };
 const int64_t QueryParserTokenManager::jjtoSkip [] = {
-		0x40L
+		_ILONGLONG(0x40)
 };
 
 QueryParserTokenManager::QueryParserTokenManager(CharStream* stream, const int32_t lexState) :
@@ -171,20 +171,20 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 			   {
 			   case 36:
 			   case 25:
-				   if ((0xfbfffcf8ffffd9ffL & l) == 0L)
+				   if (( _ILONGLONG(0xfbfffcf8ffffd9ff) & l) == 0L)
 					   break;
 				   if (kind > 21)
 					   kind = 21;
 				   jjCheckNAddTwoStates(25, 26);
 				   break;
 			   case 0:
-				   if ((0xfbffd4f8ffffd9ffL & l) != 0L)
+				   if (( _ILONGLONG(0xfbffd4f8ffffd9ff) & l) != 0L)
 				   {
 					   if (kind > 21)
 						   kind = 21;
 					   jjCheckNAddTwoStates(25, 26);
 				   }
-				   else if ((0x100002600L & l) != 0L)
+				   else if ((_ILONGLONG(0x100002600) & l) != 0L)
 				   {
 					   if (kind > 6)
 						   kind = 6;
@@ -196,7 +196,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   if (kind > 9)
 						   kind = 9;
 				   }
-				   if ((0x7bffd0f8ffffd9ffL & l) != 0L)
+				   if ((_ILONGLONG(0x7bffd0f8ffffd9ff) & l) != 0L)
 				   {
 					   if (kind > 18)
 						   kind = 18;
@@ -228,7 +228,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   jjCheckNAddStates(0, 2);
 				   break;
 			   case 15:
-				   if ((0xfffffffbffffffffL & l) != 0L)
+				   if ((_ILONGLONG(0xfffffffbffffffff) & l) != 0L)
 					   jjCheckNAddStates(0, 2);
 				   break;
 			   case 18:
@@ -236,7 +236,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   kind = 17;
 				   break;
 			   case 20:
-				   if ((0x3ff000000000000L & l) == 0L)
+				   if ((_ILONGLONG(0x3ff000000000000) & l) == 0L)
 					   break;
 				   if (kind > 19)
 					   kind = 19;
@@ -247,7 +247,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   jjCheckNAdd(22);
 				   break;
 			   case 22:
-				   if ((0x3ff000000000000L & l) == 0L)
+				   if ((_ILONGLONG(0x3ff000000000000) & l) == 0L)
 					   break;
 				   if (kind > 19)
 					   kind = 19;
@@ -258,7 +258,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   kind = 20;
 				   break;
 			   case 24:
-				   if ((0xfbffd4f8ffffd9ffL & l) == 0L)
+				   if ((_ILONGLONG(0xfbffd4f8ffffd9ff) & l) == 0L)
 					   break;
 				   if (kind > 21)
 					   kind = 21;
@@ -270,14 +270,14 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 				   jjCheckNAddTwoStates(25, 26);
 				   break;
 			   case 28:
-				   if ((0x7bffd0f8ffffd9ffL & l) == 0L)
+				   if ((_ILONGLONG(0x7bffd0f8ffffd9ff) & l) == 0L)
 					   break;
 				   if (kind > 18)
 					   kind = 18;
 				   jjCheckNAddStates(3, 7);
 				   break;
 			   case 29:
-				   if ((0x7bfff8f8ffffd9ffL & l) == 0L)
+				   if ((_ILONGLONG(0x7bfff8f8ffffd9ff) & l) == 0L)
 					   break;
 				   if (kind > 18)
 					   kind = 18;
@@ -289,7 +289,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 				   jjCheckNAddTwoStates(29, 30);
 				   break;
 			   case 32:
-				   if ((0x7bfff8f8ffffd9ffL & l) != 0L)
+				   if ((_ILONGLONG(0x7bfff8f8ffffd9ff) & l) != 0L)
 					   jjCheckNAddStates(10, 12);
 				   break;
 			   case 34:
@@ -308,7 +308,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 			   switch(jjstateSet[--i])
 			   {
 			   case 36:
-				   if ((0x97ffffff87ffffffL & l) != 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) != 0L)
 				   {
 					   if (kind > 21)
 						   kind = 21;
@@ -318,7 +318,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 					   jjCheckNAddTwoStates(27, 27);
 				   break;
 			   case 0:
-				   if ((0x97ffffff87ffffffL & l) != 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) != 0L)
 				   {
 					   if (kind > 18)
 						   kind = 18;
@@ -332,7 +332,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 						   kind = 19;
 					   jjstateSet[jjnewStateCnt++] = 20;
 				   }
-				   if ((0x97ffffff87ffffffL & l) != 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) != 0L)
 				   {
 					   if (kind > 21)
 						   kind = 21;
@@ -402,14 +402,14 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 				   jjstateSet[jjnewStateCnt++] = 20;
 				   break;
 			   case 24:
-				   if ((0x97ffffff87ffffffL & l) == 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) == 0L)
 					   break;
 				   if (kind > 21)
 					   kind = 21;
 				   jjCheckNAddTwoStates(25, 26);
 				   break;
 			   case 25:
-				   if ((0x97ffffff87ffffffL & l) == 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) == 0L)
 					   break;
 				   if (kind > 21)
 					   kind = 21;
@@ -425,14 +425,14 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 				   jjCheckNAddTwoStates(25, 26);
 				   break;
 			   case 28:
-				   if ((0x97ffffff87ffffffL & l) == 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) == 0L)
 					   break;
 				   if (kind > 18)
 					   kind = 18;
 				   jjCheckNAddStates(3, 7);
 				   break;
 			   case 29:
-				   if ((0x97ffffff87ffffffL & l) == 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) == 0L)
 					   break;
 				   if (kind > 18)
 					   kind = 18;
@@ -448,7 +448,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_3(const int32_t startState, int32_t c
 				   jjCheckNAddTwoStates(29, 30);
 				   break;
 			   case 32:
-				   if ((0x97ffffff87ffffffL & l) != 0L)
+				   if ((_ILONGLONG(0x97ffffff87ffffff) & l) != 0L)
 					   jjCheckNAddStates(10, 12);
 				   break;
 			   case 33:
@@ -652,13 +652,13 @@ int32_t QueryParserTokenManager::jjMoveNfa_1(const int32_t startState, int32_t c
 				switch(jjstateSet[--i])
 				{
 				case 0:
-					if ((0xfffffffeffffffffL & l) != 0L)
+					if ((_ILONGLONG(0xfffffffeffffffff) & l) != 0L)
 					{
 						if (kind > 32)
 							kind = 32;
 						jjCheckNAdd(6);
 					}
-					if ((0x100002600L & l) != 0L)
+					if ((_ILONGLONG(0x100002600) & l) != 0L)
 					{
 						if (kind > 6)
 							kind = 6;
@@ -671,7 +671,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_1(const int32_t startState, int32_t c
 						jjCheckNAddTwoStates(2, 4);
 					break;
 				case 2:
-					if ((0xfffffffbffffffffL & l) != 0L)
+					if ((_ILONGLONG(0xfffffffbffffffff) & l) != 0L)
 						jjCheckNAddStates(16, 18);
 					break;
 				case 3:
@@ -683,7 +683,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_1(const int32_t startState, int32_t c
 						kind = 31;
 					break;
 				case 6:
-					if ((0xfffffffeffffffffL & l) == 0L)
+					if ((_ILONGLONG(0xfffffffeffffffff) & l) == 0L)
 						break;
 					if (kind > 32)
 						kind = 32;
@@ -703,7 +703,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_1(const int32_t startState, int32_t c
 				{
 				case 0:
 				case 6:
-					if ((0xdfffffffffffffffL & l) == 0L)
+					if ((_ILONGLONG(0xdfffffffffffffff) & l) == 0L)
 						break;
 					if (kind > 32)
 						kind = 32;
@@ -794,7 +794,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_0(const int32_t startState, int32_t c
 			   switch(jjstateSet[--i])
 			   {
 			   case 0:
-				   if ((0x3ff000000000000L & l) == 0L)
+				   if ((_ILONGLONG(0x3ff000000000000) & l) == 0L)
 					   break;
 				   if (kind > 24)
 					   kind = 24;
@@ -805,7 +805,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_0(const int32_t startState, int32_t c
 					   jjCheckNAdd(2);
 				   break;
 			   case 2:
-				   if ((0x3ff000000000000L & l) == 0L)
+				   if ((_ILONGLONG(0x3ff000000000000) & l) == 0L)
 					   break;
 				   if (kind > 24)
 					   kind = 24;
@@ -963,13 +963,13 @@ int32_t QueryParserTokenManager::jjMoveNfa_2(const int32_t startState, int32_t c
 			   switch(jjstateSet[--i])
 			   {
 			   case 0:
-				   if ((0xfffffffeffffffffL & l) != 0L)
+				   if ((_ILONGLONG(0xfffffffeffffffff) & l) != 0L)
 				   {
 					   if (kind > 28)
 						   kind = 28;
 					   jjCheckNAdd(6);
 				   }
-				   if ((0x100002600L & l) != 0L)
+				   if ((_ILONGLONG(0x100002600) & l) != 0L)
 				   {
 					   if (kind > 6)
 						   kind = 6;
@@ -982,7 +982,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_2(const int32_t startState, int32_t c
 					   jjCheckNAddTwoStates(2, 4);
 				   break;
 			   case 2:
-				   if ((0xfffffffbffffffffL & l) != 0L)
+				   if ((_ILONGLONG(0xfffffffbffffffff) & l) != 0L)
 					   jjCheckNAddStates(16, 18);
 				   break;
 			   case 3:
@@ -994,7 +994,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_2(const int32_t startState, int32_t c
 					   kind = 27;
 				   break;
 			   case 6:
-				   if ((0xfffffffeffffffffL & l) == 0L)
+				   if ((_ILONGLONG(0xfffffffeffffffff) & l) == 0L)
 					   break;
 				   if (kind > 28)
 					   kind = 28;
@@ -1014,7 +1014,7 @@ int32_t QueryParserTokenManager::jjMoveNfa_2(const int32_t startState, int32_t c
 			   {
 			   case 0:
 			   case 6:
-				   if ((0xffffffffdfffffffL & l) == 0L)
+				   if ((_ILONGLONG(0xffffffffdfffffff) & l) == 0L)
 					   break;
 				   if (kind > 28)
 					   kind = 28;
@@ -1087,7 +1087,7 @@ bool QueryParserTokenManager::jjCanMove_0(const int32_t hiByte, const int32_t i1
 	{
 	case 0:
 		return ((jjbitVec2[i2] & l2) != 0L);
-	default : 
+	default :
 		if ((jjbitVec0[i1] & l1) != 0L)
 			return true;
 		return false;
@@ -1144,9 +1144,9 @@ Token* QueryParserTokenManager::getNextToken() {
 	Token* matchedToken = NULL;
 	int32_t curPos = 0;
 
-	for (;;) {   
-		try   
-		{     
+	for (;;) {
+		try
+		{
 			curChar = input_stream->BeginToken();
 		}
 		_CLCATCH_ERR(CL_ERR_IO, /*cleanup code*/ , {

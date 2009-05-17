@@ -57,7 +57,7 @@ private:
 	};
 
 	class TVTerm:LUCENE_BASE {
-		const TCHAR* termText;
+		TCHAR* termText;
 		int32_t termTextLen; //textlen cache
 		
 	public:
@@ -153,7 +153,7 @@ public:
  */
 class SegmentTermVector: public /*virtual*/ TermFreqVector {
 private:
-	const TCHAR* field;
+	TCHAR* field;
 	TCHAR** terms;
 	int32_t termsLen; //cache
 	CL_NS(util)::ValueArray<int32_t>* termFreqs;

@@ -27,6 +27,7 @@
 	#include <io.h>
 #endif
 
+std::string cl_tempDirS;
 const char* cl_tempDir;
 bool cl_quiet;
 char clucene_data_location[1024];
@@ -61,20 +62,16 @@ int main(int argc, char *argv[])
 	bool times = true;
 	uint64_t startTime=0;
 
-	cl_tempDir = NULL;
 	if ( Misc::dir_Exists("/tmp") )
-		cl_tempDir = "/tmp";
+		cl_tempDirS = "/tmp";
 	if ( getenv("TEMP") != NULL )
-		cl_tempDir = getenv("TEMP");
+		cl_tempDirS = getenv("TEMP");
 	else if ( getenv("TMP") != NULL )
-		cl_tempDir = getenv("TMP");
-	
-	char* tmp = _CL_NEWARRAY(char,strlen(cl_tempDir)+9);
-	strcpy(tmp,cl_tempDir);
-	strcat(tmp,"/clucene");
-	_mkdir(tmp);
-	if ( Misc::dir_Exists(tmp) )
-		cl_tempDir=tmp;
+		cl_tempDirS = getenv("TMP");
+
+  if ( Misc::dir_Exists( (cl_tempDirS + "/clucene").c_str() ) )
+		cl_tempDirS += "/clucene";
+  cl_tempDir = cl_tempDirS.c_str();
 
 	clucene_data_location[0]=0;
 	if ( CL_NS(util)::Misc::dir_Exists(CLUCENE_DATA_LOCATION1 "/reuters-21578-index/segments") )
@@ -211,7 +208,6 @@ exit_point:
 	if ( alltests != NULL )
 		CuSuiteListDelete(alltests);
 	CuStringFree(output);
-	_CLDELETE_CaARRAY(cl_tempDir)
 
 	_lucene_shutdown(); //clears all static memory
 

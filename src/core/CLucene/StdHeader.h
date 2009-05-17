@@ -27,12 +27,12 @@
 #define StringArray                  std::vector<TCHAR*>
 #define StringArrayWithDeletor       CL_NS(util)::CLVector<TCHAR*, CL_NS(util)::Deletor::tcArray >
 #define StringArrayConst             std::vector<const TCHAR*>
-#define StringArrayConstWithDeletor  CL_NS(util)::CLVector<const TCHAR*, CL_NS(util)::Deletor::tcArray >
+//#define StringArrayConstWithDeletor  CL_NS(util)::CLVector<const TCHAR*, CL_NS(util)::Deletor::tcArray >
 
 #define AStringArray                 std::vector<char*>
 #define AStringArrayWithDeletor      CL_NS(util)::CLVector<char*, CL_NS(util)::Deletor::acArray >
 #define AStringArrayConst            std::vector<const char*>
-#define AStringArrayConstWithDeletor CL_NS(util)::CLVector<const char*, CL_NS(util)::Deletor::acArray >
+//#define AStringArrayConstWithDeletor CL_NS(util)::CLVector<const char*, CL_NS(util)::Deletor::acArray >
 
 //call this at the end of running to clean up memory. 
 extern CLUCENE_EXPORT void _lucene_shutdown();

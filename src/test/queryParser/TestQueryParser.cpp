@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -77,7 +77,7 @@ Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a, int ignoreCLError=0)
 
 		qp = getParser(a);
 		Query* ret = qp->parse(query);
-		
+
 		_CLLDELETE(qp);
 		if ( del )
 			_CLLDELETE(a);
@@ -99,14 +99,14 @@ Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a, int ignoreCLError=0)
 }
 
 void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* result)  {
-	
+
 	Query* q = getQuery(tc,query, a);
 	if ( q == NULL ){
 		CuFail(tc, _T("getQuery returned NULL unexpectedly for query /%s/\n"), query);
 		return;
 	}
 
-	const TCHAR* s = q->toString(_T("field"));
+	TCHAR* s = q->toString(_T("field"));
 	int ret = _tcscmp(s,result);
 	_CLDELETE(q);
 	if ( ret != 0 ) {
@@ -118,7 +118,7 @@ void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* 
 	_CLDELETE_CARRAY(s);
 }
 
-void assertWildcardQueryEquals(CuTest *tc,TCHAR* query, bool lowercase, TCHAR* result, bool allowLeadingWildcard=false){
+void assertWildcardQueryEquals(CuTest *tc, const TCHAR* query, bool lowercase, const TCHAR* result, bool allowLeadingWildcard=false){
 	SimpleAnalyzer a;
 	QueryParser* qp = getParser(&a);
 	qp->setLowercaseExpandedTerms(lowercase);
@@ -148,14 +148,14 @@ void testSimple(CuTest *tc) {
 	StandardAnalyzer a;
 	KeywordAnalyzer b;
 	assertQueryEquals(tc,_T("term term term"), NULL, _T("term term term"));
-	
+
 #ifdef _UCS2
 	TCHAR tmp1[100];
 
 	lucene_utf8towcs(tmp1,"t\xc3\xbcrm term term",100);
-	assertQueryEquals(tc,tmp1, NULL, tmp1);	
-	assertQueryEquals(tc,tmp1, &a, tmp1);	
-	
+	assertQueryEquals(tc,tmp1, NULL, tmp1);
+	assertQueryEquals(tc,tmp1, &a, tmp1);
+
 	lucene_utf8towcs(tmp1,"\xc3\xbcmlaut",100);
 	assertQueryEquals(tc,tmp1, NULL, tmp1);
 	assertQueryEquals(tc,tmp1, &a, tmp1);
@@ -180,9 +180,9 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,_T("a OR -b"), NULL, _T("a -b"));
 
 	assertQueryEquals(tc,_T("+term -term term"), NULL, _T("+term -term term"));
-	assertQueryEquals(tc,_T("foo:term AND field:anotherTerm"), NULL, 
+	assertQueryEquals(tc,_T("foo:term AND field:anotherTerm"), NULL,
 					_T("+foo:term +anotherterm"));
-	assertQueryEquals(tc,_T("term AND \"phrase phrase\""), NULL, 
+	assertQueryEquals(tc,_T("term AND \"phrase phrase\""), NULL,
 					_T("+term +\"phrase phrase\"") );
 	assertQueryEquals(tc,_T("\"hello there\""), NULL, _T("\"hello there\"") );
 
@@ -200,13 +200,13 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,_T("\"germ term\"^2.02"), NULL, _T("\"germ term\"^2.0"));
 	assertQueryEquals(tc,_T("\"term germ\"^2"), NULL, _T("\"term germ\"^2.0") );
 
-	assertQueryEquals(tc,_T("(foo OR bar) AND (baz OR boo)"), NULL, 
+	assertQueryEquals(tc,_T("(foo OR bar) AND (baz OR boo)"), NULL,
 					_T("+(foo bar) +(baz boo)"));
-	assertQueryEquals(tc,_T("((a OR b) AND NOT c) OR d"), NULL, 
+	assertQueryEquals(tc,_T("((a OR b) AND NOT c) OR d"), NULL,
 					_T("(+(a b) -c) d"));
-	assertQueryEquals(tc,_T("+(apple \"steve jobs\") -(foo bar baz)"), NULL, 
+	assertQueryEquals(tc,_T("+(apple \"steve jobs\") -(foo bar baz)"), NULL,
 					_T("+(apple \"steve jobs\") -(foo bar baz)") );
-	assertQueryEquals(tc,_T("+title:(dog OR cat) -author:\"bob dole\""), NULL, 
+	assertQueryEquals(tc,_T("+title:(dog OR cat) -author:\"bob dole\""), NULL,
 					_T("+(title:dog title:cat) -author:\"bob dole\"") );
 
     // make sure OR is the default:
@@ -218,7 +218,7 @@ void testSimple(CuTest *tc) {
 	// try creating a query and make sure it uses AND
 	Query* bq = qp->parse(_T("term1 term2"));
 	CLUCENE_ASSERT( bq != NULL );
-	const TCHAR* s = bq->toString(_T("field"));
+	TCHAR* s = bq->toString(_T("field"));
 	if ( _tcscmp(s,_T("+term1 +term2")) != 0 ) {
 		CuFail(tc, _T("FAILED Query /term1 term2/ yielded /%s/, expecting +term1 +term2\n"), s);
 	}
@@ -281,7 +281,7 @@ void testWildcard(CuTest *tc) {
 	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term~0.5^2.0"));
 	assertQueryEquals(tc,_T("term*germ"), NULL, _T("term*germ"));
 	assertQueryEquals(tc,_T("term*germ^3"), NULL, _T("term*germ^3.0"));
-	
+
 	assertTrue(tc, _T("term*"), NULL,"PrefixQuery", _T("term*"));
 	assertTrue(tc, _T("term*^2"), NULL,"PrefixQuery", _T("term*^2.0"));
 	assertTrue(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
@@ -364,9 +364,9 @@ void testQPA(CuTest *tc) {
 	assertQueryEquals(tc,_T("term +stop term"), &qpAnalyzer, _T("term term") );
 	assertQueryEquals(tc,_T("term -stop term"), &qpAnalyzer, _T("term term") );
 	assertQueryEquals(tc,_T("drop AND stop AND roll"), &qpAnalyzer, _T("+drop +roll") );
-	assertQueryEquals(tc,_T("term phrase term"), &qpAnalyzer, 
+	assertQueryEquals(tc,_T("term phrase term"), &qpAnalyzer,
 					_T("term \"phrase1 phrase2\" term") );
-	assertQueryEquals(tc,_T("term AND NOT phrase term"), &qpAnalyzer, 
+	assertQueryEquals(tc,_T("term AND NOT phrase term"), &qpAnalyzer,
 					_T("+term -\"phrase1 phrase2\" term") );
 	assertQueryEquals(tc,_T("stop"), &qpAnalyzer, _T("") );
 	assertTrue(tc, _T("term term term"), &qpAnalyzer,"BooleanQuery", _T("term term term"));
@@ -467,6 +467,6 @@ CuSuite *testQueryParser(void)
     SUITE_ADD_TEST(suite, testRange);
     SUITE_ADD_TEST(suite, testWildcard);
 
-    return suite; 
+    return suite;
 }
 // EOF

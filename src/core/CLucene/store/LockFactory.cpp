@@ -44,7 +44,7 @@ const char* LockFactory::getLockPrefix()
 
 SingleInstanceLockFactory::SingleInstanceLockFactory()
 {
-	locks = _CLNEW LocksType(false);
+	locks = _CLNEW LocksType();
 }
 
 SingleInstanceLockFactory::~SingleInstanceLockFactory()

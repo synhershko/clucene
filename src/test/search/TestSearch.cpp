@@ -269,7 +269,7 @@ void SearchTest(CuTest *tc, bool bram) {
 
 	for (int k = 0; k < 6; k++) {		
 		Query* query = parser.parse(queries[k]);
-		const TCHAR* qryInfo = query->toString(_T("contents"));
+		TCHAR* qryInfo = query->toString(_T("contents"));
 		
 		hits = searcher.search(query);
 		CLUCENE_ASSERT( hits->length() == shouldbe[k] );
