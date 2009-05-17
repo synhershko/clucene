@@ -88,7 +88,7 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
   _buffer[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
-	setText(text, 0);
+	setText(text, -1);
 }
 
 size_t Token::bufferLength(){

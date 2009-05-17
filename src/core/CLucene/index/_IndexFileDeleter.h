@@ -74,7 +74,7 @@ private:
    * has a natural ordering that is inconsistent with
    * equals.
    */
-  class CommitPoint: public CL_NS(util)::Comparable, public IndexCommitPoint {
+  class CommitPoint: public IndexCommitPoint, public CL_NS(util)::Comparable {
     int64_t gen;
     std::string segmentsFileName;
     IndexFileDeleter* _this;
@@ -83,6 +83,7 @@ private:
     bool deleted;
 
     CommitPoint(IndexFileDeleter* _this, SegmentInfos* segmentInfos);
+    virtual ~CommitPoint();
 
     /**
      * Get the segments_N file for this commit point.
@@ -120,7 +121,7 @@ private:
    * Maps String to RefCount (class below) instances: */
   RefCountsType refCounts;
 
-  typedef CL_NS(util)::CLVector<IndexCommitPoint*, CL_NS(util)::Deletor::Object<IndexCommitPoint*> > CommitsType;
+  typedef CL_NS(util)::CLVector<IndexCommitPoint*, CL_NS(util)::Deletor::Object<IndexCommitPoint> > CommitsType;
   /* Holds all commits (segments_N) currently in the index.
    * This will have just 1 commit if you are using the
    * default delete policy (KeepOnlyLastCommitDeletionPolicy).

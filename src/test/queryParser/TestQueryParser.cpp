@@ -300,7 +300,7 @@ void testWildcard(CuTest *tc) {
 	try {
 		Query *q = getQuery(tc, _T("term~1.1"), NULL, CL_ERR_Parse); // value > 1, throws exception
 		CuFail(tc,_T("Expected a parse exception for query /term~1.1/"));
-	} catch (CLuceneError& e){
+	} catch (CLuceneError&){
 	}
 
 	assertTrue(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
@@ -344,13 +344,13 @@ void testWildcard(CuTest *tc) {
 	try {
 		getQuery(tc,_T("*Term"), NULL, CL_ERR_Parse);
 		CuFail(tc,_T("Expected an exception for query /*Term/"));
-	} catch (CLuceneError& e){
+	} catch (CLuceneError&){
 	}
 
 	try {
 		getQuery(tc,_T("?Term"), NULL, CL_ERR_Parse);
 		CuFail(tc,_T("Expected an exception for query /?Term/"));
-	} catch (CLuceneError& e){
+	} catch (CLuceneError&){
 	}
 
 	// Test suffix queries: then allow
@@ -458,15 +458,15 @@ CuSuite *testQueryParser(void)
 	CuSuite *suite = CuSuiteNew(_T("CLucene Query Parser Test"));
 
 	SUITE_ADD_TEST(suite, testSimple);
-    SUITE_ADD_TEST(suite, testQPA);
-    SUITE_ADD_TEST(suite, testEscaped);
-    SUITE_ADD_TEST(suite, testNumber);
-    SUITE_ADD_TEST(suite, testPunct);
+  SUITE_ADD_TEST(suite, testQPA);
+  SUITE_ADD_TEST(suite, testEscaped);
+  SUITE_ADD_TEST(suite, testNumber);
+  SUITE_ADD_TEST(suite, testPunct);
 
 	SUITE_ADD_TEST(suite, testSlop);
-    SUITE_ADD_TEST(suite, testRange);
-    SUITE_ADD_TEST(suite, testWildcard);
+  SUITE_ADD_TEST(suite, testRange);
+  SUITE_ADD_TEST(suite, testWildcard);
 
-    return suite;
+  return suite;
 }
 // EOF

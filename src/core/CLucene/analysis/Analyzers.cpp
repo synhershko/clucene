@@ -224,7 +224,7 @@ Token* StopFilter::next(Token*& token) {
     if ( ignoreCase ){
       stringCaseFold(termText);
     }
-		if (stopWords->find(termText)!=stopWords->end()){
+		if (stopWords->find(termText)==stopWords->end()){
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
 			}
@@ -326,7 +326,7 @@ ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
 ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
 Token* ISOLatin1AccentFilter::next(Token*& token){
-	if ( input->next(token) != NULL ){
+	if ( (token = input->next(token)) != NULL ){
 		int32_t l = token->termLength();
 		const TCHAR* chars = token->termBuffer();
 		bool doProcess = false;

@@ -30,6 +30,8 @@ IndexFileDeleter::CommitPoint::CommitPoint(IndexFileDeleter* _this, SegmentInfos
 	  }
 	}
 }
+IndexFileDeleter::CommitPoint::~CommitPoint(){
+}
 
 /**
 * Get the segments_N file for this commit point32_t.
@@ -93,6 +95,9 @@ void IndexFileDeleter::message(string message) {
 
 IndexFileDeleter::~IndexFileDeleter(){
   _CLDELETE(policy);
+  commitsToDelete.clear();
+  commits.clear();
+  refCounts.clear();
 }
 IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* policy,
   SegmentInfos* segmentInfos, std::ostream* infoStream, DocumentsWriter* docWriter):
@@ -259,7 +264,7 @@ void IndexFileDeleter::deleteCommits() {
       CommitPoint* commit = (CommitPoint*)commits[readFrom];
       if (!commit->deleted) {
         if (writeTo != readFrom) {
-          commits[readFrom] = NULL;
+          commits.remove(readFrom,true);
           commits[writeTo] = commit;
         }
         writeTo++;
@@ -268,7 +273,7 @@ void IndexFileDeleter::deleteCommits() {
     }
 
     while(size > writeTo) {
-      commits.pop_back();
+      commits.delete_back();
       size--;
     }
   }

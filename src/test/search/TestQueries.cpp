@@ -44,9 +44,9 @@ CuSuite *testqueries(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Queries Test"));
 
-    SUITE_ADD_TEST(suite, testPrefixQuery);
+  SUITE_ADD_TEST(suite, testPrefixQuery);
 
-    return suite; 
+  return suite; 
 }
 //EOF 
 

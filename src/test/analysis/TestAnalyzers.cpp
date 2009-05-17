@@ -246,12 +246,12 @@ CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
 
-    //SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
+    SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
     SUITE_ADD_TEST(suite, testStopAnalyzer);
-    //SUITE_ADD_TEST(suite, testNullAnalyzer);
-    //SUITE_ADD_TEST(suite, testSimpleAnalyzer);
-    //SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
-    //SUITE_ADD_TEST(suite, testWordlistLoader);
+    SUITE_ADD_TEST(suite, testNullAnalyzer);
+    SUITE_ADD_TEST(suite, testSimpleAnalyzer);
+    SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
+    SUITE_ADD_TEST(suite, testWordlistLoader);
     return suite; 
 }
 // EOF

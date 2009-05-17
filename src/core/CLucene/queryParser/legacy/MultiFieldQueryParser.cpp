@@ -94,8 +94,8 @@ Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText
 				//If the user passes a map of boosts
 				if (boosts != NULL) {
 					//Get the boost from the map and apply them
-                    BoostMap::const_iterator itr = boosts->find(fields[i]);
-                    if (itr != boosts->end()) {
+            BoostMap::iterator itr = boosts->find( fields[i]);
+            if (itr != boosts->end()) {
 						q->setBoost(itr->second);
 					}
 				}
