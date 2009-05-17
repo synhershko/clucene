@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -20,10 +20,10 @@ CL_NS_DEF(search)
 ///the type that is stored in the field cache. can't use a typedef because
 ///the decorated name would become too long
 class fieldcacheCacheReaderType: public CL_NS(util)::CLHashMap<FieldCacheImpl::FileEntry*,
-	FieldCacheAuto*, 
+	FieldCacheAuto*,
 	FieldCacheImpl::FileEntry::Compare,
 	FieldCacheImpl::FileEntry::Equals,
-	CL_NS(util)::Deletor::Object<FieldCacheImpl::FileEntry>, 
+	CL_NS(util)::Deletor::Object<FieldCacheImpl::FileEntry>,
 	CL_NS(util)::Deletor::Object<FieldCacheAuto> >{
 public:
     fieldcacheCacheReaderType(){
@@ -45,12 +45,12 @@ public:
 
 //note: typename gets too long if using cacheReaderType as a typename
 class fieldcacheCacheType: public CL_NS(util)::CLHashMap<
-	CL_NS(index)::IndexReader*, 
-	fieldcacheCacheReaderType*, 
+	CL_NS(index)::IndexReader*,
+	fieldcacheCacheReaderType*,
 	CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
 	CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
-	CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
-	CL_NS(util)::Deletor::Object<fieldcacheCacheReaderType> >{ 
+	CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>,
+	CL_NS(util)::Deletor::Object<fieldcacheCacheReaderType> >{
 public:
 	fieldcacheCacheType ( const bool deleteKey, const bool deleteValue)
 	{
@@ -58,7 +58,7 @@ public:
 	    setDeleteValue(deleteValue);
 	}
 	virtual ~fieldcacheCacheType(){
-		
+
 	}
 };
 
@@ -70,7 +70,7 @@ FieldCache::StringIndex::StringIndex (int32_t* values, TCHAR** lookup, int count
 
 FieldCache::StringIndex::~StringIndex(){
     _CLDELETE_ARRAY(order);
-    
+
     for ( int i=0;i<count;i++ )
         _CLDELETE_CARRAY(lookup[i]);
     _CLDELETE_ARRAY(lookup);
@@ -134,7 +134,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
              return 1;
          else
              return -1;
-             
+
      }else
          return _tcscmp(other->field,this->field);
  }
@@ -167,14 +167,14 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     {
     	SCOPED_LOCK_MUTEX(THIS_LOCK)
       	fieldcacheCacheReaderType* readerCache = cache->get(reader);
-      	if (readerCache != NULL) 
+      	if (readerCache != NULL)
           ret = readerCache->get (entry);
       	_CLDELETE(entry);
 	}
     return ret;
   }
 
- 
+
   /** See if a custom object is in the cache. */
   FieldCacheAuto* FieldCacheImpl::lookup (IndexReader* reader, const TCHAR* field, SortComparatorSource* comparer) {
     FieldCacheAuto* ret = NULL;
@@ -188,7 +188,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 }
     return ret;
   }
-  
+
 	void FieldCacheImpl::closeCallback(CL_NS(index)::IndexReader* reader, void* fieldCacheImpl){
 		FieldCacheImpl* fci = (FieldCacheImpl*)fieldCacheImpl;
     	SCOPED_LOCK_MUTEX(fci->THIS_LOCK)
@@ -226,9 +226,9 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 	  //this is supposed to return the previous value, but it needs to be deleted!!!
 	}
   }
-  
-  
-  
+
+
+
 
 
  // inherit javadocs
@@ -251,11 +251,10 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           }
           do {
             Term* term = termEnum->term(false);
-            if (term->field() != field) 
+            if (term->field() != field)
 				      break;
-    
-			      TCHAR* end;
-            int32_t termval = (int32_t)_tcstoi64(term->text(), &end, 10);
+
+            int32_t termval = _ttoi(term->text());
             termDocs->seek (termEnum);
             while (termDocs->next()) {
               retArray[termDocs->doc()] = termval;
@@ -301,11 +300,10 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           }
           do {
             Term* term = termEnum->term(false);
-            if (term->field() != field) 
+            if (term->field() != field)
 				break;
 
-			TCHAR* tmp;
-            float_t termval = _tcstod(term->text(),&tmp);
+            float_t termval = _tcstod(term->text(),NULL);
             termDocs->seek (termEnum);
             while (termDocs->next()) {
               retArray[termDocs->doc()] = termval;
@@ -318,7 +316,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           _CLDELETE(termEnum);
         )
       }
-	  
+
 	  FieldCacheAuto* fa = _CLNEW FieldCacheAuto(retLen,FieldCacheAuto::FLOAT_ARRAY);
 	  fa->floatArray = retArray;
 
@@ -353,7 +351,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           }
           do {
             Term* term = termEnum->term(false);
-            if (term->field() != field) 
+            if (term->field() != field)
 				break;
             const TCHAR* termval = term->text();
             termDocs->seek (termEnum);
@@ -370,7 +368,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
         )
       }
 
-	  
+
 	    FieldCacheAuto* fa = _CLNEW FieldCacheAuto(retLen,FieldCacheAuto::STRING_ARRAY);
 	    fa->stringArray = retArray;
 	    fa->ownContents=true;
@@ -416,12 +414,12 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           }
           do {
             Term* term = termEnum->term(false);
-            if (term->field() != field) 
+            if (term->field() != field)
 			        break;
 
             // store term text
             // we expect that there is at most one term per document
-            if (t >= retLen+1) 
+            if (t >= retLen+1)
 			        _CLTHROWA(CL_ERR_Runtime,"there are more terms than documents in field"); //todo: rich error \"" + field + "\"");
             mterms[t] = STRDUP_TtoT(term->text());
 
@@ -455,11 +453,11 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           //mterms = terms;
 
           //we simply shorten the length of the array...
-        
+
         }
       }
       FieldCache::StringIndex* value = _CLNEW FieldCache::StringIndex (retArray, mterms,t);
-  	  
+
 	    FieldCacheAuto* fa = _CLNEW FieldCacheAuto(retLen,FieldCacheAuto::STRING_INDEX);
 	    fa->stringIndex = value;
 	    fa->ownContents=true;
@@ -483,7 +481,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
       try {
         Term* term = enumerator->term(false);
         if (term == NULL) {
-          _CLTHROWA(CL_ERR_Runtime,"no terms in field - cannot determine sort type"); //todo: make rich error: " + field + " 
+          _CLTHROWA(CL_ERR_Runtime,"no terms in field - cannot determine sort type"); //todo: make rich error: " + field + "
         }
         if (term->field() == field) {
           const TCHAR* termtext = term->text();
@@ -521,7 +519,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 			      store (reader, field, SortField::AUTO, ret);
           }
         } else {
-          _CLTHROWA (CL_ERR_Runtime,"field does not appear to be indexed"); //todo: make rich error: \"" + field + "\" 
+          _CLTHROWA (CL_ERR_Runtime,"field does not appear to be indexed"); //todo: make rich error: \"" + field + "\"
         }
       } _CLFINALLY( enumerator->close(); _CLDELETE(enumerator) );
 
@@ -529,7 +527,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
 	  CLStringIntern::unintern(field);
     return ret;
   }
-   
+
 
   // inherit javadocs
   FieldCacheAuto* FieldCacheImpl::getCustom (IndexReader* reader, const TCHAR* field, SortComparator* comparator){
@@ -539,7 +537,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
     if (ret == NULL) {
 	    int32_t retLen = reader->maxDoc();
       Comparable** retArray = _CL_NEWARRAY(Comparable*,retLen);
-	    memset(retArray,0,sizeof(Comparable*)*retLen); 
+	    memset(retArray,0,sizeof(Comparable*)*retLen);
       if (retLen > 0) {
         TermDocs* termDocs = reader->termDocs();
         TermEnum* termEnum = reader->terms ();
@@ -550,7 +548,7 @@ FieldCacheImpl::FileEntry::FileEntry (const TCHAR* field, int32_t type) {
           }
           do {
             Term* term = termEnum->term(false);
-            if (term->field() != field) 
+            if (term->field() != field)
 				    break;
             Comparable* termval = comparator->getComparable (term->text());
             termDocs->seek (termEnum);

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -544,7 +544,7 @@ TCHAR* QueryParser::discardEscapeChar(TCHAR* input, TCHAR* output) {
 	// the actual length of the output
 	int32_t length = 0;
 
-	// We remember whether the last processed character was 
+	// We remember whether the last processed character was
 	// an escape character
 	bool lastCharWasEscapeChar = false;
 
@@ -820,7 +820,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
 	if (boost != NULL) {
 		float_t f = 1.0;
 		try {
-			f = static_cast<float_t>(_tstof(boost->image));
+			f = _tcstod(boost->image, NULL);
 			q->setBoost(f);
 		} catch (...) { /* ignore errors */ }
 	}
@@ -903,8 +903,9 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
 			} else if (fuzzy) {
 				float_t fms = fuzzyMinSim;
 				try {
-					if (fuzzySlop->image[1] != 0)
-						fms = static_cast<float_t>(_tstof(fuzzySlop->image + 1));
+					if (fuzzySlop->image[1] != 0){
+						fms = _tcstod(fuzzySlop->image + 1, NULL);
+					}
 				} catch (...) { /* ignore exceptions */ }
 				if(fms < 0.0f || fms > 1.0f){
 					_CLTHROWT(CL_ERR_Parse, _T("Minimum similarity for a FuzzyQuery has to be between 0.0f and 1.0f !"));
@@ -1071,7 +1072,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
 	if (boost != NULL) {
 		float_t f = 1.0;
 		try {
-			f = static_cast<float_t>(_tstof(boost->image));
+			f = _tcstod(boost->image,NULL);
 		}
 		catch (...) {
 			/* Should this be handled somehow? (defaults to "no boost", if

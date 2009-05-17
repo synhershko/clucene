@@ -1,14 +1,14 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
   static void print_tHits( CuTest *tc, Hits* hits ) {
     CuMessageA(tc,"%d total results\n\n", hits->length());
-    
+
     for (int32_t i = 0 ; i < hits->length(); i++) {
       if ( i < 10 || (i > 94 && i < 105) ) {
         const Document& d = hits->doc(i);
@@ -16,14 +16,14 @@
       }
     }
   }
-      
+
   void testSearchTestForDuplicatesRaw(CuTest *tc){
 		const int MAX_DOCS=1500;
 		const char *strBody[10] = {"test", "value", "why not", "computer", "clucene",
 			"sun", "program", "main", "database", "code"};
 		RAMDirectory ram;
 
-		//---  
+		//---
 		WhitespaceAnalyzer an;
 		IndexWriter* writer = _CLNEW IndexWriter(&ram, &an, true);
 		Document *doc = 0;
@@ -36,20 +36,20 @@
 			//printf("%d/%d=%s\n", i, MAX_DOCS,strBody[i%10]);
 			doc = _CLNEW Document();
 
-			//---    
+			//---
 			_sntprintf(strDb, 1024, _T("%d"), i);
 			doc->add( *_CLNEW Field(_T("id"), strDb,Field::STORE_YES | Field::INDEX_UNTOKENIZED) );
-		    
+
 			STRCPY_AtoT(strDb, strBody[i%10], 1022);
-			
+
 			doc->add(*_CLNEW Field(_T("body"), strDb,Field::STORE_NO | Field::INDEX_TOKENIZED) );
 			//---
 			writer->addDocument(doc);
 			_CLDELETE(doc);
-			//****    
+			//****
 		}
 		//printf("\nDone.\n");
-		  
+
 		//---
 		writer->close();
 		_CLDELETE(writer);
@@ -69,9 +69,8 @@
 		int32_t id;
 		for (int32_t j = 0; j < result->length(); j++) {
 			doc = &result->doc(j);
-			
-			TCHAR* end;
-			id = (int32_t)_tcstoi64(doc->get(_T("id")), &end, 10);
+
+			id = (_ttoi(doc->get(_T("id")));
 			if ( resMap.find(id) ==resMap.end() ) {
 				resMap.insert( std::pair<int32_t,int32_t>(id, 1));
 				//printf("Inserted $d\n",id);
@@ -162,6 +161,6 @@
     SUITE_ADD_TEST(suite, testSearchTestForDuplicates);
     SUITE_ADD_TEST(suite, testSearchTestForDuplicatesRaw);
 
-    return suite; 
+    return suite;
   }
 // EOF

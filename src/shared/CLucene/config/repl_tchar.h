@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _REPL_TCHAR_H
@@ -9,16 +9,16 @@
 
 #ifndef _CL_HAVE_TCHAR_H
     #if defined(_UCS2)
-        
+
         //note: descriptions with * in front have replacement functions
-        
+
         //formatting functions
         #define _sntprintf swprintf //* make a formatted a string
         #define _tprintf wprintf //* print a formatted string
-        
+
         //this one has no replacement functions yet, but it is only used in the tests
         #define _vsntprintf vsnwprintf //* print a formatted string using variable arguments
-        
+
         //we are using the internal functions of the compiler here
         //if LUCENE_USE_INTERNAL_CHAR_FUNCTIONS is defined, thesse
         //will be replaced by internal functions
@@ -29,7 +29,7 @@
         #define _totlower towlower //* convert char to lower case
         #define _totupper towupper //* convert char to lower case
         #define _tcslwr wcslwr //* convert string to lower case
-        
+
         //these are the string handling functions
         //we may need to create wide-character/multi-byte replacements for these
         #define _tcscpy wcscpy //copy a string to another string
@@ -42,24 +42,24 @@
         #define _tcscmp wcscmp //case sensitive compare two strings
         #define _tcsncmp wcsncmp //case sensitive compare two strings
         #define _tcscspn wcscspn //location of any of a set of character in a string
-        
+
         #ifdef _CL_HAVE_FUNCTION_WCSICMP
             #define _tcsicmp wcsicmp //* case insensitive compare two string
         #else
             #define _tcsicmp wcscasecmp //* case insensitive compare two string
         #endif
-        
+
         //conversion functions
         #define _tcstod wcstod //convert a string to a double
         #define _tcstoi64 wcstoll //* convers a string to an 64bit bit integer
         #define _i64tot lltow //* converts a 64 bit integer to a string (with base)
     #else //if defined(_ASCII)
-        
+
         //formatting functions
-        #define _sntprintf snprintf    
+        #define _sntprintf snprintf
         #define _tprintf printf
-        #define _vsntprintf vsnprintf 
-        
+        #define _vsntprintf vsnprintf
+
         //we are using the internal functions of the compiler here
         //if LUCENE_USE_INTERNAL_CHAR_FUNCTIONS is defined, thesse
         //will be replaced by internal functions
@@ -70,7 +70,7 @@
         #define _totlower tolower
         #define _totupper toupper
         #define _tcslwr strlwr
-        
+
         //these are the string handling functions
         #define _tcscpy strcpy
         #define _tcsncpy strncpy
@@ -83,16 +83,17 @@
         #define _tcsncmp strncmp
         #define _tcsicmp strcasecmp
         #define _tcscspn strcspn
-        
+
         //converstion methods
         #define _tcstod strtod
         #define _tcstoi64 strtoll
         #define _i64tot lltoa
-        
+
     #endif
+
 #else //HAVE_TCHAR_H
     #include <tchar.h>
-    
+
     //some tchar headers miss these...
     #ifndef _tcstoi64
         #if defined(_UCS2)
@@ -101,24 +102,18 @@
         	#define _tcstoi64 strtoll
         #endif
     #endif
- 
+
 #endif //HAVE_TCHAR_H
 
-//new [] based strdup. if we change to using malloc, then we have to free strings (not delete[])
-CLUCENE_SHARED_EXPORT char* lucenestrdup(const char* v);
-#ifdef _UCS2
-    #define stringDuplicate(x) lucenewcsdup(x)
-    CLUCENE_SHARED_EXPORT wchar_t* lucenewcsdup(const wchar_t* v);
-#else
-    #define stringDuplicate(x) lucenestrdup(x)
+#ifndef _ttoi
+  #define _ttoi(x) (int)_tcstoi64(x,NULL,10)
 #endif
 
-
 #define STRCPY_AtoA(target,src,len) strncpy(target,src,len)
-#define STRDUP_AtoA(x) lucenestrdup(x)
+#define STRDUP_AtoA(x) strdup(x)
 
 #if defined(_UCS2)
-	#define STRDUP_WtoW(x) lucenewcsdup(x)
+	#define STRDUP_WtoW(x) wcsdup(x)
     #define STRDUP_TtoT STRDUP_WtoW
     #define STRDUP_WtoT STRDUP_WtoW
     #define STRDUP_TtoW STRDUP_WtoW
@@ -128,7 +123,7 @@ CLUCENE_SHARED_EXPORT char* lucenestrdup(const char* v);
 
     #define STRDUP_WtoA(x) CL_NS(util)::Misc::_wideToChar(x)
 	#define STRDUP_TtoA STRDUP_WtoA
-    
+
     #define STRCPY_WtoW(target,src,len) _tcsncpy(target,src,len)
 	#define STRCPY_TtoW STRCPY_WtoW
 	#define STRCPY_WtoT STRCPY_WtoW
@@ -151,7 +146,6 @@ CLUCENE_SHARED_EXPORT char* lucenestrdup(const char* v);
     #define STRCPY_TtoA STRCPY_AtoA
     //#define _tcscpy STRCPY_AtoA
 #endif
-
 
 
 #endif //_REPL_TCHAR_H

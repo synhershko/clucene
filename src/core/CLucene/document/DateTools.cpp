@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -21,11 +21,6 @@
 # include <sys/timeb.h>
 #endif
 
-// Defining function macros missing in specific enviroments
-#ifndef _ttoi
-	#define _ttoi(x) (int)_tcstoi64(x,NULL,10)
-#endif
-
 #include "DateTools.h"
 #include "CLucene/util/Misc.h"
 
@@ -43,7 +38,7 @@ TCHAR* DateTools::timeToString(const int64_t time, Resolution resolution /*= MIL
 void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf, size_t bufLength) {
 	time_t secs = time / 1000;
 	tm *ptm = gmtime(&secs);
-	
+
 	char abuf[DATETOOLS_BUFFER_SIZE];
 
 	if (resolution == MILLISECOND_FORMAT) {
@@ -63,7 +58,7 @@ void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* b
 	} else if (resolution == HOUR_FORMAT) {
 		strftime(abuf, DATETOOLS_BUFFER_SIZE, "%Y%m%d%H", ptm);
 	}
-	
+
 	STRCPY_AtoT(buf,abuf, bufLength);
 }
 
@@ -179,7 +174,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 	ret = (t * 1000) + ms;
 
 	return ret;
-} 
+}
 
 DateTools::~DateTools(){
 }
