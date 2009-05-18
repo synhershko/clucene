@@ -213,7 +213,7 @@ public:
 	*  @param result a Token that may or may not be used to return
 	*  @return next token in the stream or null if end-of-stream was hit
 	*/
-	virtual Token* next(Token*& token) = 0;
+	virtual Token* next(Token* token) = 0;
 
 	/** This is for backwards compatibility only. You should pass the token you want to fill
 	 * to next(), this will save a lot of object construction and destructions.

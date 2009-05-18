@@ -12,7 +12,7 @@ CL_NS_DEF(queryParser)
 /**
  * Describes the input token stream.
  */
-class CLUCENE_EXPORT QueryToken:virtual LUCENE_BASE {
+class CLUCENE_EXPORT QueryToken{
 public:
 	QueryToken();
 	~QueryToken();

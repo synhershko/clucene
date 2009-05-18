@@ -62,7 +62,7 @@ CL_NS_DEF2(analysis,standard)
     /** Returns the next token in the stream, or false at end-of-stream.
     * The returned token's type is set to an element of
     * StandardTokenizerConstants::tokenImage. */
-    Token* next(Token*& token);
+    Token* next(Token* token);
 
     // Reads for number like "1"/"1234.567", or IP address like "192.168.1.2".
     Token* ReadNumber(const TCHAR* previousNumber, const TCHAR prev, Token* t);

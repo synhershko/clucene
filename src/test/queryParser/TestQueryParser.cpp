@@ -24,14 +24,13 @@ public:
 	{
 	}
 
-	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token*& token) {
+	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token* token) {
 		if (inPhrase) {
-			if (token == NULL) token = _CLNEW CL_NS(analysis)::Token();
 			inPhrase = false;
 			token->set( _T("phrase2"), savedStart, savedEnd);
 			return token;
 		}else{
-			while( (token = input->next(token) ) != NULL ){
+			while( input->next(token) != NULL ){
 				if ( _tcscmp(token->termBuffer(), _T("phrase")) == 0 ) {
 					inPhrase = true;
 					savedStart = token->startOffset();
@@ -40,8 +39,6 @@ public:
 					return token;
 				}else if ( _tcscmp(token->termBuffer(), _T("stop") ) !=0 ){
 					return token;
-				} else {
-					_CLDELETE(token);
 				}
 			}
 		}

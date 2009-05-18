@@ -131,16 +131,11 @@ CL_NS_DEF2(analysis,standard)
 	  return t;
   }
 
-  Token* StandardTokenizer::next(Token*& t) {
+  Token* StandardTokenizer::next(Token* t) {
     int ch=0;
 
-    bool bOwnsToken=false;
     while (!EOS) {
       ch = readChar();
-
-      bOwnsToken = (t==NULL);
-      if (bOwnsToken)
-        t = _CLNEW Token();
 
       if ( ch == 0 || ch == -1 ){
         continue;
@@ -161,7 +156,6 @@ CL_NS_DEF2(analysis,standard)
         if ( t != NULL ) return t;
       }
     }
-    if (bOwnsToken) _CLDELETE(t);
     return NULL;
   }
 
