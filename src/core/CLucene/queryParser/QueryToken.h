@@ -12,10 +12,10 @@ CL_NS_DEF(queryParser)
 /**
  * Describes the input token stream.
  */
-class CLUCENE_EXPORT Token:virtual LUCENE_BASE {
+class CLUCENE_EXPORT QueryToken:virtual LUCENE_BASE {
 public:
-	Token();
-	~Token();
+	QueryToken();
+	~QueryToken();
 
 	/**
 	* An integer that describes the kind of this token.  This numbering
@@ -53,7 +53,7 @@ public:
 	* token.  Otherwise, see below for a description of the contents of
 	* this field.
 	*/
-	Token* next;
+	QueryToken* next;
 
 	/**
 	* This field is used to access special tokens that occur prior to this
@@ -67,7 +67,7 @@ public:
 	* immediately follow it (without an intervening regular token).  If there
 	* is no such token, this field is null.
 	*/
-	Token* specialToken;
+	QueryToken* specialToken;
 
 	/**
 	* Returns the image.
@@ -86,7 +86,7 @@ public:
 	* to the following switch statement. Then you can cast matchedToken
 	* variable to the appropriate type and use it in your lexical actions.
 	*/
-	static Token* newToken(const int32_t ofKind);
+	static QueryToken* newToken(const int32_t ofKind);
 
 };
 CL_NS_END

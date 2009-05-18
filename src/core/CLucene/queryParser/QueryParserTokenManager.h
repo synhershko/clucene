@@ -8,11 +8,11 @@
 #define _lucene_queryParser_QueryParserTokenManager_
 
 #include "QueryParserConstants.h"
-#include "Token.h"
 
 CL_NS_DEF(queryParser)
 
 class CharStream;
+class QueryToken;
 
 class CLUCENE_EXPORT QueryParserTokenManager: public virtual QueryParserConstants
 {
@@ -92,7 +92,7 @@ public:
 	void SwitchTo(const int32_t lexState);
 
 protected:
-	Token* jjFillToken();
+	QueryToken* jjFillToken();
 
 	int32_t curLexState;
 	int32_t defaultLexState;
@@ -102,7 +102,7 @@ protected:
 	int32_t jjmatchedKind;
 
 public:
-	Token* getNextToken();
+	QueryToken* getNextToken();
 
 private:
 	static TCHAR* getLexicalError(bool EOFSeen, int32_t lexState, int32_t errorLine, int32_t errorColumn,
