@@ -15,6 +15,7 @@
 
 #include "test.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <fcntl.h>
 #ifdef _CL_HAVE_DIRECT_H
