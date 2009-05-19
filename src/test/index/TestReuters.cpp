@@ -74,7 +74,6 @@ CL_NS_USE(util)
 		char* tmppathP = tmppath + strlen(tmppath);
 		TCHAR tpath[CL_MAX_PATH];
 
-    int c = 0;
 		while ( fl != NULL ){
 			strcpy(tmppathP,fl->d_name);
 			STRCPY_AtoT(tpath,fl->d_name,CL_MAX_PATH);
@@ -87,8 +86,6 @@ CL_NS_USE(util)
 				writer.addDocument( doc );
 				_CLDELETE(doc);
 
-        if ( c++ % 2 == 0 ) 
-          writer.flush();
 			}
 			fl = readdir(srcdir);
 		}
