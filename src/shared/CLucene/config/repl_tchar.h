@@ -116,7 +116,7 @@
 #if defined(_UCS2)
   #define stringDuplicate(x) _tcsdup(x)
 
-	#if !defined(_CL_HAVE_FUNCTION_WCSDUP))
+	#if !defined(_CL_HAVE_FUNCTION_WCSDUP)
   	#define STRDUP_WtoW	wcsdup
   #else
   	#define STRDUP_WtoW	lucene_wcsdup
