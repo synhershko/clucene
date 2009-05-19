@@ -1693,7 +1693,7 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
     rollback = segmentInfos->clone();
     int32_t segmentssize = _merge->segments->size();
     for ( int32_t i=0;i<segmentssize;i++ ){
-      segmentInfos->remove(start+i);
+      segmentInfos->remove(start);
     }
     segmentInfos->add(_merge->info,start);
     checkpoint();

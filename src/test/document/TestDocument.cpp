@@ -87,11 +87,11 @@ public:
     Document doc;
     Field* f;
     const signed char* _as2;
-    const TCHAR* _ts;
+    const TCHAR *_ts, *_ts2;
 	  const ValueArray<uint8_t>* strm;
     RAMDirectory ram;
 
-    const char* areaderString = "a string reader field";
+    const char* areaderString = "a binary field";
     const TCHAR* treaderString = _T("a string reader field");
     size_t readerStringLen = strlen(areaderString);
 
@@ -100,7 +100,7 @@ public:
 
     //use binary utf8
     ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString));
-    doc.add( *_CLNEW Field(_T("utf8Field"), b ,
+    doc.add( *_CLNEW Field(_T("binaryField"), b ,
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
@@ -115,7 +115,6 @@ public:
     writer.optimize();
 
     //use big file
-    CL_NS(util)::FileInputStream input(factbook);
     doc.add( *_CLNEW Field(_T("fileField"),
         _CLNEW FileReader(factbook, SimpleInputStreamReader::ASCII),
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
@@ -128,9 +127,9 @@ public:
 
     IndexReader* reader = IndexReader::open(&ram);
 
-    //now check binary stream
+    //now check binary field
     reader->document(0, doc);
-    f = doc.getField(_T("utf8Field"));
+    f = doc.getField(_T("binaryField"));
     strm = f->binaryValue();
 
     CLUCENE_ASSERT(readerStringLen == b->length);
@@ -139,7 +138,6 @@ public:
     }
 	  doc.clear();
 
-
     //and check reader stream
     reader->document(1, doc);
     f = doc.getField(_T("readerField"));
@@ -147,22 +145,23 @@ public:
     CLUCENE_ASSERT(_tcscmp(treaderString,_ts)==0);
     doc.clear();
 
-    //now check file stream
+    //now check the large field field
     reader->document(2, doc);
     f = doc.getField(_T("fileField"));
-    strm = f->binaryValue();
-    FileInputStream fbStream(factbook);
+    _ts = f->stringValue();
+    FileReader fbStream(factbook, FileReader::ASCII);
 
     int i=0;
+    _ts2 = NULL;
     do{
-        int32_t rd = fbStream.read(_as2,1,1);
+        int32_t rd = fbStream.read(_ts2,1,1);
         if ( rd == -1 )
             break;
         CLUCENE_ASSERT(rd==1);
-        CLUCENE_ASSERT((*strm)[i]==*_as2);
+        CLUCENE_ASSERT(_ts[i]==*_ts2);
         i++;
     }while(true);
-    CLUCENE_ASSERT(i == b->length);
+    CLUCENE_ASSERT(i == _tcslen(_ts));
     doc.clear();
 
 
