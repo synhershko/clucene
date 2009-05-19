@@ -183,7 +183,7 @@ IF ( BUILD_STATIC_LIBRARIES )
 	
 	#and install library
 	install(TARGETS clucene-core-static 
-	        DESTINATION lib 
+	        DESTINATION ${LIB_DESTINATION} 
 	        COMPONENT runtime )
 ENDIF ( BUILD_STATIC_LIBRARIES )
 
@@ -239,5 +239,5 @@ ENDIF ( LUCENE_SYS_INCLUDES )
 
 #and install library
 install(TARGETS clucene-core 
-        DESTINATION lib  
+        DESTINATION ${LIB_DESTINATION}  
         COMPONENT runtime )
