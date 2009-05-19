@@ -171,8 +171,8 @@ public:
 		//todo: check if this is always right!
 		//must should look through code, for
 		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
 
 		(*this)[k] = v;;
 	}
@@ -205,8 +205,8 @@ public:
 		//todo: check if this is always right!
 		//must should look through code, for
 		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
 
 		(*this)[k] = v;;
 	}
@@ -240,8 +240,8 @@ public:
 		//todo: check if this is always right!
 		//must should look through code, for
 		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
 
 		(*this)[k] = v;;
 	}
@@ -275,8 +275,8 @@ public:
 		//todo: check if this is always right!
 		//must should look through code, for
 		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
 
 		(*this)[k] = v;;
 	}
@@ -310,10 +310,9 @@ public:
 		//todo: check if this is always right!
 		//must should look through code, for
 		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
 
-    base::
 	}
 };
 
