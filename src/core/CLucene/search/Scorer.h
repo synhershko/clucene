@@ -16,7 +16,7 @@ CL_CLASS_DEF(search,Explanation)
 
 CL_NS_DEF(search)
    /** Expert: Implements scoring for a class of queries. */
-class CLUCENE_EXPORT Scorer: LUCENE_BASE {
+class CLUCENE_EXPORT Scorer/*: LUCENE_BASE*/ {
 private:
   Similarity* similarity;
 protected:
@@ -64,8 +64,7 @@ public:
   /** Returns an explanation of the score for <code>doc</code>. */
   virtual void explain(int32_t doc, Explanation* ret) = 0;
 
-
-  /** Returns an string which explains the object */
+  /** Returns a string which explains the object */
   virtual TCHAR* toString() = 0;
 
   static bool sort(const Scorer* elem1, const Scorer* elem2);

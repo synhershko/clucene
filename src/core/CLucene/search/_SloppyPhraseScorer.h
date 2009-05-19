@@ -23,6 +23,8 @@ CL_NS_DEF(search)
 		~SloppyPhraseScorer(){
 		}
 
+		virtual TCHAR* toString();
+
 	protected:
 		float_t phraseFreq();
 	};

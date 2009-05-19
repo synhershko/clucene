@@ -23,6 +23,7 @@
 #include "CLucene/search/WildcardQuery.h"
 #include "CLucene/search/PrefixQuery.h"
 #include "CLucene/search/RangeQuery.h"
+#include "CLucene/search/MatchAllDocsQuery.h"
 
 #include "CLucene/index/Term.h"
 #include "QueryToken.h"
@@ -487,9 +488,8 @@ Query* QueryParser::getBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& 
 Query* QueryParser::getWildcardQuery(const TCHAR* _field, TCHAR* termStr)
 {
   if (_tcscmp(_T("*"), _field) == 0) {
-    if (_tcscmp(_T("*"), termStr) == 0) return NULL;
-    // TODO: Implement MatchAllDocsQuery
-    //return _CLNEW MatchAllDocsQuery();
+    if (_tcscmp(_T("*"), termStr) == 0)
+		return _CLNEW MatchAllDocsQuery();
   }
   if (!allowLeadingWildcard && (termStr[0]==_T('*') || termStr[0]==_T('?'))){
     _CLDELETE_LCARRAY(termStr);
@@ -777,7 +777,8 @@ Query* QueryParser::fClause(TCHAR*& _field) {
     case STAR:
       jj_consume_token(STAR);
       jj_consume_token(COLON);
-      cl_stprintf(_field,1,_T("*"));
+      _field[0]=_T('*');
+	  _field[1]=0;
       break;
     default:
       jj_la1[5] = jj_gen;

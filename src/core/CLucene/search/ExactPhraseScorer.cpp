@@ -86,4 +86,8 @@ CL_NS_DEF(search)
 
 		return (float_t)freq;
 	}
+
+	TCHAR* ExactPhraseScorer::toString(){
+		return stringDuplicate(_T("ExactPhraseScorer"));
+	}
 CL_NS_END

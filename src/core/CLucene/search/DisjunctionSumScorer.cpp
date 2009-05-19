@@ -104,7 +104,7 @@ bool DisjunctionSumScorer::skipTo( int32_t target )
 
 TCHAR* DisjunctionSumScorer::toString()
 {
-	return NULL;
+	return stringDuplicate(_T("DisjunctionSumScorer"));
 }
 
 void DisjunctionSumScorer::explain( int32_t doc, Explanation* ret )

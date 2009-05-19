@@ -20,6 +20,9 @@ CL_NS_DEF(search)
        
 	~ExactPhraseScorer(){
 	}
+
+	virtual TCHAR* toString();
+
     protected:
       //Returns the exact freqency of the phrase
       float_t phraseFreq();

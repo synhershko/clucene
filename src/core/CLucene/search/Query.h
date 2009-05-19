@@ -40,7 +40,7 @@ CL_NS_DEF(search)
     <li>{@link queryParser.QueryParser QueryParser}
     </ul>
 	*/
-  class CLUCENE_EXPORT Query :LUCENE_BASE, public CL_NS(util)::NamedObject { 
+  class CLUCENE_EXPORT Query :/*LUCENE_BASE,*/ public CL_NS(util)::NamedObject { 
 	private:
 		// query boost factor
 		float_t boost;
@@ -121,7 +121,6 @@ CL_NS_DEF(search)
 		* <i>This is an Internal function</i>
 		*/
 		virtual Weight* _createWeight(Searcher* searcher);
-		
 	};
     
 CL_NS_END

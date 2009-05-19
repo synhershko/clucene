@@ -141,6 +141,12 @@ void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const char* inst, co
 	CuAssert(tc,msg,success);
 }
 
+void assertTrue(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false){
+	bool ret = q->instanceOf(inst);
+	if (bDeleteQuery) _CLLDELETE(q);
+	CuAssertTrue(tc,ret);
+}
+
 void testSimple(CuTest *tc) {
 	StandardAnalyzer a;
 	KeywordAnalyzer b;
@@ -449,21 +455,39 @@ void testEscaped(CuTest *tc) {
     assertQueryEquals(tc,_T("[ a\\\\ TO a\\* ]"), &a, _T("[a\\ TO a*]") );
 }
 
+void testMatchAllDocs(CuTest *tc) {
+	WhitespaceAnalyzer a;
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+	assertTrue(tc,qp->parse(_T("*:*")),"MatchAllDocsQuery",true);
+	assertTrue(tc,qp->parse(_T("(*:*)")),"MatchAllDocsQuery",true);
+
+	BooleanQuery* bq = (BooleanQuery*)qp->parse(_T("+*:* -*:*"));
+	BooleanClause** clauses = _CL_NEWARRAY(BooleanClause*, bq->getClauseCount() + 1);
+	bq->getClauses(clauses);
+	assertTrue(tc, clauses[0]->getQuery(), "MatchAllDocsQuery");
+	assertTrue(tc, clauses[1]->getQuery(), "MatchAllDocsQuery");
+	_CLDELETE_LARRAY(clauses);
+	_CLLDELETE(bq);
+	_CLLDELETE(qp);
+}
+
 
 CuSuite *testQueryParser(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Query Parser Test"));
 
 	SUITE_ADD_TEST(suite, testSimple);
-  SUITE_ADD_TEST(suite, testQPA);
-  SUITE_ADD_TEST(suite, testEscaped);
-  SUITE_ADD_TEST(suite, testNumber);
-  SUITE_ADD_TEST(suite, testPunct);
+	SUITE_ADD_TEST(suite, testQPA);
+	SUITE_ADD_TEST(suite, testEscaped);
+	SUITE_ADD_TEST(suite, testNumber);
+	SUITE_ADD_TEST(suite, testPunct);
 
 	SUITE_ADD_TEST(suite, testSlop);
-  SUITE_ADD_TEST(suite, testRange);
-  SUITE_ADD_TEST(suite, testWildcard);
+	SUITE_ADD_TEST(suite, testRange);
+	SUITE_ADD_TEST(suite, testWildcard);
 
-  return suite;
+	SUITE_ADD_TEST(suite, testMatchAllDocs);
+
+	return suite;
 }
 // EOF

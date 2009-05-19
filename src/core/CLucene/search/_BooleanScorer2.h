@@ -18,7 +18,7 @@ CL_NS_DEF(search)
 	private:
 	    class Internal;
 		friend class Internal;
-	    Internal* internal;
+	    Internal* _internal;
 	    
 	    class Coordinator;
 	    class SingleMatchScorer;
@@ -41,7 +41,7 @@ CL_NS_DEF(search)
 		float_t score();
 		bool skipTo( int32_t target );
 		void explain( int32_t doc, Explanation* ret );
-		TCHAR* toString();
+		virtual TCHAR* toString();
 	};
 
 CL_NS_END

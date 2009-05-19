@@ -43,7 +43,7 @@ public:
 	int32_t doc() const;
 	int32_t nrMatchers();
 	bool skipTo( int32_t target );
-	TCHAR* toString();
+	virtual TCHAR* toString();
 	void explain( int32_t doc, Explanation* ret );
 	
 protected:

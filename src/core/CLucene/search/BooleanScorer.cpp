@@ -103,10 +103,12 @@ CL_NS_DEF(search)
 		CL_NS(util)::StringBuffer buffer;
 		buffer.append(_T("boolean("));
 		for (SubScorer* sub = scorers; sub != NULL; sub = sub->next) {
-			buffer.append(sub->scorer->toString());
-			buffer.append(_T(" "));
+			TCHAR* tmp = sub->scorer->toString();
+			buffer.append(tmp);
+			_CLDELETE_LCARRAY(tmp);
+			buffer.appendChar(_T(' '));
 		}
-		buffer.appendChar(')');
+		buffer.appendChar(_T(')'));
 		return buffer.toString();
 	}
 

@@ -139,6 +139,7 @@ SET(clucene_core_Files
 	./CLucene/search/BooleanQuery.cpp
 	./CLucene/search/FieldCache.cpp
 	./CLucene/search/DateFilter.cpp
+	./CLucene/search/MatchAllDocsQuery.cpp
 )
 
 #if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)
