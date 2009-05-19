@@ -49,7 +49,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataArray(ValueArray<FieldData*>(8)),
   fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ValueArray<PostingVector*>(1)),
-  allFieldDataArray(ObjectArray<FieldData>(10)),
+  allFieldDataArray(ValueArray<FieldData*>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
   vectorsPool( _CLNEW ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) ),
   charPool( _CLNEW CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),

@@ -85,6 +85,7 @@ CL_NS_USE(util)
 
 				writer.addDocument( doc );
 				_CLDELETE(doc);
+
 			}
 			fl = readdir(srcdir);
 		}

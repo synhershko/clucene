@@ -74,6 +74,9 @@ OPTION(BUILD_CONTRIBS_LIB
 SET(LUCENE_SYS_INCLUDES "" CACHE PATH
       "location for non-system independent files. defaults to CMAKE_INSTALL_PREFIX. see INSTALL documentation for further information."
       )
+#install path options
+SET(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)" )
+SET(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Library directory name" FORCE)
 
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )

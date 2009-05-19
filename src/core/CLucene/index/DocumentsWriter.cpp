@@ -457,11 +457,7 @@ int32_t DocumentsWriter::flush(bool _closeDocStore) {
 
     docCount = numDocsInRAM;
 
-    std::vector<string> flushedFiles;
-    writeSegment(flushedFiles);
-    for (std::vector<string>::const_iterator itr = flushedFiles.begin();
-		  itr != flushedFiles.end(); itr ++ )
-		  newFiles.push_back(*itr);
+    writeSegment(newFiles); //write new files directly...
 
     success = true;
 
@@ -905,7 +901,7 @@ DocumentsWriter::ThreadState* DocumentsWriter::getThreadState(Document* doc, Ter
           flushPending = false;
         }
       }
-  )
+    )
   } catch (AbortException& ae) {
     abort(&ae);
   }

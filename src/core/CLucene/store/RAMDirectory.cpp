@@ -42,9 +42,12 @@ CL_NS_DEF(store)
   RAMFile::RAMFile( RAMDirectory* _directory )
   {
      length = 0;
-	 lastModified = Misc::currentTimeMillis();
-	 this->directory = _directory;
-	 sizeInBytes = 0;
+	   lastModified = Misc::currentTimeMillis();
+	   this->directory = _directory;
+	   sizeInBytes = 0;
+     #ifdef _DEBUG
+     filename = NULL;
+     #endif
   }
 
   RAMFile::~RAMFile(){
@@ -525,7 +528,7 @@ CL_NS_DEF(store)
 
     char* n = files->getKey((char*)name);
     if (n != NULL) {
-	   RAMFile* rf = files->get((char*)name);
+	    RAMFile* rf = files->get((char*)name);
       _CLDELETE(rf);
     } else {
       n = STRDUP_AtoA(name);

@@ -139,11 +139,11 @@ string SegmentInfo::segString(Directory* dir) {
      }else{
 		   // optimized case to allocate new array only if current memory buffer is too small
        if (this->normGen.length < src->normGen.length) {
-			   _CLDELETE_LARRAY(normGen.values);
-         normGen.values = _CL_NEWARRAY(int64_t, src->normGen.length);
+         normGen.resize(src->normGen.length);
+       }else{
+        this->normGen.length = src->normGen.length;
        }
-       this->normGen.length = src->normGen.length;
-       memcpy(this->normGen.values, src->normGen.values, this->normGen.length);
+       memcpy(this->normGen.values, src->normGen.values, sizeof(int64_t) * this->normGen.length);
 	   }
 	   isCompoundFile = src->isCompoundFile;
 	   hasSingleNormFile = src->hasSingleNormFile;
@@ -347,9 +347,8 @@ string SegmentInfo::segString(Directory* dir) {
 	   si->delGen = delGen;
 	   si->preLockless = preLockless;
 	   if (this->normGen.values != NULL) {
-       si->normGen.values = _CL_NEWARRAY(int64_t, this->normGen.length);
-       si->normGen.length = this->normGen.length;
-       memcpy(si->normGen.values, this->normGen.values, this->normGen.length);
+       si->normGen.resize(this->normGen.length);
+       memcpy(si->normGen.values, this->normGen.values, sizeof(int64_t) * this->normGen.length);
 	   }
 	   return si;
    }
@@ -685,9 +684,12 @@ string SegmentInfo::segString(Directory* dir) {
 		}
   }
   void SegmentInfos::add(SegmentInfo* info, int32_t pos){
-    if ( pos == -1 ) infos.push_back(info);
-    if ( pos < 0 || pos >= (int32_t)infos.size() ) _CLTHROWA(CL_ERR_IllegalArgument, "pos is out of range");
-    infos.insert( infos.begin()+pos, info );
+    if ( pos == -1 ){
+      infos.push_back(info);
+    }else{
+      if ( pos < 0 || pos >= (int32_t)infos.size()+1 ) _CLTHROWA(CL_ERR_IllegalArgument, "pos is out of range");
+      infos.insert( infos.begin()+pos, info );
+    }
   }
   int32_t SegmentInfos::size() const{
 	  return infos.size();

@@ -307,7 +307,7 @@ IF ( ${EXTRA_LIBS} )
 ENDIF ( ${EXTRA_LIBS} )
 
 install(TARGETS clucene-shared 
-        DESTINATION lib 
+        DESTINATION ${LIB_DESTINATION} 
         COMPONENT development )
         
 
@@ -322,6 +322,6 @@ IF ( BUILD_STATIC_LIBRARIES )
 	    COMPILE_DEFINITIONS_DEBUG _DEBUG
 	)
 	install(TARGETS clucene-shared-static 
-	        DESTINATION lib 
+	        DESTINATION ${LIB_DESTINATION} 
 	        COMPONENT runtime )
 ENDIF ( BUILD_STATIC_LIBRARIES )

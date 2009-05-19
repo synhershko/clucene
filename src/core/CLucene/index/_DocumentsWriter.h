@@ -560,7 +560,7 @@ private:
     FieldsWriter* localFieldsWriter;       // Fields for one doc
     int32_t numThreads;                   // Number of threads that use this instance
     int32_t numAllFieldData;
-    CL_NS(util)::ObjectArray<FieldData> allFieldDataArray; // All FieldData instances
+    CL_NS(util)::ValueArray<FieldData*> allFieldDataArray; // All FieldData instances
     bool doFlushAfter;
     int32_t docID;                            // docID we are now working on
 	  DocumentsWriter* _parent;
