@@ -58,17 +58,21 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 	setConfig(_config);
 }
 
-Field::Field(const TCHAR* Name, CL_NS(util)::ValueArray<uint8_t>* Value, int config):
+Field::Field(const TCHAR* Name, ValueArray<uint8_t>* Value, int config, bool duplicateValue):
 	lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
 
 	_name        = CLStringIntern::intern( Name );
-	CL_NS(util)::ValueArray<uint8_t>* tmp = _CLNEW CL_NS(util)::ValueArray<uint8_t>(Value->length);
-  memcpy(tmp->values, Value->values, Value->length * sizeof(uint8_t));
-    
-	fieldsData = tmp;
+
+	if ( duplicateValue ){
+		ValueArray<uint8_t>* tmp = _CLNEW ValueArray<uint8_t>(Value->length);
+		memcpy(tmp->values, Value->values, Value->length * sizeof(uint8_t));
+		fieldsData = tmp;
+	}else{
+		fieldsData = Value;
+	}
 	valueType = VALUE_BINARY;
 
 	boost=1.0f;
@@ -103,7 +107,7 @@ Field::~Field(){
 /*===============FIELDS=======================*/
 const TCHAR* Field::name() const	{ return _name; } ///<returns reference
 const TCHAR* Field::stringValue() const	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
-const CL_NS(util)::ValueArray<uint8_t>* Field::binaryValue() { return (valueType & VALUE_BINARY) ? static_cast<CL_NS(util)::ValueArray<uint8_t>*>(fieldsData) : NULL; } ///<returns reference
+const ValueArray<uint8_t>* Field::binaryValue() { return (valueType & VALUE_BINARY) ? static_cast<ValueArray<uint8_t>*>(fieldsData) : NULL; } ///<returns reference
 Reader* Field::readerValue() const	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
 CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
 	    
@@ -131,12 +135,12 @@ void Field::setValue(TCHAR* value, const bool duplicateValue) {
 	valueType = VALUE_STRING;
 }
 
-void Field::setValue(CL_NS(util)::Reader* value) {
+void Field::setValue(Reader* value) {
 	_resetValue();
 	fieldsData = value;
 	valueType = VALUE_READER;
 }
-void Field::setValue(CL_NS(util)::ValueArray<uint8_t>* value) {
+void Field::setValue(ValueArray<uint8_t>* value) {
 	_resetValue();
 	fieldsData = value;
 	valueType = VALUE_BINARY;
@@ -221,7 +225,7 @@ void Field::setConfig(const uint32_t x){
 }
 
 TCHAR* Field::toString() {
-    CL_NS(util)::StringBuffer result;
+    StringBuffer result;
 	if (isStored()) {
       result.append( _T("stored") );
 	  if (isCompressed())
@@ -293,8 +297,8 @@ void Field::_resetValue() {
 		Reader* r = static_cast<Reader*>(fieldsData);
 		_CLDELETE(r);
 	} else if (valueType & VALUE_BINARY) {
-		CL_NS(util)::ValueArray<uint8_t>* v = static_cast<CL_NS(util)::ValueArray<uint8_t>*>(fieldsData);
-		_CLVDELETE(v);
+		ValueArray<uint8_t>* v = static_cast<ValueArray<uint8_t>*>(fieldsData);
+		_CLDELETE(v);
 	}
 	valueType=VALUE_NONE;
 }

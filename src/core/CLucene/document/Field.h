@@ -130,19 +130,22 @@ public:
 	};
 
 	/**
-	* TCHAR value constructor of Field. Set duplicateValue to false to save on memory allocations when possible
+	* TCHAR value constructor of Field.
+	* @memory Set duplicateValue to false to save on memory allocations when possible
 	*/
 	Field(const TCHAR* name, const TCHAR* value, int _config, const bool duplicateValue = true);
 
 	/**
 	* Reader* constructor of Field.
+	* @memory consumes reader
 	*/
 	Field(const TCHAR* name, CL_NS(util)::Reader* reader, int _config);
 
 	/**
 	* Binary constructor of Field.
+	* @memory Set duplicateValue to false to save on memory allocations when possible
 	*/
-  Field(const TCHAR* name, CL_NS(util)::ValueArray<uint8_t>* data, int _config);
+  Field(const TCHAR* name, CL_NS(util)::ValueArray<uint8_t>* data, int _config, const bool duplicateValue = true);
 
 	Field(const TCHAR* name, int _config); ///<No value, for lazy loading support
   virtual ~Field();

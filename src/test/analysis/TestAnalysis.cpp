@@ -13,7 +13,7 @@
 	 uint64_t start = Misc::currentTimeMillis();
 
     int32_t count = 0;
-    CL_NS(analysis)::Token* t = NULL;
+    CL_NS(analysis)::Token* t = _CLNEW Token;
     while ( t=stream->next(t)) {
       if (verbose) {
 				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t->termBuffer(), t->startOffset(), t->endOffset() );

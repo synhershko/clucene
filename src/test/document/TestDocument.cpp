@@ -98,9 +98,9 @@ public:
 	  SimpleAnalyzer an;
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
+    ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString) );
     //use binary utf8
-    ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString));
-    doc.add( *_CLNEW Field(_T("binaryField"), b ,
+    doc.add( *_CLNEW Field(_T("binaryField"), b,
         Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();

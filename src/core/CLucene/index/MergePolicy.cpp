@@ -265,9 +265,9 @@ MergePolicy::MergeSpecification* LogMergePolicy::findMergesForOptimize(SegmentIn
       }
 
     } else
-      spec = NULL;
+      _CLDELETE(spec);
   } else
-    spec = NULL;
+    _CLDELETE(spec);
 
   return spec;
 }

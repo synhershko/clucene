@@ -265,9 +265,9 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
     fieldsStream->readBytes(b->values,toRead);
 		if (compressed) {
 			// we still do not support compressed fields
-			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_COMPRESS)); // todo: uncompress(subStream->getStream())
+			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_COMPRESS, false)); // todo: uncompress(subStream->getStream())
     }else{
-			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_YES));
+			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_YES, false));
     }
     //no need to clean up, Field consumes b
 	} else {
