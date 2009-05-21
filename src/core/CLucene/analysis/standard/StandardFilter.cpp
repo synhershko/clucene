@@ -47,6 +47,7 @@ CL_NS_DEF2(analysis,standard)
           text[j++]=text[i];
       }
       text[j]=0;
+      t->resetTermTextLen();
       return t;
 
     } else {
