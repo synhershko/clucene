@@ -28,9 +28,7 @@ private:
 public:
   ConjunctionScorer(Similarity* similarity);
   virtual ~ConjunctionScorer();
-  TCHAR* toString(void){
-	return stringDuplicate(_T("ConjunctionScorer"));
-  }
+  virtual TCHAR* toString();
   void add(Scorer* scorer);
   int32_t doc() const;
   bool next();

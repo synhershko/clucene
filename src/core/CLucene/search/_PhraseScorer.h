@@ -54,7 +54,7 @@ CL_NS_DEF(search)
 
 
 		void explain(int32_t doc, Explanation* ret);
-		TCHAR* toString();
+		virtual TCHAR* toString();
 	protected:
 		/**
 		* For a document containing all the phrase query terms, compute the

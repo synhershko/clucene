@@ -107,7 +107,7 @@ CL_NS_DEF(search)
      int32_t rl = _tcslen(wb) + 9; //9=_tcslen("scorer("  ")") + 1
      TCHAR* ret = _CL_NEWARRAY(TCHAR,rl);
 	 _sntprintf(ret,rl,_T("scorer(%s)"), wb);
-     _CLDELETE_ARRAY(wb);
+     _CLDELETE_LCARRAY(wb);
      return ret;
   }
 

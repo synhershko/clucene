@@ -42,7 +42,7 @@ CL_NS_DEF(search)
 		bool next();
 		bool skipTo(int32_t target);
 		void explain(int32_t doc, Explanation* ret);
-		TCHAR* toString();
+		virtual TCHAR* toString();
 
 		float_t score();
     };

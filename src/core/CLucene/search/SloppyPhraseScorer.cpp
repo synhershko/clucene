@@ -104,4 +104,8 @@ CL_NS_DEF(search)
 
      return freq;
   }
+
+  TCHAR* SloppyPhraseScorer::toString(){
+	  return stringDuplicate(_T("SloppyPhraseScorer"));
+  }
 CL_NS_END

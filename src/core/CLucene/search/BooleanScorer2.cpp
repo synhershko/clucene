@@ -54,7 +54,7 @@ public:
 
 
 
-class BooleanScorer2::Coordinator: LUCENE_BASE {
+class BooleanScorer2::Coordinator/*: LUCENE_BASE*/ {
 public:
 	int32_t maxCoord;
 	int32_t nrMatchers;
@@ -98,7 +98,7 @@ public:
 		return scorer->skipTo( docNr );
 	}
 	
-	TCHAR* toString() {
+	virtual TCHAR* toString() {
 		return scorer->toString();
 	}
 	
@@ -123,7 +123,7 @@ public:
 		return 0.0;
 	}
 	bool skipTo( int32_t target ) { return false; }
-	TCHAR* toString() { return NULL; }
+	virtual TCHAR* toString() { return stringDuplicate(_T("NonMatchingScorer")); }
 
 	void explain( int32_t doc, Explanation* ret ) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::explain");								
@@ -153,8 +153,8 @@ public:
 		return reqScorer->skipTo( target );
 	}
 	
-	TCHAR* toString() {
-		return NULL;
+	virtual TCHAR* toString() {
+		return stringDuplicate(_T("ReqOptSumScorer"));
 	}
 	
 	void explain( int32_t doc, Explanation* ret ) {
@@ -183,8 +183,8 @@ public:
 		return reqScorer->score();
 	}
 	
-	TCHAR* toString() {
-		return NULL;
+	virtual TCHAR* toString() {
+		return stringDuplicate(_T("ReqExclScorer"));
 	}
 	
 	void explain( int32_t doc, Explanation* ret ) {
@@ -206,8 +206,9 @@ private:
 	int32_t requiredNrMatchers;
 public:
 	BSConjunctionScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, int32_t requiredNrMatchers );
+	virtual ~BSConjunctionScorer();
 	float_t score();
-	~BSConjunctionScorer();
+	virtual TCHAR* toString() {return stringDuplicate(_T("BSConjunctionScorer"));}
 };
 
 class BooleanScorer2::BSDisjunctionSumScorer: public CL_NS(search)::DisjunctionSumScorer {
@@ -216,7 +217,9 @@ private:
 	int32_t lastScoredDoc;
 public:
 	BSDisjunctionSumScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, BooleanScorer2::Internal::ScorersType* subScorers, int32_t minimumNrMatchers );
+	virtual ~BSDisjunctionSumScorer(){}
 	float_t score();
+	virtual TCHAR* toString() {return stringDuplicate(_T("BSDisjunctionSumScorer"));}
 };
 
 
@@ -440,89 +443,89 @@ BooleanScorer2::Internal::~Internal(){
 BooleanScorer2::BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch, bool allowDocsOutOfOrder ):
 	Scorer( similarity )
 {
-	internal = new Internal(this, minNrShouldMatch,allowDocsOutOfOrder);
+	_internal = new Internal(this, minNrShouldMatch,allowDocsOutOfOrder);
 }
 
 BooleanScorer2::~BooleanScorer2()
 {
-	delete internal;
+	delete _internal;
 }
 
 void BooleanScorer2::add( Scorer* scorer, bool required, bool prohibited )
 {
 	if ( !prohibited ) {
-		internal->coordinator->maxCoord++;
+		_internal->coordinator->maxCoord++;
 	}
 
 	if ( required ) {
 		if ( prohibited ) {
 			// throw some sort of exception
 		}
-		internal->requiredScorers.push_back( scorer );
+		_internal->requiredScorers.push_back( scorer );
 	} else if ( prohibited ) {
-		internal->prohibitedScorers.push_back( scorer );		
+		_internal->prohibitedScorers.push_back( scorer );		
 	} else {
-		internal->optionalScorers.push_back( scorer );
+		_internal->optionalScorers.push_back( scorer );
 	}
 
 }
 
 void BooleanScorer2::score( HitCollector* hc )
 {
-	if ( internal->allowDocsOutOfOrder && internal->requiredScorers.size() == 0 && internal->prohibitedScorers.size() < 32 ) {
+	if ( _internal->allowDocsOutOfOrder && _internal->requiredScorers.size() == 0 && _internal->prohibitedScorers.size() < 32 ) {
 
-		BooleanScorer* bs = _CLNEW BooleanScorer( getSimilarity(), internal->minNrShouldMatch );
-		Internal::ScorersType::iterator si = internal->optionalScorers.begin();		
-		while ( si != internal->optionalScorers.end() ) {
+		BooleanScorer* bs = _CLNEW BooleanScorer( getSimilarity(), _internal->minNrShouldMatch );
+		Internal::ScorersType::iterator si = _internal->optionalScorers.begin();		
+		while ( si != _internal->optionalScorers.end() ) {
 			bs->add( (*si), false, false );
 			si++;
 		}
-		si = internal->prohibitedScorers.begin();
-		while ( si != internal->prohibitedScorers.begin() ) {
+		si = _internal->prohibitedScorers.begin();
+		while ( si != _internal->prohibitedScorers.begin() ) {
 			bs->add( (*si), false, true );
 		}
 		bs->score( hc );
 	} else {
-		if ( internal->countingSumScorer == NULL ) {
-			internal->initCountingSumScorer();
+		if ( _internal->countingSumScorer == NULL ) {
+			_internal->initCountingSumScorer();
 		}
-		while ( internal->countingSumScorer->next() ) {
-			hc->collect( internal->countingSumScorer->doc(), score() );
+		while ( _internal->countingSumScorer->next() ) {
+			hc->collect( _internal->countingSumScorer->doc(), score() );
 		}
 	}
 }
 
 int32_t BooleanScorer2::doc() const
 {
-	return internal->countingSumScorer->doc();
+	return _internal->countingSumScorer->doc();
 }
 
 bool BooleanScorer2::next()
 {
-	if ( internal->countingSumScorer == NULL ) {
-		internal->initCountingSumScorer();
+	if ( _internal->countingSumScorer == NULL ) {
+		_internal->initCountingSumScorer();
 	}
-	return internal->countingSumScorer->next();
+	return _internal->countingSumScorer->next();
 }
 
 float_t BooleanScorer2::score()
 {
-	internal->coordinator->initDoc();
-	float_t sum = internal->countingSumScorer->score();
-	return sum * internal->coordinator->coordFactor();
+	_internal->coordinator->initDoc();
+	float_t sum = _internal->countingSumScorer->score();
+	return sum * _internal->coordinator->coordFactor();
 }
 
 bool BooleanScorer2::skipTo( int32_t target )
 {
-	if ( internal->countingSumScorer == NULL ) {
-		internal->initCountingSumScorer();
+	if ( _internal->countingSumScorer == NULL ) {
+		_internal->initCountingSumScorer();
 	}
-	return internal->countingSumScorer->skipTo( target );
+	return _internal->countingSumScorer->skipTo( target );
 }
 
 TCHAR* BooleanScorer2::toString()
 {
-	return NULL;
+	return stringDuplicate(_T("BooleanScorer2"));
 }
 
 void BooleanScorer2::explain( int32_t doc, Explanation* ret )
@@ -532,13 +535,13 @@ void BooleanScorer2::explain( int32_t doc, Explanation* ret )
 
 bool BooleanScorer2::score( HitCollector* hc, int32_t max )
 {
-	int32_t docNr = internal->countingSumScorer->doc();
+	int32_t docNr = _internal->countingSumScorer->doc();
 	while ( docNr < max ) {
 		hc->collect( docNr, score() );
-		if ( !internal->countingSumScorer->next() ) {
+		if ( !_internal->countingSumScorer->next() ) {
 			return false;
 		}
-		docNr = internal->countingSumScorer->doc();
+		docNr = _internal->countingSumScorer->doc();
 	}
 	return true;
 }

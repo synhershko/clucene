@@ -79,14 +79,13 @@ CL_NS_DEF(search)
 		_CLDELETE(scorers);
 	}
 
-	TCHAR *CL_NS(search)::Scorer::toString(void){
-		return STRDUP_TtoT(_T("ConjunctionScorer"));
+	TCHAR* ConjunctionScorer::toString(){
+		return stringDuplicate(_T("ConjunctionScorer"));
 	}
 	
-
-  void ConjunctionScorer::add(Scorer* scorer){
-    scorers->push_back(scorer);
-  }
+	void ConjunctionScorer::add(Scorer* scorer){
+		scorers->push_back(scorer);
+	}
 
 
   int32_t ConjunctionScorer::doc()  const{ return first()->doc(); }

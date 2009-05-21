@@ -191,6 +191,12 @@ CL_NS_DEF(util)
 	 append(buf);
   }
 
+  void StringBuffer::appendBoost(const float_t boost){
+	  if (boost != 1.0f) {
+		  appendChar(_T('^')); appendFloat(boost,1);
+	  }
+  }
+
   void StringBuffer::prepend(const TCHAR* value){
   //Func - Puts a copy of the string value infront of the current string in the StringBuffer
   //Pre  - value != NULL

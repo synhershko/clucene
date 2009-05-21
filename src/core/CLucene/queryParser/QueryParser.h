@@ -432,17 +432,12 @@ private:
   class JJCalls {
   public:
     int32_t gen;
-    Token* first;
+    QueryToken* first;
     int32_t arg;
     JJCalls* next;
 
-    JJCalls():gen(0),first(NULL),arg(0),next(NULL)
-    {
-    }
-    ~JJCalls(){
-      _CLLDELETE(first);
-      delete next;
-    }
+    JJCalls();
+    ~JJCalls();
   };
 
 public:
@@ -478,11 +473,11 @@ private:
 
 public:
   QueryParserTokenManager* token_source;
-  Token *token, *jj_nt;
+  QueryToken *token, *jj_nt;
 private:
-  Token *_firstToken;
+  QueryToken *_firstToken;
   int32_t jj_ntk;
-  Token *jj_scanpos, *jj_lastpos;
+  QueryToken *jj_scanpos, *jj_lastpos;
   int32_t jj_la;
 public:
   bool lookingAhead;
@@ -504,12 +499,12 @@ public:
 
 private:
   void _init(CharStream* stream);
-  Token* jj_consume_token(const int32_t kind);
+  QueryToken* jj_consume_token(const int32_t kind);
   bool jj_scan_token(const int32_t kind);
 
 public:
-  Token* getNextToken();
-  Token* getToken(int32_t index);
+  QueryToken* getNextToken();
+  QueryToken* getToken(int32_t index);
 
 private:
   int32_t f_jj_ntk();
@@ -534,7 +529,7 @@ private:
   void jj_rescan_token();
   void jj_save(const int32_t index, int32_t xla);
 
-  TCHAR* getParseExceptionMessage(Token* currentToken,
+  TCHAR* getParseExceptionMessage(QueryToken* currentToken,
     CL_NS(util)::CLVector<  CL_NS(util)::ValueArray<int32_t>*,
     CL_NS(util)::Deletor::Object< CL_NS(util)::ValueArray<int32_t> > >* expectedTokenSequences,
     const TCHAR* tokenImage[]);

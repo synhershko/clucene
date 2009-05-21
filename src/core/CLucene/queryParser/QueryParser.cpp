@@ -23,9 +23,10 @@
 #include "CLucene/search/WildcardQuery.h"
 #include "CLucene/search/PrefixQuery.h"
 #include "CLucene/search/RangeQuery.h"
+#include "CLucene/search/MatchAllDocsQuery.h"
 
 #include "CLucene/index/Term.h"
-#include "Token.h"
+#include "QueryToken.h"
 
 #include "CLucene/util/CLStreams.h"
 #include "CLucene/util/StringBuffer.h"
@@ -93,7 +94,7 @@ QueryParser::QueryParser(const TCHAR* f, Analyzer* a) : _operator(OR_OPERATOR),
 }
 
 void QueryParser::_deleteTokens(){
-  Token* t = _firstToken;
+  QueryToken* t = _firstToken;
   while (true){
     if (_firstToken == NULL) break;
     t = _firstToken->next;
@@ -307,9 +308,10 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) 
   bool severalTokensAtSamePosition = false;
 
   while (true) {
-    t = NULL;
+    t = _CLNEW Token();
     try {
-      t = source->next(t);
+      Token* _t = source->next(t);
+	  if (_t == NULL) _CLDELETE(t);
     }
     _CLCATCH_ERR(CL_ERR_IO, _CLLDELETE(source);_CLLDELETE(t);_CLDELETE_LCARRAY(queryText);,{
       t = NULL;
@@ -486,9 +488,8 @@ Query* QueryParser::getBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& 
 Query* QueryParser::getWildcardQuery(const TCHAR* _field, TCHAR* termStr)
 {
   if (_tcscmp(_T("*"), _field) == 0) {
-    if (_tcscmp(_T("*"), termStr) == 0) return NULL;
-    // TODO: Implement MatchAllDocsQuery
-    //return _CLNEW MatchAllDocsQuery();
+    if (_tcscmp(_T("*"), termStr) == 0)
+		return _CLNEW MatchAllDocsQuery();
   }
   if (!allowLeadingWildcard && (termStr[0]==_T('*') || termStr[0]==_T('?'))){
     _CLDELETE_LCARRAY(termStr);
@@ -760,7 +761,7 @@ label_1_brk:
 
 Query* QueryParser::fClause(TCHAR*& _field) {
   Query* q=NULL;
-  Token *fieldToken=NULL, *boost=NULL;
+  QueryToken *fieldToken=NULL, *boost=NULL;
   if (jj_2_1(2)) {
     switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
     {
@@ -776,7 +777,8 @@ Query* QueryParser::fClause(TCHAR*& _field) {
     case STAR:
       jj_consume_token(STAR);
       jj_consume_token(COLON);
-      cl_stprintf(_field,1,_T("*"));
+      _field[0]=_T('*');
+	  _field[1]=0;
       break;
     default:
       jj_la1[5] = jj_gen;
@@ -830,7 +832,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
 }
 
 Query* QueryParser::fTerm(const TCHAR* _field) {
-  Token *term, *boost=NULL, *fuzzySlop=NULL, *goop1, *goop2;
+  QueryToken *term, *boost=NULL, *fuzzySlop=NULL, *goop1, *goop2;
   bool prefix = false;
   bool wildcard = false;
   bool fuzzy = false;
@@ -1109,7 +1111,7 @@ bool QueryParser::jj_3R_2() {
 }
 
 bool QueryParser::jj_3_1() {
-  Token* xsp = jj_scanpos;
+  QueryToken* xsp = jj_scanpos;
   if (jj_3R_2()) {
     jj_scanpos = xsp;
     if (jj_3R_3()) return true;
@@ -1138,16 +1140,16 @@ QueryParser::QueryParser(CharStream* stream):_operator(OR_OPERATOR),
 void QueryParser::_init(CharStream* stream){
   if (token_source == NULL)
     token_source = _CLNEW QueryParserTokenManager(stream);
-  _firstToken = token = _CLNEW Token();
+  _firstToken = token = _CLNEW QueryToken();
   jj_ntk = -1;
   jj_gen = 0;
   for (int32_t i = 0; i < 23; i++) jj_la1[i] = -1;
   jj_2_rtns = new JJCalls();
 }
 
-Token* QueryParser::jj_consume_token(const int32_t kind)
+QueryToken* QueryParser::jj_consume_token(const int32_t kind)
 {
-  Token* oldToken = token;
+  QueryToken* oldToken = token;
   if (token->next != NULL)
     token = token->next;
   else
@@ -1183,7 +1185,7 @@ bool QueryParser::jj_scan_token(const int32_t kind) {
     jj_scanpos = jj_scanpos->next;
   }
   if (jj_rescan) {
-    int32_t i = 0; Token* tok = token;
+    int32_t i = 0; QueryToken* tok = token;
     while (tok != NULL && tok != jj_scanpos) { i++; tok = tok->next; }
     if (tok != NULL) jj_add_error_token(kind, i);
   }
@@ -1215,7 +1217,7 @@ void QueryParser::ReInit(QueryParserTokenManager* tm){
   _CLLDELETE(token_source);
   token_source = tm;
   _deleteTokens();
-  _firstToken = token = _CLNEW Token();
+  _firstToken = token = _CLNEW QueryToken();
   jj_ntk = -1;
   jj_gen = 0;
   for (int32_t i = 0; i < 23; i++) jj_la1[i] = -1;
@@ -1223,7 +1225,7 @@ void QueryParser::ReInit(QueryParserTokenManager* tm){
   jj_2_rtns = new JJCalls();
 }
 
-Token* QueryParser::getNextToken() {
+QueryToken* QueryParser::getNextToken() {
   if (token->next != NULL) token = token->next;
   else token = token->next = token_source->getNextToken();
   jj_ntk = -1;
@@ -1231,8 +1233,8 @@ Token* QueryParser::getNextToken() {
   return token;
 }
 
-Token* QueryParser::getToken(int32_t index) {
-  Token* t = lookingAhead ? jj_scanpos : token;
+QueryToken* QueryParser::getToken(int32_t index) {
+  QueryToken* t = lookingAhead ? jj_scanpos : token;
   for (int32_t i = 0; i < index; i++) {
     if (t->next != NULL) t = t->next;
     else t = t->next = token_source->getNextToken();
@@ -1250,6 +1252,14 @@ int32_t QueryParser::f_jj_ntk() {
     jj_ntk = jj_nt->kind;
     return jj_ntk;
   }
+}
+
+QueryParser::JJCalls::JJCalls():gen(0),first(NULL),arg(0),next(NULL)
+{
+}
+QueryParser::JJCalls::~JJCalls(){
+	_CLLDELETE(first);
+	delete next;
 }
 
 void QueryParser::jj_add_error_token(const int32_t kind, int32_t pos) {
@@ -1397,7 +1407,7 @@ TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
   return retval.getBuffer();
 }
 
-TCHAR* QueryParser::getParseExceptionMessage(Token* currentToken,
+TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
                        CL_NS(util)::CLVector< CL_NS(util)::ValueArray<int32_t>*, CL_NS(util)::Deletor::Object< CL_NS(util)::ValueArray<int32_t> > >* expectedTokenSequences,
                        const TCHAR* tokenImage[])
 {
@@ -1424,7 +1434,7 @@ TCHAR* QueryParser::getParseExceptionMessage(Token* currentToken,
 
   StringBuffer retval(CL_MAX_PATH, false);
   retval.append(_T("Encountered \""));
-  Token* tok = currentToken->next;
+  QueryToken* tok = currentToken->next;
   for (size_t i = 0; i < maxSize; i++) {
     if (i != 0) retval.appendChar(' ');
     if (tok->kind == 0) {

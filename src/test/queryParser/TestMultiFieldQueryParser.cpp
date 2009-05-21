@@ -24,9 +24,8 @@ public:
 	{
 	}
 
-	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token*& token) {
+	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token* token) {
 		if (inPhrase) {
-			if (token == NULL) token=_CLNEW CL_NS(analysis)::Token();
 			inPhrase = false;
 			token->set( _T("phrase2"), savedStart, savedEnd);
 			return token;
@@ -43,7 +42,6 @@ public:
 				}
 			}
 		}
-		_CLDELETE(token);
 		return NULL;
 	}
 };

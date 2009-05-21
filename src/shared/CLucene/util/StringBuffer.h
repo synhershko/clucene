@@ -35,6 +35,8 @@ CL_NS_DEF(util)
    void appendInt(const int64_t value, const int32_t _Radix = 10);
    ///Appends a float_t (after conversion to a character string)
    void appendFloat(const float_t value, const size_t digits);
+   ///Appends a Lucene boost, formatted in the format used in the toString() functions; replaces JL's ToStringUtils::boost
+   void appendBoost(const float_t boost);
    ///Puts a copy of the string value in front of the current string in the StringBuffer
    void prepend(const TCHAR* value);
    ///Puts a copy of the string value in front of the current string in the StringBuffer

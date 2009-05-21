@@ -1,0 +1,276 @@
+Lucene 2.3.2 Files:
+---------------
+
+WORKING ISH	analysis\Analyzer.java
+?	analysis\CachingTokenFilter.java
+?	analysis\CharArraySet.java
+?	analysis\CharTokenizer.java
+?	analysis\ISOLatin1AccentFilter.java
+DONE ISH	analysis\KeywordAnalyzer.java
+?	analysis\KeywordTokenizer.java
+DONE ISH	analysis\LengthFilter.java
+?	analysis\LetterTokenizer.java
+?	analysis\LowerCaseFilter.java
+?	analysis\LowerCaseTokenizer.java
+DONE ISH	analysis\PerFieldAnalyzerWrapper.java
+?	analysis\PorterStemFilter.java
+?	analysis\PorterStemmer.java
+DONE ISH	analysis\SimpleAnalyzer.java
+?	analysis\SinkTokenizer.java
+?	analysis\standard\StandardAnalyzer.java
+?	analysis\standard\StandardFilter.java
+?	analysis\standard\StandardTokenizer.java
+?	analysis\standard\StandardTokenizerImpl.java
+?	analysis\standard\StandardTokenizerImpl.jflex
+DONE ISH	analysis\StopAnalyzer.java				- reusableTokenStream and StopAnalyzer(Set stopWords) were not implemented. May need to revisit reusableTokenStream()
+DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or similar? Radix/PATRICIA maybe?
+?	analysis\TeeTokenFilter.java
+?	analysis\Token.java
+?	analysis\TokenFilter.java
+DONE ISH	analysis\Tokenizer.java
+DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
+DONE ISH	analysis\WhitespaceAnalyzer.java
+?	analysis\WhitespaceTokenizer.java
+DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
+DONE ISH	document\AbstractField.java				- Merged into Field
+DEPRECATED	document\DateField.java
+DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
+DONE ISH	document\Document.java				- getBinaryValue(s) were and are not implemented. All Fieldable mentiones were kept Field*.
+DONE ISH	document\Field.java				- Still need to complete all TODOs in file
+DONE ISH	document\Fieldable.java				- Merged into Field
+DONE ISH	document\FieldSelector.java
+DONE ISH	document\FieldSelectorResult.java
+DONE ISH	document\LoadFirstFieldSelector.java
+?	document\MapFieldSelector.java
+DONE ISH	document\NumberTools.java
+?	document\SetBasedFieldSelector.java
+WORKING ISH	index\CheckIndex.java
+DONE ISH	index\CompoundFileReader.java				- Needs to enable and use support for buffer in readBytes of BufferedIndexInput (and CSIndexInput)
+WORKING BEN	index\CompoundFileWriter.java
+WORKING BEN	index\ConcurrentMergeScheduler.java
+?	index\CorruptIndexException.java
+DONE ISH	index\DefaultSkipListReader.java
+WORKING BEN	index\DefaultSkipListWriter.java
+WORKING JW	index\DirectoryIndexReader.java
+WORKING BEN	index\DocumentsWriter.java
+DONE ISH	index\FieldInfos.java
+?	index\FieldReaderException.java
+DONE ISH	index\FieldSortedTermVectorMapper.java
+PARTIAL ISH	index\FieldsReader.java
+WORKING BEN	index\FieldsWriter.java
+?	index\FilterIndexReader.java
+WORKING JW	index\IndexCommitPoint.java
+WORKING JW	index\IndexDeletionPolicy.java
+WORKING JW	index\IndexFileDeleter.java
+?	index\IndexFileNameFilter.java
+DONE JW	index\IndexFileNames.java
+?	index\IndexModifier.java
+WORKING ISH	index\IndexReader.java
+WORKING BEN	index\IndexWriter.java
+WORKING BEN	index\KeepOnlyLastCommitDeletionPolicy.java
+WORKING BEN	index\LogByteSizeMergePolicy.java
+WORKING BEN	index\LogDocMergePolicy.java
+WORKING BEN	index\LogMergePolicy.java
+WORKING BEN	index\MergePolicy.java
+WORKING BEN	index\MergeScheduler.java
+DONE ISH	index\MultiLevelSkipListReader.java
+WORKING BEN?	index\MultiLevelSkipListWriter.java
+WORKING ISH	index\MultiReader.java
+WORKING JW	index\MultiSegmentReader.java
+WORKING JW	index\ParallelReader.java
+DONE ISH	index\Payload.java
+WORKING JW	index\PositionBasedTermVectorMapper.java
+PARTIAL ISH	index\SegmentInfo.java				- Almost done. The files() functionality is missing, will need to implement it when porting code that uses it.
+PARTIAL ISH	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
+WORKING BEN	index\SegmentMerger.java
+WORKING ISH	index\SegmentReader.java
+DONE ISH	index\SegmentTermDocs.java
+WORKING ISH	index\SegmentTermEnum.java
+DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
+DONE ISH	index\SegmentTermPositionVector.java
+WORKING BEN	index\SerialMergeScheduler.java
+WORKING BEN	index\SnapshotDeletionPolicy.java
+WORKING JW	index\SortedTermVectorMapper.java
+?	index\StaleReaderException.java
+?	index\TermBuffer.java
+PARTIAL ISH index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
+WORKING BEN	index\TermInfosWriter.java
+?	index\TermVectorEntry.java
+?	index\TermVectorEntryFreqSortedComparator.java
+DONE ISH	index\TermVectorMapper.java
+DONE ISH	index\TermVectorOffsetInfo.java
+DONE ISH	index\TermVectorsReader.java
+?	index\TermVectorsWriter.java
+DONE ISH	index\FieldInfo.java
+DONE ISH	index\MultipleTermPositions.java
+DONE ISH	index\SegmentMergeInfo.java
+DONE ISH	index\SegmentMergeQueue.java
+DONE ISH	index\SegmentTermVector.java
+DONE ISH	index\Term.java
+DONE ISH	index\TermDocs.java
+DONE ISH	index\TermEnum.java
+DONE ISH	index\TermFreqVector.java
+DONE ISH	index\TermInfo.java
+DONE ISH	index\TermPositions.java
+DONE ISH	index\TermPositionVector.java
+?	LucenePackage.java
+DONE ISH	queryParser\CharStream.java
+DONE ISH	queryParser\FastCharStream.java
+DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
+DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, MatchAllDocsQuery, and some tests
+IRRELEVANT	queryParser\QueryParser.jj
+DONE ISH	queryParser\QueryParserConstants.java
+DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
+DONE ISH	queryParser\Token.java			- If LUCENE_TOKEN_WORD_LENGTH is still necessary, it needs to be implemented in the new code, and have tests written to make sure it works flawlessly with the new QP. Currently it's half implemented.
+DONE ISH	queryParser\TokenMgrError.java		- Integrated within QueryParserTokenManager as functions
+?	search\BooleanQuery.java
+?	search\BooleanScorer.java
+?	search\BooleanScorer2.java
+?	search\CachingSpanFilter.java
+?	search\CachingWrapperFilter.java
+DONE ISH	search\ComplexExplanation.java
+?	search\ConjunctionScorer.java
+?	search\ConstantScoreQuery.java
+?	search\ConstantScoreRangeQuery.java
+?	search\DefaultSimilarity.java
+?	search\DisjunctionMaxQuery.java
+?	search\DisjunctionMaxScorer.java
+?	search\DisjunctionSumScorer.java
+?	search\ExactPhraseScorer.java
+DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
+?	search\ExtendedFieldCache.java
+?	search\ExtendedFieldCacheImpl.java
+?	search\FieldCache.java
+?	search\FieldCacheImpl.java
+?	search\FieldDoc.java
+?	search\FieldDocSortedHitQueue.java
+?	search\FieldSortedHitQueue.java
+DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
+?	search\FilteredQuery.java
+?	search\FilteredTermEnum.java
+?	search\FilterManager.java
+?	search\function\ByteFieldSource.java
+?	search\function\CustomScoreQuery.java
+?	search\function\DocValues.java
+?	search\function\FieldCacheSource.java
+?	search\function\FieldScoreQuery.java
+?	search\function\FloatFieldSource.java
+?	search\function\IntFieldSource.java
+?	search\function\OrdFieldSource.java
+?	search\function\ReverseOrdFieldSource.java
+?	search\function\ShortFieldSource.java
+?	search\function\ValueSource.java
+?	search\function\ValueSourceQuery.java
+?	search\FuzzyQuery.java
+?	search\FuzzyTermEnum.java
+?	search\Hit.java
+?	search\HitCollector.java
+?	search\HitIterator.java
+DONE	search\HitQueue.java
+DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
+PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
+DONE ISH	search\MatchAllDocsQuery.java
+?	search\MultiPhraseQuery.java
+?	search\MultiSearcher.java
+DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
+?	search\NonMatchingScorer.java
+?	search\ParallelMultiSearcher.java
+?	search\payloads\BoostingTermQuery.java
+?	search\PhrasePositions.java
+?	search\PhraseQuery.java
+?	search\PhraseQueue.java
+?	search\PhraseScorer.java
+?	search\PrefixFilter.java			- Implemented. Need to check if PrefixGenerator and IdGenerator can be left behind, or they are a good improvement
+DONE ISH	search\PrefixQuery.java
+DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
+?	search\QueryFilter.java
+?	search\QueryTermVector.java
+?	search\QueryWrapperFilter.java
+?	search\RangeFilter.java
+?	search\RangeQuery.java
+?	search\RemoteCachingWrapperFilter.java
+?	search\RemoteSearchable.java
+?	search\ReqExclScorer.java
+?	search\ReqOptSumScorer.java
+DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
+DONE ISH	search\ScoreDocComparator.java
+?	search\Scorer.java
+?	search\Searchable.java
+?	search\Searcher.java
+?	search\Similarity.java
+?	search\SimilarityDelegator.java
+?	search\SloppyPhraseScorer.java
+?	search\Sort.java
+?	search\SortComparator.java
+?	search\SortComparatorSource.java
+?	search\SortField.java
+?	search\SpanFilter.java
+?	search\SpanFilterResult.java
+?	search\SpanQueryFilter.java
+?	search\spans\NearSpansOrdered.java
+?	search\spans\NearSpansUnordered.java
+?	search\spans\SpanFirstQuery.java
+?	search\spans\SpanNearQuery.java
+?	search\spans\SpanNotQuery.java
+?	search\spans\SpanOrQuery.java
+?	search\spans\SpanQuery.java
+?	search\spans\Spans.java
+?	search\spans\SpanScorer.java
+?	search\spans\SpanTermQuery.java
+?	search\spans\SpanWeight.java
+?	search\spans\TermSpans.java
+?	search\TermQuery.java
+?	search\TermScorer.java
+?	search\TopDocCollector.java
+?	search\TopDocs.java
+?	search\TopFieldDocCollector.java
+?	search\TopFieldDocs.java
+?	search\Weight.java
+?	search\WildcardQuery.java
+?	search\WildcardTermEnum.java
+DONE ISH	search\BooleanClause.java
+IRRELEVANT	store\AlreadyClosedException.java		- Using CL_ERR_IllegalState for this
+DONE JW	store\Directory.java
+DONE JW	store\FSDirectory.java
+DONE ISH	store\IndexInput.java			- Clone method implemented as constructor only
+DONE ISH	store\IndexOutput.java
+DONE JW	store\Lock.java
+DONE JW	store\LockFactory.java
+?	store\LockObtainFailedException.java
+?	store\LockReleaseFailedException.java
+?	store\LockStressTest.java
+?	store\LockVerifyServer.java
+?	store\MMapDirectory.java
+DONE JW	store\NativeFSLockFactory.java - 1 class implemented as FSLockFactory
+DONE JW	store\NoLockFactory.java
+DONE JW	store\RAMDirectory.java
+DONE JW	store\RAMFile.java
+DONE JW	store\RAMInputStream.java
+DONE JW	store\RAMOutputStream.java
+DONE JW	store\SimpleFSLockFactory.java - 1 class implemented as FSLockFactory
+DONE JW	store\SingleInstanceLockFactory.java
+?	store\VerifyingLockFactory.java
+DONE ISH	store\BufferedIndexInput.java
+DONE ISH	store\BufferedIndexOutput.java
+?	util\BitVector.java
+?	util\Constants.java
+?	util\Parameter.java
+?	util\ScorerDocQueue.java
+?	util\SmallFloat.java
+?	util\StringHelper.java
+?	util\ToStringUtils.java
+DONE JW	util\PriorityQueue.java
+
+
+CMake:
+Check todos in (_)clucene-config.h.cmake. Some checks arent being done yet.
+for example: _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
+get rid of Misc.h, repl_*
+check up on sub-folders bug (analysis/standard)
+MapViewOfFile issues (cmake not picking up functions in kernel32)
+
+Misc TODOs:
+Update jstreams from latest code of Strigi
+Create an auxiliary namespace with all the platform-dependant code, to enable static linking to it by contrib, tests and other apps which might need this
+update Internal* internal to be named otherwise (internal is a preserved word in VS; perhaps ChesireCat* chesCat?)?

@@ -29,7 +29,7 @@ TCHAR CharTokenizer::normalize(const TCHAR c) const
 { 
 	return c; 
 }
-Token* CharTokenizer::next(Token*& token){
+Token* CharTokenizer::next(Token* token){
 	int32_t length = 0;
 	int32_t start = offset;
 	while (true) {
@@ -62,10 +62,7 @@ Token* CharTokenizer::next(Token*& token){
 			break;					  // return 'em
 	}
 	buffer[length]=0;
-	if (token != NULL) //TODO: why do this? the analysis contract says there will always be a token
-		token->set( buffer, start, start+length);
-	else
-		token = _CLNEW Token( buffer, start, start+length );
+	token->set( buffer, start, start+length);
 	return token;
 }
 void CharTokenizer::reset(CL_NS(util)::Reader* input)
@@ -150,9 +147,8 @@ LowerCaseFilter::LowerCaseFilter(TokenStream* in, bool deleteTokenStream):
 LowerCaseFilter::~LowerCaseFilter(){
 }
 
-Token* LowerCaseFilter::next(Token*& t){
-	t = input->next(t);
-	if (t == NULL)
+Token* LowerCaseFilter::next(Token* t){
+	if (input->next(t) == NULL)
 		return NULL;
  	stringCaseFold( t->termBuffer() );
 	return t;
@@ -216,7 +212,7 @@ void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords, 
   }
 }
 
-Token* StopFilter::next(Token*& token) {
+Token* StopFilter::next(Token* token) {
 	// return the first non-stop word found
 	int32_t skippedPositions = 0;
 	while (input->next(token)){
@@ -325,8 +321,8 @@ ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
 }
 ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
-Token* ISOLatin1AccentFilter::next(Token*& token){
-	if ( (token = input->next(token)) != NULL ){
+Token* ISOLatin1AccentFilter::next(Token* token){
+	if ( input->next(token) != NULL ){
 		int32_t l = token->termLength();
 		const TCHAR* chars = token->termBuffer();
 		bool doProcess = false;
@@ -511,7 +507,7 @@ KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 KeywordTokenizer::~KeywordTokenizer(){
 }
 
-Token* KeywordTokenizer::next(Token*& token){
+Token* KeywordTokenizer::next(Token* token){
   if (!done) {
     done = true;
     int32_t upto = 0;
@@ -519,7 +515,7 @@ Token* KeywordTokenizer::next(Token*& token){
     token->clear();
     TCHAR* termBuffer=token->termBuffer();
     const TCHAR* readBuffer=NULL;
-assert(false);//test me
+	assert(false);//test me
     while (true) {
       rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
       if (rd == -1) 
@@ -550,7 +546,7 @@ LengthFilter::LengthFilter(TokenStream* in, const size_t _min, const size_t _max
     this->_max = _max;
 }
 
-Token* LengthFilter::next(Token*& token)
+Token* LengthFilter::next(Token* token)
 {
     // return the first non-stop word found
     while ( input->next(token) )

@@ -9,6 +9,7 @@
 #include "QueryParserTokenManager.h"
 #include "_CharStream.h"
 #include "_FastCharStream.h"
+#include "QueryToken.h"
 
 #include "CLucene/util/StringBuffer.h"
 
@@ -1128,8 +1129,8 @@ void QueryParserTokenManager::SwitchTo(const int32_t lexState)
 		curLexState = lexState;
 }
 
-Token* QueryParserTokenManager::jjFillToken(){
-	Token* t = Token::newToken(jjmatchedKind);
+QueryToken* QueryParserTokenManager::jjFillToken(){
+	QueryToken* t = QueryToken::newToken(jjmatchedKind);
 	t->kind = jjmatchedKind;
 	const TCHAR* im = jjstrLiteralImages[jjmatchedKind];
 	t->image = (im == NULL) ? input_stream->GetImage() : stringDuplicate(im);
@@ -1140,8 +1141,8 @@ Token* QueryParserTokenManager::jjFillToken(){
 	return t;
 }
 
-Token* QueryParserTokenManager::getNextToken() {
-	Token* matchedToken = NULL;
+QueryToken* QueryParserTokenManager::getNextToken() {
+	QueryToken* matchedToken = NULL;
 	int32_t curPos = 0;
 
 	for (;;) {

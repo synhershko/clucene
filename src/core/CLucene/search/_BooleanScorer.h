@@ -15,7 +15,7 @@ CL_NS_DEF(search)
 	class BooleanScorer: public Scorer {
 	private:
 			
-		class Bucket: LUCENE_BASE {
+		class Bucket/*: LUCENE_BASE*/ {
 		public:
 			int32_t	doc;				  // tells if bucket is valid
 			float_t	score;				  // incremental score
@@ -27,7 +27,7 @@ CL_NS_DEF(search)
 			~Bucket();
 		};
 
-		class SubScorer: LUCENE_BASE {
+		class SubScorer/*: LUCENE_BASE*/ {
 		public:
 			bool done;
 			Scorer* scorer;
@@ -39,7 +39,7 @@ CL_NS_DEF(search)
 			~SubScorer();
 		};
 
-		class BucketTable:LUCENE_BASE {		
+		class BucketTable/*:LUCENE_BASE*/ {
 		private:
 			BooleanScorer* scorer;
 		public:
@@ -91,19 +91,13 @@ CL_NS_DEF(search)
 		void score( HitCollector* hc );
 		bool skipTo(int32_t target);
 		void explain(int32_t doc, Explanation* ret);
-		TCHAR* toString();
+		virtual TCHAR* toString();
 		void computeCoordFactors();
 		
 	protected:
 		bool score( HitCollector* hc, const int32_t max );
 		
 	};
-
-
-
-
-
-
 
 CL_NS_END
 #endif

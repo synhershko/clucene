@@ -35,7 +35,7 @@ protected:
 
 public:
 	CharTokenizer(CL_NS(util)::Reader* in);
-	Token* next(Token*& token);
+	Token* next(Token* token);
 	void reset(CL_NS(util)::Reader* input);
 
 	virtual ~CharTokenizer();
@@ -123,7 +123,7 @@ class CLUCENE_EXPORT LowerCaseFilter: public TokenFilter {
 public:
 	LowerCaseFilter(TokenStream* in, bool deleteTokenStream);
 	virtual ~LowerCaseFilter();
-	Token* next(Token*& token);
+	Token* next(Token* token);
 };
 
 
@@ -166,7 +166,7 @@ public:
 	/**
 	* Returns the next input Token whose termText() is not a stop word.
 	*/ 
-	Token* next(Token*& token);
+	Token* next(Token* token);
 
 
 	/**
@@ -333,7 +333,7 @@ public:
 	/**
 	 * To replace accented characters in a String by unaccented equivalents.
 	 */
-	Token* next(Token*& token);
+	Token* next(Token* token);
 	virtual ~ISOLatin1AccentFilter();
 };
 
@@ -348,7 +348,7 @@ private:
   int bufferSize;
 public:
     KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize=-1);
-    Token* next(Token*& token);
+    Token* next(Token* token);
 	void reset(CL_NS(util)::Reader* input);
 
 	virtual ~KeywordTokenizer();
@@ -385,7 +385,7 @@ public:
     /**
     * Returns the next input Token whose termText() is the right len
     */
-    Token* next(Token*& token);
+    Token* next(Token* token);
 };
 
 

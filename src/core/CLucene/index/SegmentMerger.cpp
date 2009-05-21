@@ -87,6 +87,8 @@ SegmentMerger::~SegmentMerger(){
 		queue->close(); 
 		_CLDELETE(queue);
 	}
+
+	_CLDELETE(checkAbort);
 }
 
 void SegmentMerger::add(IndexReader* reader) {

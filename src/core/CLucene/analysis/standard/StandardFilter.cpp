@@ -23,9 +23,8 @@ CL_NS_DEF2(analysis,standard)
   StandardFilter::~StandardFilter(){
   }
 
-  Token* StandardFilter::next(Token*& t) {
-    t = input->next(t);
-    if (t == NULL)
+  Token* StandardFilter::next(Token* t) {
+    if (input->next(t) == NULL)
       return NULL;
 
     TCHAR* text = t->termBuffer();

@@ -2021,8 +2021,6 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
 
   const string mergedName = _merge->info->name;
 
-  SegmentMerger* merger = NULL;
-
   int32_t mergedDocCount = 0;
 
   const SegmentInfos* sourceSegments = _merge->segments;
@@ -2032,7 +2030,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
   if (infoStream != NULL)
     message("merging " + _merge->segString(directory));
 
-  merger = _CLNEW SegmentMerger(this, mergedName.c_str(), _merge);
+  SegmentMerger merger (this, mergedName.c_str(), _merge) ;
 
   // This is try/finally to make sure merger's readers are
   // closed:
@@ -2045,7 +2043,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
     for (int32_t i = 0; i < numSegments; i++) {
       SegmentInfo* si = sourceSegmentsClone->info(i);
       IndexReader* reader = SegmentReader::get(si, MERGE_READ_BUFFER_SIZE, _merge->mergeDocStores); // no need to set deleter (yet)
-      merger->add(reader);
+      merger.add(reader);
       totDocCount += reader->numDocs();
     }
     if (infoStream != NULL) {
@@ -2054,7 +2052,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
 
     _merge->checkAborted(directory);
 
-    mergedDocCount = _merge->info->docCount = merger->merge(_merge->mergeDocStores);
+    mergedDocCount = _merge->info->docCount = merger.merge(_merge->mergeDocStores);
 
     assert (mergedDocCount == totDocCount);
 
@@ -2063,9 +2061,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
   } _CLFINALLY (
     // close readers before we attempt to delete
     // now-obsolete segments
-    if (merger != NULL) {
-      merger->closeReaders();
-    }
+    merger.closeReaders();
     if (!success) {
       if (infoStream != NULL)
         message("hit exception during merge; now refresh deleter on segment " + mergedName);
@@ -2088,7 +2084,7 @@ int32_t IndexWriter::mergeMiddle(MergePolicy::OneMerge* _merge) {
 
     try {
       try {
-        merger->createCompoundFile(compoundFileName.c_str());
+        merger.createCompoundFile(compoundFileName.c_str());
         success = true;
       } catch (CLuceneError& ioe) {
         if ( ioe.number() != CL_ERR_IO ) throw ioe;

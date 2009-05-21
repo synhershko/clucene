@@ -36,7 +36,7 @@ SET(clucene_core_Files
 	./CLucene/queryParser/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/QueryParser.cpp
 	./CLucene/queryParser/QueryParserTokenManager.cpp
-	./CLucene/queryParser/Token.cpp
+	./CLucene/queryParser/QueryToken.cpp
 	./CLucene/queryParser/legacy/Lexer.cpp
 	./CLucene/queryParser/legacy/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/legacy/QueryParser.cpp
@@ -139,6 +139,7 @@ SET(clucene_core_Files
 	./CLucene/search/BooleanQuery.cpp
 	./CLucene/search/FieldCache.cpp
 	./CLucene/search/DateFilter.cpp
+	./CLucene/search/MatchAllDocsQuery.cpp
 )
 
 #if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)
