@@ -1455,7 +1455,7 @@ const char* DocumentsWriter::ByteSliceReader::getClassName(){
 IndexInput* DocumentsWriter::ByteSliceReader::clone() const{
   _CLTHROWA(CL_ERR_UnsupportedOperation, "Not implemented");
 }
-void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* pool, int32_t _startIndex, int32_t _endIndex) {
+void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* _pool, int32_t _startIndex, int32_t _endIndex) {
 
   assert (_endIndex-_startIndex > 0);
 
