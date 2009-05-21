@@ -43,7 +43,7 @@ CL_NS_DEF(search)
 		PhraseQuery* _this;
 	public:
 		PhraseWeight(Searcher* searcher, PhraseQuery* _this);
-		~PhraseWeight();
+		virtual ~PhraseWeight();
 		TCHAR* toString();
 
 		Query* getQuery();
@@ -87,28 +87,31 @@ CL_NS_DEF(search)
   Query* PhraseQuery::clone() const{
 	  return _CLNEW PhraseQuery(*this);
   }
+
+  void PhraseQuery::setSlop(const int32_t s) { slop = s; }
+  int32_t PhraseQuery::getSlop() const { return slop; }
+
   bool PhraseQuery::equals(CL_NS(search)::Query *other) const{
 	  if (!(other->instanceOf(PhraseQuery::getClassName())))
             return false;
 
-    PhraseQuery* pq = (PhraseQuery*)other;
-    bool ret = (this->getBoost() == pq->getBoost())
-      && (this->slop == pq->slop);
-	
-		if ( ret ){
-			CLListEquals<CL_NS(index)::Term,CL_NS(index)::Term_Equals,
-				const CL_NS(util)::CLVector<CL_NS(index)::Term*>,
-				const CL_NS(util)::CLVector<CL_NS(index)::Term*> > comp;
-			ret = comp.equals(this->terms,pq->terms);
-		}
-	
-		if ( ret ){
-			CLListEquals<int32_t,Equals::Int32,
-				const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>,
-				const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32> > comp;
-			ret = comp.equals(this->positions,pq->positions);
-		}
-		return ret;
+	  PhraseQuery* pq = (PhraseQuery*)other;
+	  bool ret = (this->getBoost() == pq->getBoost()) && (this->slop == pq->slop);
+
+	  if ( ret ){
+		  CLListEquals<CL_NS(index)::Term,CL_NS(index)::Term_Equals,
+			  const CL_NS(util)::CLVector<CL_NS(index)::Term*>,
+			  const CL_NS(util)::CLVector<CL_NS(index)::Term*> > comp;
+		  ret = comp.equals(this->terms,pq->terms);
+	  }
+
+	  if ( ret ){
+		  CLListEquals<int32_t,Equals::Int32,
+			  const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>,
+			  const CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32> > comp;
+		  ret = comp.equals(this->positions,pq->positions);
+	  }
+	  return ret;
   }
 
 
@@ -121,8 +124,8 @@ CL_NS_DEF(search)
 	  for (uint32_t i = 0; i < terms->size(); i++){
         _CLLDECDELETE((*terms)[i]);
       }
-	  _CLDELETE(terms);
-	  _CLDELETE(positions);
+	  _CLLDELETE(terms);
+	  _CLLDELETE(positions);
   }
 
   size_t PhraseQuery::hashCode() const {
@@ -197,7 +200,7 @@ CL_NS_DEF(search)
 			Query* termQuery = _CLNEW TermQuery(term);
 			termQuery->setBoost(getBoost());
 			Weight* ret = termQuery->_createWeight(searcher);
-			_CLDELETE(termQuery);
+			_CLLDELETE(termQuery);
 			return ret;
 		}
 		return _CLNEW PhraseWeight(searcher,this);
@@ -206,8 +209,6 @@ CL_NS_DEF(search)
 
   Term** PhraseQuery::getTerms() const{
   //Func - added by search highlighter
-  //Pre  -
-  //Post -
 
 	  //Let size contain the number of terms
       int32_t size = terms->size();
@@ -252,21 +253,15 @@ CL_NS_DEF(search)
 			  buffer.appendChar(_T(' '));
 		  }
 	  }
-
 	  buffer.appendChar( _T('"') );
 
 	  if (slop != 0) {
 		  buffer.appendChar(_T('~'));
-		  buffer.appendFloat(slop,0);
+		  buffer.appendFloat(slop, 0);
 	  }
 
-	  //Check if there is an other boost factor than 1.0
-	  if (getBoost() != 1.0f) {
-		  buffer.appendChar(_T('^'));
-		  buffer.appendFloat( getBoost(),1 );
-	  }
+	  buffer.appendBoost(getBoost());
 
-	  //return the query string
 	  return buffer.getBuffer();
   }
 

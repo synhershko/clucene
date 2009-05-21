@@ -118,7 +118,7 @@ DONE ISH	queryParser\CharStream.java
 DONE ISH	queryParser\FastCharStream.java
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
-DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, MatchAllDocsQuery, and some tests
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
 DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
@@ -170,7 +170,7 @@ DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFi
 DONE	search\HitQueue.java
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
-DONE ISH	search\MatchAllDocsQuery.java
+DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
 ?	search\MultiPhraseQuery.java
 ?	search\MultiSearcher.java
 DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
@@ -178,7 +178,7 @@ DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\ParallelMultiSearcher.java
 ?	search\payloads\BoostingTermQuery.java
 ?	search\PhrasePositions.java
-?	search\PhraseQuery.java
+DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
 ?	search\PhraseQueue.java
 ?	search\PhraseScorer.java
 ?	search\PrefixFilter.java			- Implemented. Need to check if PrefixGenerator and IdGenerator can be left behind, or they are a good improvement
@@ -195,7 +195,7 @@ DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extr
 ?	search\ReqOptSumScorer.java
 DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
 DONE ISH	search\ScoreDocComparator.java
-?	search\Scorer.java
+DONE ISH	search\Scorer.java
 ?	search\Searchable.java
 ?	search\Searcher.java
 ?	search\Similarity.java
