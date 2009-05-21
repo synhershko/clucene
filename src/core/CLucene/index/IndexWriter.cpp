@@ -325,7 +325,7 @@ void IndexWriter::setMaxBufferedDocs(int32_t maxBufferedDocs) {
     _CLTHROWA(CL_ERR_IllegalArgument,
         "maxBufferedDocs must at least be 2 when enabled");
   if (maxBufferedDocs == DISABLE_AUTO_FLUSH
-      && getRAMBufferSizeMB() == DISABLE_AUTO_FLUSH)
+      && (int32_t)getRAMBufferSizeMB() == DISABLE_AUTO_FLUSH)
     _CLTHROWA(CL_ERR_IllegalArgument,
         "at least one of ramBufferSize and maxBufferedDocs must be enabled");
   docWriter->setMaxBufferedDocs(maxBufferedDocs);
@@ -356,7 +356,7 @@ int32_t IndexWriter::getMaxBufferedDocs() {
 }
 
 void IndexWriter::setRAMBufferSizeMB(float_t mb) {
-  if (mb != DISABLE_AUTO_FLUSH && mb <= 0.0)
+  if ( (int32_t)mb != DISABLE_AUTO_FLUSH && mb <= 0.0)
     _CLTHROWA(CL_ERR_IllegalArgument,
         "ramBufferSize should be > 0.0 MB when enabled");
   if (mb == DISABLE_AUTO_FLUSH && getMaxBufferedDocs() == DISABLE_AUTO_FLUSH)

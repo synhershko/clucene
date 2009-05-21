@@ -46,7 +46,7 @@ CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const unsigned char p); //< the 
     #define _i64tot lucene_i64tot
 #endif
 #if !defined(_CL_HAVE_FUNCTION_WCSDUP)
-    CLUCENE_SHARED_EXPORT TCHAR* lucene_wcsdup( const wchar_t* str);
+    CLUCENE_SHARED_EXPORT wchar_t* lucene_wcsdup( const wchar_t* str);
 #endif
 #if (defined(_UCS2) && !defined(_CL_HAVE_FUNCTION_WCSTOLL)) || (defined(_ASCII) && !defined(_CL_HAVE_FUNCTION_STRTOLL))
 	CLUCENE_SHARED_EXPORT int64_t lucene_tcstoi64(const TCHAR* str, TCHAR**end, int radix);

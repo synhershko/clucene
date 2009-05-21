@@ -43,12 +43,17 @@
         #define _tcsncmp wcsncmp //case sensitive compare two strings
         #define _tcscspn wcscspn //location of any of a set of character in a string
 
-				//string duplicated
+				//string compare
         #ifdef _CL_HAVE_FUNCTION_WCSICMP
             #define _tcsicmp wcsicmp //* case insensitive compare two string
         #else
             #define _tcsicmp wcscasecmp //* case insensitive compare two string
         #endif
+				#if defined(_CL_HAVE_FUNCTION_WCSDUP)
+			  	#define _tcsdup	wcsdup
+			  #else
+			  	#define _tcsdup	lucene_wcsdup
+			  #endif
 
         //conversion functions
         #define _tcstod wcstod //convert a string to a double
@@ -76,7 +81,7 @@
         #define _tcscpy strcpy
         #define _tcsncpy strncpy
         #define _tcscat strcat
-    	#define _tcsncat strncat
+    		#define _tcsncat strncat
         #define _tcschr strchr
         #define _tcsstr strstr
         #define _tcslen strlen
@@ -116,7 +121,7 @@
 #if defined(_UCS2)
   #define stringDuplicate(x) _tcsdup(x)
 
-	#if !defined(_CL_HAVE_FUNCTION_WCSDUP)
+	#if defined(_CL_HAVE_FUNCTION_WCSDUP)
   	#define STRDUP_WtoW	wcsdup
   #else
   	#define STRDUP_WtoW	lucene_wcsdup
