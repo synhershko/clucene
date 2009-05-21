@@ -80,6 +80,8 @@ std::string MergePolicy::OneMerge::segString(CL_NS(store)::Directory* dir) const
 
 
 
+MergePolicy::MergeSpecification::~MergeSpecification() {
+}
 void MergePolicy::MergeSpecification::add(OneMerge* merge) {
   merges.push_back(merge);
 }
@@ -179,7 +181,7 @@ void LogMergePolicy::close() {}
 
 
 MergePolicy::MergeSpecification* LogMergePolicy::findMergesForOptimize(SegmentInfos* infos, IndexWriter* writer, int32_t maxNumSegments, vector<SegmentInfo*>& segmentsToOptimize) {
-  MergeSpecification* spec;
+  MergeSpecification* spec = NULL;
 
   assert (maxNumSegments > 0);
 
