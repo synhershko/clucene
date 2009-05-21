@@ -165,6 +165,28 @@ This is typically what I use to produce some meaningful output after a -pg
 compiled application has exited:
 # gprof bin/cl_test-pedantic.exe gmon.out >gprof.txt
 
+Code coverage with gcov
+-----------------------
+To create a code coverage report of the test, you can use gcov. Here are the
+steps I followed to create a nice html report. You'll need the lcov package
+installed to generate html. Also, I recommend using an out-of-source build
+directory as there are lots of files that will be generated.
+
+I have created a cl_test-gcov target which contains the necessary gcc switches
+already. So all you need to do is
+# make test-gcov
+
+If everything goes well, there will be a coverage file hidden away in the cmake
+folders. 
+
+Then I used lcov to generate html:
+# lcov --directory ./src/test/CMakeFiles/cl_test-gcov.dir/__/core/CLucene -c -o clucene-coverage.info
+# lcov --remove clucene-coverage.info "/usr/*" > clucene-coverage.clean
+# genhtml -o coverage-html clucene-coverage.clean
+
+If both those commands pass, then there will be a clucene coverage report in the 
+coverage-html directory.
+
 Benchmarks
 ----------
 Very little benchmarking has been done on clucene. Andi Vajda posted some 
