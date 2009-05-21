@@ -86,7 +86,6 @@ public:
 
     Document doc;
     Field* f;
-    const signed char* _as2;
     const TCHAR *_ts, *_ts2;
 	  const ValueArray<uint8_t>* strm;
     RAMDirectory ram;

@@ -226,11 +226,12 @@ bool CompoundFileReader::openInput(const char * id, CL_NS(store)::IndexInput *& 
 	return true;
 }
 
-void CompoundFileReader::list(vector<string>* names) const{
+bool CompoundFileReader::list(vector<string>* names) const{
   for ( EntriesType::const_iterator i=entries->begin();i!=entries->end();i++ ){
      names->push_back(i->first);
      ++i;
   }
+  return true;
 }
 
 bool CompoundFileReader::fileExists(const char* name) const{

@@ -361,14 +361,15 @@ CL_NS_DEF(store)
 
 
 
-  void RAMDirectory::list(vector<string>* names) const{
+  bool RAMDirectory::list(vector<string>* names) const{
     SCOPED_LOCK_MUTEX(files_mutex);
 
-	FileMap::const_iterator itr = files->begin();
+    FileMap::const_iterator itr = files->begin();
     while (itr != files->end()){
         names->push_back(itr->first);
         ++itr;
     }
+    return true;
   }
 
   RAMDirectory::RAMDirectory():

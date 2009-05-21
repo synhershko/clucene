@@ -119,8 +119,7 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
 
 	vector<string> files;
-  directory->list(&files);
-  if (files.empty() )
+  if ( !directory->list(&files) )
 	  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str());
 
 
@@ -289,8 +288,7 @@ void IndexFileDeleter::deleteCommits() {
 */
 void IndexFileDeleter::refresh(const char* segmentName) {
   vector<string> files;
-  directory->list(files);
-  if (files.empty())
+  if ( directory->list(files) )
     _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str() );
   const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
   string segmentPrefix1;

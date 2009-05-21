@@ -282,8 +282,7 @@ string SegmentInfo::segString(Directory* dir) {
         prefix = name + "." + IndexFileNames::PLAIN_NORMS_EXTENSION;
       size_t prefixLength = prefix.length();
       vector<string> allFiles;
-      dir->list(allFiles);
-      if (allFiles.empty()){
+      if (dir->list(allFiles) == false ){
         string err = "cannot read directory ";
         err += dir->getObjectName();
         err += ": list() returned null";
@@ -624,12 +623,9 @@ string SegmentInfo::segString(Directory* dir) {
 
   int64_t SegmentInfos::getCurrentSegmentGeneration( const CL_NS(store)::Directory* directory ) {
 	  vector<string> files;
-    directory->list(&files);
-    if ( files.empty() ){
+    if ( !directory->list(&files) ){
 		  string strdir = directory->toString();
-		  TCHAR err[CL_MAX_PATH + 65];
-		  _sntprintf(err,CL_MAX_PATH + 65,_T("cannot read directory %s: list() returned NULL"), strdir.c_str());
-		  _CLTHROWT(CL_ERR_IO, err);
+		  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + strdir + string(": list() returned NULL")).c_str() );
 	  }
 	  int64_t gen = getCurrentSegmentGeneration( files );
 	  return gen;
@@ -917,15 +913,13 @@ string SegmentInfo::segString(Directory* dir) {
 
         int64_t genA = -1;
 
-        if (directory != NULL)
-          directory->list(&files);
-        //else
-        //todo: files = fileDirectory.list();
-
-        if (!files.empty()) {
-          genA = getCurrentSegmentGeneration( files );
-          files.clear();
+        if (directory != NULL){
+          if (directory->list(&files)) {
+            genA = getCurrentSegmentGeneration( files );
+            files.clear();
+          }
         }
+
 
         if ( infoStream ){
           (*infoStream) << "[SIS]: directory listing genA=" << genA << "\n";
