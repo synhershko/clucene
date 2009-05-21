@@ -103,6 +103,8 @@ public:
 
   class MergeSpecification {
   public:
+    ~MergeSpecification(); 
+
     /**
      * The subset of segments to be included in the primitive merge.
      */
