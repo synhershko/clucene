@@ -179,7 +179,7 @@ void LogMergePolicy::close() {}
 
 
 MergePolicy::MergeSpecification* LogMergePolicy::findMergesForOptimize(SegmentInfos* infos, IndexWriter* writer, int32_t maxNumSegments, vector<SegmentInfo*>& segmentsToOptimize) {
-  MergeSpecification* spec;
+  MergeSpecification* spec = NULL;
 
   assert (maxNumSegments > 0);
 
