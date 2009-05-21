@@ -159,6 +159,7 @@ CHECK_CXX_ACCEPTS_FLAG("-fprofile-arcs -ftest-coverage" GccFlagGcov)
 IF ( GccFlagGcov )
 	ADD_EXECUTABLE(cl_test-gcov EXCLUDE_FROM_ALL ${test_monolithic_Files} )
 	SET_TARGET_PROPERTIES(cl_test-gcov PROPERTIES
+    	COMPILE_DEFINITIONS "_CL_DISABLE_MULTITHREADING"
 	    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -fprofile-arcs -ftest-coverage"
 	    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 	ADD_CUSTOM_TARGET(test-gcov
