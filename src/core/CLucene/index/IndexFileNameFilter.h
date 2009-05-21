@@ -22,6 +22,7 @@ class IndexFileNameFilter: public FilenameFilter {
   CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char> extensionsInCFS;
 public:
   IndexFileNameFilter();
+  virtual ~IndexFileNameFilter();
 
   /* (non-Javadoc)
    * @see java.io.FilenameFilter#accept(java.io.File, java.lang.String)

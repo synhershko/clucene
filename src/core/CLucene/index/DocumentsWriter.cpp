@@ -124,7 +124,7 @@ void DocumentsWriter::setInfoStream(std::ostream* infoStream) {
 }
 
 void DocumentsWriter::setRAMBufferSizeMB(float_t mb) {
-  if (mb == IndexWriter::DISABLE_AUTO_FLUSH) {
+  if ( (int32_t)mb == IndexWriter::DISABLE_AUTO_FLUSH) {
     ramBufferSize = IndexWriter::DISABLE_AUTO_FLUSH;
   } else {
     ramBufferSize = (int64_t) (mb*1024*1024);
@@ -1008,8 +1008,8 @@ bool DocumentsWriter::timeToFlushDeletes() {
          && setFlushPending();
 }
 
-void DocumentsWriter::setMaxBufferedDeleteTerms(int32_t maxBufferedDeleteTerms) {
-  this->maxBufferedDeleteTerms = maxBufferedDeleteTerms;
+void DocumentsWriter::setMaxBufferedDeleteTerms(int32_t _maxBufferedDeleteTerms) {
+  this->maxBufferedDeleteTerms = _maxBufferedDeleteTerms;
 }
 
 int32_t DocumentsWriter::getMaxBufferedDeleteTerms() {
@@ -1455,22 +1455,22 @@ const char* DocumentsWriter::ByteSliceReader::getClassName(){
 IndexInput* DocumentsWriter::ByteSliceReader::clone() const{
   _CLTHROWA(CL_ERR_UnsupportedOperation, "Not implemented");
 }
-void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* pool, int32_t startIndex, int32_t endIndex) {
+void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* _pool, int32_t _startIndex, int32_t _endIndex) {
 
-  assert (endIndex-startIndex > 0);
+  assert (_endIndex-_startIndex > 0);
 
   level = 0;
-  this->pool = pool;
-  this->endIndex = endIndex;
+  this->pool = _pool;
+  this->endIndex = _endIndex;
 
   buffer = pool->buffers[bufferUpto];
-  bufferUpto = startIndex / BYTE_BLOCK_SIZE;
+  bufferUpto = _startIndex / BYTE_BLOCK_SIZE;
   bufferOffset = bufferUpto * BYTE_BLOCK_SIZE;
-  upto = startIndex & BYTE_BLOCK_MASK;
+  upto = _startIndex & BYTE_BLOCK_MASK;
 
   const int32_t firstSize = levelSizeArray[0];
 
-  if (startIndex+firstSize >= endIndex) {
+  if (_startIndex+firstSize >= endIndex) {
     // There is only this one slice to read
     limit = endIndex & BYTE_BLOCK_MASK;
   } else

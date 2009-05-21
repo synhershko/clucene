@@ -136,8 +136,8 @@ CL_NS_DEF(util)
 			static _comparator comp;
 			if ( val1 == val2 )
 				return true;
-			size_t size = val1->size();
-			if ( size != val2->size() )
+			int32_t size = (int32_t)val1->size();
+			if ( size != (int32_t)val2->size() )
 				return false;
 
 			_itr1 itr1 = val1->begin();

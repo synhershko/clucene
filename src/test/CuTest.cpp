@@ -8,6 +8,8 @@
 #include "CuTest.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 static int verbose = 0;
 static int messyPrinting = 0;
