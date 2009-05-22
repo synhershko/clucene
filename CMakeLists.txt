@@ -92,11 +92,6 @@ OPTION(ENABLE_COMPILE_TESTS
 #check flags...
 INCLUDE (TestCXXAcceptsFlag)
 IF ( CMAKE_COMPILER_IS_GNUCC )
-    CHECK_CXX_ACCEPTS_FLAG(-g GccFlagG)
-    IF ( GccFlagG )
-        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-    ENDIF ( GccFlagG )
-
     CHECK_CXX_ACCEPTS_FLAG(-pg GccFlagPg)
     IF ( GccFlagPg )
         OPTION(ENABLE_GPROF
