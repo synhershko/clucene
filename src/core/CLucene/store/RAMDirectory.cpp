@@ -34,7 +34,7 @@ CL_NS_DEF(store)
 		bool obtain();
 		void release();
 		bool isLocked();
-		virtual TCHAR* toString();
+		virtual std::string toString();
 	};
 
 

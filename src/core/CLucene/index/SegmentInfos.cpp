@@ -158,8 +158,7 @@ string SegmentInfo::segString(Directory* dir) {
 		   // normGen is null if we loaded a pre-2.1 segment
 		   // file, or, if this segments file hasn't had any
 		   // norms set against it yet:
-       normGen.values = _CL_NEWARRAY(int64_t, numFields); // todo: make sure memory was allocated successfully?
-       normGen.length = numFields;
+           normGen.resize(numFields);
 
 		   if (preLockless) {
 			   // Do nothing: thus leaving normGen[k]==CHECK_DIR (==0), so that later we know
@@ -284,7 +283,7 @@ string SegmentInfo::segString(Directory* dir) {
       vector<string> allFiles;
       if (dir->list(allFiles) == false ){
         string err = "cannot read directory ";
-        err += dir->getObjectName();
+        err += dir->toString();
         err += ": list() returned null";
         _CLTHROWA(CL_ERR_IO, err.c_str());
       }
@@ -366,9 +365,7 @@ string SegmentInfo::segString(Directory* dir) {
    bool SegmentInfo::hasSeparateNorms(const int32_t fieldNumber) const {
 	   if ((normGen.values == NULL && preLockless) || (normGen.values != NULL && normGen[fieldNumber] == CHECK_DIR)) {
 		   // Must fallback to directory file exists check:
-		   char fileName[255]; // todo: try to see if we can put less than 255
-		   cl_sprintf(fileName, 255, "%s.s%d", name.c_str(), fieldNumber);
-		   return dir->fileExists(fileName);
+		   return dir->fileExists( (name + string(".s") + Misc::toString(fieldNumber)).c_str() );
 	   } else if (normGen.values == NULL || normGen[fieldNumber] == NO) {
 		   return false;
 	   } else {
@@ -386,21 +383,19 @@ string SegmentInfo::segString(Directory* dir) {
 			   // This means this segment was saved with pre-LOCKLESS
 			   // code.  So we must fallback to the original
 			   // directory list check:
-			   char** result = dir->list();
-			   if (result == NULL) {
-				   _CLTHROWA(CL_ERR_IO, "cannot read directory: list() returned NULL"); // todo: add dir name
+			   vector<string> result;
+			   if ( !dir->list(result) ) {
+				   _CLTHROWA(CL_ERR_IO, (string("cannot read directory: ") + dir->toString() + string(" list() returned NULL")).c_str() );
 			   }
 
-			   char pattern[255]; // todo: make better size estimation for this
-			   cl_sprintf(pattern, 255, "%s.s", name.c_str());
-			   size_t patternLength = strlen(pattern);
-			   for(size_t i = 0; result[i] != NULL; i++){
-				   if(strncmp(result[i], pattern, strlen(pattern)) == 0 && isdigit(result[i][patternLength])) {
-					   _CLDELETE_CaARRAY_ALL(result);
+         string pattern = name + string(".s");
+			   for ( vector<string>::iterator itr = result.begin();
+               itr != result.end() ; itr ++ ){
+				   if(strncmp(itr->c_str(), pattern.c_str(), pattern.length() ) == 0 &&
+              isdigit( (*itr)[pattern.length()])) {
 					   return true;
 				   }
 			   }
-			   _CLDELETE_CaARRAY_ALL(result);
 			   return false;
 		   }
 	   } else {
@@ -500,9 +495,6 @@ string SegmentInfo::segString(Directory* dir) {
    }
 
    void SegmentInfo::write(CL_NS(store)::IndexOutput* output) {
-	   // todo: due to the following conversions, either have a pre-allocated buffer in the class,
-	   //		 use a TCHAR* for storing name and docStoreSegment, or code a new WriteStringA.
-	   //		 There are a few conversion in the IndexInput constructor as well
      output->writeString(name);
 	   output->writeInt(docCount);
 	   output->writeLong(delGen);
@@ -624,8 +616,7 @@ string SegmentInfo::segString(Directory* dir) {
   int64_t SegmentInfos::getCurrentSegmentGeneration( const CL_NS(store)::Directory* directory ) {
 	  vector<string> files;
     if ( !directory->list(&files) ){
-		  string strdir = directory->toString();
-		  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + strdir + string(": list() returned NULL")).c_str() );
+		  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->toString() + string(": list() returned NULL")).c_str() );
 	  }
 	  int64_t gen = getCurrentSegmentGeneration( files );
 	  return gen;
@@ -737,7 +728,7 @@ string SegmentInfo::segString(Directory* dir) {
 	  clear();
 
 	  IndexInput* input = directory->openInput(segmentFileName);
-	  CND_CONDITION(input != NULL,"input == NULL"); // todo: make sure if at all necessary
+	  CND_CONDITION(input != NULL,"input == NULL");
 
 	  generation = generationFromSegmentsFileName( segmentFileName );
 	  lastGeneration = generation;
@@ -785,7 +776,6 @@ string SegmentInfo::segString(Directory* dir) {
 
 	  FindSegmentsRead find(directory);
 
-	  //todo: see if we can do better than allocating a new SegmentInfos...
 	  find.run();
   }
 
@@ -996,7 +986,7 @@ string SegmentInfo::segString(Directory* dir) {
 
         if (gen == -1) {
           // Neither approach found a generation
-          _CLTHROWA(CL_ERR_IO, "No segments* file found"); //todo: add folder name (directory->toString())
+          _CLTHROWA(CL_ERR_IO, (string("No segments* file found in ") + directory->toString()).c_str());
         }
       }
 
@@ -1067,9 +1057,8 @@ string SegmentInfo::segString(Directory* dir) {
         bool prevExists=false;
         if (directory != NULL)
           prevExists = directory->fileExists(prevSegmentFileName.c_str());
-        //todo: File implementation below
-        //else
-        //  prevExists = new File(fileDirectory, prevSegmentFileName).exists();
+        else
+          prevExists = Misc::dir_Exists( (string(fileDirectory) + prevSegmentFileName).c_str() );
 
         if (prevExists) {
           //CL_TRACE("fallback to prior segment file '%s'", prevSegmentFileName);
