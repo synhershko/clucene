@@ -1096,7 +1096,7 @@ string SegmentInfo::segString(Directory* dir) {
 	  IndexInput* input = directory->openInput( segmentFileName );
 
 	  int32_t format = 0;
-	  int64_t version;
+	  int64_t version=0;
 	  try {
 		  format = input->readInt();
 		  if(format < 0){

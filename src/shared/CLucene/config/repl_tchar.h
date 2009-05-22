@@ -35,7 +35,7 @@
         #define _tcscpy wcscpy //copy a string to another string
         #define _tcsncpy wcsncpy //copy a specified amount of one string to another string.
         #define _tcscat wcscat //copy a string onto the end of the other string
-    	#define _tcsncat wcsncat
+    		#define _tcsncat wcsncat
         #define _tcschr wcschr //find location of one character
         #define _tcsstr wcsstr //find location of a string
         #define _tcslen wcslen //get length of a string
@@ -43,12 +43,17 @@
         #define _tcsncmp wcsncmp //case sensitive compare two strings
         #define _tcscspn wcscspn //location of any of a set of character in a string
 
-        #define _tcsdup	wcsdup //string duplicate
+				//string compare
         #ifdef _CL_HAVE_FUNCTION_WCSICMP
             #define _tcsicmp wcsicmp //* case insensitive compare two string
         #else
             #define _tcsicmp wcscasecmp //* case insensitive compare two string
         #endif
+				#if defined(_CL_HAVE_FUNCTION_WCSDUP)
+			  	#define _tcsdup	wcsdup
+			  #else
+			  	#define _tcsdup	lucene_wcsdup
+			  #endif
 
         //conversion functions
         #define _tcstod wcstod //convert a string to a double
@@ -76,7 +81,7 @@
         #define _tcscpy strcpy
         #define _tcsncpy strncpy
         #define _tcscat strcat
-    	#define _tcsncat strncat
+    		#define _tcsncat strncat
         #define _tcschr strchr
         #define _tcsstr strstr
         #define _tcslen strlen
@@ -115,7 +120,12 @@
 
 #if defined(_UCS2)
   #define stringDuplicate(x) _tcsdup(x)
-  #define STRDUP_WtoW(x) wcsdup(x)
+
+	#if defined(_CL_HAVE_FUNCTION_WCSDUP)
+  	#define STRDUP_WtoW	wcsdup
+  #else
+  	#define STRDUP_WtoW	lucene_wcsdup
+  #endif
   #define STRDUP_TtoT STRDUP_WtoW
   #define STRDUP_WtoT STRDUP_WtoW
   #define STRDUP_TtoW STRDUP_WtoW

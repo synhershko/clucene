@@ -24,3 +24,10 @@ const char* _LUCENE_BLANK_ASTRING="";
 	 #warning "==================Using ascii mode!!!=================="
 	#endif
 #endif
+
+wchar_t* lucene_wcsdup( const wchar_t* str ){
+	size_t len = wcslen(str);
+	wchar_t* ret = _CL_NEWARRAY( wchar_t, len + 1 );
+	wcscpy(ret, str);
+	return ret;
+}

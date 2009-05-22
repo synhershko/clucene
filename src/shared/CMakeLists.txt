@@ -84,11 +84,11 @@ DEFINE_DWORD()
 
 
 CHECK_REQUIRED_FUNCTIONS(  printf strftime wcscpy wcsncpy wcscat wcschr wcsstr wcslen 
-                           wcscmp wcsncmp wcscspn wcsdup )
+                           wcscmp wcsncmp wcscspn )
 
 #todo: wcstoq is bsd equiv of wcstoll, we can use that...
 CHECK_OPTIONAL_FUNCTIONS( wcsupr wcscasecmp wcsicmp wcstoll wprintf lltow 
-    wcstod strupr strlwr lltoa strtoll gettimeofday _vsnwprintf mmap "MapViewOfFile(0,0,0,0,0)"
+    wcstod wcsdup strupr strlwr lltoa strtoll gettimeofday _vsnwprintf mmap "MapViewOfFile(0,0,0,0,0)"
 )
 
 #make decisions about which functions to use...

@@ -20,23 +20,24 @@
 #cmakedefine _CL_HAVE_FUNCTION_WCSNCMP  1 
 #cmakedefine _CL_HAVE_FUNCTION_WCSNCPY  1 
 #cmakedefine _CL_HAVE_FUNCTION_WCSSTR  1 
-#cmakedefine _CL_HAVE_FUNCTION_WCSTOD
-#cmakedefine _CL_HAVE_FUNCTION_WCSTOLL
-#cmakedefine _CL_HAVE_FUNCTION_WCSUPR
-#cmakedefine _CL_HAVE_FUNCTION_GETTIMEOFDAY
-#cmakedefine _CL_HAVE_FUNCTION_MAPVIEWOFFILE
+#cmakedefine _CL_HAVE_FUNCTION_WCSTOD 1
+#cmakedefine _CL_HAVE_FUNCTION_WCSDUP 1
+#cmakedefine _CL_HAVE_FUNCTION_WCSTOLL 1
+#cmakedefine _CL_HAVE_FUNCTION_WCSUPR 1
+#cmakedefine _CL_HAVE_FUNCTION_GETTIMEOFDAY 1
+#cmakedefine _CL_HAVE_FUNCTION_MAPVIEWOFFILE 1
 
-#cmakedefine _CL_HAVE_FUNCTION_LLTOA
-#cmakedefine _CL_HAVE_FUNCTION_LLTOW
+#cmakedefine _CL_HAVE_FUNCTION_LLTOA 1
+#cmakedefine _CL_HAVE_FUNCTION_LLTOW 1
 #cmakedefine _CL_HAVE_FUNCTION_PRINTF  1 
 #cmakedefine _CL_HAVE_FUNCTION_SNPRINTF  1 
 #cmakedefine _CL_HAVE_FUNCTION_MMAP  1 
-#cmakedefine _CL_HAVE_FUNCTION_STRLWR
-#cmakedefine _CL_HAVE_FUNCTION_STRTOLL
-#cmakedefine _CL_HAVE_FUNCTION_STRUPR
-#cmakedefine _CL_HAVE_FUNCTION_GETPAGESIZE
-#cmakedefine _CL_HAVE_FUNCTION_USLEEP
-#cmakedefine _CL_HAVE_FUNCTION_SLEEP
+#cmakedefine _CL_HAVE_FUNCTION_STRLWR 1
+#cmakedefine _CL_HAVE_FUNCTION_STRTOLL 1
+#cmakedefine _CL_HAVE_FUNCTION_STRUPR 1
+#cmakedefine _CL_HAVE_FUNCTION_GETPAGESIZE 1
+#cmakedefine _CL_HAVE_FUNCTION_USLEEP 1
+#cmakedefine _CL_HAVE_FUNCTION_SLEEP 1
 
 ${SYMBOL_CL_MAX_PATH}
 //this is the max filename... for now its just the same,

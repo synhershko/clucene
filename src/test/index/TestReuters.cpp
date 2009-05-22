@@ -6,6 +6,7 @@
 #ifdef _CL_HAVE_SYS_STAT_H
 	#include <sys/stat.h>
 #endif
+#include <stdio.h>
 
 CL_NS_USE(util)
 

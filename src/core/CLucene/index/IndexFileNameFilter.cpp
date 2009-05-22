@@ -20,7 +20,8 @@ IndexFileNameFilter::IndexFileNameFilter() {
 	  extensionsInCFS.insert(IndexFileNames::INDEX_EXTENSIONS_IN_COMPOUND_FILE[i]);
 	}
 }
-
+IndexFileNameFilter::~IndexFileNameFilter(){
+}
 bool IndexFileNameFilter::accept(const char* dir, const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
