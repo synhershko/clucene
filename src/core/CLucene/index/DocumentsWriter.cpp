@@ -186,8 +186,7 @@ std::string DocumentsWriter::closeDocStore() {
       tvd->close();
       _CLDELETE(tvd);
 
-	    string vectorFN = docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
-      assert ( 4+numDocsInStore*8 == directory->fileLength(vectorFN.c_str()) ); // "after flush: tvx size mismatch: " + numDocsInStore + " docs vs " + directory->fileLength(docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION) + " length in bytes of " + docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
+      assert ( 4+numDocsInStore*8 == directory->fileLength( (docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str()) ); // "after flush: tvx size mismatch: " + numDocsInStore + " docs vs " + directory->fileLength(docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION) + " length in bytes of " + docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
     }
 
     if (fieldsWriter != NULL) {
@@ -638,7 +637,6 @@ std::string DocumentsWriter::segmentFileName(const std::string& extension) {
   return segment + "." + extension;
 }
 
-//TODO: can't we just use _tcscmp???
 int32_t DocumentsWriter::compareText(const TCHAR* text1, const TCHAR* text2) {
 int32_t pos1=0;
 int32_t pos2=0;
@@ -1534,7 +1532,7 @@ void DocumentsWriter::ByteSliceReader::readBytes(uint8_t* b, int32_t len) {
     if (numLeft < len) {
       // Read entire slice
       memcpy(b, buffer->values+upto,numLeft * sizeof(uint8_t));
-      //offset += numLeft; TODO: which offset do they mean????
+      b += numLeft;
       len -= numLeft;
       nextSlice();
     } else {

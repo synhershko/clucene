@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_util_Misc_H
@@ -10,7 +10,7 @@
 #include <vector>
 
 CL_NS_DEF(util)
-  /** A class containing various functions. 
+  /** A class containing various functions.
   */
   class CLUCENE_SHARED_EXPORT Misc{
   public:
@@ -50,9 +50,9 @@ CL_NS_DEF(util)
 	// be errorneous
 	static TCHAR* stringTrim(TCHAR* s);
 	static TCHAR* wordTrim(TCHAR* s);
-	
+
 	static size_t longToBase( int64_t value, int32_t base, char* to ); //< length of to should be at least ((sizeof(unsigned long) << 3) + 1). returns actual length used
-	static int64_t base36ToLong( const char* value );	
+	static int64_t base36ToLong( const char* value );
 
   static std::string toString(const int32_t value);
   static std::string toString(const int64_t value);
@@ -73,11 +73,11 @@ CL_NS_DEF(util)
 	#else
 		#define thashCode ahashCode
 	#endif
-		
-		/** List all files in dir. 
+
+		/** List all files in dir.
 		* @param bool fullPath True to return entire path
 		*/
-		static void listFiles(const char* dir, std::vector<std::string>& files, bool fullPath=false);
+		static bool listFiles(const char* dir, std::vector<std::string>& files, bool fullPath=false);
   };
 
 CL_NS_END

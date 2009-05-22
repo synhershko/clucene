@@ -1226,7 +1226,7 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
 }
 
 void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo) {
-
+assert(false);//test me...
   assert (fieldInfo->storeTermVector);
 
   threadState->vectorFieldNumbers.values[threadState->numVectorFields] = fieldInfo->number;
@@ -1255,24 +1255,20 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
     const int32_t freq = posting->docFreq;
 
     int32_t prefix = 0;
-    //todo: use pointer here...
-    const CL_NS(util)::ValueArray<TCHAR>* text2 = threadState->charPool->buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
-    const int32_t start2 = posting->textStart & CHAR_BLOCK_MASK;
-    int32_t pos2 = start2;
+    const TCHAR* text2 = threadState->charPool->buffers[posting->textStart >> CHAR_BLOCK_SHIFT]->values;
+    const TCHAR* start2 = text2 + (posting->textStart & CHAR_BLOCK_MASK);
+    const TCHAR* pos2 = start2;
 
     // Compute common prefix between last term and
     // this term
     if (lastPosting == NULL)
       prefix = 0;
     else {
-      const CL_NS(util)::ValueArray<TCHAR>* text1 = threadState->charPool->buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT];
-      const int32_t start1 = lastPosting->textStart & CHAR_BLOCK_MASK;
-      int32_t pos1 = start1;
+      const TCHAR* text1 = threadState->charPool->buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT]->values;
+      const TCHAR* start1 = text1 + (lastPosting->textStart & CHAR_BLOCK_MASK);
+      const TCHAR* pos1 = start1;
       while(true) {
-//todo: use pointer here...
-        const TCHAR c1 = (*text1)[pos1];
-        const TCHAR c2 = (*text2)[pos2];
-        if (c1 != c2 || c1 == 0xffff) {
+        if (*pos1 != *pos2 || *pos1 == 0xffff) {
           prefix = pos1-start1;
           break;
         }
@@ -1283,13 +1279,13 @@ void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo)
     lastPosting = posting;
 
     // Compute length
-    while((*text2)[pos2] != 0xffff)
+    while(*pos2 != 0xffff)
       pos2++;
 
     const int32_t suffix = pos2 - start2 - prefix;
     threadState->tvfLocal->writeVInt(prefix);
     threadState->tvfLocal->writeVInt(suffix);
-    threadState->tvfLocal->writeChars(text2->values + start2 + prefix, suffix);
+    threadState->tvfLocal->writeChars(start2 + prefix, suffix);
     threadState->tvfLocal->writeVInt(freq);
 
     if (doVectorPositions) {

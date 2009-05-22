@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -70,7 +70,7 @@ TermVectorsReader::TermVectorsReader(const TermVectorsReader& copy)
     tvx = copy.tvx->clone();
     tvd = copy.tvd->clone();
     tvf = copy.tvf->clone();
-	
+
     tvdFormat = copy.tvdFormat;
     tvfFormat = copy.tvfFormat;
     _size = copy._size;
@@ -175,10 +175,10 @@ void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVector
 			else
 				number += tvd->readVInt();
 
-          if (number == fieldNumber) 
+          if (number == fieldNumber)
 			  found = i;
         }
-  
+
 		// This field, although valid in the segment, was not found in this
 		// document
 		if (found != -1) {
@@ -186,7 +186,7 @@ void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVector
           position = 0;
           for (int32_t i = 0; i <= found; i++) // TODO: Was ++i, make sure its still good
             position += tvd->readVLong();
-          
+
 		  mapper->setDocumentNumber(docNum);
 		  readTermVector(field, position, mapper);
       } else {
@@ -223,7 +223,7 @@ ArrayBase<TermFreqVector*>* TermVectorsReader::get(const int32_t docNum){
         if (fieldCount != 0) {
             int32_t number = 0;
             const TCHAR** fields = _CL_NEWARRAY(const TCHAR*,fieldCount+1);
-    		
+
 			{ //msvc6 scope fix
 				for (int32_t i = 0; i < fieldCount; ++i) {
 					if(tvdFormat == FORMAT_VERSION)
@@ -234,7 +234,7 @@ ArrayBase<TermFreqVector*>* TermVectorsReader::get(const int32_t docNum){
 				}
 			}
 			fields[fieldCount]=NULL;
-		  
+
 		    // Compute position in the tvf file
 		    position = 0;
 		    int64_t* tvfPointers = _CL_NEWARRAY(int64_t,fieldCount);
@@ -331,7 +331,7 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 
     int32_t numTerms = tvf->readVInt();
     // If no terms - return a constant empty termvector. However, this should never occur!
-    if (numTerms == 0) 
+    if (numTerms == 0)
 		return;
 
 	bool storePositions;
@@ -354,7 +354,7 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
     int32_t totalLength = 0;
 	int32_t bufferLen=10; // init the buffer with a length of 10 character
 	TCHAR* buffer = (TCHAR*)malloc(bufferLen * sizeof(TCHAR));
-	
+
     for (int32_t i = 0; i < numTerms; ++i) {
 		start = tvf->readVInt();
 		deltaLength = tvf->readVInt();
@@ -450,7 +450,7 @@ void TermVectorOffsetInfo::setStartOffset(const int32_t _startOffset) {
 }
 
 bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo) {
-	if (this == termVectorOffsetInfo) 
+	if (this == termVectorOffsetInfo)
 		return true;
 
 	if (endOffset != termVectorOffsetInfo->endOffset) return false;
@@ -467,6 +467,8 @@ size_t TermVectorOffsetInfo::hashCode() const{
 }
 
 TermVectorMapper::TermVectorMapper(){
+	this->ignoringPositions = false;
+	this->ignoringOffsets = false;
 }
 
 TermVectorMapper::TermVectorMapper(const bool _ignoringPositions, const bool _ignoringOffsets){
@@ -489,7 +491,12 @@ void TermVectorMapper::setDocumentNumber(const int32_t documentNumber)
 }
 
 ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():
-	  terms(NULL),termFreqs(NULL),positions(NULL),offsets(NULL),currentPosition(0),field(NULL)
+  terms(NULL),
+  termFreqs(NULL),
+  positions(NULL),
+  offsets(NULL),
+  currentPosition(0),
+  field(NULL)
 {
 }
 ParallelArrayTermVectorMapper::~ParallelArrayTermVectorMapper(){

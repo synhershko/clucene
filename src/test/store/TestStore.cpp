@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -17,9 +17,9 @@ void hashTest(CuTest *tc){
 	map.put(STRDUP_AtoA("a2"),3);
 	map.put(STRDUP_AtoA("a3"),4);
 
-	
+
 	CuAssertIntEquals(tc, _T("map size!=3"), 3, map.size());
-	
+
 	map.remove("a1");
 	CuAssertIntEquals(tc, _T("map size!=2"), 2, map.size());
 
@@ -30,7 +30,7 @@ void hashTest(CuTest *tc){
 void StoreTest(CuTest *tc,int32_t count, bool ram){
 	srand(1251971);
 	int32_t i;
-	
+
 	uint64_t veryStart = Misc::currentTimeMillis();
 	uint64_t start = Misc::currentTimeMillis();
 
@@ -50,7 +50,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 
 		for (int32_t j = 0; j < length; j++)
 			file->writeByte(b);
-			
+
 		file->close();
 		_CLDELETE(file);
 	}
@@ -103,11 +103,10 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 
 	//test makeLock::toString
 	CL_NS(store)::LuceneLock* lf = store->makeLock("testlock");
-	TCHAR* ts = lf->toString();
-	CLUCENE_ASSERT(_tcscmp(ts,_T("fail")));
-  _CLDELETE_CARRAY(ts);
+	std::string ts = lf->toString();
+	CLUCENE_ASSERT( ts.compare("fail") != 0 );
   _CLDELETE(lf);
-	
+
 	store->close();
 	_CLDECDELETE(store);
 }
@@ -127,6 +126,6 @@ CuSuite *teststore(void)
     SUITE_ADD_TEST(suite, ramtest);
     SUITE_ADD_TEST(suite, fstest);
 
-    return suite; 
+    return suite;
 }
 // EOF
