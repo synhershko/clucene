@@ -893,7 +893,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, An
 				if (maxFieldLength != IndexWriter::FIELD_TRUNC_POLICY__WARN) {
 					// The client programmer has explicitly authorized us to
 					// truncate the token stream after maxFieldLength tokens.
-					if ( length > maxFieldLength) {
+					if ( length >= maxFieldLength) {
 	          if (_parent->infoStream != NULL)
 	            (*_parent->infoStream) << "maxFieldLength "  << maxFieldLength << " reached for field " << fieldInfo->name << ", ignoring following tokens\n";
 						break;
@@ -988,7 +988,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
 /*
   std::cout << "  addPosition: buffer=" << Misc::toString(tokenText).substr(0,tokenTextLen) << " pos=" << position
             << " offsetStart=" << (offset+token->startOffset()) << " offsetEnd=" << (offset + token->endOffset())
-            << " docID=" << threadState->docID << " doPos=" << doVectorPositions << " doOffset=" << doVectorOffsets << "\n";
+            << " docID=" << threadState->docID << " doPos=" << (doVectorPositions?"true":"false") << " doOffset=" << (doVectorOffsets?"true":"false") << "\n";
 */
   int32_t hashPos = code & postingsHashMask;
 
@@ -1057,7 +1057,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         threadState->p->lastDocID = threadState->docID;
 
       } else {                                // term already seen in this doc
-        // std::cout << "    seen before (same docID=" << threadState->docID << ") proxUpto=" << threadState->p->proxUpto << "\n";
+         //std::cout << "    seen before (same docID=" << threadState->docID << ") proxUpto=" << threadState->p->proxUpto << "\n";
 
         threadState->p->docFreq++;
 

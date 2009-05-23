@@ -183,7 +183,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeD
   this->localRollbackSegmentInfos = NULL;
   this->stopMerges = false;
   messageID = -1;
-  maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
+  maxFieldLength = FIELD_TRUNC_POLICY__WARN;
   infoStream = NULL;
   this->mergeFactor = this->minMergeDocs = this->maxMergeDocs = 0;
   this->commitLockTimeout =0;

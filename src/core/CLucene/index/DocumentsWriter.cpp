@@ -81,7 +81,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
 	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true))
+  freeByteBlocks(FreeByteBlocksType(false)), freeCharBlocks(FreeCharBlocksType(false)) //todo: memory!
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -1461,9 +1461,9 @@ void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* _pool, int32_t _start
   this->pool = _pool;
   this->endIndex = _endIndex;
 
-  buffer = pool->buffers[bufferUpto];
   bufferUpto = _startIndex / BYTE_BLOCK_SIZE;
   bufferOffset = bufferUpto * BYTE_BLOCK_SIZE;
+  buffer = pool->buffers[bufferUpto];
   upto = _startIndex & BYTE_BLOCK_MASK;
 
   const int32_t firstSize = levelSizeArray[0];
