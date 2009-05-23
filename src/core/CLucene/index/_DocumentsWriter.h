@@ -219,7 +219,7 @@ private:
   class ByteSliceReader: public CL_NS(store)::IndexInput {
     ByteBlockPool* pool;
     int32_t bufferUpto;
-    CL_NS(util)::ValueArray<uint8_t>* buffer;
+    const uint8_t* buffer;
     int32_t limit;
     int32_t level;
 
@@ -305,8 +305,7 @@ private:
   int32_t postingsFreeCountDW;
   int32_t postingsAllocCountDW;
 
-  typedef CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<TCHAR>*,
-    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<TCHAR> > > FreeCharBlocksType;
+  typedef CL_NS(util)::CLArrayList<TCHAR*, CL_NS(util)::Deletor::tcArray> FreeCharBlocksType;
   FreeCharBlocksType freeCharBlocks;
 
   /* We have three pools of RAM: Postings, uint8_t blocks
@@ -362,8 +361,7 @@ private:
   // used when we hit a exception when adding a document
   void addDeleteDocID(int32_t docId);
 
-  typedef CL_NS(util)::CLArrayList<CL_NS(util)::ValueArray<uint8_t>*,
-    CL_NS(util)::Deletor::Object<CL_NS(util)::ValueArray<uint8_t> > > FreeByteBlocksType;
+  typedef CL_NS(util)::CLArrayList<uint8_t*, CL_NS(util)::Deletor::vArray<uint8_t> > FreeByteBlocksType;
   FreeByteBlocksType freeByteBlocks;
 
 
@@ -506,26 +504,26 @@ private:
     PostingVector* vector;
 
     //writeFreqByte...
-    CL_NS(util)::ValueArray<uint8_t>* freq;
+    uint8_t* freq;
     int32_t freqUpto;
 
     //writeProxByte...
-    CL_NS(util)::ValueArray<uint8_t>* prox;
+    uint8_t* prox;
     int32_t proxUpto;
 
     //writeOffsetByte...
-    CL_NS(util)::ValueArray<uint8_t>* offsets;
+    uint8_t* offsets;
     int32_t offsetUpto;
 
     //writePosByte...
-    CL_NS(util)::ValueArray<uint8_t>* pos;
+    uint8_t* pos;
     int32_t posUpto;
 
 
     /** Do in-place sort of Posting array */
-    void doPostingSort(CL_NS(util)::ValueArray<Posting*>& postings, int32_t numPosting);
+    void doPostingSort(Posting** postings, int32_t numPosting);
 
-    void quickSort(CL_NS(util)::ValueArray<Posting*>& postings, int32_t lo, int32_t hi);
+    void quickSort(Posting** postings, int32_t lo, int32_t hi);
 
     /** Do in-place sort of PostingVector array */
     void doVectorSort(CL_NS(util)::ValueArray<PostingVector*>& postings, int32_t numPosting);
@@ -537,7 +535,7 @@ private:
       public String getPostingText() {
       char[] text = charPool.buffers[p.textStart >> CHAR_BLOCK_SHIFT];
       int32_t upto = p.textStart & CHAR_BLOCK_MASK;
-      while(text[upto] != 0xffff)
+      while(text[upto] != CLUCENE_END_OF_WORD)
       upto++;
       return new String(text, p.textStart, upto-(p.textStart & BYTE_BLOCK_MASK));
       }
@@ -641,6 +639,8 @@ private:
   template<typename T>
   class BlockPool {
   protected:
+    bool trackAllocations;
+
     int32_t numBuffer;
 
     int32_t bufferUpto;           // Which buffer we are upto
@@ -648,15 +648,15 @@ private:
 
     DocumentsWriter* parent;
   public:
-    CL_NS(util)::ObjectArray< CL_NS(util)::ValueArray<T> > buffers;
+    CL_NS(util)::ValueArray< T* > buffers;
     int32_t tOffset;          // Current head offset
     int32_t tUpto;             // Where we are in head buffer
-    CL_NS(util)::ValueArray<T>* buffer;                              // Current head buffer
+    T* buffer;                              // Current head buffer
 
-    virtual CL_NS(util)::ValueArray<T>* getNewBlock() = 0;
+    virtual T* getNewBlock(bool trackAllocations) = 0;
 
-    BlockPool(DocumentsWriter* _parent, int32_t _blockSize):
-      buffers(CL_NS(util)::ObjectArray<CL_NS(util)::ValueArray<T> >(10))
+    BlockPool(DocumentsWriter* _parent, int32_t _blockSize, bool trackAllocations):
+      buffers(CL_NS(util)::ValueArray<T*>(10))
     {
 	    this->blockSize = _blockSize;
       this->parent = _parent;
@@ -665,24 +665,21 @@ private:
       tOffset = -blockSize;
       buffer = NULL;
       numBuffer = 0;
+      this->trackAllocations = trackAllocations;
+      buffer = NULL;
     }
 	  virtual ~BlockPool(){
 		  buffers.deleteValues();
 	  }
 
-    void reset() {
-      parent->recycleBlocks(buffers, 1+bufferUpto);
-      bufferUpto = -1;
-      tUpto = blockSize;
-      tOffset = -blockSize;
-    }
+    virtual void reset() = 0;
 
     void nextBuffer() {
       if (1+bufferUpto == buffers.length) {
       	//expand the number of buffers
         buffers.resize( (int32_t)(buffers.length * 1.5));
       }
-      buffer = buffers.values[1+bufferUpto] = getNewBlock();
+      buffer = buffers.values[1+bufferUpto] = getNewBlock(trackAllocations);
       bufferUpto++;
 
       tUpto = 0;
@@ -698,22 +695,18 @@ private:
   
   class CharBlockPool: public BlockPool<TCHAR>{
   public:
-    CharBlockPool(DocumentsWriter* _parent, int32_t _blockSize):
-        BlockPool<TCHAR>(_parent, _blockSize)
-    {
-    }
-    CL_NS(util)::ValueArray<TCHAR>* getNewBlock(){
-        return parent->getCharBlock();
-    }
+    CharBlockPool(DocumentsWriter* _parent);
+    TCHAR* getNewBlock(bool trackAllocations);
+    void reset();
     friend class DocumentsWriter::FieldMergeState;
   };
   class ByteBlockPool: public BlockPool<uint8_t>{
-    bool trackAllocations;
   public:
-    ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize);
-    CL_NS(util)::ValueArray<uint8_t>* getNewBlock();
+    ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent);
+    uint8_t* getNewBlock(bool trackAllocations);
     int32_t newSlice(const int32_t size);
-    int32_t allocSlice(CL_NS(util)::ValueArray<uint8_t>& slice, const int32_t upto);
+    int32_t allocSlice(uint8_t* slice, const int32_t upto);
+    void reset();
     	
     friend class DocumentsWriter::ThreadState;
   };
@@ -751,7 +744,7 @@ private:
     CL_NS(util)::ValueArray<Posting*>* postings;
 
     Posting* p;
-    CL_NS(util)::ValueArray<TCHAR>* text;
+    TCHAR* text;
     int32_t textOffset;
 
     int32_t postingUpto;
@@ -810,7 +803,7 @@ public:
    *  no buffered documents. */
   std::string closeDocStore();
 
-  const std::vector<std::string>& abortedFiles();
+  const std::vector<std::string>* abortedFiles();
   
   /* Returns list of files in use by this instance,
    * including any flushed segments. */
@@ -941,10 +934,10 @@ public:
   static const int32_t BYTE_BLOCK_NOT_MASK;
 
   /* Allocate another uint8_t[] from the shared pool */
-  CL_NS(util)::ValueArray<uint8_t>* getByteBlock(bool trackAllocations);
+  uint8_t* getByteBlock(bool trackAllocations);
 
   /* Return a uint8_t[] to the pool */
-  void recycleBlocks(CL_NS(util)::ArrayBase< CL_NS(util)::ValueArray<uint8_t>* >& blocks, int32_t end);
+  void recycleBlocks(CL_NS(util)::ArrayBase<uint8_t*>& blocks, int32_t start, int32_t end);
 
   /* Initial chunk size of the shared char[] blocks used to
      store term text */
@@ -955,15 +948,17 @@ public:
   static const int32_t MAX_TERM_LENGTH;
 
   /* Allocate another char[] from the shared pool */
-  CL_NS(util)::ValueArray<TCHAR>* getCharBlock();
+  TCHAR* getCharBlock();
 
   /* Return a char[] to the pool */
-  void recycleBlocks(CL_NS(util)::ArrayBase<CL_NS(util)::ValueArray<TCHAR>* >& blocks, int32_t numBlocks);
+  void recycleBlocks(CL_NS(util)::ArrayBase<TCHAR*>& blocks, int32_t start, int32_t numBlocks);
 
   std::string toMB(int64_t v);
 
 
 };
+
+#define CLUCENE_END_OF_WORD 0x0
 
 CL_NS_END
 #endif

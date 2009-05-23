@@ -671,9 +671,9 @@ void IndexWriter::addDocument(Document* doc, Analyzer* analyzer) {
           // If docWriter has some aborted files that were
           // never incref'd, then we clean them up here
           if (docWriter != NULL) {
-            const std::vector<std::string>& files = docWriter->abortedFiles();
-            if (!files.empty())
-              deleter->deleteNewFiles(files);
+            const std::vector<std::string>* files = docWriter->abortedFiles();
+            if (files != NULL )
+              deleter->deleteNewFiles(*files);
           }
         }
       }
@@ -733,9 +733,9 @@ void IndexWriter::updateDocument(Term* term, Document* doc, Analyzer* analyzer)
         { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
           // If docWriter has some aborted files that were
           // never incref'd, then we clean them up here
-          const std::vector<std::string>& files = docWriter->abortedFiles();
-          if (!files.empty())
-            deleter->deleteNewFiles(files);
+          const std::vector<std::string>* files = docWriter->abortedFiles();
+          if (files != NULL)
+            deleter->deleteNewFiles(*files);
         }
       }
     )

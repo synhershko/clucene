@@ -78,9 +78,6 @@ protected:
    */
   void acquireWriteLock();
 
-  /** Release the write lock, if needed. */
-  void finalize();
-
 public:
   virtual ~DirectoryIndexReader();
   void init(CL_NS(store)::Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory);

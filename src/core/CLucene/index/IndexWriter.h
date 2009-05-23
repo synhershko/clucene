@@ -234,8 +234,6 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
 
-	void _finalize();
-
 	// where this index resides
 	CL_NS(store)::Directory* directory;
 
