@@ -96,12 +96,12 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	}else{
 		writer = _CLNEW IndexWriter( target ,&an, true);
 	}
-  writer->setInfoStream(&std::cout);
-  writer->setMaxBufferedDocs(3);
+  //writer->setInfoStream(&std::cout);
+  //writer->setMaxBufferedDocs(3);
   //writer->setMaxMergeDocs(5);
 	writer->setMaxFieldLength(10000);
-  writer->setUseCompoundFile(false);
-  //writer->setRAMBufferSizeMB(0.1);
+  //writer->setUseCompoundFile(false);
+  writer->setRAMBufferSizeMB(0.5);
 
 	/*printf("Set MaxFieldLength: ");
 	char mfl[250];
@@ -114,7 +114,7 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	uint64_t str = Misc::currentTimeMillis();
 
 	indexDocs(writer, path);
-//	writer->optimize();
+	writer->optimize();
 	writer->close();
 	_CLDELETE(writer);
 
