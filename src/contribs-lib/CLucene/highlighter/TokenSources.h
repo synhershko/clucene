@@ -26,7 +26,7 @@ class CLUCENE_CONTRIBS_EXPORT TokenSources: LUCENE_BASE
 		size_t length;
         int32_t currentToken;
         StoredTokenStream(CL_NS(analysis)::Token** tokens, size_t len);
-		bool next(CL_NS(analysis)::Token* token);
+		CL_NS(analysis)::Token* next(CL_NS(analysis)::Token* token);
 		void close();
     };
 public:

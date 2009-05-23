@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -58,7 +58,7 @@ CL_NS_DEF(index)
     //       fis contains a valid reference to a reference FieldInfos
     //Post - The instance has been initialized
 
-      
+
     maxSkipLevels = 10;
     lastTermText = NULL;
     lastTermTextBufLen = 0;
@@ -97,7 +97,7 @@ CL_NS_DEF(index)
 
 		close();
 	}
-	
+
   void TermInfosWriter::add(Term* term, TermInfo* ti){
     const size_t length = term->textLength();
     if ( termTextBuffer == NULL ){
@@ -158,7 +158,7 @@ CL_NS_DEF(index)
       " lastField=" + Misc::toString(fieldInfos->fieldName(lastFieldNumber)) + " (number " + Misc::toString(lastFieldNumber) + ")" +
       " text=" + Misc::toString(termText, termTextLength) + " lastText=" + Misc::toString(lastTermText, lastTermTextLength)
       ).c_str() );
-      
+
     CND_PRECONDITION(ti->freqPointer >= lastTi->freqPointer, ("freqPointer out of order (" + Misc::toString(ti->freqPointer) + " < " + Misc::toString(lastTi->freqPointer) + ")").c_str());
     CND_PRECONDITION(ti->proxPointer >= lastTi->proxPointer, ("proxPointer out of order (" + Misc::toString(ti->proxPointer) + " < " + Misc::toString(lastTi->proxPointer) + ")").c_str());
 
@@ -168,9 +168,9 @@ CL_NS_DEF(index)
 		}
 
 		//write term
-		writeTerm(fieldNumber, termText, termTextLength);				      
+		writeTerm(fieldNumber, termText, termTextLength);
 		// write doc freq
-		output->writeVInt(ti->docFreq);		  
+		output->writeVInt(ti->docFreq);
 		//write pointers
 		output->writeVLong(ti->freqPointer - lastTi->freqPointer);
 		output->writeVLong(ti->proxPointer - lastTi->proxPointer);
@@ -200,12 +200,12 @@ CL_NS_DEF(index)
 		lastTi->set(ti);
 		size++;
 	}
-	
+
 	void TermInfosWriter::close() {
     //Func - Closes the TermInfosWriter
 	//Pre  - true
 	//Post - The TermInfosWriter has been closed
-    
+
 		if (output){
 			//write size at start
 		    output->seek(4);          // write size after format
@@ -217,9 +217,9 @@ CL_NS_DEF(index)
 			   if(other){
 			      other->close();
 			      _CLDELETE( other );
-			      }
-		      }
-		      _CLDELETE(lastTi);
+          }
+        }
+        _CLDELETE(lastTi);
 		   }
 	}
 

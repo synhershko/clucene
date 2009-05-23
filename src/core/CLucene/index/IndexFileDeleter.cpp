@@ -119,9 +119,8 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
 
 	vector<string> files;
-  directory->list(&files);
-  if (files.empty() )
-	  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str());
+  if ( !directory->list(&files) )
+	  _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->toString() + ": list() returned NULL").c_str());
 
 
 	for(size_t i=0;i<files.size();i++) {
@@ -249,10 +248,7 @@ void IndexFileDeleter::deleteCommits() {
       if (infoStream != NULL) {
         message("deleteCommits: now remove commit \"" + commit->getSegmentsFileName() + "\"");
       }
-      int32_t size2 = commit->files.size();
-      for(int32_t j=0;j<size2;j++) {
-        decRef(commit->files[j]);
-      }
+      decRef(commit->files);
     }
     commitsToDelete.clear();
 
@@ -265,7 +261,11 @@ void IndexFileDeleter::deleteCommits() {
       if (!commit->deleted) {
         if (writeTo != readFrom) {
           commits.remove(readFrom,true);
-          commits[writeTo] = commit;
+          commits.remove(writeTo,true);//todo: memleak
+          if ( commits.size() == writeTo )
+            commits.push_back(commit);
+          else
+            commits[writeTo] = commit;
         }
         writeTo++;
       }
@@ -273,7 +273,7 @@ void IndexFileDeleter::deleteCommits() {
     }
 
     while(size > writeTo) {
-      commits.delete_back();
+      commits.remove(size-1);
       size--;
     }
   }
@@ -289,9 +289,8 @@ void IndexFileDeleter::deleteCommits() {
 */
 void IndexFileDeleter::refresh(const char* segmentName) {
   vector<string> files;
-  directory->list(files);
-  if (files.empty())
-    _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->getObjectName() + ": list() returned NULL").c_str() );
+  if ( !directory->list(files) )
+    _CLTHROWA(CL_ERR_IO, (string("cannot read directory ") + directory->toString() + ": list() returned NULL").c_str() );
   const IndexFileNameFilter* filter = IndexFileNameFilter::getFilter();
   string segmentPrefix1;
   string segmentPrefix2;

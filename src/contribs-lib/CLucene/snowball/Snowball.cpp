@@ -89,9 +89,9 @@ CL_NS_DEF2(analysis,snowball)
 	}
 
   /** Returns the next input Token, after being stemmed */
-  bool SnowballFilter::next(Token* token){
-    if (!input->next(token))
-      return false;
+  Token* SnowballFilter::next(Token* token){
+    if (input->next(token) == NULL)
+      return NULL;
 
 	unsigned char uctext[LUCENE_MAX_WORD_LEN];
 	TCHAR tchartext[LUCENE_MAX_WORD_LEN];
@@ -124,7 +124,7 @@ CL_NS_DEF2(analysis,snowball)
 		tchartext[i]=stemmed[i];
 #endif
 	token->set(tchartext,token->startOffset(), token->endOffset(), token->type());
-	return true;
+	return token;
   }
 
 

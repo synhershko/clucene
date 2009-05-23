@@ -390,9 +390,10 @@ int64_t Misc::base36ToLong( const char* value ) {
 	return lval;
 }
 
-void Misc::listFiles(const char* directory, std::vector<std::string>& files, bool fullPath){
+bool Misc::listFiles(const char* directory, std::vector<std::string>& files, bool fullPath){
   //clear old files
   DIR* dir = opendir(directory);
+  if ( dir == NULL ) return false;
   struct dirent* fl = readdir(dir);
   struct cl_stat_t buf;
 	string path;
@@ -411,6 +412,7 @@ void Misc::listFiles(const char* directory, std::vector<std::string>& files, boo
 	  fl = readdir(dir);
   }
   closedir(dir);
+  return true;
 }
 
 
@@ -419,7 +421,9 @@ std::string Misc::toString(const bool value){
 }
 std::string Misc::toString(const int32_t value){
   char buf[20];
-  _snprintf(buf,20,"%d",value);
+  TCHAR tbuf[20];
+  _i64tot(value, tbuf, 10);
+  STRCPY_TtoA(buf,tbuf,20);
   return buf;
 }
 std::string Misc::toString(const int64_t value){

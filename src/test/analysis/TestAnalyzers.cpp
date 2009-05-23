@@ -20,7 +20,8 @@
 		buffer[len]=0;
 
 		CLUCENE_ASSERT(ts->next(&t)!=NULL);
-		CLUCENE_ASSERT(_tcscmp( t.termBuffer(),buffer) == 0 );
+		CLUCENE_ASSERT( t.termLength() == _tcslen(buffer) );
+		CLUCENE_ASSERT(_tcscmp( t.termBuffer(), buffer) == 0 );
 
 		last = pos+1;
 	}

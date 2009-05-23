@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include <cctype>
 #include <string.h>
+#include <algorithm>
+
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -63,25 +65,26 @@ void FileDocument(const char* f, Document* doc){
 
 void indexDocs(IndexWriter* writer, const char* directory) {
   vector<string> files;
+  std::sort(files.begin(),files.end());
   Misc::listFiles(directory,files,true);
   vector<string>::iterator itr = files.begin();
 	// use a single, empty document
 	Document doc;
+  int i=0;
 	while ( itr != files.end() ){
     const char* path = itr->c_str();
-	  printf( "adding: %s\n", path );
+	  printf( "adding file %d: %s\n", ++i, path );
 
     doc.clear();
 		FileDocument( path, &doc );
 		writer->addDocument( &doc );
-break;
     itr++;
 	}
 }
 void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	IndexWriter* writer = NULL;
 	//lucene::analysis::SimpleAnalyzer* an = *_CLNEW lucene::analysis::SimpleAnalyzer();
-	lucene::analysis::standard::StandardAnalyzer an;
+	lucene::analysis::WhitespaceAnalyzer an;
 	
 	if ( !clearIndex && IndexReader::indexExists(target) ){
 		if ( IndexReader::isLocked(target) ){
@@ -93,7 +96,13 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	}else{
 		writer = _CLNEW IndexWriter( target ,&an, true);
 	}
-	writer->setMaxFieldLength(1000);
+  //writer->setInfoStream(&std::cout);
+  //writer->setMaxBufferedDocs(3);
+  //writer->setMaxMergeDocs(5);
+	writer->setMaxFieldLength(10000);
+  //writer->setUseCompoundFile(false);
+  writer->setRAMBufferSizeMB(0.5);
+
 	/*printf("Set MaxFieldLength: ");
 	char mfl[250];
 	fgets(mfl,250,stdin);
@@ -105,7 +114,7 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	uint64_t str = Misc::currentTimeMillis();
 
 	indexDocs(writer, path);
-//	writer->optimize();
+	writer->optimize();
 	writer->close();
 	_CLDELETE(writer);
 

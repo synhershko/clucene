@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_compoundfile_h
@@ -54,7 +54,7 @@ public:
 	bool openInput(const char * name, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize=0);
 
 	/** Returns an array of strings, one for each file in the directory-> */
-	void list(std::vector<std::string>* names) const;
+	bool list(std::vector<std::string>* names) const;
 	/** Returns true iff a file with the given name exists. */
 	bool fileExists(const char* name) const;
 	/** Returns the time the named file was last modified. */
@@ -76,7 +76,7 @@ public:
 	CL_NS(store)::LuceneLock* makeLock(const char* name);
 
 	std::string toString() const;
-	
+
 	static const char* getClassName();
 	const char* getObjectName() const;
 };
@@ -121,9 +121,9 @@ public:
 	/** Returns the directory of the compound file. */
 	CL_NS(store)::Directory* getDirectory();
 	const char* getName() const ;
-	/** Add a source stream. <code>file</code> is the string by which the 
+	/** Add a source stream. <code>file</code> is the string by which the
 	*  sub-stream will be known in the compound stream.
-	* 
+	*
 	*  @throws IllegalStateException if this writer is closed
 	*  @throws NullPointerException if <code>file</code> is null
 	*  @throws IllegalArgumentException if a file with the same name

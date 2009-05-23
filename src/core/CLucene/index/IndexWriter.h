@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_IndexWriter_
@@ -193,12 +193,12 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
   MergePolicy* mergePolicy;
   MergeScheduler* mergeScheduler;
 
-  typedef  CL_NS(util)::CLLinkedList<MergePolicy::OneMerge*, 
+  typedef  CL_NS(util)::CLLinkedList<MergePolicy::OneMerge*,
     CL_NS(util)::Deletor::Object<MergePolicy::OneMerge> > PendingMergesType;
   PendingMergesType* pendingMerges;
 
-  typedef CL_NS(util)::CLHashSet<MergePolicy::OneMerge*, 
-    CL_NS(util)::Compare::Void<MergePolicy::OneMerge>, 
+  typedef CL_NS(util)::CLHashSet<MergePolicy::OneMerge*,
+    CL_NS(util)::Compare::Void<MergePolicy::OneMerge>,
     CL_NS(util)::Deletor::Object<MergePolicy::OneMerge> > RunningMergesType;
   RunningMergesType* runningMerges;
 
@@ -234,12 +234,10 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
 
-	void _finalize();
-
 	// where this index resides
-	CL_NS(store)::Directory* directory;		
-		
-		
+	CL_NS(store)::Directory* directory;
+
+
 	int32_t getSegmentsCounter();
 	int32_t maxFieldLength;
 	int32_t mergeFactor;
@@ -267,10 +265,10 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
 public:
 	DEFINE_MUTEX(THIS_LOCK)
   DEFINE_CONDITION(THIS_WAIT_CONDITION)
-	
-	// Release the write lock, if needed. 
+
+	// Release the write lock, if needed.
 	SegmentInfos* segmentInfos;
-  
+
 	// Release the write lock, if needed.
 	~IndexWriter();
 
@@ -320,7 +318,7 @@ public:
 	* @see #setMaxBufferedDocs
 	*/
 	int32_t getMaxBufferedDocs();
-	
+
 	/**
 	* Default value for the write lock timeout (1,000).
   * @see #setDefaultWriteLockTimeout
@@ -334,7 +332,7 @@ public:
 	* @see #setWriteLockTimeout
 	*/
 	int64_t getWriteLockTimeout();
-	
+
 	/**
 	* Sets the maximum time to wait for a commit lock (in milliseconds).
 	*/
@@ -392,7 +390,7 @@ public:
    */
   static const int32_t MAX_TERM_LENGTH;
 
-	
+
 	/* Determines how often segment indices are merged by addDocument().  With
 	*  smaller values, less RAM is used while indexing, and searches on
 	*  unoptimized indices are faster, but indexing speed is slower.  With larger
@@ -406,7 +404,7 @@ public:
 	int32_t getMergeFactor() const;
 	void setMergeFactor(int32_t val);
 
-	
+
 	/** Expert: The fraction of terms in the "dictionary" which should be stored
 	*   in RAM.  Smaller values use more memory, but make searching slightly
 	*   faster, while larger values use less memory and make searching slightly
@@ -441,7 +439,7 @@ public:
 	* @see #setTermIndexInterval(int)
 	*/
 	int32_t getTermIndexInterval();
- 
+
 	/**Determines the largest number of documents ever merged by addDocument().
 	*  Small values (e.g., less than 10,000) are best for interactive indexing,
 	*  as this limits the length of pauses while indexing to a few seconds.
@@ -472,7 +470,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  IndexWriter(const char* path, CL_NS(analysis)::Analyzer* a, bool create);
+  explicit IndexWriter(const char* path, CL_NS(analysis)::Analyzer* a, bool create);
 
   /**
   * Constructs an IndexWriter for the index in <code>d</code>.
@@ -494,7 +492,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create);
+  explicit IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create);
 
   /**
   * Expert: constructs an IndexWriter with a custom {@link
@@ -514,7 +512,7 @@ public:
   *  read/written to or if there is any other low-level
   *  IO error
   */
-  IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, IndexDeletionPolicy* deletionPolicy);
+  explicit IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, IndexDeletionPolicy* deletionPolicy = NULL);
 
   /**
   * Expert: constructs an IndexWriter with a custom {@link
@@ -540,7 +538,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy);
+  explicit IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy = NULL);
 
 	/**Returns the number of documents currently in this index.
 	*  synchronized
@@ -647,7 +645,7 @@ public:
   * created.</p>
 
   * <p>Disabled by default (writer flushes by RAM usage).</p>
-  * 
+  *
   * @throws IllegalArgumentException if maxBufferedDeleteTerms
   * is enabled but smaller than 1
   * @see #setRAMBufferSizeMB
@@ -678,7 +676,7 @@ public:
   * whichever comes first.</p>
   *
   * <p> The default value is {@link #DEFAULT_RAM_BUFFER_SIZE_MB}.</p>
-  * 
+  *
   * @throws IllegalArgumentException if ramBufferSize is
   * enabled but non-positive, or it disables ramBufferSize
   * when maxBufferedDocs is already disabled
@@ -688,7 +686,7 @@ public:
 
   /** Expert: the {@link MergeScheduler} calls this method
    *  to retrieve the next merge requested by the
-   *  MergePolicy */  
+   *  MergePolicy */
   MergePolicy::OneMerge* getNextMerge();
 
   /**
@@ -777,7 +775,7 @@ public:
   * even though part of it (flushing buffered documents)
   * may have succeeded, so the write lock will still be
   * held.</p>
-  * 
+  *
   * <p> If you can correct the underlying cause (eg free up
   * some disk space) then you can call close() again.
   * Failing that, if you want to force the write lock to be
@@ -812,8 +810,8 @@ public:
   * @see LogMergePolicy#findMergesForOptimize
   *
   * <p>It is recommended that this method be called upon completion of indexing.  In
-  * environments with frequent updates, optimize is best done during low volume times, if at all. 
-  * 
+  * environments with frequent updates, optimize is best done during low volume times, if at all.
+  *
   * </p>
   * <p>See http://www.gossamer-threads.com/lists/lucene/java-dev/47895 for more discussion. </p>
   *
@@ -824,7 +822,7 @@ public:
   *
   * <ul>
   * <li>
-  * 
+  *
   * <p>If no readers/searchers are open against the index,
   * then free space required is up to 1X the total size of
   * the starting index.  For example, if the starting
@@ -832,7 +830,7 @@ public:
   * space before calling optimize.</p>
   *
   * <li>
-  * 
+  *
   * <p>If readers/searchers are using the index, then free
   * space required is up to 2X the size of the starting
   * index.  This is because in addition to the 1X used by
@@ -842,7 +840,7 @@ public:
   * where it will appear as if the files are gone ("ls"
   * won't list them), they still consume storage due to
   * "delete on last close" semantics.</p>
-  * 
+  *
   * <p>Furthermore, if some but not all readers re-open
   * while the optimize is underway, this will cause > 2X
   * temporary space to be consumed as those new readers
@@ -876,8 +874,8 @@ public:
   * newly created segments will not be optimized unless you
   * call optimize again.</p>
   *
-  * @param doWait Specifies whether the call should block 
-  *  until the optimize completes.  This is only meaningful 
+  * @param doWait Specifies whether the call should block
+  *  until the optimize completes.  This is only meaningful
   *  with a {@link MergeScheduler} that is able to run merges
   *  in background threads.
   * @throws CorruptIndexException if the index is corrupt
@@ -891,8 +889,8 @@ public:
    * #optimize()}.
    * @param maxNumSegments maximum number of segments left
    * in the index after optimization finishes
-   * @param doWait Specifies whether the call should block 
-   *  until the optimize completes.  This is only meaningful 
+   * @param doWait Specifies whether the call should block
+   *  until the optimize completes.  This is only meaningful
    *  with a {@link MergeScheduler} that is able to run merges
    *   in background threads.
    */
@@ -900,8 +898,8 @@ public:
 
   /**
   * Flush all in-memory buffered updates (adds and deletes)
-  * to the Directory. 
-  * <p>Note: if <code>autoCommit=false</code>, flushed data would still 
+  * to the Directory.
+  * <p>Note: if <code>autoCommit=false</code>, flushed data would still
   * not be visible to readers, until {@link #close} is called.
   * @throws CorruptIndexException if the index is corrupt
   * @throws IOException if there is a low-level IO error
@@ -975,7 +973,7 @@ public:
   */
   void abort();
 
-  
+
   /**
   * Merges all segments from an array of indexes into this index.
   * <p>
@@ -1116,7 +1114,7 @@ private:
 	* 	and pushes the merged index onto the top of the segmentInfos stack.
 	*/
 	void mergeSegments(const uint32_t minSegment);
-	
+
 	/** Merges the named range of segments, replacing them in the stack with a
 	* single segment. */
 	void mergeSegments(const uint32_t minSegment, const uint32_t end);
@@ -1124,7 +1122,7 @@ private:
   void deleteFiles(std::vector<std::string>& files);
 	void readDeleteableFiles(std::vector<std::string>& files);
 	void writeDeleteableFiles(std::vector<std::string>& files);
-    
+
 	/*
 	* Some operating systems (e.g. Windows) don't permit a file to be deleted
 	* while it is opened for read (e.g. by another process or thread). So we
@@ -1134,15 +1132,15 @@ private:
 	void deleteSegments(CL_NS(util)::CLVector<SegmentReader*>* segments);
 	void deleteFiles(std::vector<std::string>& files, CL_NS(store)::Directory* directory);
 	void deleteFiles(std::vector<std::string>& files, std::vector<std::string>& deletable);
-  
+
   /**
   * Casts current mergePolicy to LogMergePolicy, and throws
   * an exception if the mergePolicy is not a LogMergePolicy.
   */
   LogMergePolicy* getLogMergePolicy() const;
-  
+
   void setMessageID();
-    
+
   void closeInternal(bool waitForMerges);
   void messageState();
 
@@ -1154,7 +1152,7 @@ private:
   void pushMaxBufferedDocs();
 
   void finishMerges(bool waitForMerges);
-  
+
   /** Tells the docWriter to close its currently open shared
    *  doc stores (stored fields & vectors files).
    *  Return value specifices whether new doc store files are compound or not.
@@ -1197,7 +1195,7 @@ private:
 
   /*
   * Rolls back the transaction and restores state to where
-  * we were at the start. 
+  * we were at the start.
   */
   void rollbackTransaction();
 
@@ -1235,9 +1233,9 @@ private:
 
   /* FIXME if we want to support non-contiguous segment merges */
   bool commitMerge(MergePolicy::OneMerge* merge);
-  
+
   int32_t ensureContiguousMerge(MergePolicy::OneMerge* merge);
-  
+
   void decrefMergeSegments(MergePolicy::OneMerge* _merge);
 
   /** Does fininishing for a merge, which is fast but holds

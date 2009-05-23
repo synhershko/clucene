@@ -233,7 +233,7 @@ CL_NS_USE(util)
 					 substringBuffer[endOffset-startOffset]=_T('\0');
 
 					 TCHAR* encoded = _encoder->encodeText(substringBuffer);
-					 const TCHAR* markedUpText=_formatter->highlightTerm(encoded, tokenGroup);
+					 TCHAR* markedUpText=_formatter->highlightTerm(encoded, tokenGroup);
 					 _CLDELETE_CARRAY(encoded);
 
 					 //store any whitespace etc from between this and last group
@@ -291,7 +291,7 @@ CL_NS_USE(util)
 				substringBuffer[endOffset-startOffset]=_T('\0');
 
 				TCHAR* encoded = _encoder->encodeText(substringBuffer);
-  	            const TCHAR* markedUpText=_formatter->highlightTerm(encoded, tokenGroup);
+        TCHAR* markedUpText=_formatter->highlightTerm(encoded, tokenGroup);
 				_CLDELETE_CARRAY(encoded);
 
   	            //store any whitespace etc from between this and last group

@@ -21,7 +21,7 @@ CJKTokenizer::CJKTokenizer(Reader* in):
 	ignoreSurrogates = true;
 }
 
-bool CJKTokenizer::next(Token* token){
+CL_NS(analysis)::Token* CJKTokenizer::next(Token* token){
     /** how many character(s) has been stored in buffer */
     int32_t length = 0;
 
@@ -31,7 +31,7 @@ bool CJKTokenizer::next(Token* token){
     while (true) {
         /** current character */
         clunichar c;
-		int charlen = 1;
+	int charlen = 1;
 
         offset++;
 
@@ -49,7 +49,7 @@ bool CJKTokenizer::next(Token* token){
 
                 break;
             } else {
-                return false;
+                return NULL;
             }
         } else {
             //get current character
@@ -178,7 +178,7 @@ bool CJKTokenizer::next(Token* token){
 
 	buffer[length]='\0';
 	token->set(buffer,start, start+length, tokenType);
-	return true;
+	return token;
 }
 
 CL_NS_END2

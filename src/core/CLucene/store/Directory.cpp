@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -16,7 +16,7 @@ CL_NS_DEF(store)
 Directory::Directory(){
   this->lockFactory = NULL;
 }
-Directory::~Directory(){ 
+Directory::~Directory(){
 }
 
 LuceneLock* Directory::makeLock(const char* name) {
@@ -51,7 +51,7 @@ bool Directory::deleteFile(const char* name, const bool throwError){
     }
     return ret;
 }
-IndexInput* Directory::openInput(const char* name, int32_t bufferSize){ 
+IndexInput* Directory::openInput(const char* name, int32_t bufferSize){
 	IndexInput* ret;
 	CLuceneError err;
 	if ( ! openInput(name, ret, err, bufferSize) )
@@ -60,7 +60,7 @@ IndexInput* Directory::openInput(const char* name, int32_t bufferSize){
 }
 char** Directory::list() const{
 	vector<string> names;
-	
+
 	list(&names);
 
 	size_t size = names.size();
@@ -68,9 +68,9 @@ char** Directory::list() const{
     for ( size_t i=0;i<size;i++ )
       ret[i] = STRDUP_AtoA(names[i].c_str());
     ret[size]=NULL;
-    return ret;	
+    return ret;
 }
-void Directory::list(std::vector<std::string>& names) const{
+bool Directory::list(std::vector<std::string>& names) const{
   return list(&names);
 }
 CL_NS_END

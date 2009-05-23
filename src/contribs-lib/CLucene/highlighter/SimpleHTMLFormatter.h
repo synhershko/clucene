@@ -29,8 +29,8 @@ CL_NS_DEF2(search,highlight)
 class CLUCENE_CONTRIBS_EXPORT SimpleHTMLFormatter :public Formatter
 {
 private:
-	const TCHAR* _preTag;
-	const TCHAR* _postTag;
+	TCHAR* _preTag;
+	TCHAR* _postTag;
 
 public:
 	~SimpleHTMLFormatter(); 

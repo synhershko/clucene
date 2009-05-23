@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_store_Lock_
@@ -16,7 +16,7 @@ CL_NS_DEF(store)
   public:
       LUCENE_STATIC_CONSTANT(int64_t, LOCK_POLL_INTERVAL = 1000);
       LUCENE_STATIC_CONSTANT(int64_t, LOCK_OBTAIN_WAIT_FOREVER = -1);
-      
+
       /** Attempts to obtain exclusive access and immediately return
       *  upon success or failure.
       * @return true iff exclusive access is obtained
@@ -41,9 +41,9 @@ CL_NS_DEF(store)
 
       virtual ~LuceneLock();
 
-      virtual TCHAR* toString() = 0;
+      virtual std::string toString() = 0;
   };
-  
+
 
 CL_NS_END
 #endif

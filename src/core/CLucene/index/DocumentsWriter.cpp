@@ -81,7 +81,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
 	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true))
+  freeByteBlocks(FreeByteBlocksType(false)), freeCharBlocks(FreeCharBlocksType(false)) //todo: memory!
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -186,8 +186,7 @@ std::string DocumentsWriter::closeDocStore() {
       tvd->close();
       _CLDELETE(tvd);
 
-	    string vectorFN = docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
-      assert ( 4+numDocsInStore*8 == directory->fileLength(vectorFN.c_str()) ); // "after flush: tvx size mismatch: " + numDocsInStore + " docs vs " + directory->fileLength(docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION) + " length in bytes of " + docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
+      assert ( 4+numDocsInStore*8 == directory->fileLength( (docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str()) ); // "after flush: tvx size mismatch: " + numDocsInStore + " docs vs " + directory->fileLength(docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION) + " length in bytes of " + docStoreSegment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION;
     }
 
     if (fieldsWriter != NULL) {
@@ -208,8 +207,8 @@ std::string DocumentsWriter::closeDocStore() {
   }
 }
 
-const std::vector<string>& DocumentsWriter::abortedFiles() {
-  return *_abortedFiles;
+const std::vector<string>* DocumentsWriter::abortedFiles() {
+  return _abortedFiles;
 }
 
 const std::vector<std::string>& DocumentsWriter::files() {
@@ -638,7 +637,6 @@ std::string DocumentsWriter::segmentFileName(const std::string& extension) {
   return segment + "." + extension;
 }
 
-//TODO: can't we just use _tcscmp???
 int32_t DocumentsWriter::compareText(const TCHAR* text1, const TCHAR* text2) {
 int32_t pos1=0;
 int32_t pos2=0;
@@ -646,16 +644,16 @@ int32_t pos2=0;
     const TCHAR c1 = text1[pos1++];
     const TCHAR c2 = text2[pos2++];
     if (c1 < c2)
-      if (0xffff == c2)
+      if (CLUCENE_END_OF_WORD == c2)
         return 1;
       else
         return -1;
     else if (c2 < c1)
-      if (0xffff == c1)
+      if (CLUCENE_END_OF_WORD == c1)
         return -1;
       else
         return 1;
-    else if (0xffff == c1)
+    else if (CLUCENE_END_OF_WORD == c1)
       return 0;
   }
 }
@@ -697,9 +695,9 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
     int32_t numToMerge = 1;
 
     for(int32_t i=1;i<numFields;i++) {
-      const CL_NS(util)::ValueArray<TCHAR>* text = mergeStates[i]->text;
+      const TCHAR* text = mergeStates[i]->text;
       const int32_t textOffset = mergeStates[i]->textOffset;
-      const int32_t cmp = compareText(text->values+textOffset, termStates[0]->text->values+termStates[0]->textOffset);
+      const int32_t cmp = compareText(text+  textOffset, termStates[0]->text + termStates[0]->textOffset);
 
       if (cmp < 0) {
         termStates.values[0] = mergeStates[i];
@@ -713,9 +711,9 @@ void DocumentsWriter::appendPostings(ArrayBase<ThreadState::FieldData*>* fields,
 
     int32_t lastDoc = 0;
 
-    const TCHAR* start = termStates[0]->text->values + termStates[0]->textOffset;
+    const TCHAR* start = termStates[0]->text + termStates[0]->textOffset;
     const TCHAR* pos = start;
-    while(*pos != 0xffff)
+    while(*pos != CLUCENE_END_OF_WORD)
       pos++;
 
     int64_t freqPointer = freqOut->getFilePointer();
@@ -1188,14 +1186,15 @@ void DocumentsWriter::recyclePostings(ValueArray<Posting*>& postings, int32_t nu
   this->postingsFreeCountDW += numPostings;
 }
 
-ValueArray<uint8_t>* DocumentsWriter::getByteBlock(bool trackAllocations) {
+uint8_t* DocumentsWriter::getByteBlock(bool trackAllocations) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
   const int32_t size = freeByteBlocks.size();
-  ValueArray<uint8_t>* b;
+  uint8_t* b;
   if (0 == size) {
     numBytesAlloc += BYTE_BLOCK_SIZE;
     balanceRAM();
-    b = _CLNEW ValueArray<uint8_t>(BYTE_BLOCK_SIZE);
+    b = _CL_NEWARRAY(uint8_t, BYTE_BLOCK_SIZE);
+    memset(b,0,sizeof(uint8_t) * BYTE_BLOCK_SIZE);
   } else {
     b = *freeByteBlocks.begin();
     freeByteBlocks.remove(freeByteBlocks.begin(),true);
@@ -1205,24 +1204,25 @@ ValueArray<uint8_t>* DocumentsWriter::getByteBlock(bool trackAllocations) {
   return b;
 }
 
-void DocumentsWriter::recycleBlocks(ArrayBase<ValueArray<uint8_t>* >& blocks, int32_t end) {
+void DocumentsWriter::recycleBlocks(ArrayBase<uint8_t*>& blocks, int32_t start, int32_t end) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-  ValueArray<uint8_t>* block;
-  for(int32_t i=1;i<end;i++){
-    block = blocks.values[i];
+  uint8_t* block;
+  for(int32_t i=start;i<end;i++){
+    block = blocks[i];
     freeByteBlocks.push_back(block);
   }
 }
 
-ValueArray<TCHAR>* DocumentsWriter::getCharBlock() {
+TCHAR* DocumentsWriter::getCharBlock() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 
   const int32_t size = freeCharBlocks.size();
-  ValueArray<TCHAR>* c;
+  TCHAR* c;
   if (0 == size) {
     numBytesAlloc += CHAR_BLOCK_SIZE * CHAR_NUM_BYTE;
     balanceRAM();
-    c = _CLNEW ValueArray<TCHAR>(CHAR_BLOCK_SIZE);
+    c = _CL_NEWARRAY(TCHAR, CHAR_BLOCK_SIZE);
+    memset(c,0,sizeof(TCHAR) * CHAR_BLOCK_SIZE);
   } else{
     c = *freeCharBlocks.begin();
     freeCharBlocks.remove(freeCharBlocks.begin(),true);
@@ -1231,10 +1231,10 @@ ValueArray<TCHAR>* DocumentsWriter::getCharBlock() {
   return c;
 }
 
-void DocumentsWriter::recycleBlocks(ArrayBase<ValueArray<TCHAR>* >& blocks, int32_t numBlocks) {
+void DocumentsWriter::recycleBlocks(ArrayBase<TCHAR*>& blocks, int32_t start, int32_t numBlocks) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 
-  for(int32_t i=0;i<numBlocks;i++){
+  for(int32_t i=start;i<numBlocks;i++){
     freeCharBlocks.push_back(blocks[i]);
     blocks.values[i] = NULL;
   }
@@ -1309,7 +1309,7 @@ void DocumentsWriter::balanceRAM() {
         else
           numToFree = this->postingsFreeCountDW;
         for ( size_t i = this->postingsFreeCountDW-numToFree;i< this->postingsFreeListDW.length; i++ ){
-          _CLDELETE(this->postingsFreeListDW.values[i]);
+          this->postingsFreeListDW.values[i] = NULL; //TODO: memleak!
         }
         this->postingsFreeCountDW -= numToFree;
         this->postingsAllocCountDW -= numToFree;
@@ -1463,9 +1463,9 @@ void DocumentsWriter::ByteSliceReader::init(ByteBlockPool* _pool, int32_t _start
   this->pool = _pool;
   this->endIndex = _endIndex;
 
-  buffer = pool->buffers[bufferUpto];
   bufferUpto = _startIndex / BYTE_BLOCK_SIZE;
   bufferOffset = bufferUpto * BYTE_BLOCK_SIZE;
+  buffer = pool->buffers[bufferUpto];
   upto = _startIndex & BYTE_BLOCK_MASK;
 
   const int32_t firstSize = levelSizeArray[0];
@@ -1482,7 +1482,7 @@ uint8_t DocumentsWriter::ByteSliceReader::readByte() {
   assert (upto + bufferOffset < endIndex);
   if (upto == limit)
     nextSlice();
-  return (*buffer)[upto++];
+  return buffer[upto++];
 }
 
 int64_t DocumentsWriter::ByteSliceReader::writeTo(IndexOutput* out) {
@@ -1490,11 +1490,11 @@ int64_t DocumentsWriter::ByteSliceReader::writeTo(IndexOutput* out) {
   while(true) {
     if (limit + bufferOffset == endIndex) {
       assert (endIndex - bufferOffset >= upto);
-      out->writeBytes(buffer->values+upto, limit-upto);
+      out->writeBytes(buffer+upto, limit-upto);
       size += limit-upto;
       break;
     } else {
-      out->writeBytes(buffer->values+upto, limit-upto);
+      out->writeBytes(buffer+upto, limit-upto);
       size += limit-upto;
       nextSlice();
     }
@@ -1506,8 +1506,7 @@ int64_t DocumentsWriter::ByteSliceReader::writeTo(IndexOutput* out) {
 void DocumentsWriter::ByteSliceReader::nextSlice() {
 
   // Skip to our next slice
-  const int32_t nextIndex = (((*buffer)[limit]&0xff)<<24) + (((*buffer)[1+limit]&0xff)<<16) + (((*buffer)[2+limit]&0xff)<<8) + ((*buffer)[3+limit]&0xff);
-
+  const int32_t nextIndex = ((buffer[limit]&0xff)<<24) + ((buffer[1+limit]&0xff)<<16) + ((buffer[2+limit]&0xff)<<8) + (buffer[3+limit]&0xff);
   level = nextLevelArray[level];
   const int32_t newSize = levelSizeArray[level];
 
@@ -1533,13 +1532,13 @@ void DocumentsWriter::ByteSliceReader::readBytes(uint8_t* b, int32_t len) {
     const int32_t numLeft = limit-upto;
     if (numLeft < len) {
       // Read entire slice
-      memcpy(b, buffer->values+upto,numLeft * sizeof(uint8_t));
-      //offset += numLeft; TODO: which offset do they mean????
+      memcpy(b, buffer+upto,numLeft * sizeof(uint8_t));
+      b += numLeft;
       len -= numLeft;
       nextSlice();
     } else {
       // This slice is the last one
-      memcpy(b, buffer->values+upto,len * sizeof(uint8_t));
+      memcpy(b, buffer+upto,len * sizeof(uint8_t));
       upto += len;
       break;
     }
@@ -1551,24 +1550,23 @@ int64_t DocumentsWriter::ByteSliceReader::length() const{_CLTHROWA(CL_ERR_Runtim
 void DocumentsWriter::ByteSliceReader::seek(const int64_t pos) {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 void DocumentsWriter::ByteSliceReader::close() {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 
-DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent, int32_t _blockSize):
-    BlockPool<uint8_t>(_parent, _blockSize)
+DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent):
+  BlockPool<uint8_t>(_parent, BYTE_BLOCK_SIZE, _trackAllocations)
 {
-  this->trackAllocations = _trackAllocations;
 }
-CL_NS(util)::ValueArray<uint8_t>* DocumentsWriter::ByteBlockPool::getNewBlock(){
-    return parent->getByteBlock(trackAllocations);
+uint8_t* DocumentsWriter::ByteBlockPool::getNewBlock(bool _trackAllocations){
+  return parent->getByteBlock(_trackAllocations);
 }
 int32_t DocumentsWriter::ByteBlockPool::newSlice(const int32_t size) {
   if (tUpto > BYTE_BLOCK_SIZE-size)
     nextBuffer();
   const int32_t upto = tUpto;
   tUpto += size;
-  buffer->values[tUpto-1] = 16;
+  buffer[tUpto-1] = 16;
   return upto;
 }
 
-int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8_t>& slice, const int32_t upto) {
+int32_t DocumentsWriter::ByteBlockPool::allocSlice(uint8_t* slice, const int32_t upto) {
   const int32_t level = slice[upto] & 15;
   assert(level < 10);
   const int32_t newLevel = nextLevelArray[level];
@@ -1584,20 +1582,55 @@ int32_t DocumentsWriter::ByteBlockPool::allocSlice(CL_NS(util)::ValueArray<uint8
 
   // Copy forward the past 3 bytes (which we are about
   // to overwrite with the forwarding address):
-  (*buffer)[newUpto] = slice[upto-3];
-  (*buffer)[newUpto+1] = slice[upto-2];
-  (*buffer)[newUpto+2] = slice[upto-1];
+  buffer[newUpto] = slice[upto-3];
+  buffer[newUpto+1] = slice[upto-2];
+  buffer[newUpto+2] = slice[upto-1];
 
   // Write forwarding address at end of last slice:
-  slice.values[upto-3] = (uint8_t) (offset >> 24); //offset is unsigned...
-  slice.values[upto-2] = (uint8_t) (offset >> 16);
-  slice.values[upto-1] = (uint8_t) (offset >> 8);
-  slice.values[upto] = (uint8_t) offset;
+  slice[upto-3] = (uint8_t) (offset >> 24); //offset is unsigned...
+  slice[upto-2] = (uint8_t) (offset >> 16);
+  slice[upto-1] = (uint8_t) (offset >> 8);
+  slice[upto] = (uint8_t) offset;
 
   // Write new level:
-  buffer->values[tUpto-1] = (uint8_t) (16|newLevel);
+  buffer[tUpto-1] = (uint8_t) (16|newLevel);
 
   return newUpto+3;
+}
+void DocumentsWriter::ByteBlockPool::reset() {
+  if (bufferUpto != -1) {
+    // We allocated at least one buffer
+
+    for(int i=0;i<bufferUpto;i++)
+      // Fully zero fill buffers that we fully used
+      memset(buffers.values[i], 0, BYTE_BLOCK_SIZE );
+
+    // Partial zero fill the final buffer
+    memset(buffers.values[bufferUpto], 0, tUpto);
+      
+    if (bufferUpto > 0)
+      // Recycle all but the first buffer
+      parent->recycleBlocks(buffers, 1, 1+bufferUpto);
+
+    // Re-use the first buffer
+    bufferUpto = 0;
+    tUpto = 0;
+    tOffset = 0;
+    buffer = buffers[0];
+  }
+}
+DocumentsWriter::CharBlockPool::CharBlockPool(DocumentsWriter* _parent):
+    BlockPool<TCHAR>(_parent, CHAR_BLOCK_SIZE, false)
+{
+}
+TCHAR* DocumentsWriter::CharBlockPool::getNewBlock(bool){
+    return parent->getCharBlock();
+}
+void DocumentsWriter::CharBlockPool::reset() {
+  parent->recycleBlocks(buffers, 0, 1+bufferUpto);
+  bufferUpto = -1;
+  tUpto = blockSize;
+  tOffset = -blockSize;
 }
 
 CL_NS_END
