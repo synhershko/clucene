@@ -14,7 +14,7 @@ CL_NS_DEF2(analysis,snowball)
  * {@link EnglishStemmer} is named "English".
  */
 class CLUCENE_CONTRIBS_EXPORT SnowballAnalyzer: public Analyzer {
-  const TCHAR* language;
+  TCHAR* language;
   CLTCSetList* stopSet;
 
 public:

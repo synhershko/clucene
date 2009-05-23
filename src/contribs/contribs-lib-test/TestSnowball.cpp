@@ -10,14 +10,14 @@ void testSnowball(CuTest *tc) {
 
     TokenStream* ts = an.tokenStream(_T("test"), &reader);
     Token t;
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t)!=NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("he")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t)!=NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("abhor")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t)!=NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("accent")) == 0);
 
-    CLUCENE_ASSERT(ts->next(&t) == false);
+    CLUCENE_ASSERT(ts->next(&t) == NULL);
     _CLDELETE(ts);
 }
 

@@ -43,7 +43,7 @@ class CLUCENE_CONTRIBS_EXPORT QueryScorer : public HighlightScorer
 {
 private:
 	TextFragment * _currentTextFragment;
-	CL_NS(util)::CLHashSet<const TCHAR*,
+	CL_NS(util)::CLHashSet<TCHAR*,
 		CL_NS(util)::Compare::TChar,
 		CL_NS(util)::Deletor::tcArray> _uniqueTermsInFragment;
 	float_t _totalScore;
@@ -51,7 +51,7 @@ private:
 	CL_NS(util)::CLHashMap<const TCHAR*, const WeightedTerm *,
 		CL_NS(util)::Compare::TChar,
 		CL_NS(util)::Equals::TChar,
-		CL_NS(util)::Deletor::tcArray,
+		CL_NS(util)::Deletor::Dummy,
 		CL_NS(util)::Deletor::Object<const WeightedTerm> > _termsToFind;
 
 public:

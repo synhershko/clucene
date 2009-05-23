@@ -28,7 +28,7 @@ public:
 	~SnowballFilter();
 
     /** Returns the next input Token, after being stemmed */
-    bool next(Token* token);
+    Token* next(Token* token);
 };
 
 CL_NS_END2
