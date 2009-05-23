@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Query.h"
 #include "MatchAllDocsQuery.h"
+#include "Explanation.h"
 
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/StringBuffer.h"
@@ -89,19 +90,17 @@ Scorer* MatchAllDocsQuery::MatchAllDocsWeight::scorer(CL_NS(index)::IndexReader*
 	return _CLNEW MatchAllScorer(reader, similarity, this);
 }
 
-void MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret) {
+void MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* queryExpl) {
 	// explain query weight
-	/*
-	TODO:
-	Explanation queryExpl = _CLNEW ComplexExplanation
-	(true, getValue(), _T("MatchAllDocsQuery, product of:"));
-	if (getBoost() != 1.0f) {
-	queryExpl->addDetail(new Explanation(getBoost(),"boost"));
+	//Explanation* queryExpl = new ComplexExplanation(true, getValue(), _T("MatchAllDocsQuery, product of:"));
+	queryExpl->setDescription(_T("MatchAllDocsQuery, product of:"));
+	queryExpl->setValue(getValue());
+	// TODO: queryExpl->setMatch(true); 
+	if (_enclosingInstance->getBoost() != 1.0f) {
+		queryExpl->addDetail(new Explanation(_enclosingInstance->getBoost(),_T("boost")));
 	}
-	queryExpl->addDetail(new Explanation(queryNorm,"queryNorm"));
-
-	return queryExpl;
-	*/
+	queryExpl->addDetail(new Explanation(queryNorm,_T("queryNorm")));
+	//return queryExpl;
 }
 
 MatchAllDocsQuery::MatchAllDocsQuery(){}
