@@ -7,7 +7,6 @@
 #ifndef _lucene_search_Scorer_
 #define _lucene_search_Scorer_
 
-
 CL_CLASS_DEF(search,Similarity)
 CL_CLASS_DEF(search,HitCollector)
 CL_CLASS_DEF(search,Explanation)

@@ -11,6 +11,7 @@
 #include "SearchHeader.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/index/Terms.h"
+#include "_PhraseQueue.h"
 #include "_PhraseScorer.h"
 
 CL_NS_USE(index)
@@ -18,9 +19,10 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-	PhraseScorer::PhraseScorer(Weight* weight, TermPositions** tps, 
-		int32_t* offsets, Similarity* similarity, uint8_t* norms):
-		Scorer(similarity)
+	PhraseScorer::PhraseScorer(Weight* _weight, TermPositions** tps, 
+		int32_t* offsets, Similarity* similarity, uint8_t* _norms):
+		Scorer(similarity), weight(_weight), norms(_norms), value(_weight->getValue()), firstTime(true), more(true),
+			first(NULL), last(NULL)
 	{
 	//Func - Constructor
 	//Pre  - tps != NULL and is an array of TermPositions
@@ -34,17 +36,7 @@ CL_NS_DEF(search)
 		//phraseFreq should only return more than 0.0 if norms != NULL
 		//CND_PRECONDITION(n != NULL,"n is NULL");
 
-		firstTime = true;
-		more = true;
-		this->norms = norms;
-		this->weight = weight;
-		this->value = weight->getValue();
-
-		//reset internal pointers
-		first   = NULL;
-		last    = NULL;
-
-		// use pq to build a sorted list of PhrasePositions
+		// convert tps to a list of phrase positions.
 		// note: phrase-position differs from term-position in that its position
 		// reflects the phrase offset: pp.pos = tp.pos - offset.
 		// this allows to easily identify a matching (exact) phrase 
@@ -77,8 +69,8 @@ CL_NS_DEF(search)
 		//having been transferred by pqToList() to the linked list starting with
 		//first.  The nodes of that linked list are deleted by the destructor of
 		//first, rather than the destructor of pq.
-		_CLDELETE(first);
-		_CLDELETE(pq);
+		_CLLDELETE(first);
+		_CLLDELETE(pq);
 	}
 
 	bool PhraseScorer::next(){
@@ -140,8 +132,6 @@ CL_NS_DEF(search)
 			pq->put(pp);
 		pqToList();
 	}
-
-
 
 	void PhraseScorer::pqToList(){
 	//Func - Transfers the PhrasePositions from the PhraseQueue pq to
@@ -227,5 +217,7 @@ CL_NS_DEF(search)
 
 		return buf.toString();
 	}
+
+	int32_t PhraseScorer::doc() const { return first->doc; }
 
 CL_NS_END

@@ -15,36 +15,67 @@ CL_CLASS_DEF(search,Similarity)
 
 CL_NS_DEF(search)
     
-	class TermScorer: public Scorer {
-	private:
-		CL_NS(index)::TermDocs* termDocs;
-		uint8_t* norms;
-		Weight* weight;
-		const float_t weightValue;
-		int32_t _doc;
+/** Expert: A <code>Scorer</code> for documents matching a <code>Term</code>.
+*/
+class TermScorer: public Scorer {
+private:
+	CL_NS(index)::TermDocs* termDocs;
+	uint8_t* norms;
+	Weight* weight;
+	const float_t weightValue;
+	int32_t _doc;
 
-		int32_t docs[32];	  // buffered doc numbers
-		int32_t freqs[32];	  // buffered term freqs
-		int32_t pointer;
-		int32_t pointerMax;
+	int32_t docs[32];	  // buffered doc numbers
+	int32_t freqs[32];	  // buffered term freqs
+	int32_t pointer;
+	int32_t pointerMax;
 
-		float_t scoreCache[LUCENE_SCORE_CACHE_SIZE];
-	public:
+	float_t scoreCache[LUCENE_SCORE_CACHE_SIZE];
+public:
 
-		//TermScorer takes TermDocs and delets it when TermScorer is cleaned up
-		TermScorer(Weight* weight, CL_NS(index)::TermDocs* td, 
-				Similarity* similarity, uint8_t* _norms);
+	/** Construct a <code>TermScorer</code>.
+	* @param weight The weight of the <code>Term</code> in the query.
+	* @param td An iterator over the documents matching the <code>Term</code>.
+	* @param similarity The </code>Similarity</code> implementation to be used for score computations.
+	* @param norms The field norms of the document fields for the <code>Term</code>.
+	*
+	* @memory TermScorer takes TermDocs and deletes it when TermScorer is cleaned up */
+	TermScorer(Weight* weight, CL_NS(index)::TermDocs* td, 
+		Similarity* similarity, uint8_t* _norms);
 
-		~TermScorer();
+	virtual ~TermScorer();
 
-		int32_t doc() const { return _doc; }
+	/** Returns the current document number matching the query.
+	* Initially invalid, until {@link #next()} is called the first time.
+	*/
+	int32_t doc() const;
 
-		bool next();
-		bool skipTo(int32_t target);
-		void explain(int32_t doc, Explanation* ret);
-		virtual TCHAR* toString();
+	/** Advances to the next document matching the query.
+	* <br>The iterator over the matching documents is buffered using
+	* {@link TermDocs#read(int[],int[])}.
+	* @return true iff there is another document matching the query.
+	*/
+	bool next();
 
-		float_t score();
-    };
+	float_t score();
+
+	/** Skips to the first match beyond the current whose document number is
+	* greater than or equal to a given target. 
+	* <br>The implementation uses {@link TermDocs#skipTo(int)}.
+	* @param target The target document number.
+	* @return true iff there is such a match.
+	*/
+	bool skipTo(int32_t target);
+
+	/** Returns an explanation of the score for a document.
+	* <br>When this method is used, the {@link #next()} method
+	* and the {@link #score(HitCollector)} method should not be used.
+	* @param doc The document number for the explanation.
+	*/
+	void explain(int32_t doc, Explanation* ret);
+
+	/** Returns a string representation of this <code>TermScorer</code>. */
+	virtual TCHAR* toString();
+};
 CL_NS_END
 #endif

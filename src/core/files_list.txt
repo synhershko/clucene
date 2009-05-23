@@ -51,7 +51,7 @@ WORKING BEN	index\ConcurrentMergeScheduler.java
 ?	index\CorruptIndexException.java
 DONE ISH	index\DefaultSkipListReader.java
 WORKING BEN	index\DefaultSkipListWriter.java
-WORKING JW	index\DirectoryIndexReader.java
+?	index\DirectoryIndexReader.java
 WORKING BEN	index\DocumentsWriter.java
 DONE ISH	index\FieldInfos.java
 ?	index\FieldReaderException.java
@@ -59,9 +59,9 @@ DONE ISH	index\FieldSortedTermVectorMapper.java
 PARTIAL ISH	index\FieldsReader.java
 WORKING BEN	index\FieldsWriter.java
 ?	index\FilterIndexReader.java
-WORKING JW	index\IndexCommitPoint.java
-WORKING JW	index\IndexDeletionPolicy.java
-WORKING JW	index\IndexFileDeleter.java
+?	index\IndexCommitPoint.java
+?	index\IndexDeletionPolicy.java
+?	index\IndexFileDeleter.java
 ?	index\IndexFileNameFilter.java
 DONE JW	index\IndexFileNames.java
 ?	index\IndexModifier.java
@@ -76,10 +76,10 @@ WORKING BEN	index\MergeScheduler.java
 DONE ISH	index\MultiLevelSkipListReader.java
 WORKING BEN?	index\MultiLevelSkipListWriter.java
 WORKING ISH	index\MultiReader.java
-WORKING JW	index\MultiSegmentReader.java
-WORKING JW	index\ParallelReader.java
+?	index\MultiSegmentReader.java
+?	index\ParallelReader.java
 DONE ISH	index\Payload.java
-WORKING JW	index\PositionBasedTermVectorMapper.java
+?	index\PositionBasedTermVectorMapper.java
 PARTIAL ISH	index\SegmentInfo.java				- Almost done. The files() functionality is missing, will need to implement it when porting code that uses it.
 PARTIAL ISH	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
 WORKING BEN	index\SegmentMerger.java
@@ -90,7 +90,7 @@ DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
 DONE ISH	index\SegmentTermPositionVector.java
 WORKING BEN	index\SerialMergeScheduler.java
 WORKING BEN	index\SnapshotDeletionPolicy.java
-WORKING JW	index\SortedTermVectorMapper.java
+?	index\SortedTermVectorMapper.java
 ?	index\StaleReaderException.java
 ?	index\TermBuffer.java
 PARTIAL ISH index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
@@ -113,7 +113,7 @@ DONE ISH	index\TermFreqVector.java
 DONE ISH	index\TermInfo.java
 DONE ISH	index\TermPositions.java
 DONE ISH	index\TermPositionVector.java
-?	LucenePackage.java
+---	LucenePackage.java
 DONE ISH	queryParser\CharStream.java
 DONE ISH	queryParser\FastCharStream.java
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
@@ -137,7 +137,7 @@ DONE ISH	search\ComplexExplanation.java
 ?	search\DisjunctionMaxQuery.java
 ?	search\DisjunctionMaxScorer.java
 ?	search\DisjunctionSumScorer.java
-?	search\ExactPhraseScorer.java
+DONE ISH	search\ExactPhraseScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
@@ -180,7 +180,7 @@ DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
 ?	search\PhraseQueue.java
-?	search\PhraseScorer.java
+DONE ISH	search\PhraseScorer.java
 ?	search\PrefixFilter.java			- Implemented. Need to check if PrefixGenerator and IdGenerator can be left behind, or they are a good improvement
 DONE ISH	search\PrefixQuery.java
 DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
@@ -200,7 +200,7 @@ DONE ISH	search\Scorer.java
 ?	search\Searcher.java
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
-?	search\SloppyPhraseScorer.java
+DONE ISH	search\SloppyPhraseScorer.java		- Requires testing due to new scoring code
 ?	search\Sort.java
 ?	search\SortComparator.java
 ?	search\SortComparatorSource.java
@@ -221,7 +221,7 @@ DONE ISH	search\Scorer.java
 ?	search\spans\SpanWeight.java
 ?	search\spans\TermSpans.java
 ?	search\TermQuery.java
-?	search\TermScorer.java
+PARTIAL	search\TermScorer.java				- Missing implementations of score(HitCollector) and score(HitCollector,int)
 ?	search\TopDocCollector.java
 ?	search\TopDocs.java
 ?	search\TopFieldDocCollector.java
