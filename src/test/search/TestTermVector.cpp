@@ -112,13 +112,21 @@ void setupDoc(Document& doc, const TCHAR* text)
 	doc.add(*new Field(_T("field"), text, Field::STORE_YES |
 		Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES));
 }
+struct __TCharCompare
+{
+  bool operator()(const TCHAR* s1, const TCHAR* s2) const
+  {
+    return _tcscmp(s1, s2) < 0;
+  }
+};
+
 void testKnownSetOfDocuments(CuTest *tc) {
     const TCHAR* test1 = _T("eating chocolate in a computer lab"); //6 terms
     const TCHAR* test2 = _T("computer in a computer lab"); //5 terms
     const TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
     const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
     
-    typedef std::map<const TCHAR*, int32_t> test4MapType;
+    typedef std::map<const TCHAR*, int32_t, __TCharCompare> test4MapType;
     test4MapType test4Map;
     test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("chocolate"), 3) );
     test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("lab"), 2) );
