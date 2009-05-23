@@ -87,6 +87,7 @@ public:
 		else 
 			return itr->second;
 	}
+	/*
 	///using a non-const key, get the actual key
 	_kt getKey( _kt k) const {
 		const_iterator itr = base::find(k);
@@ -94,7 +95,7 @@ public:
 			return NULL;
 		else 
 			return itr->first;
-	}
+	}*/
 
 	void removeitr (iterator itr, const bool dontDeleteKey = false, const bool dontDeleteValue = false){
 		//delete key&val first. This prevents potential loops (deleting object removes itself)
