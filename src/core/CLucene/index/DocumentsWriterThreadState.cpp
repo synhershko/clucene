@@ -50,9 +50,9 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ValueArray<PostingVector*>(1)),
   allFieldDataArray(ValueArray<FieldData*>(10)),
-  postingsPool( _CLNEW ByteBlockPool(true, __parent, BYTE_BLOCK_SIZE) ),
-  vectorsPool( _CLNEW ByteBlockPool(false, __parent, BYTE_BLOCK_SIZE) ),
-  charPool( _CLNEW CharBlockPool(__parent, CHAR_BLOCK_SIZE) ),
+  postingsPool( _CLNEW ByteBlockPool(true, __parent) ),
+  vectorsPool( _CLNEW ByteBlockPool(false, __parent) ),
+  charPool( _CLNEW CharBlockPool(__parent) ),
   _parent(__parent)
 {
   fieldDataHashMask = 15;
@@ -338,11 +338,11 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
   }
 }
 
-void DocumentsWriter::ThreadState::doPostingSort(ValueArray<Posting*>& postings, int32_t numPosting) {
+void DocumentsWriter::ThreadState::doPostingSort(Posting** postings, int32_t numPosting) {
   quickSort(postings, 0, numPosting-1);
 }
 
-void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting*>& postings, int32_t lo, int32_t hi) {
+void DocumentsWriter::ThreadState::quickSort(Posting** postings, int32_t lo, int32_t hi) {
   if (lo >= hi)
     return;
 
@@ -350,19 +350,19 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting*>& postings, int
 
   if (comparePostings(postings[lo], postings[mid]) > 0) {
     Posting* tmp = postings[lo];
-    postings.values[lo] = postings[mid];
-    postings.values[mid] = tmp;
+    postings[lo] = postings[mid];
+    postings[mid] = tmp;
   }
 
   if (comparePostings(postings[mid], postings[hi]) > 0) {
     Posting* tmp = postings[mid];
-    postings.values[mid] = postings[hi];
-    postings.values[hi] = tmp;
+    postings[mid] = postings[hi];
+    postings[hi] = tmp;
 
     if (comparePostings(postings[lo], postings[mid]) > 0) {
       Posting* tmp2 = postings[lo];
-      postings.values[lo] = postings[mid];
-      postings.values[mid] = tmp2;
+      postings[lo] = postings[mid];
+      postings[mid] = tmp2;
     }
   }
 
@@ -383,8 +383,8 @@ void DocumentsWriter::ThreadState::quickSort(ValueArray<Posting*>& postings, int
 
     if (left < right) {
       Posting* tmp = postings[left];
-      postings.values[left] = postings[right];
-      postings.values[right] = tmp;
+      postings[left] = postings[right];
+      postings[right] = tmp;
       --right;
     } else {
       break;
@@ -554,7 +554,7 @@ void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
   String getPostingText() {
   TCHAR* text = charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
   int32_t upto = p->textStart & CHAR_BLOCK_MASK;
-  while((*text)[upto] != 0xffff)
+  while((*text)[upto] != CLUCENE_END_OF_WORD)
   upto++;
   return new String(text, p->textStart, upto-(p->textStart & BYTE_BLOCK_MASK));
   }
@@ -562,35 +562,34 @@ void DocumentsWriter::ThreadState::processDocument(Analyzer* analyzer)
 
 bool DocumentsWriter::ThreadState::postingEquals(const TCHAR* tokenText, const int32_t tokenTextLen) {
 
-  const CL_NS(util)::ValueArray<TCHAR>* _text = charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
-  assert (_text != NULL);
-  const CL_NS(util)::ValueArray<TCHAR>& text = *_text;
+  const TCHAR* text = charPool->buffers[p->textStart >> CHAR_BLOCK_SHIFT];
+  assert (text != NULL);
   int32_t pos = p->textStart & CHAR_BLOCK_MASK;
 
   int32_t tokenPos = 0;
   for(;tokenPos<tokenTextLen;pos++,tokenPos++)
     if (tokenText[tokenPos] != text[pos])
       return false;
-  return 0xffff == text[pos];
+  return CLUCENE_END_OF_WORD == text[pos];
 }
 
 int32_t DocumentsWriter::ThreadState::comparePostings(Posting* p1, Posting* p2) {
-  const TCHAR* pos1 = (charPool->buffers[p1->textStart >> CHAR_BLOCK_SHIFT]->values) + (p1->textStart & CHAR_BLOCK_MASK);
-  const TCHAR* pos2 = (charPool->buffers[p2->textStart >> CHAR_BLOCK_SHIFT]->values) + (p2->textStart & CHAR_BLOCK_MASK);
+  const TCHAR* pos1 = charPool->buffers[p1->textStart >> CHAR_BLOCK_SHIFT] + (p1->textStart & CHAR_BLOCK_MASK);
+  const TCHAR* pos2 = charPool->buffers[p2->textStart >> CHAR_BLOCK_SHIFT] + (p2->textStart & CHAR_BLOCK_MASK);
   while(true) {
     const TCHAR c1 = *pos1++;
     const TCHAR c2 = *pos2++;
     if (c1 < c2)
-      if (0xffff == c2)
+      if (CLUCENE_END_OF_WORD == c2)
         return 1;
       else
         return -1;
     else if (c2 < c1)
-      if (0xffff == c1)
+      if (CLUCENE_END_OF_WORD == c1)
         return -1;
       else
         return 1;
-    else if (0xffff == c1)
+    else if (CLUCENE_END_OF_WORD == c1)
       return 0;
   }
 }
@@ -615,38 +614,38 @@ void DocumentsWriter::ThreadState::writeProxVInt(int32_t vi) {
 
 void DocumentsWriter::ThreadState::writeFreqByte(uint8_t b) {
   assert (freq != NULL);
-  if ((*freq)[freqUpto] != 0) {
-    freqUpto = postingsPool->allocSlice((*freq), freqUpto);
+  if (freq[freqUpto] != 0) {
+    freqUpto = postingsPool->allocSlice(freq, freqUpto);
     freq = postingsPool->buffer;
     p->freqUpto = postingsPool->tOffset;
   }
-  (*freq)[freqUpto++] = b;
+  freq[freqUpto++] = b;
 }
 
 void DocumentsWriter::ThreadState::writeProxByte(uint8_t b) {
   assert (prox != NULL);
-  if ((*prox)[proxUpto] != 0) {
-    proxUpto = postingsPool->allocSlice(*prox, proxUpto);
+  if (prox[proxUpto] != 0) {
+    proxUpto = postingsPool->allocSlice(prox, proxUpto);
     prox = postingsPool->buffer;
     p->proxUpto = postingsPool->tOffset;
     assert (prox != NULL);
   }
-  prox->values[proxUpto++] = b;
-  assert (proxUpto != prox->length);
+  prox[proxUpto++] = b;
+  assert (proxUpto != DocumentsWriter::BYTE_BLOCK_SIZE);
 }
 
 void DocumentsWriter::ThreadState::writeProxBytes(uint8_t* b, int32_t offset, int32_t len) {
   const int32_t offsetEnd = offset + len;
   while(offset < offsetEnd) {
-    if ((*prox)[proxUpto] != 0) {
+    if (prox[proxUpto] != 0) {
       // End marker
-      proxUpto = postingsPool->allocSlice(*prox, proxUpto);
+      proxUpto = postingsPool->allocSlice(prox, proxUpto);
       prox = postingsPool->buffer;
       p->proxUpto = postingsPool->tOffset;
     }
 
-    prox->values[proxUpto++] = b[offset++];
-    assert (proxUpto != prox->length);
+    prox[proxUpto++] = b[offset++];
+    assert (proxUpto != DocumentsWriter::BYTE_BLOCK_SIZE);
   }
 }
 
@@ -661,12 +660,12 @@ void DocumentsWriter::ThreadState::writeOffsetVInt(int32_t vi) {
 
 void DocumentsWriter::ThreadState::writeOffsetByte(uint8_t b) {
   assert (offsets != NULL);
-  if ((*offsets)[offsetUpto] != 0) {
-    offsetUpto = vectorsPool->allocSlice(*offsets, offsetUpto);
+  if (offsets[offsetUpto] != 0) {
+    offsetUpto = vectorsPool->allocSlice(offsets, offsetUpto);
     offsets = vectorsPool->buffer;
     vector->offsetUpto = vectorsPool->tOffset;
   }
-  (*offsets)[offsetUpto++] = b;
+  offsets[offsetUpto++] = b;
 }
 
 void DocumentsWriter::ThreadState::writePosVInt(int32_t vi) {
@@ -680,12 +679,12 @@ void DocumentsWriter::ThreadState::writePosVInt(int32_t vi) {
 
 void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
   assert (pos != NULL);
-  if ((*pos)[posUpto] != 0) {
-    posUpto = vectorsPool->allocSlice(*pos, posUpto);
+  if (pos[posUpto] != 0) {
+    posUpto = vectorsPool->allocSlice(pos, posUpto);
     pos = vectorsPool->buffer;
     vector->posUpto = vectorsPool->tOffset;
   }
-  (*pos)[posUpto++] = b;
+  pos[posUpto++] = b;
 }
 
 
@@ -755,7 +754,7 @@ void DocumentsWriter::ThreadState::FieldData::compactPostings() {
 
 CL_NS(util)::ValueArray<DocumentsWriter::Posting*>* DocumentsWriter::ThreadState::FieldData::sortPostings() {
   compactPostings();
-  threadState->doPostingSort(postingsHash, numPostings);
+  threadState->doPostingSort(postingsHash.values, numPostings);
   return &postingsHash;
 }
 
@@ -1103,7 +1102,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
         }
         threadState->charPool->nextBuffer();
       }
-      TCHAR* text = threadState->charPool->buffer->values;
+      TCHAR* text = threadState->charPool->buffer;
       TCHAR* textUpto = text+ threadState->charPool->tUpto;
 
       // Pull next free Posting from free list
@@ -1113,7 +1112,7 @@ void DocumentsWriter::ThreadState::FieldData::addPosition(Token* token) {
       threadState->charPool->tUpto += textLen1;
 
       _tcsncpy(textUpto, tokenText, tokenTextLen);
-      textUpto[tokenTextLen] = 0xffff;
+      textUpto[tokenTextLen] = CLUCENE_END_OF_WORD;
 
       assert (postingsHash[hashPos] == NULL);
 
@@ -1196,9 +1195,9 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
   for(int32_t i=0;i<postingsHashSize;i++) {
     p0 = postingsHash[i];
     if (p0 != NULL) {
-      start = threadState->charPool->buffers[p0->textStart >> CHAR_BLOCK_SHIFT]->values + (p0->textStart & CHAR_BLOCK_MASK);
+      start = threadState->charPool->buffers[p0->textStart >> CHAR_BLOCK_SHIFT] + (p0->textStart & CHAR_BLOCK_MASK);
       pos = start;
-      while( *pos != 0xffff)
+      while( *pos != CLUCENE_END_OF_WORD)
         pos++;
       code = 0;
       while (pos > start)
@@ -1255,7 +1254,7 @@ assert(false);//test me...
     const int32_t freq = posting->docFreq;
 
     int32_t prefix = 0;
-    const TCHAR* text2 = threadState->charPool->buffers[posting->textStart >> CHAR_BLOCK_SHIFT]->values;
+    const TCHAR* text2 = threadState->charPool->buffers[posting->textStart >> CHAR_BLOCK_SHIFT];
     const TCHAR* start2 = text2 + (posting->textStart & CHAR_BLOCK_MASK);
     const TCHAR* pos2 = start2;
 
@@ -1264,11 +1263,11 @@ assert(false);//test me...
     if (lastPosting == NULL)
       prefix = 0;
     else {
-      const TCHAR* text1 = threadState->charPool->buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT]->values;
+      const TCHAR* text1 = threadState->charPool->buffers[lastPosting->textStart >> CHAR_BLOCK_SHIFT];
       const TCHAR* start1 = text1 + (lastPosting->textStart & CHAR_BLOCK_MASK);
       const TCHAR* pos1 = start1;
       while(true) {
-        if (*pos1 != *pos2 || *pos1 == 0xffff) {
+        if (*pos1 != *pos2 || *pos1 == CLUCENE_END_OF_WORD) {
           prefix = pos1-start1;
           break;
         }
@@ -1279,7 +1278,7 @@ assert(false);//test me...
     lastPosting = posting;
 
     // Compute length
-    while(*pos2 != 0xffff)
+    while(*pos2 != CLUCENE_END_OF_WORD)
       pos2++;
 
     const int32_t suffix = pos2 - start2 - prefix;

@@ -339,15 +339,19 @@ string SegmentInfo::segString(Directory* dir) {
    }
 
    SegmentInfo* SegmentInfo::clone () {
-	   SegmentInfo* si = _CLNEW SegmentInfo(name.c_str(), docCount, dir, false, hasSingleNormFile,
-		   docStoreOffset, docStoreSegment.c_str(), docStoreIsCompoundFile);
+	   SegmentInfo* si = _CLNEW SegmentInfo(name.c_str(), docCount, dir);
 	   si->isCompoundFile = isCompoundFile;
 	   si->delGen = delGen;
 	   si->preLockless = preLockless;
+	   si->hasSingleNormFile = hasSingleNormFile;
 	   if (this->normGen.values != NULL) {
        si->normGen.resize(this->normGen.length);
        memcpy(si->normGen.values, this->normGen.values, sizeof(int64_t) * this->normGen.length);
 	   }
+     si->docStoreOffset = docStoreOffset;
+     si->docStoreSegment = docStoreSegment;
+     si->docStoreIsCompoundFile = docStoreIsCompoundFile;
+
 	   return si;
    }
 

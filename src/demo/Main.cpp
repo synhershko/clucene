@@ -41,7 +41,7 @@ int main( int32_t argc, char** argv ){
 	try{
 
 		const char* ndx = "d:/git_lucene232/testindex";
-    //IndexFiles("d:\\git_lucene232\\clucene\\src\\test\\data\\reuters-21578", ndx, true);
+    IndexFiles("d:\\git_lucene232\\lucene2_3_2\\src\\test\\data\\reuters-21578", ndx, true);
 		//getStats(ndx);
 		SearchFiles(ndx);
 

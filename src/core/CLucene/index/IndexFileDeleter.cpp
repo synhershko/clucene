@@ -248,10 +248,7 @@ void IndexFileDeleter::deleteCommits() {
       if (infoStream != NULL) {
         message("deleteCommits: now remove commit \"" + commit->getSegmentsFileName() + "\"");
       }
-      int32_t size2 = commit->files.size();
-      for(int32_t j=0;j<size2;j++) {
-        decRef(commit->files[j]);
-      }
+      decRef(commit->files);
     }
     commitsToDelete.clear();
 
@@ -264,7 +261,11 @@ void IndexFileDeleter::deleteCommits() {
       if (!commit->deleted) {
         if (writeTo != readFrom) {
           commits.remove(readFrom,true);
-          commits[writeTo] = commit;
+          commits.remove(writeTo,true);//todo: memleak
+          if ( commits.size() == writeTo )
+            commits.push_back(commit);
+          else
+            commits[writeTo] = commit;
         }
         writeTo++;
       }
@@ -272,7 +273,7 @@ void IndexFileDeleter::deleteCommits() {
     }
 
     while(size > writeTo) {
-      commits.delete_back();
+      commits.remove(size-1);
       size--;
     }
   }

@@ -26,7 +26,7 @@ void SearchFiles(const char* index){
 	standard::StandardAnalyzer analyzer;
 	char line[80];
 	TCHAR tline[80];
-	const TCHAR* buf;
+	TCHAR* buf;
 
   IndexReader* reader = IndexReader::open(index);
   while (true) {
