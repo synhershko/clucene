@@ -155,8 +155,22 @@ For example:
 # DMALLOC_OPTIONS=medium,log=dmalloc.log.txt
 # export DMALLOC_OPTIONS
 
+UPDATE: when i upgrade my machine to Ubuntu 9.04, dmalloc stopped working (caused
+clucene to crash).
+
+Performance with callgrind
+--------------------------
+Really simple
+
+valgrind --tool=callgrind <command: e.g. bin/cl_test>
+this will create a file like callgrind.out.12345. you can open this with kcachegrind or some
+tool like that.
+
+
 Performance with gprof
 ----------------------
+Note: I recommend callgrind, it works much better.
+
 Compile with gprof turned on (ENABLE_GPROF in cmake gui or using ccmake).
 I've found (at least on windows cygwin) that gprof wasn't working over
 dll boundaries, running the cl_test-pedantic monolithic build worked better.
