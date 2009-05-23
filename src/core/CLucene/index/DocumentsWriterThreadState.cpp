@@ -1225,7 +1225,6 @@ void DocumentsWriter::ThreadState::FieldData::rehashPostings(const int32_t newSi
 }
 
 void DocumentsWriter::ThreadState::FieldData::writeVectors(FieldInfo* fieldInfo) {
-assert(false);//test me...
   assert (fieldInfo->storeTermVector);
 
   threadState->vectorFieldNumbers.values[threadState->numVectorFields] = fieldInfo->number;
