@@ -341,10 +341,9 @@ CuSuite *testreuters(void)
 
     SUITE_ADD_TEST(suite, testReuters);
     //SUITE_ADD_TEST(suite, testByteForByte); this test rarely works currently, use more robust by section test...
-    SUITE_ADD_TEST(suite, testBySection);
+    //SUITE_ADD_TEST(suite, testBySection);
     
     //we still do this, but it'll be slow because the 'threads' will be run serially.
-    
     SUITE_ADD_TEST(suite, testThreaded);
     return suite; 
 }
