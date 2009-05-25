@@ -900,7 +900,7 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
   if (stopMerges)
     return;
 
-  const MergePolicy::MergeSpecification* spec;
+  MergePolicy::MergeSpecification* spec;
   if (optimize) {
     spec = mergePolicy->findMergesForOptimize(segmentInfos, this, maxNumSegmentsOptimize, *segmentsToOptimize);
 
@@ -921,6 +921,7 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
     for(int32_t i=0;i<numMerges;i++)
       registerMerge(spec->merges[i]);
   }
+  _CLDELETE(spec);
 }
 
 MergePolicy::OneMerge* IndexWriter::getNextMerge() {

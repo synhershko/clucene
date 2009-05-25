@@ -84,6 +84,9 @@ DocumentsWriter::ThreadState::~ThreadState(){
   _CLDELETE(postingsPool);
   _CLDELETE(vectorsPool);
   _CLDELETE(charPool);
+  _CLDELETE(stringReader);
+  _CLDELETE(tvfLocal);
+  _CLDELETE(fdtLocal);
 }
 
 void DocumentsWriter::ThreadState::resetPostings() {

@@ -198,6 +198,7 @@ protected:
 	bool ownValue;
 	int64_t pos;
 	size_t m_size;
+  size_t buffer_size;
 public:
   StringReader ( const TCHAR* value, const int32_t length = -1, bool copyData = true );
   void init ( const TCHAR* value, const int32_t length, bool copyData = true );

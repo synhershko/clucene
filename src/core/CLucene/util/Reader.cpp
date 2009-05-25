@@ -27,21 +27,36 @@
 
 CL_NS_DEF(util)
 
-StringReader::StringReader ( const TCHAR* value, const int32_t length, bool copyData )
+StringReader::StringReader ( const TCHAR* _value, const int32_t _length, bool copyData )
 {
-	this->init(value,length,copyData);
+  this->m_size = 0;
+  this->value = NULL;
+  this->ownValue = true;
+  this->buffer_size = 0;
+	this->init(_value,_length,copyData);
 }
 
-void StringReader::init ( const TCHAR* value, const int32_t length, bool copyData ){
-  this->m_size = ( length < 0 ? _tcslen(value) : length );
+void StringReader::init ( const TCHAR* _value, const int32_t _length, bool copyData ){
+  const int32_t length = ( _length < 0 ? _tcslen(_value) : _length );
 	this->pos = 0;
 	if ( copyData ){
-		TCHAR* b = _CL_NEWARRAY(TCHAR, this->m_size+1);
-		_tcsncpy(b, value, this->m_size+1);
-		this->value = b;
+    TCHAR* tmp = (TCHAR*)this->value;
+    if ( tmp == NULL || !this->ownValue ){
+      tmp = _CL_NEWARRAY(TCHAR, length+1);
+      this->buffer_size = length;
+    }else if ( length > this->buffer_size || length < (this->buffer_size/2) ){ //expand, or shrink
+      tmp = (TCHAR*)realloc(tmp, sizeof(TCHAR) * (length+1));
+      this->buffer_size = length;
+    }
+		_tcsncpy(tmp, _value, length+1);
+    this->value = tmp;
 	}else{
-		this->value = value;
+    if ( ownValue && this->value != NULL)
+      _CLDELETE_LARRAY( (TCHAR*)this->value);
+		this->value = _value;
+    this->buffer_size = 0;
 	}
+  this->m_size = length;
 	this->ownValue = copyData;
 }
 

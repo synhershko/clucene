@@ -168,8 +168,6 @@ DefaultSkipListWriter::DefaultSkipListWriter(int32_t skipInterval, int32_t numbe
   lastSkipProxPointer =  _CL_NEWARRAY(int64_t,numberOfSkipLevels);
 }
 DefaultSkipListWriter::~DefaultSkipListWriter(){
-  _CLDELETE(freqOutput);
-  _CLDELETE(proxOutput);
   _CLDELETE_ARRAY(lastSkipDoc);
   _CLDELETE_ARRAY(lastSkipPayloadLength);
   _CLDELETE_ARRAY(lastSkipFreqPointer);

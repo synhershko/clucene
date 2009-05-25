@@ -81,7 +81,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
 	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  freeByteBlocks(FreeByteBlocksType(false)), freeCharBlocks(FreeCharBlocksType(false)) //todo: memory!
+  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true)) //todo: memory!
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -113,6 +113,7 @@ DocumentsWriter::~DocumentsWriter(){
   _CLDELETE(skipListWriter);
   _CLDELETE_ARRAY(copyByteBuffer);
   _CLDELETE(_files);
+  _CLDELETE(fieldInfos);
 
   for(size_t i=0;i<threadStates.length;i++) {
     _CLDELETE(threadStates.values[i]);
@@ -588,8 +589,12 @@ void DocumentsWriter::writeSegment(std::vector<std::string>& flushedFiles) {
   }
 
   freqOut->close();
+  _CLDELETE(freqOut);
   proxOut->close();
+  _CLDELETE(proxOut);
   termsOut->close();
+  _CLDELETE(termsOut);
+  _CLDELETE(skipListWriter);
 
   // Record all files we have flushed
   flushedFiles.push_back(segmentFileName(IndexFileNames::FIELD_INFOS_EXTENSION));

@@ -97,10 +97,10 @@ public:
 	  SimpleAnalyzer an;
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
-    ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>( (uint8_t*)areaderString, strlen(areaderString) );
+    ValueArray<uint8_t> b( (uint8_t*)strdup(areaderString), strlen(areaderString) );
     //use binary utf8
-    doc.add( *_CLNEW Field(_T("binaryField"), b,
-        Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
+    doc.add( *_CLNEW Field(_T("binaryField"), &b,
+        Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO,true) );
     writer.addDocument(&doc);
     doc.clear();
 
@@ -131,7 +131,7 @@ public:
     f = doc.getField(_T("binaryField"));
     strm = f->binaryValue();
 
-    CLUCENE_ASSERT(readerStringLen == b->length);
+    CLUCENE_ASSERT(readerStringLen == b.length);
     for ( int i=0;i<readerStringLen;i++){
         CLUCENE_ASSERT((*strm)[i]==areaderString[i]);
     }

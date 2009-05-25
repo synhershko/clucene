@@ -261,7 +261,7 @@ void IndexFileDeleter::deleteCommits() {
       if (!commit->deleted) {
         if (writeTo != readFrom) {
           commits.remove(readFrom,true);
-          commits.remove(writeTo,true);//todo: memleak
+          commits.remove(writeTo,false);//delete this one...
           if ( commits.size() == writeTo )
             commits.push_back(commit);
           else
