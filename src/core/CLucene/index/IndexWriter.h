@@ -470,7 +470,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  explicit IndexWriter(const char* path, CL_NS(analysis)::Analyzer* a, bool create);
+  explicit IndexWriter(const char* path, CL_NS(analysis)::Analyzer* a, const bool create);
 
   /**
   * Constructs an IndexWriter for the index in <code>d</code>.
@@ -492,7 +492,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  explicit IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create);
+  explicit IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, const bool create, const bool closeDirOnShutdown=false);
 
   /**
   * Expert: constructs an IndexWriter with a custom {@link
@@ -512,7 +512,7 @@ public:
   *  read/written to or if there is any other low-level
   *  IO error
   */
-  explicit IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, IndexDeletionPolicy* deletionPolicy = NULL);
+  explicit IndexWriter(CL_NS(store)::Directory* d, const bool autoCommit, CL_NS(analysis)::Analyzer* a, IndexDeletionPolicy* deletionPolicy = NULL, const bool closeDirOnShutdown=false);
 
   /**
   * Expert: constructs an IndexWriter with a custom {@link
@@ -538,7 +538,7 @@ public:
   *  <code>false</code> or if there is any other low-level
   *  IO error
   */
-  explicit IndexWriter(CL_NS(store)::Directory* d, bool autoCommit, CL_NS(analysis)::Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy = NULL);
+  explicit IndexWriter(CL_NS(store)::Directory* d, const bool autoCommit, CL_NS(analysis)::Analyzer* a, const bool create, IndexDeletionPolicy* deletionPolicy = NULL, const bool closeDirOnShutdown=false);
 
 	/**Returns the number of documents currently in this index.
 	*  synchronized

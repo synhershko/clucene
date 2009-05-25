@@ -8,6 +8,7 @@
 #define _lucene_util_Array_
 
 #include <stdlib.h>
+#include <string.h>
 
 CL_NS_DEF(util)
 

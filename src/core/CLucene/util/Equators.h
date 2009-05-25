@@ -238,29 +238,29 @@ public:
 	};
 	class CLUCENE_INLINE_EXPORT Dummy: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const void* nothing){
+		void Delete(void*){}
+		static void doDelete(const void*){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
 	};
 	class CLUCENE_INLINE_EXPORT DummyInt32: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const int32_t nothing){
+		void Delete(void*){}
+		static void doDelete(const int32_t){
 		}
 	};
 	class CLUCENE_INLINE_EXPORT DummyFloat: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const float_t nothing){
+		void Delete(void*){}
+		static void doDelete(const float_t){
 		}
 	};
 	template <typename _type>
 	class CLUCENE_INLINE_EXPORT ConstNullVal: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const _type nothing){
+		void Delete(void*){}
+		static void doDelete(const _type){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
@@ -269,8 +269,8 @@ public:
 	template <typename _type>
 	class CLUCENE_INLINE_EXPORT NullVal: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(_type nothing){
+		void Delete(void*){}
+		static void doDelete(_type){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}

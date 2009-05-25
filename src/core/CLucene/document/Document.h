@@ -17,6 +17,25 @@ CL_NS_DEF(document)
 //predefine
 class Document;
 
+
+class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
+    class CLUCENE_EXPORT DocumentFieldList :LUCENE_BASE{
+    public:
+      DocumentFieldList(Field* f, DocumentFieldList* n);
+      ~DocumentFieldList();
+      Field* field;
+      DocumentFieldList* next;
+    };
+  friend class Document;
+private:
+  const DocumentFieldList* fields;
+public:
+  DocumentFieldEnumeration(const DocumentFieldList* fl);
+  ~DocumentFieldEnumeration();
+  bool hasMoreElements() const;
+  Field* nextElement();
+};
+
 /** Documents are the unit of indexing and search.
 *
 * A Document is a set of fields.  Each field has a name and a textual value.
@@ -34,7 +53,8 @@ class CLUCENE_EXPORT Document:LUCENE_BASE {
 public:
   typedef CL_NS(util)::CLArrayList<Field*,CL_NS(util)::Deletor::Object<Field> > FieldsType;
 private:
-	FieldsType* fields;
+  DocumentFieldEnumeration::DocumentFieldList* fieldListCache;
+	FieldsType* _fields;
 	float_t boost;
 public:
 	/** Constructs a new document with no fields. */
@@ -122,6 +142,11 @@ public:
 	* Note: name is case sensitive
 	*/
 	const TCHAR* get(const TCHAR* field) const;
+
+  /** Returns an Enumeration of all the fields in a document.
+  * @deprecated use {@link #getFields()} instead
+  */
+  _CL_DEPRECATED(  getFields() ) DocumentFieldEnumeration* fields();
 
   /** Returns a List of all the fields in a document.
    * <p>Note that fields which are <i>not</i> {@link Field#isStored() stored} are

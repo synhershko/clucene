@@ -14,14 +14,78 @@ CL_NS_USE(util)
 CL_NS_DEF(document) 
 
 
+  DocumentFieldEnumeration::DocumentFieldList::DocumentFieldList(Field* f, DocumentFieldList* n ) {
+    field = f;
+    next  = n;
+  }
+  DocumentFieldEnumeration::DocumentFieldList::~DocumentFieldList(){
+    if (!field) {
+        return; // nothing to do; deleted by different invocation of dtor
+    }
+
+    DocumentFieldList* cur = next;
+    while (cur != NULL)
+    {
+      DocumentFieldList* temp = cur->next;
+      cur->next = NULL;
+
+      _CLDELETE(cur);
+      cur = temp;
+    }
+    field = NULL;
+  }
+  DocumentFieldEnumeration::DocumentFieldEnumeration(const DocumentFieldList* fl){
+    //Func - Constructor
+  //Pre  - fl may be NULL
+  //Post - Instance has been created
+
+    fields = fl;
+  }
+
+  bool DocumentFieldEnumeration::hasMoreElements() const {
+    return fields == NULL ? false : true;
+  }
+
+  Field* DocumentFieldEnumeration::nextElement() {
+    //Func - Return the next element in the enumeration
+  //Pre  - true
+  //Post - The next element is returned or NULL
+
+
+    Field* result = NULL;
+    //Check if fields is still valid
+    if (fields){
+      result = fields->field;
+      fields = fields->next;
+    }
+    return result;
+  }
+
+  DocumentFieldEnumeration::~DocumentFieldEnumeration(){
+    //Func - Destructor
+  //Pre  - true
+  //Post - Instance has been destroyed
+  }
+  DocumentFieldEnumeration* Document::fields() {
+    if ( fieldListCache == NULL ){
+      for ( FieldsType::const_iterator itr = _fields->begin();
+        itr != _fields->end(); itr ++ ){
+
+        fieldListCache = _CLNEW DocumentFieldEnumeration::DocumentFieldList(*itr, fieldListCache);
+      }
+    }
+    return _CLNEW DocumentFieldEnumeration(fieldListCache);
+  }
+
   /** Constructs a new document with no fields-> */
   Document::Document():
-    fields(_CLNEW FieldsType(true) )
+    _fields(_CLNEW FieldsType(true) )
   {
     //Func - Constructor
 	//Pre  - true
 	//Post - Instance has been created
-        boost = 1.0f;
+    boost = 1.0f;
+    fieldListCache = NULL;
 	}
 
 	Document::~Document(){
@@ -29,15 +93,17 @@ CL_NS_DEF(document)
 	//Pre  - true
 	//Post - Instance has been destroyed
     boost = 1.0f;
-    _CLDELETE(fields);
+    _CLDELETE(_fields);
 	}
 	
 	void Document::clear(){
-		fields->clear();
+		_fields->clear();
+    _CLDELETE(fieldListCache);
 	}
 
 	void Document::add(Field& field) {
-		fields->push_back(&field);
+		_fields->push_back(&field);
+    _CLDELETE(fieldListCache);
 	}
 
    void Document::setBoost(const float_t boost) {
@@ -51,8 +117,8 @@ CL_NS_DEF(document)
 
 	 Field* Document::getField(const TCHAR* name) const{
     CND_PRECONDITION(name != NULL, "name is NULL");
-    for ( FieldsType::const_iterator itr = fields->begin();
-      itr != fields->end(); itr ++ ){
+    for ( FieldsType::const_iterator itr = _fields->begin();
+      itr != _fields->end(); itr ++ ){
       if ( _tcscmp( (*itr)->name(),name)==0 )
         return *itr;
     }
@@ -68,14 +134,14 @@ CL_NS_DEF(document)
 	}
 
 	const Document::FieldsType* Document::getFields() const  {
-    return fields;
+    return _fields;
   }
 
 
 	TCHAR* Document::toString() const {
 		StringBuffer ret(_T("Document<"));
-    for (FieldsType::const_iterator itr = fields->begin();
-         itr != fields->end(); itr++ ) {
+    for (FieldsType::const_iterator itr = _fields->begin();
+         itr != _fields->end(); itr++ ) {
   		TCHAR* tmp = (*itr)->toString();
       if ( ret.len > 0 )
   		    ret.append(_T(" "));
@@ -90,33 +156,35 @@ CL_NS_DEF(document)
 
    void Document::removeField(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
-    for ( FieldsType::iterator itr = fields->begin();
-      itr != fields->end(); itr++ ){
+    for ( FieldsType::iterator itr = _fields->begin();
+      itr != _fields->end(); itr++ ){
 
       if ( _tcscmp( (*itr)->name(), name) == 0 ){
-        fields->remove(itr);
+        _fields->remove(itr);
         return;
       }
     }
+    _CLDELETE(fieldListCache);
    }
    
    void Document::removeFields(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
-    for ( FieldsType::iterator itr = fields->begin();
-      itr != fields->end(); itr++ ){
+    for ( FieldsType::iterator itr = _fields->begin();
+      itr != _fields->end(); itr++ ){
 
       if ( _tcscmp( (*itr)->name(), name) == 0 ){
-        fields->remove(itr);
+        _fields->remove(itr);
         itr--;
-        assert(false);//do we have to go back?
+        assert(false);//todo: do we have to go back?
       }
     }
+    _CLDELETE(fieldListCache);
    }
 
    TCHAR** Document::getValues(const TCHAR* name) {
     int count = 0;
-    for ( FieldsType::iterator itr = fields->begin();
-      itr != fields->end(); itr++ ){
+    for ( FieldsType::iterator itr = _fields->begin();
+      itr != _fields->end(); itr++ ){
       if ( _tcscmp( (*itr)->name(),name) == 0 && (*itr)->stringValue() != NULL )
         count++;
     }
@@ -126,8 +194,8 @@ CL_NS_DEF(document)
 	  if ( count > 0 ){
       ret = _CL_NEWARRAY(TCHAR*,count+1);
       int32_t i=0;
-      for ( FieldsType::iterator itr = fields->begin();
-        itr != fields->end(); itr++ ){
+      for ( FieldsType::iterator itr = _fields->begin();
+        itr != _fields->end(); itr++ ){
 
         if ( _tcscmp( (*itr)->name(),name) == 0 && (*itr)->stringValue() != NULL ){
            ret[i] = stringDuplicate((*itr)->stringValue());

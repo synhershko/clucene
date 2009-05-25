@@ -147,19 +147,19 @@ int32_t IndexWriter::getTermIndexInterval() {
 }
 
 IndexWriter::IndexWriter(const char* path, Analyzer* a, bool create){
-  init(FSDirectory::getDirectory(path), a, create, true, NULL, true);
+  init(FSDirectory::getDirectory(path), a, create, true, (IndexDeletionPolicy*)NULL, true);
 }
 
-IndexWriter::IndexWriter(Directory* d, Analyzer* a, bool create){
-  init(d, a, create, false, NULL, true);
+IndexWriter::IndexWriter(Directory* d, Analyzer* a, bool create, bool closeDir){
+  init(d, a, create, closeDir, NULL, true);
 }
 
-IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, IndexDeletionPolicy* deletionPolicy){
-  init(d, a, false, deletionPolicy, autoCommit);
+IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown){
+  init(d, a, closeDirOnShutdown, deletionPolicy, autoCommit);
 }
 
-IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy){
-  init(d, a, create, false, deletionPolicy, autoCommit);
+IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown){
+  init(d, a, create, closeDirOnShutdown, deletionPolicy, autoCommit);
 }
 
 void IndexWriter::init(Directory* d, Analyzer* a, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit){
@@ -170,7 +170,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, bool closeDir, IndexDeletionPo
   }
 }
 
-void IndexWriter::init(Directory* d, Analyzer* a, const bool create, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit){
+void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool closeDir, IndexDeletionPolicy* deletionPolicy, const bool autoCommit){
   this->_internal = new Internal(this);
   this->termIndexInterval = IndexWriter::DEFAULT_TERM_INDEX_INTERVAL;
   this->mergeScheduler = _CLNEW SerialMergeScheduler(); //TODO: implement and use ConcurrentMergeScheduler
