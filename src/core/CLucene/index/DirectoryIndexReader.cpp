@@ -106,6 +106,7 @@ CL_NS_DEF(index)
 
   void DirectoryIndexReader::init(Directory* __directory, SegmentInfos* segmentInfos, bool closeDirectory) {
     this->deletionPolicy = NULL;
+    this->stale = false;
     this->writeLock = NULL;
     this->rollbackSegmentInfos = NULL;
     this->_directory = _CL_POINTER(__directory);
