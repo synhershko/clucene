@@ -166,8 +166,8 @@ public:
 
 class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
 private:
-  Document::FieldsType::iterator itr;
-  Document::FieldsType::iterator end;
+  struct Internal;
+  Internal* _internal;
 public:
   DocumentFieldEnumeration(Document::FieldsType::iterator itr, Document::FieldsType::iterator end);
   ~DocumentFieldEnumeration();

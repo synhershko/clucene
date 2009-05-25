@@ -14,13 +14,18 @@ CL_NS_USE(util)
 CL_NS_DEF(document)
 
 
+  struct DocumentFieldEnumeration::Internal {
+    Document::FieldsType::iterator itr;
+    Document::FieldsType::iterator end;
+  };
   DocumentFieldEnumeration::DocumentFieldEnumeration(Document::FieldsType::iterator itr, Document::FieldsType::iterator end){
-    this->itr = itr;
-    this->end = end;
+    this->_internal = new DocumentFieldEnumeration::Internal;
+    this->_internal->itr = itr;
+    this->_internal->end = end;
   }
 
   bool DocumentFieldEnumeration::hasMoreElements() const {
-    return itr != end;
+    return _internal->itr != _internal->end;
   }
 
   Field* DocumentFieldEnumeration::nextElement() {
@@ -29,9 +34,9 @@ CL_NS_DEF(document)
   //Post - The next element is returned or NULL
 
     Field* result = NULL;
-    if ( itr != end ){
-      result = *itr;
-      itr++;
+    if ( _internal->itr != _internal->end ){
+      result = *_internal->itr;
+      _internal->itr++;
     }
     return result;
   }
@@ -40,6 +45,7 @@ CL_NS_DEF(document)
     //Func - Destructor
     //Pre  - true
     //Post - Instance has been destroyed
+    delete _internal;
   }
   DocumentFieldEnumeration* Document::fields() {
     return _CLNEW DocumentFieldEnumeration(_fields->begin(), _fields->end());
