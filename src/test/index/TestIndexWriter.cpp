@@ -26,7 +26,10 @@ void testIWmergeSegments1(CuTest *tc){
 
 		Document doc;
 		
-		doc.add ( *_CLNEW Field(_T("field"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
+		doc.add ( *_CLNEW Field(_T("field0"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
+		doc.add ( *_CLNEW Field(_T("field1"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
+		doc.add ( *_CLNEW Field(_T("field2"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
+		doc.add ( *_CLNEW Field(_T("field3"),fld,Field::STORE_YES | Field::INDEX_TOKENIZED) );
 		ndx.addDocument(&doc);
 	}
 	//ndx.optimize(); //optimize so we can read terminfosreader with segmentreader
@@ -35,7 +38,7 @@ void testIWmergeSegments1(CuTest *tc){
 	//test the ram loading
 	RAMDirectory ram2(&ram);
 	IndexReader* reader2 = IndexReader::open(&ram2);
-	Term* term = _CLNEW Term(_T("field"),fld);
+	Term* term = _CLNEW Term(_T("field0"),fld);
 	TermEnum* en = reader2->terms(term);
 	CLUCENE_ASSERT(en->next());
 	_CLDELETE(en);
