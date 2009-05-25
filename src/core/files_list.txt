@@ -45,9 +45,8 @@ DONE ISH	document\LoadFirstFieldSelector.java
 DONE ISH	document\NumberTools.java
 ?	document\SetBasedFieldSelector.java
 WORKING ISH	index\CheckIndex.java
-DONE ISH	index\CompoundFileReader.java				- Needs to enable and use support for buffer in readBytes of BufferedIndexInput (and CSIndexInput)
+DONE ISH	index\CompoundFileReader.java
 DONE BEN	index\CompoundFileWriter.java
-?	index\ConcurrentMergeScheduler.java
 DONE BEN	index\CorruptIndexException.java
 DONE ISH	index\DefaultSkipListReader.java
 DONE BEN	index\DefaultSkipListWriter.java
@@ -77,7 +76,6 @@ DONE ISH	index\MultiLevelSkipListReader.java
 DONE BEN	index\MultiLevelSkipListWriter.java
 DONE BEN	index\MultiReader.java
 DONE BEN	index\MultiSegmentReader.java
-?	index\ParallelReader.java
 DONE ISH	index\Payload.java
 ? index\PositionBasedTermVectorMapper.java
 DONE ISH/BEN	index\SegmentInfo.java
@@ -89,7 +87,6 @@ DONE BEN	index\SegmentTermEnum.java
 DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
 DONE ISH	index\SegmentTermPositionVector.java
 DONE BEN	index\SerialMergeScheduler.java
-?	index\SnapshotDeletionPolicy.java
 ? index\SortedTermVectorMapper.java
 DONE BEN	index\StaleReaderException.java
 DONE BEN	index\TermBuffer.java (actually, not nessary, Term has the same functionality)
@@ -113,7 +110,7 @@ DONE ISH	index\TermFreqVector.java
 DONE ISH	index\TermInfo.java
 DONE ISH	index\TermPositions.java
 DONE ISH	index\TermPositionVector.java
-?	LucenePackage.java
+IRRELEVANT	LucenePackage.java
 DONE ISH	queryParser\CharStream.java
 DONE ISH	queryParser\FastCharStream.java
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
@@ -150,18 +147,6 @@ DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFi
 ?	search\FilteredQuery.java
 ?	search\FilteredTermEnum.java
 ?	search\FilterManager.java
-?	search\function\ByteFieldSource.java
-?	search\function\CustomScoreQuery.java
-?	search\function\DocValues.java
-?	search\function\FieldCacheSource.java
-?	search\function\FieldScoreQuery.java
-?	search\function\FloatFieldSource.java
-?	search\function\IntFieldSource.java
-?	search\function\OrdFieldSource.java
-?	search\function\ReverseOrdFieldSource.java
-?	search\function\ShortFieldSource.java
-?	search\function\ValueSource.java
-?	search\function\ValueSourceQuery.java
 ?	search\FuzzyQuery.java
 ?	search\FuzzyTermEnum.java
 ?	search\Hit.java
@@ -175,8 +160,6 @@ DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to su
 ?	search\MultiSearcher.java
 DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\NonMatchingScorer.java
-?	search\ParallelMultiSearcher.java
-?	search\payloads\BoostingTermQuery.java
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
 ?	search\PhraseQueue.java
@@ -205,21 +188,6 @@ DONE ISH	search\Scorer.java
 ?	search\SortComparator.java
 ?	search\SortComparatorSource.java
 ?	search\SortField.java
-?	search\SpanFilter.java
-?	search\SpanFilterResult.java
-?	search\SpanQueryFilter.java
-?	search\spans\NearSpansOrdered.java
-?	search\spans\NearSpansUnordered.java
-?	search\spans\SpanFirstQuery.java
-?	search\spans\SpanNearQuery.java
-?	search\spans\SpanNotQuery.java
-?	search\spans\SpanOrQuery.java
-?	search\spans\SpanQuery.java
-?	search\spans\Spans.java
-?	search\spans\SpanScorer.java
-?	search\spans\SpanTermQuery.java
-?	search\spans\SpanWeight.java
-?	search\spans\TermSpans.java
 ?	search\TermQuery.java
 ?	search\TermScorer.java
 ?	search\TopDocCollector.java
@@ -237,11 +205,9 @@ DONE ISH	store\IndexInput.java			- Clone method implemented as constructor only
 DONE ISH	store\IndexOutput.java
 DONE JW	store\Lock.java
 DONE JW	store\LockFactory.java
-?	store\LockObtainFailedException.java
-?	store\LockReleaseFailedException.java
-?	store\LockStressTest.java
-?	store\LockVerifyServer.java
-?	store\MMapDirectory.java
+IRRELEVANT	store\LockObtainFailedException.java
+IRRELEVANT	store\LockReleaseFailedException.java
+IRRELEVANT	store\MMapDirectory.java
 DONE JW	store\NativeFSLockFactory.java - 1 class implemented as FSLockFactory
 DONE JW	store\NoLockFactory.java
 DONE JW	store\RAMDirectory.java
@@ -274,3 +240,46 @@ Misc TODOs:
 Update jstreams from latest code of Strigi
 Create an auxiliary namespace with all the platform-dependant code, to enable static linking to it by contrib, tests and other apps which might need this
 update Internal* internal to be named otherwise (internal is a preserved word in VS; perhaps ChesireCat* chesCat?)?
+
+
+
+
+
+
+
+Post v1 Final:
+
+?	search\SpanFilter.java
+?	search\SpanFilterResult.java
+?	search\SpanQueryFilter.java
+?	search\spans\NearSpansOrdered.java
+?	search\spans\NearSpansUnordered.java
+?	search\spans\SpanFirstQuery.java
+?	search\spans\SpanNearQuery.java
+?	search\spans\SpanNotQuery.java
+?	search\spans\SpanOrQuery.java
+?	search\spans\SpanQuery.java
+?	search\spans\Spans.java
+?	search\spans\SpanScorer.java
+?	search\spans\SpanTermQuery.java
+?	search\spans\SpanWeight.java
+?	search\spans\TermSpans.java
+?	search\function\ByteFieldSource.java
+?	search\function\CustomScoreQuery.java
+?	search\function\DocValues.java
+?	search\function\FieldCacheSource.java
+?	search\function\FieldScoreQuery.java
+?	search\function\FloatFieldSource.java
+?	search\function\IntFieldSource.java
+?	search\function\OrdFieldSource.java
+?	search\function\ReverseOrdFieldSource.java
+?	search\function\ShortFieldSource.java
+?	search\function\ValueSource.java
+?	search\function\ValueSourceQuery.java
+?	index\ConcurrentMergeScheduler.java
+?	index\SnapshotDeletionPolicy.java
+?	index\ParallelReader.java
+?	store\LockStressTest.java
+?	store\LockVerifyServer.java
+?	search\ParallelMultiSearcher.java
+?	search\payloads\BoostingTermQuery.java
