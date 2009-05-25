@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -11,7 +11,7 @@
 #include <assert.h>
 
 CL_NS_USE(util)
-CL_NS_DEF(document) 
+CL_NS_DEF(document)
 
 
   DocumentFieldEnumeration::DocumentFieldList::DocumentFieldList(Field* f, DocumentFieldList* n ) {
@@ -95,7 +95,7 @@ CL_NS_DEF(document)
     boost = 1.0f;
     _CLDELETE(_fields);
 	}
-	
+
 	void Document::clear(){
 		_fields->clear();
     _CLDELETE(fieldListCache);
@@ -146,11 +146,11 @@ CL_NS_DEF(document)
       if ( ret.len > 0 )
   		    ret.append(_T(" "));
 		  ret.append( tmp );
-			_CLDELETE_ARRAY( tmp ); 
+			_CLDELETE_ARRAY( tmp );
 		}
 		ret.append(_T(">"));
 		return ret.toString();
-	} 
+	}
 
 
 
@@ -166,7 +166,7 @@ CL_NS_DEF(document)
     }
     _CLDELETE(fieldListCache);
    }
-   
+
    void Document::removeFields(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
     for ( FieldsType::iterator itr = _fields->begin();
@@ -175,7 +175,6 @@ CL_NS_DEF(document)
       if ( _tcscmp( (*itr)->name(), name) == 0 ){
         _fields->remove(itr);
         itr--;
-        assert(false);//todo: do we have to go back?
       }
     }
     _CLDELETE(fieldListCache);
@@ -188,7 +187,7 @@ CL_NS_DEF(document)
       if ( _tcscmp( (*itr)->name(),name) == 0 && (*itr)->stringValue() != NULL )
         count++;
     }
-    
+
     //todo: there must be a better way of doing this, we are doing two iterations of the fields
     TCHAR** ret = NULL;
 	  if ( count > 0 ){

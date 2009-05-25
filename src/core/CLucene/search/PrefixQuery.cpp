@@ -88,35 +88,35 @@ CL_NS_DEF(search)
    Query* PrefixQuery::rewrite(IndexReader* reader){
     BooleanQuery* query = _CLNEW BooleanQuery( true );
     TermEnum* enumerator = reader->terms(prefix);
-	Term* lastTerm = NULL;
+    Term* lastTerm = NULL;
     try {
       const TCHAR* prefixText = prefix->text();
       const TCHAR* prefixField = prefix->field();
       const TCHAR* tmp;
       size_t i;
-	size_t prefixLen = prefix->textLength();
+      size_t prefixLen = prefix->textLength();
       do {
         lastTerm = enumerator->term();
-		if (lastTerm != NULL &&
-			lastTerm->field() == prefixField ) // interned comparison 
-		{
-		  
-		  //now see if term->text() starts with prefixText
-		  size_t termLen = lastTerm->textLength();
-		  if ( prefixLen>termLen )
-			  break; //the prefix is longer than the term, can't be matched
+        if (lastTerm != NULL &&
+          lastTerm->field() == prefixField ) // interned comparison
+        {
 
-            tmp = lastTerm->text();
-            
-            //check for prefix match in reverse, since most change will be at the end
-            for ( i=prefixLen-1;i!=-1;--i ){
-                if ( tmp[i] != prefixText[i] ){
-                    tmp=NULL;//signals inequality
-                    break;
-                }
-            }
-            if ( tmp == NULL )
-                break;
+          //now see if term->text() starts with prefixText
+          size_t termLen = lastTerm->textLength();
+          if ( prefixLen>termLen )
+            break; //the prefix is longer than the term, can't be matched
+
+          tmp = lastTerm->text();
+
+          //check for prefix match in reverse, since most change will be at the end
+          for ( i=prefixLen-1;i!=-1;--i ){
+              if ( tmp[i] != prefixText[i] ){
+                  tmp=NULL;//signals inequality
+                  break;
+              }
+          }
+          if ( tmp == NULL )
+              break;
 
           TermQuery* tq = _CLNEW TermQuery(lastTerm);	  // found a match
           tq->setBoost(getBoost());                // set the boost

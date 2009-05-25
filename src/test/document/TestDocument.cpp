@@ -61,6 +61,32 @@ public:
 	  CLUCENE_ASSERT(f->getOmitNorms());
 	  CLUCENE_ASSERT(f->isStored() && !f->isBinary());
 	  _CLDELETE(f);
+
+	  Document doc;
+    doc.add(*_CLNEW Field(_T("f1"), _T("value"), Field::INDEX_TOKENIZED));
+    doc.add(*_CLNEW Field(_T("f2"), _T("value"), Field::INDEX_TOKENIZED));
+    doc.add(*_CLNEW Field(_T("f3"), _T("value1"), Field::INDEX_TOKENIZED));
+    doc.add(*_CLNEW Field(_T("f3"), _T("value2"), Field::INDEX_TOKENIZED));
+    doc.add(*_CLNEW Field(_T("f4"), _T("value"), Field::INDEX_TOKENIZED));
+    CLUCENE_ASSERT( doc.getFields()->size() == 5);
+
+    doc.removeField(_T("f3"));
+    CLUCENE_ASSERT( doc.getFields()->size() == 4);
+
+    doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::INDEX_TOKENIZED));
+    CLUCENE_ASSERT( doc.getFields()->size() == 5);
+
+    doc.removeFields(_T("f3"));
+    CLUCENE_ASSERT( doc.getFields()->size() == 3);
+
+    doc.removeFields(_T("f4"));
+    CLUCENE_ASSERT( doc.getFields()->size() == 2);
+
+    doc.removeFields(_T("f1"));
+    CLUCENE_ASSERT( doc.getFields()->size() == 1);
+
+    doc.removeFields(_T("f2"));
+    CLUCENE_ASSERT( doc.getFields()->size() == 0);
   }
 
   void TestDateTools(CuTest *tc) {
