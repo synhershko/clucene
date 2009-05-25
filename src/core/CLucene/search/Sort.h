@@ -97,7 +97,7 @@ public:
   /**
    * Creates a comparator for the field in the given index.
    * @param reader Index to create comparator for.
-   * @param fieldname  Field to create comparator for.
+   * @param fieldname  Name of the field to create comparator for.
    * @return Comparator of ScoreDoc objects.
    * @throws IOException If an error occurs reading the index.
    */
