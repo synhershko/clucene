@@ -163,7 +163,8 @@ CL_NS_DEF(search)
     //Instantiate a stringbuffer buffer to store the readable version temporarily
     CL_NS(util)::StringBuffer buffer;
     //check if field equal to the field of prefix
-    if( field==NULL || _tcscmp(prefix->field(),field) != 0 ) {
+    if( field==NULL ||
+        _tcscmp(prefix->field(),field) != 0 ) {
         //Append the field of prefix to the buffer
         buffer.append(prefix->field());
         //Append a colon
@@ -188,8 +189,76 @@ CL_NS_DEF(search)
 
 
 
+//todo: this needs to be exposed, but java is still a bit confused about how...
+class PrefixFilter::PrefixGenerator{
+  const Term* prefix;
+public:
+  PrefixGenerator(const Term* prefix){
+    this->prefix = prefix;
+  }
 
+  virtual void handleDoc(int doc) = 0;
 
+  void generate(IndexReader* reader) {
+    TermEnum* enumerator = reader->terms(prefix);
+    TermDocs* termDocs = reader->termDocs();
+    const TCHAR* prefixText = prefix->text();
+    const TCHAR* prefixField = prefix->field();
+    const TCHAR* tmp;
+    size_t i;
+    size_t prefixLen = prefix->textLength();
+    Term* term = NULL;
+
+    try{
+      do{
+          term = enumerator->term(false);
+          if (term != NULL &&
+              term->field() == prefixField // interned comparison
+          ){
+              //now see if term->text() starts with prefixText
+              size_t termLen = term->textLength();
+              if ( prefixLen>termLen )
+                  break; //the prefix is longer than the term, can't be matched
+
+              tmp = term->text();
+
+              //check for prefix match in reverse, since most change will be at the end
+              for ( i=prefixLen-1;i!=-1;--i ){
+                  if ( tmp[i] != prefixText[i] ){
+                      tmp=NULL;//signals inequality
+                      break;
+                  }
+              }
+              if ( tmp == NULL )
+                  break;
+
+            termDocs->seek(enumerator);
+            while (termDocs->next()) {
+              handleDoc(termDocs->doc());
+            }
+          }
+      }while(enumerator->next());
+    } _CLFINALLY(
+        termDocs->close();
+        _CLDELETE(termDocs);
+        enumerator->close();
+      _CLDELETE(enumerator);
+    )
+  }
+};
+
+class DefaultPrefixGenerator: public PrefixFilter::PrefixGenerator{
+public:
+  BitSet* bts;
+  DefaultPrefixGenerator(BitSet* bts, const Term* prefix):
+    PrefixGenerator(prefix)
+  {
+    this->bts = bts;
+  }
+  void handleDoc(int doc) {
+    bts->set(doc);
+  }
+};
 
 PrefixFilter::PrefixFilter( Term* prefix )
 {
@@ -214,10 +283,8 @@ TCHAR* PrefixFilter::toString()
 {
 	//Instantiate a stringbuffer buffer to store the readable version temporarily
     CL_NS(util)::StringBuffer buffer;
-	buffer.append(_T("PrefixFilter("));
-	buffer.append(prefix->field());
-	buffer.append(_T(":"));
-	buffer.append(prefix->text());
+    buffer.append(_T("PrefixFilter("));
+    buffer.append(prefix->field());
     buffer.append(_T(")"));
 
 	//Convert StringBuffer buffer to TCHAR block and return it
@@ -229,49 +296,8 @@ search results, and false for those that should not. */
 BitSet* PrefixFilter::bits( IndexReader* reader )
 {
 	BitSet* bts = _CLNEW BitSet( reader->maxDoc() );
-	TermEnum* enumerator = reader->terms(prefix);
-	TermDocs* docs = reader->termDocs();
-    const TCHAR* prefixText = prefix->text();
-    const TCHAR* prefixField = prefix->field();
-    const TCHAR* tmp;
-    size_t i;
-    size_t prefixLen = prefix->textLength();
-	Term* lastTerm = NULL;
-    
-	try{
-		do{
-            lastTerm = enumerator->term(false);
-    		if (lastTerm != NULL && lastTerm->field() == prefixField ){
-    		    //now see if term->text() starts with prefixText
-                size_t termLen = lastTerm->textLength();
-                if ( prefixLen>termLen )
-                    break; //the prefix is longer than the term, can't be matched
-
-                tmp = lastTerm->text();
-                
-                //check for prefix match in reverse, since most change will be at the end
-                for ( i=prefixLen-1;i!=-1;--i ){
-                    if ( tmp[i] != prefixText[i] ){
-                        tmp=NULL;//signals inequality
-                        break;
-                    }
-                }
-                if ( tmp == NULL )
-                    break;
-
-    			docs->seek(enumerator);
-    			while (docs->next()) {
-    			  bts->set(docs->doc());
-    			}
-    		}
-		}while(enumerator->next());
-	} _CLFINALLY(
-      docs->close();
-      _CLDELETE(docs);
-      enumerator->close();
-	  _CLDELETE(enumerator);
-    )
-
+  DefaultPrefixGenerator gen(bts, prefix);
+  gen.generate(reader);
 	return bts;
 }
 

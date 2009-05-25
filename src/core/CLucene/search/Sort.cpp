@@ -143,23 +143,27 @@ CL_NS_DEF(search)
   TCHAR* SortField::toString() const {
 	CL_NS(util)::StringBuffer buffer;
     switch (type) {
-      case DOCSCORE: buffer.append(_T("<score>"));
-                  break;
+      case DOCSCORE:
+        buffer.append(_T("<score>"));
+        break;
 
-      case DOC: buffer.append(_T("<doc>"));
-                break;
+      case DOC:
+        buffer.append(_T("<doc>"));
+        break;
 
-      case CUSTOM: buffer.append (_T("<custom:\""));
-         buffer.append( field );
-         buffer.append( _T("\": "));
-         buffer.append(factory->getName());
-         buffer.append(_T(">"));
-         break;
+      case CUSTOM:
+        buffer.append (_T("<custom:\""));
+        buffer.append( field );
+        buffer.append( _T("\": "));
+        buffer.append(factory->getName());
+        buffer.append(_T(">"));
+        break;
 
-      default: buffer.append( _T("\""));
-            buffer.append( field );
-            buffer.append( _T("\"") );
-               break;
+      default:
+        buffer.append( _T("\""));
+        buffer.append( field );
+        buffer.append( _T("\"") );
+        break;
     }
 
     //if (locale != null) buffer.append ("("+locale+")"); todo:

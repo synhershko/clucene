@@ -86,10 +86,10 @@ CL_NS_DEF(search)
       pointer++;
     }
     if (tf == 0) {
-      while (termDocs->next()) {
-        if (termDocs->doc() == doc) {
-          tf = termDocs->freq();
-        }
+      if (termDocs->skipTo(doc)){
+          if (termDocs->doc() == doc){
+              tf = termDocs->freq();
+          }
       }
     }
     termDocs->close();

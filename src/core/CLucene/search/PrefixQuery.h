@@ -58,8 +58,9 @@ CL_NS_DEF(search)
     	CL_NS(index)::Term* prefix;
     protected:
     	PrefixFilter( const PrefixFilter& copy );
-    	
     public:
+      class PrefixGenerator;
+
     	PrefixFilter(CL_NS(index)::Term* prefix);
     	~PrefixFilter();
     

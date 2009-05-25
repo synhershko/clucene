@@ -41,6 +41,12 @@ CL_NS_DEF(search)
 
 		bool next();
 		bool skipTo(int32_t target);
+
+    /** Returns an explanation of the score for a document.
+    * <br>When this method is used, the {@link #next()} method
+    * and the {@link #score(HitCollector)} method should not be used.
+    * @param doc The document number for the explanation.
+    */
 		void explain(int32_t doc, Explanation* ret);
 		virtual TCHAR* toString();
 
