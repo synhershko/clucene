@@ -44,7 +44,7 @@ DONE ISH	document\LoadFirstFieldSelector.java
 ?	document\MapFieldSelector.java
 DONE ISH	document\NumberTools.java
 ?	document\SetBasedFieldSelector.java
-WORKING ISH	index\CheckIndex.java
+?	index\CheckIndex.java
 DONE ISH	index\CompoundFileReader.java				- Needs to enable and use support for buffer in readBytes of BufferedIndexInput (and CSIndexInput)
 DONE BEN	index\CompoundFileWriter.java
 ?	index\ConcurrentMergeScheduler.java
@@ -136,7 +136,7 @@ DONE ISH	search\ComplexExplanation.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
 ?	search\DisjunctionMaxScorer.java
-?	search\DisjunctionSumScorer.java
+DONE ISH	search\DisjunctionSumScorer.java		- Still needs it's explain() method to be implemented (requires a change to Scorer::explain() return value)
 DONE ISH	search\ExactPhraseScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
@@ -259,7 +259,7 @@ DONE ISH	store\BufferedIndexOutput.java
 ?	util\ScorerDocQueue.java
 ?	util\SmallFloat.java
 ?	util\StringHelper.java
-?	util\ToStringUtils.java
+DONE ISH	util\ToStringUtils.java		- function boost() impelemented as StringBuffer.appendBoost(float_t)
 DONE JW	util\PriorityQueue.java
 
 
