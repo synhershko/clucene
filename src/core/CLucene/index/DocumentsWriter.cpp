@@ -113,6 +113,7 @@ DocumentsWriter::~DocumentsWriter(){
   _CLDELETE(skipListWriter);
   _CLDELETE_ARRAY(copyByteBuffer);
   _CLDELETE(_files);
+  _CLDELETE(fieldInfos);
 
   for(size_t i=0;i<threadStates.length;i++) {
     _CLDELETE(threadStates.values[i]);
