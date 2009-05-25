@@ -282,7 +282,8 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/debug/condition.cpp
     	${rel}/CLucene/util/StringBuffer.cpp
     	${rel}/CLucene/util/Misc.cpp
-    	${rel}/CLucene/util/dirent.cpp
+      ${rel}/CLucene/util/dirent.cpp
+      ${rel}/CLucene/util/deflate.cpp
 	)	
 ENDMACRO (GET_SHARED_FILES)
 
