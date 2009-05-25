@@ -70,11 +70,35 @@ public:
     doc.add(*_CLNEW Field(_T("f4"), _T("value"), Field::INDEX_TOKENIZED));
     CLUCENE_ASSERT( doc.getFields()->size() == 5);
 
+    doc.fields();//just fetch the fields
+
     doc.removeField(_T("f3"));
     CLUCENE_ASSERT( doc.getFields()->size() == 4);
 
+    //test deprecated enumerator
+    DocumentFieldEnumeration* e = doc.fields();
+    int count = 0;
+    while ( e->hasMoreElements() ) {
+      Field* field4 = e->nextElement();
+      CLUCENE_ASSERT(field4!=NULL);
+      count++;
+    }
+    CLUCENE_ASSERT(count==4);
+    _CLDELETE(e);
+
     doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::INDEX_TOKENIZED));
     CLUCENE_ASSERT( doc.getFields()->size() == 5);
+
+    //test deprecated enumerator
+    e = doc.fields();
+    count = 0;
+    while ( e->hasMoreElements() ) {
+      Field* field5 = e->nextElement();
+      CLUCENE_ASSERT(field5!=NULL);
+      count++;
+    }
+    CLUCENE_ASSERT(count==5);
+    _CLDELETE(e);
 
     doc.removeFields(_T("f3"));
     CLUCENE_ASSERT( doc.getFields()->size() == 3);

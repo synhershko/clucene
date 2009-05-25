@@ -14,27 +14,7 @@
 ///to using a java List... do we want to do this too?
 CL_NS_DEF(document)
 
-//predefine
-class Document;
-
-
-class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
-    class CLUCENE_EXPORT DocumentFieldList :LUCENE_BASE{
-    public:
-      DocumentFieldList(Field* f, DocumentFieldList* n);
-      ~DocumentFieldList();
-      Field* field;
-      DocumentFieldList* next;
-    };
-  friend class Document;
-private:
-  const DocumentFieldList* fields;
-public:
-  DocumentFieldEnumeration(const DocumentFieldList* fl);
-  ~DocumentFieldEnumeration();
-  bool hasMoreElements() const;
-  Field* nextElement();
-};
+class DocumentFieldEnumeration;
 
 /** Documents are the unit of indexing and search.
 *
@@ -53,7 +33,6 @@ class CLUCENE_EXPORT Document:LUCENE_BASE {
 public:
   typedef CL_NS(util)::CLArrayList<Field*,CL_NS(util)::Deletor::Object<Field> > FieldsType;
 private:
-  DocumentFieldEnumeration::DocumentFieldList* fieldListCache;
 	FieldsType* _fields;
 	float_t boost;
 public:
@@ -182,6 +161,18 @@ public:
 	* Empties out the document so that it can be reused
 	*/
 	void clear();
+};
+
+
+class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
+private:
+  Document::FieldsType::iterator itr;
+  Document::FieldsType::iterator end;
+public:
+  DocumentFieldEnumeration(Document::FieldsType::iterator itr, Document::FieldsType::iterator end);
+  ~DocumentFieldEnumeration();
+  bool hasMoreElements() const;
+  Field* nextElement();
 };
 CL_NS_END
 #endif
