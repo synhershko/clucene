@@ -29,6 +29,7 @@ void MultiSegmentReader::initialize(CL_NS(util)::ArrayBase<IndexReader*>* _subRe
   _maxDoc        = 0;
   _numDocs       = -1;
   ones           = NULL;
+  _hasDeletions  = false;
 
   starts = _CL_NEWARRAY(int32_t, subReaders->length + 1);    // build starts array
   for (size_t i = 0; i < subReaders->length; i++) {
@@ -655,7 +656,7 @@ void MultiTermDocs::close() {
         }
     }
 
-    _CLDELETE_ARRAY(readerTermDocs);
+    _CLDELETE(readerTermDocs);
 	}
 
 	//current previously pointed to a member of readerTermDocs; ensure that

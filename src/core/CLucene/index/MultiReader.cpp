@@ -40,6 +40,7 @@ public:
     _maxDoc        = 0;
     _numDocs       = -1;
     ones           = NULL;
+    _hasDeletions  = false;
 	}
 	~Internal(){
 	}
