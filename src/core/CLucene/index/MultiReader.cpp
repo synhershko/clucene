@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -27,7 +27,7 @@ CL_NS_DEF(index)
 class MultiReader::Internal: LUCENE_BASE{
 public:
   MultiSegmentReader::NormsCacheType normsCache;
-	
+
   bool* decrefOnClose; //remember which subreaders to decRef on close
   bool _hasDeletions;
   uint8_t* ones;
@@ -210,6 +210,10 @@ bool MultiReader::hasDeletions() const{
     return _internal->_hasDeletions;
 }
 
+const ArrayBase<IndexReader*>* MultiReader::getSubReaders() const{
+  return subReaders;
+}
+
 uint8_t* MultiReader::norms(const TCHAR* field){
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
@@ -218,21 +222,21 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 	if (bytes != NULL){
 	  return bytes;				  // cache hit
 	}
-	
+
 	if ( !hasNorms(field) )
 		return fakeNorms();
-	
+
 	bytes = _CL_NEWARRAY(uint8_t,maxDoc());
 	for (size_t i = 0; i < subReaders->length; i++)
 	  (*subReaders)[i]->norms(field, bytes + starts[i]);
-	
+
 	//Unfortunately the data in the normCache can get corrupted, since it's being loaded with string
 	//keys that may be deleted while still in use by the map. To prevent this field is duplicated
 	//and then stored in the normCache
 	TCHAR* key = STRDUP_TtoT(field);
 	//update cache
 	_internal->normsCache.put(key, bytes);
-	
+
 	return bytes;
 }
 
@@ -240,14 +244,14 @@ void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 	uint8_t* bytes = _internal->normsCache.get((TCHAR*)field);
-	if (bytes==NULL && !hasNorms(field)) 
+	if (bytes==NULL && !hasNorms(field))
 		bytes=fakeNorms();
-    
+
 	if (bytes != NULL){                            // cache hit
 	   int32_t len = maxDoc();
 	   memcpy(result,bytes,len * sizeof(int32_t));
 	}
-	
+
 	for (size_t i = 0; i < subReaders->length; i++)      // read from segments
 	  (*subReaders)[i]->norms(field, result + starts[i]);
 }

@@ -18,6 +18,7 @@
 #include "analysis/TestAnalyzers.cpp"
 #include "index/TestHighFreqTerms.cpp"
 #include "index/TestIndexWriter.cpp"
+#include "index/TestIndexReader.cpp"
 #include "index/TestReuters.cpp"
 #include "index/TestUtf8.cpp"
 #include "util/TestPriorityQueue.cpp"

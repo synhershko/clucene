@@ -703,7 +703,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
   uint8_t* SegmentReader::createFakeNorms(int32_t size) {
     uint8_t* ones = _CL_NEWARRAY(uint8_t,size);
-    if ( size > 0 ) 
+    if ( size > 0 )
       memset(ones, DefaultSimilarity::encodeNorm(1.0f), size);
     return ones;
   }
@@ -1170,5 +1170,19 @@ bool SegmentReader::hasNorms(const TCHAR* field){
   }
   const char* SegmentReader::getObjectName() const{
     return getClassName();
+  }
+
+  bool SegmentReader::normsClosed() {
+    if (singleNormStream != NULL) {
+      return false;
+    }
+    NormsType::iterator it = _norms.begin();
+    while ( it != _norms.end() ) {
+      Norm* norm = it->second;
+      if (norm->refCount > 0) {
+        return false;
+      }
+    }
+    return true;
   }
 CL_NS_END

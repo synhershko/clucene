@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -74,10 +74,10 @@ MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, Segme
 
 /** This contructor is only used for {@link #reopen()} */
 MultiSegmentReader::MultiSegmentReader(
-      CL_NS(store)::Directory* directory, 
+      CL_NS(store)::Directory* directory,
       SegmentInfos* infos,
       bool closeDirectory,
-      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders, 
+      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders,
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache):
   DirectoryIndexReader(directory, infos, closeDirectory)
@@ -91,13 +91,13 @@ MultiSegmentReader::MultiSegmentReader(
       segmentReaders[((SegmentReader*)(*oldReaders)[i])->getSegmentName()] = i;
     }
   }
-  
+
   ArrayBase<IndexReader*>* newReaders = _CLNEW ObjectArray<IndexReader>(infos->size());
-  
+
   // remember which readers are shared between the old and the re-opened
   // MultiSegmentReader - we have to incRef those readers
   ValueArray<bool>* readerShared = _CLNEW ValueArray<bool>(infos->size());
-  
+
   for (int32_t i = infos->size() - 1; i>=0; i--) {
     // find SegmentReader for this segment
     map<string,size_t>::iterator oldReaderIndex = segmentReaders.find(infos->info(i)->name);
@@ -150,11 +150,11 @@ MultiSegmentReader::MultiSegmentReader(
         }
       }
     )
-  }    
-  
+  }
+
   // initialize the readers to calculate maxDoc before we try to reuse the old normsCache
   initialize(newReaders);
-  
+
   // try to copy unchanged norms from the old normsCache to the new one
   if (oldNormsCache != NULL) {
     NormsCacheType::iterator it = oldNormsCache->begin();
@@ -165,14 +165,14 @@ MultiSegmentReader::MultiSegmentReader(
       }
       uint8_t* oldBytes = it->second;
       uint8_t* bytes = _CL_NEWARRAY(uint8_t,maxDoc());
-      
-      
+
+
       for (size_t i = 0; i < subReaders->length; i++) {
         map<string,size_t>::iterator oldReaderIndex = segmentReaders.find(((SegmentReader*)(*subReaders)[i])->getSegmentName());
-        
-        // this SegmentReader was not re-opened, we can copy all of its norms 
+
+        // this SegmentReader was not re-opened, we can copy all of its norms
         if (oldReaderIndex != segmentReaders.end() &&
-            ((*oldReaders)[oldReaderIndex->second] == (*subReaders)[i] 
+            ((*oldReaders)[oldReaderIndex->second] == (*subReaders)[i]
             || ((SegmentReader*)(*oldReaders)[oldReaderIndex->second])->_norms.get(field) == ((SegmentReader*)(*subReaders)[i])->_norms.get(field))) {
           // we don't have to synchronize here: either this constructor is called from a SegmentReader,
           // in which case no old norms cache is present, or it is called from MultiReader.reopen(),
@@ -182,7 +182,7 @@ MultiSegmentReader::MultiSegmentReader(
           (*subReaders)[i]->norms(field, bytes+starts[i]);
         }
       }
-      
+
       normsCache.put(field, bytes);      // update cache
 
       it++;
@@ -216,7 +216,7 @@ const char* MultiTermEnum::getClassName(){ return "MultiTermEnum"; }
       return SegmentReader::get(infos, infos->info(0), false);
     } else {
       return _CLNEW MultiSegmentReader(_directory, infos, closeDirectory, subReaders, starts, &normsCache);
-    }            
+    }
   }
 
 
@@ -265,6 +265,10 @@ int32_t MultiSegmentReader::maxDoc() const {
 	return _maxDoc;
 }
 
+const ArrayBase<IndexReader*>* MultiSegmentReader::getSubReaders() const{
+  return subReaders;
+}
+
 bool MultiSegmentReader::document(int32_t n, CL_NS(document)::Document& doc, const FieldSelector* fieldSelector){
 	ensureOpen();
   int32_t i = readerIndex(n);			  // find segment num
@@ -279,7 +283,7 @@ bool MultiSegmentReader::isDeleted(const int32_t n) {
 
 bool MultiSegmentReader::hasDeletions() const{
     // Don't call ensureOpen() here (it could affect performance)
-    return _hasDeletions; 
+    return _hasDeletions;
 }
 
 uint8_t* MultiSegmentReader::norms(const TCHAR* field){
@@ -290,21 +294,21 @@ uint8_t* MultiSegmentReader::norms(const TCHAR* field){
 	if (bytes != NULL){
 	  return bytes;				  // cache hit
 	}
-	
+
 	if ( !hasNorms(field) )
 		return fakeNorms();
-	
+
 	bytes = _CL_NEWARRAY(uint8_t,maxDoc());
 	for (size_t i = 0; i < subReaders->length; i++)
 	  (*subReaders)[i]->norms(field, bytes + starts[i]);
-	
+
 	//Unfortunately the data in the normCache can get corrupted, since it's being loaded with string
 	//keys that may be deleted while still in use by the map. To prevent this field is duplicated
 	//and then stored in the normCache
 	TCHAR* key = STRDUP_TtoT(field);
 	//update cache
 	normsCache.put(key, bytes);
-	
+
 	return bytes;
 }
 
@@ -312,14 +316,14 @@ void MultiSegmentReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
     ensureOpen();
 	uint8_t* bytes = normsCache.get((TCHAR*)field);
-	if (bytes==NULL && !hasNorms(field)) 
+	if (bytes==NULL && !hasNorms(field))
 		bytes=fakeNorms();
-    
+
 	if (bytes != NULL){                            // cache hit
 	   int32_t len = maxDoc();
 	   memcpy(result,bytes,len * sizeof(int32_t));
 	}
-	
+
 	for (size_t i = 0; i < subReaders->length; i++)      // read from segments
 	  (*subReaders)[i]->norms(field, result + starts[i]);
 }
@@ -409,13 +413,13 @@ int32_t MultiSegmentReader::readerIndex(const int32_t n, int32_t* starts, int32_
 bool MultiSegmentReader::hasNorms(const TCHAR* field) {
     ensureOpen();
 	for (size_t i = 0; i < subReaders->length; i++) {
-		if ((*subReaders)[i]->hasNorms(field)) 
+		if ((*subReaders)[i]->hasNorms(field))
 			return true;
 	}
 	return false;
 }
 uint8_t* MultiSegmentReader::fakeNorms() {
-	if (ones==NULL) 
+	if (ones==NULL)
 		ones=SegmentReader::createFakeNorms(maxDoc());
 	return ones;
 }
@@ -450,7 +454,7 @@ void MultiSegmentReader::getFieldNames(FieldOption fieldNames, StringArrayWithDe
     retarray.insert(retarray.end(),subFields.begin(),subFields.end());
     subFields.clear();
   }
-} 
+}
 
 
 void MultiSegmentReader::getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray){
@@ -556,21 +560,21 @@ void MultiTermDocs::seek( Term* tterm) {
 //Post - The instance has been reset for a new search
 
 	CND_PRECONDITION(tterm != NULL, "tterm is NULL");
-	
+
 	//Assigning tterm is done as below for a reason
 	//The construction ensures that if seek is called from within
 	//MultiTermDocs with as argument this->term (seek(this->term)) that the assignment
 	//will succeed and all referencecounters represent the correct situation
-	
+
 	//Get a pointer from tterm and increase its reference counter
 	Term *TempTerm = _CL_POINTER(tterm);
-	
+
 	//Finialize term to ensure we decrease the reference counter of the instance which term points to
 	_CLDECDELETE(term);
-	
+
 	//Assign TempTerm to term
 	term = TempTerm;
-	
+
 	base = 0;
 	pointer = 0;
 	current = NULL;
@@ -625,7 +629,7 @@ bool MultiTermDocs::skipTo(const int32_t target) {
 			current = termDocs(pointer++);
 		} else {
 			return false;
-		}		
+		}
 	}
 }
 
@@ -642,7 +646,7 @@ void MultiTermDocs::close() {
     for (size_t i = 0; i < subReaders->length; i++) {
         //Retrieve the i-th TermDocs instance
         curTD = (*readerTermDocs)[i];
-        
+
         //Check if it is a valid pointer
         if (curTD != NULL) {
             //Close it
@@ -650,16 +654,16 @@ void MultiTermDocs::close() {
             _CLDELETE(curTD);
         }
     }
-    
+
     _CLDELETE_ARRAY(readerTermDocs);
 	}
-	
+
 	//current previously pointed to a member of readerTermDocs; ensure that
 	//it doesn't now point to invalid memory.
 	current = NULL;
 	base          = 0;
 	pointer       = 0;
-	
+
 	_CLDECDELETE(term);
 }
 
@@ -677,7 +681,7 @@ TermDocs* MultiTermDocs::termDocs(const int32_t i) {
 	  result = (*readerTermDocs)[i];
 	}
 	result->seek(term);
-	
+
 	return result;
 }
 
@@ -694,9 +698,9 @@ MultiTermEnum::MultiTermEnum(ArrayBase<IndexReader*>* subReaders, const int32_t 
 //Pre  - if readers is NULL then subReaders->length must be 0 else if readers != NULL then subReaders->length > 0
 //       s != NULL
 //Post - The instance has been created
-	
+
 	CND_PRECONDITION(starts != NULL,"starts is NULL");
-	
+
 	//Temporary variables
 	IndexReader*   reader    = NULL;
 	TermEnum* termEnum  = NULL;
@@ -704,14 +708,14 @@ MultiTermEnum::MultiTermEnum(ArrayBase<IndexReader*>* subReaders, const int32_t 
 	_docFreq = 0;
 	_term = NULL;
 	queue                      = _CLNEW SegmentMergeQueue(subReaders->length);
-	
+
 	CND_CONDITION (queue != NULL, "Could not allocate memory for queue");
-	
+
 	//iterate through all the readers
 	for ( size_t i=0;i<subReaders->length;i++ ) {
 		//Get the i-th reader
 		reader = (*subReaders)[i];
-		
+
 		//Check if the enumeration must start from term t
 		if (t != NULL) {
 			//termEnum is an enumeration of terms starting at or after the named term t
@@ -723,7 +727,7 @@ MultiTermEnum::MultiTermEnum(ArrayBase<IndexReader*>* subReaders, const int32_t 
 
 		//Instantiate an new SegmentMerginfo
 		smi = _CLNEW SegmentMergeInfo(starts[i], termEnum, reader);
-		
+
 		// Note that in the call termEnum->getTerm(false) below false is required because
 		// otherwise a reference is leaked. By passing false getTerm is
 		// ordered to return an unowned reference instead. (Credits for DSR)
@@ -737,7 +741,7 @@ MultiTermEnum::MultiTermEnum(ArrayBase<IndexReader*>* subReaders, const int32_t 
 			_CLDELETE(smi);
 		}
 	}
-	
+
 	//Check if the queue has elements
 	if (t != NULL && queue->size() > 0) {
 		next();
@@ -751,7 +755,7 @@ MultiTermEnum::~MultiTermEnum(){
 
 	//Close the enumeration
 	close();
-	
+
 	//Delete the queue
 	_CLDELETE(queue);
 }
@@ -764,37 +768,37 @@ bool MultiTermEnum::next(){
 
 	SegmentMergeInfo* top = queue->top();
 	if (top == NULL) {
-	    _CLDECDELETE(_term); 
+	    _CLDECDELETE(_term);
 	    _term = NULL;
 	    return false;
 	}
-	
+
 	//The getTerm method requires the client programmer to indicate whether he
 	// owns the returned reference, so we can discard ours
 	// right away.
-	_CLDECDELETE(_term); 
-	
+	_CLDECDELETE(_term);
+
 	//Assign term the term of top and make sure the reference counter is increased
 	_term = _CL_POINTER(top->term);
 	_docFreq = 0;
-	
+
 	//Find the next term
 	while (top != NULL && _term->compareTo(top->term) == 0) {
 		//don't delete, this is the top
-		queue->pop(); 
+		queue->pop();
 		// increment freq
-		_docFreq += top->termEnum->docFreq();	  
+		_docFreq += top->termEnum->docFreq();
 		if (top->next()){
 			// restore queue
-			queue->put(top);				  
+			queue->put(top);
 		}else{
 			// done with a segment
-			top->close();				  
+			top->close();
 			_CLDELETE(top);
 		}
 		top = queue->top();
 	}
-	
+
 	return true;
 }
 
@@ -836,7 +840,7 @@ void MultiTermEnum::close() {
 
 	// Needed when this enumeration hasn't actually been exhausted yet
 	_CLDECDELETE(_term);
-	
+
 	//Close the queue This will destroy all SegmentMergeInfo instances!
 	queue->close();
 
@@ -873,22 +877,22 @@ TermDocs* MultiTermPositions::termDocs(IndexReader* reader) {
 
 	TermPositions* tp = reader->termPositions();
 	TermDocs* ret = tp->__asTermDocs();
-	
+
 	CND_CONDITION(ret != NULL,
 	    "Dynamic downcast in MultiTermPositions::termDocs from"
 	    " TermPositions to TermDocs failed."
 	  );
 	return ret;
 	}
-	
+
 int32_t MultiTermPositions::nextPosition() {
 	//Func -
 	//Pre  - current != NULL
 	//Post -
 	CND_PRECONDITION(current != NULL,"current is NULL");
-	
+
 	TermPositions* curAsTP = current->__asTermPositions();
-	
+
 	CND_CONDITION(curAsTP != NULL,
 	    "Dynamic downcast in MultiTermPositions::nextPosition from"
 	    " SegmentTermDocs to TermPositions failed."

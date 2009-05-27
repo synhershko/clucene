@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_MultiReader
@@ -95,12 +95,12 @@ public:
 	void norms(const TCHAR* field, uint8_t* result);
 	TermEnum* terms();
 	TermEnum* terms(const Term* term);
-	
+
 	//Returns the document frequency of the current term in the set
 	int32_t docFreq(const Term* t=NULL);
 	TermDocs* termDocs();
 	TermPositions* termPositions();
-	
+
 	/**
 	* @see IndexReader#getFieldNames(IndexReader.FieldOption fldOption)
 	*/
@@ -116,7 +116,9 @@ public:
    * @throws UnsupportedOperationException
    */
   int64_t getVersion();
-  
+
+  const CL_NS(util)::ArrayBase<IndexReader*>* getSubReaders() const;
+
   static const char* getClassName();
   const char* getObjectName() const;
 };

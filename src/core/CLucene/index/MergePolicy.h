@@ -44,14 +44,14 @@ class IndexWriter;
  * <p><b>NOTE:</b> This API is new and still experimental
  * (subject to change suddenly in the next release)</p>
  */
-class CLUCENE_EXPORT MergePolicy: public CL_NS(util)::NamedObject {
+class CLUCENE_EXPORT CLUCENE_EXPORT MergePolicy: public CL_NS(util)::NamedObject {
 public:
   /** OneMerge provides the information necessary to perform
    *  an individual primitive merge operation, resulting in
    *  a single new segment.  The merge spec includes the
    *  subset of segments to be merged as well as whether the
    *  new segment should use the compound file format. */
-  class OneMerge: public CL_NS(util)::NamedObject {
+  class CLUCENE_EXPORT OneMerge: public CL_NS(util)::NamedObject {
   public:
     DEFINE_MUTEX(THIS_LOCK)
     SegmentInfo* info;               // used by IndexWriter
@@ -101,7 +101,7 @@ public:
    * contains a list of {@link OneMerge} instances.
    */
 
-  class MergeSpecification {
+  class CLUCENE_EXPORT MergeSpecification {
   public:
     /**
      * The subset of segments to be included in the primitive merge.
@@ -192,7 +192,7 @@ public:
  * subclass that measures size as the total byte size of the
  * file(s) for the segment.</p>
  */
-class LogMergePolicy: public MergePolicy {
+class CLUCENE_EXPORT LogMergePolicy: public MergePolicy {
 
   int32_t mergeFactor;
 
@@ -337,7 +337,7 @@ public:
 /** This is a {@link LogMergePolicy} that measures size of a
  *  segment as the number of documents (not taking deletions
  *  into account). */
-class LogDocMergePolicy: public LogMergePolicy {
+class CLUCENE_EXPORT LogDocMergePolicy: public LogMergePolicy {
 public:
 
   /** Default minimum segment size.  @see setMinMergeDocs */
@@ -419,7 +419,7 @@ public:
    *  un-merged.
    *  @see #setMinMergeMB **/
   float_t getMinMergeMB();
-  
+
   static const char* getClassName();
   virtual const char* getObjectName() const;
 };

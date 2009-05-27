@@ -35,6 +35,7 @@ CL_NS_USE2(analysis,standard)
 #include "CuTest.h"
 
 CuSuite *testindexwriter(void);
+CuSuite *testindexreader(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
 CuSuite *testanalyzers(void);
@@ -115,6 +116,9 @@ public:
         this->insert ( std::pair<_K,_T>(k,v) );
     }
 };
+
+void TestAssertIndexReaderEquals(CuTest *tc,  IndexReader* reader1, IndexReader* reader2);
+
 
 extern unittest tests[];
 

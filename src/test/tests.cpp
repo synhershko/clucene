@@ -7,6 +7,8 @@
 #include "test.h"
 
 unittest tests[] = {
+    {"indexreader", testindexreader},/*
+    {"reuters", testreuters},
     {"analyzers", testanalyzers},
     {"document", testdocument},
     {"numbertools", testNumberTools},
@@ -25,7 +27,6 @@ unittest tests[] = {
     {"datefilter", testdatefilter},
     {"wildcard", testwildcard},
     {"store", teststore},
-    {"utf8", testutf8},
-    {"reuters", testreuters},
+    {"utf8", testutf8},*/
     {"LastTest", NULL}
 };

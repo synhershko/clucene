@@ -417,6 +417,10 @@ public:
 
   static const char* getClassName();
   const char* getObjectName() const;
+
+  // for testing only
+  bool normsClosed();
+
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir, int32_t readBufferSize);

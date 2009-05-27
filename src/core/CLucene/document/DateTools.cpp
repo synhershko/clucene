@@ -171,7 +171,7 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 	if (t == -1)
 		_CLTHROWA(CL_ERR_Parse, "Input is not valid date string");
 
-	ret = (t * 1000) + ms;
+	ret = (static_cast<int64_t>(t) * 1000) + ms;
 
 	return ret;
 }

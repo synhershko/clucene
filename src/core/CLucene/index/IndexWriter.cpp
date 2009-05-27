@@ -23,6 +23,7 @@
 #include "_SegmentMerger.h"
 #include "_SegmentHeader.h"
 #include "CLucene/search/Similarity.h"
+#include "CLucene/index/MergePolicy.h"
 #include "MergePolicy.h"
 #include "MergeScheduler.h"
 #include "_IndexFileDeleter.h"
