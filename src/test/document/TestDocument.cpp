@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include "CLucene/document/_FieldSelector.h"
 
 //an in memory input stream for testing binary data
 class MemReader: public CL_NS(util)::Reader{
@@ -128,6 +129,50 @@ public:
 	  _CLDELETE_ARRAY(t);
   }
 
+  void TestFieldSelectors(CuTest *tc){
+    RAMDirectory dir;
+    {
+      WhitespaceAnalyzer a;
+      IndexWriter w(&dir,&a,true);
+      for (int i=0;i<3;i++){
+        Document doc;
+        doc.add(*_CLNEW Field(_T("f1"), _T("value1"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f2"), _T("value2"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f4"), _T("value4"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f5"), _T("too long a field..."), Field::STORE_YES));
+
+        w.addDocument(&doc);
+      }
+      w.flush();
+    }
+
+    IndexReader* reader = IndexReader::open(&dir);
+    MapFieldSelector fieldsToLoad;
+    fieldsToLoad.add(_T("f2"), FieldSelector::LOAD );
+    fieldsToLoad.add(_T("f3"), FieldSelector::LAZY_LOAD );
+    fieldsToLoad.add(_T("f5"), FieldSelector::SIZE );
+    Document doc;
+    CLUCENE_ASSERT(reader->document(0,doc,&fieldsToLoad));
+    CLUCENE_ASSERT(doc.getFields()->size()==3);
+    CuAssertStrEquals(tc,_T("check f2"), _T("value2"), doc.get(_T("f2")) );
+    //CuAssertStrEquals(tc,_T("check f3"), _T("value3"), doc.get(_T("f3")) );
+
+    Field* byteField = doc.getField(_T("f5"));
+    const ValueArray<uint8_t>& bytes = *byteField->binaryValue();
+    uint32_t shouldBeInt = 21;
+    ValueArray<uint8_t> shouldBe(4);
+    shouldBe[0] = (uint8_t) (shouldBeInt>>24);
+    shouldBe[1] = (uint8_t) (shouldBeInt>>16);
+    shouldBe[2] = (uint8_t) (shouldBeInt>> 8);
+    shouldBe[3] = (uint8_t)  shouldBeInt      ;
+    printf("%d %d %d %d\n", bytes[0], bytes[1], bytes[2], bytes[3]);
+    CLUCENE_ASSERT(byteField!=NULL);
+    CLUCENE_ASSERT(memcmp(shouldBe.values,bytes.values,4)==0);
+
+    _CLDELETE(reader);
+  }
+
   void TestBinaryDocument(CuTest *tc){
     char factbook[1024];
     strcpy(factbook, clucene_data_location);
@@ -213,7 +258,6 @@ public:
     CLUCENE_ASSERT(i == _tcslen(_ts));
     doc.clear();
 
-
     reader->close();
     _CLDELETE(reader);
   }
@@ -222,6 +266,7 @@ CuSuite *testdocument(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Document Test"));
 
+	SUITE_ADD_TEST(suite, TestFieldSelectors);
 	SUITE_ADD_TEST(suite, TestFields);
 	SUITE_ADD_TEST(suite, TestBinaryDocument);
 	SUITE_ADD_TEST(suite, TestDateTools);

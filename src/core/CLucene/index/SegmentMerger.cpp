@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -24,7 +24,7 @@ CL_NS_USE(document)
 CL_NS_USE(store)
 CL_NS_DEF(index)
 
-const uint8_t SegmentMerger::NORMS_HEADER[] = {'N','R','M', (uint8_t)-1}; 
+const uint8_t SegmentMerger::NORMS_HEADER[] = {'N','R','M', (uint8_t)-1};
 const int SegmentMerger::NORMS_HEADER_length = 4;
 int32_t SegmentMerger::MAX_RAW_MERGE_DOCS = 4192;
 
@@ -61,30 +61,30 @@ SegmentMerger::~SegmentMerger(){
 //Func - Destructor
 //Pre  - true
 //Post - The instance has been destroyed
-    
+
 	//Clear the readers set
 	readers.clear();
 
 	//Delete field Infos
-	_CLDELETE(fieldInfos);     
+	_CLDELETE(fieldInfos);
 	//Close and destroy the IndexOutput to the Frequency File
-	if (freqOutput != NULL){ 
-		freqOutput->close(); 
-		_CLDELETE(freqOutput); 
+	if (freqOutput != NULL){
+		freqOutput->close();
+		_CLDELETE(freqOutput);
 	}
 	//Close and destroy the IndexOutput to the Prox File
 	if (proxOutput != NULL){
-		proxOutput->close(); 
-		_CLDELETE(proxOutput); 
+		proxOutput->close();
+		_CLDELETE(proxOutput);
 	}
 	//Close and destroy the termInfosWriter
 	if (termInfosWriter != NULL){
-		termInfosWriter->close(); 
-		_CLDELETE(termInfosWriter); 
+		termInfosWriter->close();
+		_CLDELETE(termInfosWriter);
 	}
 	//Close and destroy the queue
 	if (queue != NULL){
-		queue->close(); 
+		queue->close();
 		_CLDELETE(queue);
 	}
 
@@ -118,7 +118,7 @@ IndexReader* SegmentMerger::segmentReader(const int32_t i) {
 
 int32_t SegmentMerger::merge(bool mergeDocStores) {
   this->mergeDocStores = mergeDocStores;
-  
+
   // NOTE: it's important to add calls to
   // checkAbort.work(...) if you make any changes to this
   // method that will spend alot of time.  The frequency
@@ -190,14 +190,14 @@ void SegmentMerger::createCompoundFile(const char* filename, std::vector<std::st
   if ( ownFiles ) delete files;
 }
 
-void SegmentMerger::addIndexed(IndexReader* reader, FieldInfos* fieldInfos, StringArrayWithDeletor& names, 
+void SegmentMerger::addIndexed(IndexReader* reader, FieldInfos* fieldInfos, StringArrayWithDeletor& names,
 	  bool storeTermVectors, bool storePositionWithTermVector,
     bool storeOffsetWithTermVector, bool storePayloads){
 
 	StringArrayWithDeletor::const_iterator itr = names.begin();
 	while ( itr != names.end() ){
-		fieldInfos->add(*itr, true, 
-			storeTermVectors, storePositionWithTermVector, 
+		fieldInfos->add(*itr, true,
+			storeTermVectors, storePositionWithTermVector,
 			storeOffsetWithTermVector, !reader->hasNorms(*itr), storePayloads);
 
 		++itr;
@@ -211,15 +211,15 @@ class FieldSelectorMerge: public FieldSelector{
 public:
   FieldSelectorResult accept(const TCHAR* fieldName) const{
     return FieldSelector::LOAD_FOR_MERGE;
-  }        
+  }
 };
 
 
 int32_t SegmentMerger::mergeFields() {
-//Func - Merge the fields of all segments 
+//Func - Merge the fields of all segments
 //Pre  - true
 //Post - The field infos and field values of all segments have been merged.
-	
+
   if (!mergeDocStores) {
     // When we are not merging by doc stores, that means
     // all segments were written as part of a single
@@ -251,8 +251,8 @@ int32_t SegmentMerger::mergeFields() {
       SegmentReader* segmentReader = (SegmentReader*) reader;
       for (size_t j = 0; j < segmentReader->getFieldInfos()->size(); j++) {
         FieldInfo* fi = segmentReader->getFieldInfos()->fieldInfo(j);
-        fieldInfos->add(fi->name, fi->isIndexed, fi->storeTermVector, 
-          fi->storePositionWithTermVector, fi->storeOffsetWithTermVector, 
+        fieldInfos->add(fi->name, fi->isIndexed, fi->storeTermVector,
+          fi->storePositionWithTermVector, fi->storeOffsetWithTermVector,
           !reader->hasNorms(fi->name), fi->storePayloads);
       }
     } else {
@@ -384,7 +384,7 @@ int32_t SegmentMerger::mergeFields() {
 
 
 void SegmentMerger::mergeVectors(){
-	TermVectorsWriter* termVectorsWriter = 
+	TermVectorsWriter* termVectorsWriter =
 		_CLNEW TermVectorsWriter(directory, segment.c_str(), fieldInfos);
 
 	try {
@@ -398,17 +398,17 @@ void SegmentMerger::mergeVectors(){
 
 				ArrayBase<TermFreqVector*>* tmp = reader->getTermFreqVectors(docNum);
         if ( tmp != NULL ){
-					termVectorsWriter->addAllDocVectors(*tmp);
+					termVectorsWriter->addAllDocVectors(tmp);
 				  _CLLDELETE(tmp);
         }
           if (checkAbort != NULL)
             checkAbort->work(300);
 			}
 		}
-	}_CLFINALLY( 
+	}_CLFINALLY(
     if ( termVectorsWriter != NULL ){
       termVectorsWriter->close();
-      _CLDELETE(termVectorsWriter); 
+      _CLDELETE(termVectorsWriter);
     }
   );
 
@@ -431,21 +431,21 @@ void SegmentMerger::mergeTerms() {
 
       //Open an IndexOutput to the new Prox File
       proxOutput = directory->createOutput( Misc::segmentname(segment.c_str(),".prx").c_str() );
-      
+
       //Instantiate  a new termInfosWriter which will write in directory
       //for the segment name segment using the new merged fieldInfos
-      termInfosWriter = _CLNEW TermInfosWriter(directory, segment.c_str(), fieldInfos, termIndexInterval);  
-      
+      termInfosWriter = _CLNEW TermInfosWriter(directory, segment.c_str(), fieldInfos, termIndexInterval);
+
       //Condition check to see if termInfosWriter points to a valid instance
       CND_CONDITION(termInfosWriter != NULL,"Memory allocation for termInfosWriter failed")	;
-      
+
       skipInterval = termInfosWriter->skipInterval;
       maxSkipLevels = termInfosWriter->maxSkipLevels;
       skipListWriter = _CLNEW DefaultSkipListWriter(skipInterval, maxSkipLevels, mergedDocs, freqOutput, proxOutput);
       queue = _CLNEW SegmentMergeQueue(readers.size());
 
       //And merge the Term Infos
-      mergeTermInfos();	      
+      mergeTermInfos();
     }_CLFINALLY(
       if ( freqOutput != NULL ){
         freqOutput->close();
@@ -518,12 +518,12 @@ void SegmentMerger::mergeTermInfos(){
 
     //Condition check to see if match points to a valid instance
     CND_CONDITION(match != NULL, "Memory allocation for match failed")	;
-    
+
     SegmentMergeInfo* top = NULL;
 
     //As long as there are SegmentMergeInfo instances stored in the queue
     while (queue->size() > 0) {
-      int32_t matchSize = 0;			  
+      int32_t matchSize = 0;
 
       // pop matching terms
 
@@ -538,7 +538,7 @@ void SegmentMerger::mergeTermInfos(){
       //Get the current top of the queue
       top = queue->top();
 
-      //For each SegmentMergInfo still in the queue 
+      //For each SegmentMergInfo still in the queue
 		  //Check if term matches the term of the SegmentMergeInfo instances in the queue
       while (top != NULL && term->equals(top->term) ){
         //A match has been found so add the matching SegmentMergeInfo to the match array
@@ -550,11 +550,11 @@ void SegmentMerger::mergeTermInfos(){
       int32_t df = mergeTermInfo(match, matchSize);		  // add new TermInfo
       if (checkAbort != NULL)
         checkAbort->work(df/3.0);
-		
+
       //Restore the SegmentTermInfo instances in the match array back into the queue
       while (matchSize > 0){
         smi = match[--matchSize];
-	
+
         //Condition check to see if smi points to a valid instance
         CND_CONDITION(smi != NULL,"smi is NULL")	;
 
@@ -562,11 +562,11 @@ void SegmentMerger::mergeTermInfos(){
 			  if (smi->next()){
           //There still are some terms so restore smi in the queue
           queue->put(smi);
-				
+
         }else{
 		      //Done with a segment
 		      //No terms anymore so close this SegmentMergeInfo instance
-          smi->close();				  
+          smi->close();
           _CLDELETE( smi );
         }
       }
@@ -575,7 +575,7 @@ void SegmentMerger::mergeTermInfos(){
 }
 
 int32_t SegmentMerger::mergeTermInfo( SegmentMergeInfo** smis, int32_t n){
-//Func - Merge the TermInfo of a term found in one or more segments. 
+//Func - Merge the TermInfo of a term found in one or more segments.
 //Pre  - smis != NULL and it contains segments that are positioned at the same term.
 //       n is equal to the number of SegmentMergeInfo instances in smis
 //       freqOutput != NULL
@@ -592,7 +592,7 @@ int32_t SegmentMerger::mergeTermInfo( SegmentMergeInfo** smis, int32_t n){
   int64_t proxPointer = proxOutput->getFilePointer();
 
   //Process postings from multiple segments all positioned on the same term.
-  int32_t df = appendPostings(smis, n);  
+  int32_t df = appendPostings(smis, n);
 
   int64_t skipPointer = skipListWriter->writeSkip(freqOutput);
 
@@ -608,7 +608,7 @@ int32_t SegmentMerger::mergeTermInfo( SegmentMergeInfo** smis, int32_t n){
   }
   return df;
 }
-	    
+
 
 int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
 //Func - Process postings from multiple segments all positioned on the
@@ -636,12 +636,12 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
   //Iterate through all SegmentMergeInfo instances in smis
   int32_t i = 0;
   while ( (smi=smis[i]) != NULL ){
-    //Get the i-th SegmentMergeInfo 
+    //Get the i-th SegmentMergeInfo
 
     //Condition check to see if smi points to a valid instance
     CND_PRECONDITION(smi!=NULL,"	 is NULL");
 
-    //Get the term positions 
+    //Get the term positions
     TermPositions* postings = smi->getPositions();
     assert(postings != NULL);
     //Get the base of this segment
@@ -670,27 +670,27 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
         skipListWriter->bufferSkip(df);
       }
 
-      //Calculate a new docCode 
+      //Calculate a new docCode
       //use low bit to flag freq=1
-      int32_t docCode = (doc - lastDoc) << 1;	  
+      int32_t docCode = (doc - lastDoc) << 1;
       lastDoc = doc;
 
       //Get the frequency of the Term
       int32_t freq = postings->freq();
       if (freq == 1){
         //write doc & freq=1
-        freqOutput->writeVInt(docCode | 1);	  
+        freqOutput->writeVInt(docCode | 1);
       }else{
         //write doc
-        freqOutput->writeVInt(docCode);	  
+        freqOutput->writeVInt(docCode);
         //write frequency in doc
-        freqOutput->writeVInt(freq);		  
+        freqOutput->writeVInt(freq);
       }
 
-      /** See {@link DocumentWriter#writePostings(Posting[], String) for 
+      /** See {@link DocumentWriter#writePostings(Posting[], String) for
       *  documentation about the encoding of positions and payloads
       */
-      int32_t lastPosition = 0;			  
+      int32_t lastPosition = 0;
       // write position deltas
       for (int32_t j = 0; j < freq; j++) {
         //Get the next position
@@ -722,12 +722,12 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
     i++;
   }
 
-  //Return total number of documents across all segments where term was found		
+  //Return total number of documents across all segments where term was found
   return df;
 }
 
 void SegmentMerger::mergeNorms() {
-//Func - Merges the norms for all fields 
+//Func - Merges the norms for all fields
 //Pre  - fieldInfos != NULL
 //Post - The norms for all fields have been merged
   ValueArray<uint8_t> normBuffer;
@@ -745,7 +745,7 @@ void SegmentMerger::mergeNorms() {
       //Is this Field indexed?
       if (fi->isIndexed && !fi->omitNorms){
         //Instantiate  an IndexOutput to that norm file
-        if (output == NULL) { 
+        if (output == NULL) {
           output = directory->createOutput( (segment + "." + IndexFileNames::NORMS_EXTENSION).c_str() );
           output->writeBytes(NORMS_HEADER,NORMS_HEADER_length);
         }

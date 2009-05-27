@@ -89,13 +89,13 @@ TermVectorsReader::~TermVectorsReader(){
 
 int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
 	int32_t format = in->readInt();
-	if (format > TermVectorsWriter::FORMAT_VERSION)
+	if (format > TermVectorsReader::FORMAT_VERSION)
 	{
 		CL_NS(util)::StringBuffer err;
 		err.append(_T("Incompatible format version: "));
 		err.appendInt(format);
 		err.append(_T(" expected "));
-		err.appendInt(TermVectorsWriter::FORMAT_VERSION);
+		err.appendInt(TermVectorsReader::FORMAT_VERSION);
 		err.append(_T(" or less"));
 		_CLTHROWT(CL_ERR_CorruptIndex,err.getBuffer());
 	}
@@ -349,13 +349,13 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 	}
 	mapper->setExpectations(field, numTerms, storeOffsets, storePositions);
 
-    int32_t start = 0;
-    int32_t deltaLength = 0;
-    int32_t totalLength = 0;
-	int32_t bufferLen=10; // init the buffer with a length of 10 character
-	TCHAR* buffer = (TCHAR*)malloc(bufferLen * sizeof(TCHAR));
+  int32_t start = 0;
+  int32_t deltaLength = 0;
+  int32_t totalLength = 0;
+  int32_t bufferLen=10; // init the buffer with a length of 10 character
+  TCHAR* buffer = (TCHAR*)malloc(bufferLen * sizeof(TCHAR));
 
-    for (int32_t i = 0; i < numTerms; ++i) {
+  for (int32_t i = 0; i < numTerms; ++i) {
 		start = tvf->readVInt();
 		deltaLength = tvf->readVInt();
 		totalLength = start + deltaLength;
@@ -395,11 +395,11 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 			}
 		}
 
-		ObjectArray<TermVectorOffsetInfo>* offsets = NULL;
+		ArrayBase<TermVectorOffsetInfo*>* offsets = NULL;
 		if (storeOffsets) {
 			//does the mapper even care about offsets?
 			if (mapper->isIgnoringOffsets() == false) {
-				offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(freq); offsets->initArray();
+				offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(freq);
 				int32_t prevOffset = 0;
 				for (int32_t j = 0; j < freq; j++) {
 					int32_t startOffset = prevOffset + tvf->readVInt();
@@ -416,7 +416,7 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 		}
 		mapper->map(term, totalLength, freq, offsets, positions);
 	}
-    free(buffer);
+  free(buffer);
 }
 
 ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO = _CLNEW ObjectArray<TermVectorOffsetInfo>;
@@ -507,15 +507,13 @@ void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const i
 													const bool storeOffsets, const bool storePositions) {
 	this->field = const_cast<TCHAR*>(_field);
 
-	terms = _CL_NEWARRAY(TCHAR*,numTerms+1);
-	terms[numTerms]=NULL; //null terminate terms array
-
+	terms = _CLNEW CL_NS(util)::ValueArray<const TCHAR*>(numTerms);
 	termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
 
 	this->storingOffsets = storeOffsets;
 	this->storingPositions = storePositions;
 	if(storePositions){
-		positions = _CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
+		positions = (ArrayBase< ArrayBase<int32_t>* >*)_CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
 	}
 	if(storeOffsets){
 		offsets = _CLNEW ObjectArray< ArrayBase<TermVectorOffsetInfo*> >(numTerms);
@@ -523,8 +521,9 @@ void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const i
 }
 
 void ParallelArrayTermVectorMapper::map(const TCHAR* term, int32_t termLen, const int32_t frequency,
-										ObjectArray<TermVectorOffsetInfo>* _offsets, ValueArray<int32_t>* _positions) {
-	terms[currentPosition] = const_cast<TCHAR*>(term);
+    ArrayBase<TermVectorOffsetInfo*>* _offsets,
+    ArrayBase<int32_t>* _positions) {
+	terms->values[currentPosition] = term;
 
 	termFreqs->values[currentPosition] = frequency;
 

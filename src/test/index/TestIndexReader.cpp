@@ -101,12 +101,12 @@ void assertReaderOpen(CuTest* tc, IndexReader* reader) {
   }*/
 }
 
-Directory* defaultModifyIndexTestDir = NULL;
+Directory* defaultModifyIndexTestDir1 = NULL;
 IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
   WhitespaceAnalyzer whitespaceAnalyzer;
   switch (i) {
     case 0: {
-      IndexWriter w(defaultModifyIndexTestDir, &whitespaceAnalyzer, false);
+      IndexWriter w(defaultModifyIndexTestDir1, &whitespaceAnalyzer, false);
       Term* t1 = _CLNEW Term(_T("field2"), _T("a11"));
       w.deleteDocuments(t1);
       Term* t2 = _CLNEW Term(_T("field2"), _T("b30"));
@@ -117,7 +117,7 @@ IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
       break;
     }
     case 1: {
-      IndexReader* reader = IndexReader::open(defaultModifyIndexTestDir);
+      IndexReader* reader = IndexReader::open(defaultModifyIndexTestDir1);
       reader->setNorm(4, _T("field1"), (uint8_t)123);
       reader->setNorm(44, _T("field2"), (uint8_t)222);
       reader->setNorm(44, _T("field4"), (uint8_t)22);
@@ -126,13 +126,13 @@ IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
       break;
     }
     case 2: {
-      IndexWriter w(defaultModifyIndexTestDir, &whitespaceAnalyzer, false);
+      IndexWriter w(defaultModifyIndexTestDir1, &whitespaceAnalyzer, false);
       w.optimize();
       w.close();
       break;
     }
     case 3: {
-      IndexWriter w(defaultModifyIndexTestDir, &whitespaceAnalyzer, false);
+      IndexWriter w(defaultModifyIndexTestDir1, &whitespaceAnalyzer, false);
       Document doc;
       createDocument(doc, 101, 4);
       w.addDocument(&doc);
@@ -145,7 +145,7 @@ IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
       break;
     }
     case 4: {
-      IndexReader* reader = IndexReader::open(defaultModifyIndexTestDir);
+      IndexReader* reader = IndexReader::open(defaultModifyIndexTestDir1);
       reader->setNorm(5, _T("field1"), (uint8_t)123);
       reader->setNorm(55, _T("field2"), (uint8_t)222);
       reader->close();
@@ -154,8 +154,25 @@ IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
     }
 
   }
-  return IndexReader::open(defaultModifyIndexTestDir);
+  return IndexReader::open(defaultModifyIndexTestDir1);
 }
+
+
+Directory* defaultModifyIndexTestDir2 = NULL;
+IndexReader* defaultModifyIndexTestMulti(CuTest* tc, IndexReader* reader, int i){
+  defaultModifyIndexTest(tc,reader,i); //call main test
+
+  Directory* tmp = defaultModifyIndexTestDir1;
+  defaultModifyIndexTestDir1 = defaultModifyIndexTestDir2;
+  defaultModifyIndexTest(tc,reader,i); //call main test
+  defaultModifyIndexTestDir1 = tmp;
+
+  ObjectArray<IndexReader>* readers = _CLNEW ObjectArray<IndexReader>(2);
+  readers->values[0] = IndexReader::open(defaultModifyIndexTestDir1);
+  readers->values[1] = IndexReader::open(defaultModifyIndexTestDir2);
+  return _CLNEW MultiReader(readers, true);
+}
+
 ReaderCouple refreshReader(CuTest* tc, IndexReader* reader, TestIRModifyIndex test, int modify, bool hasChanges) {
   SCOPED_LOCK_MUTEX(createReaderMutex)
 
@@ -220,16 +237,49 @@ void performDefaultIRTests(CuTest *tc, IndexReader* index1, IndexReader* index2,
 
 
 
-void testIRReopen(CuTest *tc){
+void testIndexReaderReopen(CuTest *tc){
   RAMDirectory dir;
   createIndex(tc, &dir, false);
   IndexReader* index1 = IndexReader::open(&dir);
   IndexReader* index2 = IndexReader::open(&dir);
   IndexReader* index2B = IndexReader::open(&dir);
 
-  defaultModifyIndexTestDir = &dir;
+  defaultModifyIndexTestDir1 = &dir;
   performDefaultIRTests(tc, index1, index2, index2B, defaultModifyIndexTest);
-  defaultModifyIndexTestDir = NULL;
+  defaultModifyIndexTestDir1 = NULL;
+
+  _CLDELETE(index1);
+  //_CLDELETE(index2);this one gets deleted...
+  //_CLDELETE(index2B);
+}
+
+
+void testMultiReaderReopen(CuTest *tc){
+  RAMDirectory dir1;
+  createIndex(tc, &dir1, true);
+  RAMDirectory dir2 ;
+  createIndex(tc, &dir2, true);
+
+  ObjectArray<IndexReader>* readers1 = _CLNEW ObjectArray<IndexReader>(2);
+  readers1->values[0] = IndexReader::open(&dir1);
+  readers1->values[1] = IndexReader::open(&dir2);
+  IndexReader* index1 = _CLNEW MultiReader(readers1, true);
+
+  ObjectArray<IndexReader>* readers2 = _CLNEW ObjectArray<IndexReader>(2);
+  readers2->values[0] = IndexReader::open(&dir1);
+  readers2->values[1] = IndexReader::open(&dir2);
+  IndexReader* index2 = _CLNEW MultiReader(readers2, true);
+
+  ObjectArray<IndexReader>* readers2b = _CLNEW ObjectArray<IndexReader>(2);
+  readers2b->values[0] = IndexReader::open(&dir1);
+  readers2b->values[1] = IndexReader::open(&dir2);
+  IndexReader* index2b = _CLNEW MultiReader(readers2b, true);
+
+  defaultModifyIndexTestDir1 = &dir1;
+  defaultModifyIndexTestDir2 = &dir2;
+  performDefaultIRTests(tc, index1, index2, index2b, defaultModifyIndexTestMulti);
+  defaultModifyIndexTestDir1 = NULL;
+  defaultModifyIndexTestDir2 = NULL;
 
   _CLDELETE(index1);
   //_CLDELETE(index2);this one gets deleted...
@@ -239,7 +289,8 @@ void testIRReopen(CuTest *tc){
 CuSuite *testindexreader(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexReader Test"));
-	SUITE_ADD_TEST(suite, testIRReopen);
+  SUITE_ADD_TEST(suite, testIndexReaderReopen);
+  SUITE_ADD_TEST(suite, testMultiReaderReopen);
 
   return suite;
 }

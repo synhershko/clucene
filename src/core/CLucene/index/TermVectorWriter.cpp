@@ -1,329 +1,196 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "_TermVector.h"
+#include "_IndexFileNames.h"
 #include "CLucene/util/Misc.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/store/IndexOutput.h"
-
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-const char* TermVectorsWriter::LUCENE_TVX_EXTENSION = ".tvx";
-const char* TermVectorsWriter::LUCENE_TVD_EXTENSION = ".tvd";
-const char* TermVectorsWriter::LUCENE_TVF_EXTENSION = ".tvf";
-
- TermVectorsWriter::TermVectorsWriter(CL_NS(store)::Directory* directory, 
+ TermVectorsWriter::TermVectorsWriter(CL_NS(store)::Directory* directory,
     const char* segment,FieldInfos* fieldInfos)
  {
     // Open files for TermVector storage
-	char fbuf[CL_MAX_NAME];
-	strcpy(fbuf,segment);
-	char* fpbuf=fbuf+strlen(fbuf);
+    char fbuf[CL_MAX_NAME];
+    strcpy(fbuf,segment);
+    char* fpbuf=fbuf+strlen(fbuf);
 
-	strcpy(fpbuf,LUCENE_TVX_EXTENSION);
+    strcpy(fpbuf,IndexFileNames::VECTORS_INDEX_EXTENSION);
     tvx = directory->createOutput(fbuf);
-    tvx->writeInt(FORMAT_VERSION);
+    tvx->writeInt(TermVectorsReader::FORMAT_VERSION);
 
-	strcpy(fpbuf,LUCENE_TVD_EXTENSION);
+    strcpy(fpbuf,IndexFileNames::VECTORS_DOCUMENTS_EXTENSION);
     tvd = directory->createOutput(fbuf);
-    tvd->writeInt(FORMAT_VERSION);
-	
-	strcpy(fpbuf,LUCENE_TVF_EXTENSION);
+    tvd->writeInt(TermVectorsReader::FORMAT_VERSION);
+
+    strcpy(fpbuf,IndexFileNames::VECTORS_FIELDS_EXTENSION);
     tvf = directory->createOutput(fbuf);
-    tvf->writeInt(FORMAT_VERSION);
+    tvf->writeInt(TermVectorsReader::FORMAT_VERSION);
 
     this->fieldInfos = fieldInfos;
+  }
 
-	currentField = NULL;
-	currentDocPointer = -1;
+  void TermVectorsWriter::close(CLuceneError* err){
+    CLuceneError keep;
+
+    if ( tvx != NULL ){
+      try{
+        tvx->close();
+      }catch(CLuceneError& ioerr){
+        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        keep.set(ioerr.number(), ioerr.what());
+      }
+      _CLDELETE(tvx);
+    }
+    if ( tvd != NULL ){
+      try{
+        tvd->close();
+      }catch(CLuceneError& ioerr){
+        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        keep.set(ioerr.number(), ioerr.what());
+      }
+      _CLDELETE(tvd);
+    }
+    if ( tvf != NULL ){
+      try{
+        tvf->close();
+      }catch(CLuceneError& ioerr){
+        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        keep.set(ioerr.number(), ioerr.what());
+      }
+      _CLDELETE(tvf);
+    }
+
+    if ( err != NULL )
+      err->set(keep.number(), keep.what());
+    else
+      throw keep;
   }
 
   TermVectorsWriter::~TermVectorsWriter(){
-      if ( tvx != NULL ){
-          tvx->close();
-        _CLDELETE(tvx);
-      }
-      if ( tvd != NULL ){
-          tvd->close();
-        _CLDELETE(tvd);
-      }
-      if ( tvf != NULL ){
-          tvf->close();
-        _CLDELETE(tvf);
-      }
+    CLuceneError err;
+    close(&err);
   }
 
 
-  void TermVectorsWriter::openDocument() {
-    closeDocument();
+  void TermVectorsWriter::addAllDocVectors(ArrayBase<TermFreqVector*>* _vectors){
 
-    currentDocPointer = tvd->getFilePointer();
-  }
+    tvx->writeLong(tvd->getFilePointer());
 
+    if (_vectors != NULL) {
+      ArrayBase<TermFreqVector*>& vectors = *_vectors;
 
-  void TermVectorsWriter::closeDocument(){
-    if (isDocumentOpen()) {
-      closeField();
-      writeDoc();
-      fields.clear();
-      currentDocPointer = -1;
-    }
-  }
+      const int32_t numFields = vectors.length;
+      tvd->writeVInt(numFields);
 
+      ValueArray<int64_t> fieldPointers(numFields);
 
-  bool TermVectorsWriter::isDocumentOpen() const{
-    return currentDocPointer != -1;
-  }
+      for (int32_t i=0; i<numFields; i++) {
+        fieldPointers[i] = tvf->getFilePointer();
 
+        const int32_t fieldNumber = fieldInfos->fieldNumber(vectors[i]->getField());
 
-  void TermVectorsWriter::openField(int32_t fieldNumber, bool storePositionWithTermVector, bool storeOffsetWithTermVector){
-	if (!isDocumentOpen())
-		_CLTHROWA(CL_ERR_InvalidState,"Cannot open field when no document is open.");
+        // 1st pass: write field numbers to tvd
+        tvd->writeVInt(fieldNumber);
 
-    closeField();
-    currentField = _CLNEW TVField(fieldNumber, storePositionWithTermVector, storeOffsetWithTermVector);
-  }
-  void TermVectorsWriter::openField(const TCHAR* field) {
-    FieldInfo* fieldInfo = fieldInfos->fieldInfo(field);
-    openField(fieldInfo->number, fieldInfo->storePositionWithTermVector, fieldInfo->storeOffsetWithTermVector);
-  }
+        const int32_t numTerms = vectors[i]->size();
+        tvf->writeVInt(numTerms);
 
-  void TermVectorsWriter::closeField(){
-    if (isFieldOpen()) {
-      /* DEBUG */
-      //System.out.println("closeField()");
-      /* DEBUG */
+        TermPositionVector* tpVector = NULL;
 
-      // save field and terms
-      writeField();
-      fields.push_back(currentField);
-      terms.clear();
-      currentField = NULL;
-    }
-  }
+        uint8_t bits = 0;
+        bool storePositions = false;
+        bool storeOffsets = false;
 
-  bool TermVectorsWriter::isFieldOpen() const{
-    return currentField != NULL;
-  }
+        if ( vectors[i]->__asTermPositionVector() != NULL ) {
+          // May have positions & offsets
+          tpVector = vectors[i]->__asTermPositionVector();
+          storePositions = tpVector->size() > 0 && tpVector->getTermPositions(0) != NULL;
+          storeOffsets = tpVector->size() > 0 && tpVector->getOffsets(0) != NULL;
+          bits = ((storePositions ? TermVectorsReader::STORE_POSITIONS_WITH_TERMVECTOR : 0) +
+                         (storeOffsets ? TermVectorsReader::STORE_OFFSET_WITH_TERMVECTOR : 0));
+        } else {
+          tpVector = NULL;
+          bits = 0;
+          storePositions = false;
+          storeOffsets = false;
+        }
 
-  void TermVectorsWriter::addTerm(const TCHAR* termText, int32_t freq, 
-	  ValueArray<int32_t>* positions, ArrayBase<TermVectorOffsetInfo*>* offsets) {
-    if (!isDocumentOpen()) 
-		_CLTHROWA(CL_ERR_InvalidState,"Cannot add terms when document is not open");
-    if (!isFieldOpen())
-		_CLTHROWA(CL_ERR_InvalidState,"Cannot add terms when field is not open");
+        tvf->writeVInt(bits);
 
-    addTermInternal(termText, freq, positions, offsets);
-  }
+        const ArrayBase<const TCHAR*>& terms = *vectors[i]->getTerms();
+        const ArrayBase<int32_t>& freqs = *vectors[i]->getTermFrequencies();
 
-  void TermVectorsWriter::addTermInternal(const TCHAR* termText, int32_t freq,
-	  ValueArray<int32_t>* positions, ArrayBase<TermVectorOffsetInfo*>* offsets) {
-    TVTerm* term = _CLNEW TVTerm();
-    term->setTermText(termText);
-    term->freq = freq;
-    term->positions = positions;
-    term->offsets = offsets;
-    terms.push_back(term);
-  }
+        const TCHAR* lastTermText = LUCENE_BLANK_STRING;
+        size_t lastTermTextLen = 0;
 
-  void TermVectorsWriter::addAllDocVectors(ArrayBase<TermFreqVector*>& vectors){
-	openDocument();
+        for (int32_t j=0; j<numTerms; j++) {
+          const TCHAR* termText = terms[j];
+          size_t termTextLen = _tcslen(termText);
+          int32_t start = Misc::stringDifference(lastTermText, lastTermTextLen, termText, termTextLen);
+          int32_t length = termTextLen - start;
+          tvf->writeVInt(start);       // write shared prefix length
+          tvf->writeVInt(length);        // write delta length
+          tvf->writeChars(termText + start, length);  // write delta chars
+          lastTermText = termText;
 
-	for (size_t i = 0; i < vectors.length; ++i) {
-		bool storePositionWithTermVector = false;
-		bool storeOffsetWithTermVector = false;
+          const int32_t termFreq = freqs[j];
 
-		if ( vectors[i]->__asTermPositionVector() != NULL ) {
-			TermPositionVector* tpVector = vectors.values[i]->__asTermPositionVector();
+          tvf->writeVInt(termFreq);
 
-			if (tpVector->size() > 0 && tpVector->getTermPositions(0) != NULL)
-				storePositionWithTermVector = true;
-			if (tpVector->size() > 0 && tpVector->getOffsets(0) != NULL)
-				storeOffsetWithTermVector = true;
+          if (storePositions) {
+            const ArrayBase<int32_t>* _positions = tpVector->getTermPositions(j);
+            if (_positions == NULL)
+              _CLTHROWA(CL_ERR_IllegalState, "Trying to write positions that are NULL!");
+            const ArrayBase<int32_t>& positions = *_positions;
+            assert (positions.length == termFreq);
 
-			FieldInfo* fieldInfo = fieldInfos->fieldInfo(tpVector->getField());
-			openField(fieldInfo->number, storePositionWithTermVector, storeOffsetWithTermVector);
+            // use delta encoding for positions
+            int32_t lastPosition = 0;
+            for(int32_t k=0;k<positions.length;k++) {
+              const int32_t position = positions[k];
+              tvf->writeVInt(position-lastPosition);
+              lastPosition = position;
+            }
+          }
 
-			for (int32_t j = 0; j < tpVector->size(); ++j)
-				addTermInternal(tpVector->getTerms()[j], 
-					(*tpVector->getTermFrequencies())[j], 
-					tpVector->getTermPositions(j),
-					tpVector->getOffsets(j));
+          if (storeOffsets) {
+            const ArrayBase<TermVectorOffsetInfo*>* _offsets = tpVector->getOffsets(j);
+            if (_offsets == NULL)
+              _CLTHROWA(CL_ERR_IllegalState, "Trying to write offsets that are NULL!");
+            const ArrayBase<TermVectorOffsetInfo*>& offsets = *_offsets;
+            assert (offsets.length == termFreq);
 
-			closeField();
-
-		} else {
-			TermFreqVector* tfVector = vectors[i];
-
-			FieldInfo* fieldInfo = fieldInfos->fieldInfo(tfVector->getField());
-			openField(fieldInfo->number, storePositionWithTermVector, storeOffsetWithTermVector);
-
-			for (int32_t j = 0; j < tfVector->size(); ++j)
-				addTermInternal(tfVector->getTerms()[j], 
-					(*tfVector->getTermFrequencies())[j], NULL, NULL);
-
-			closeField();
-		}
-	}
-
-    closeDocument();
-  }
-
-
-  void TermVectorsWriter::close() {
-    try {
-      closeDocument();
-
-      // make an effort to close all streams we can but remember and re-throw
-      // the first exception encountered in this process
-	#define _DOTVWCLOSE(x) if (x != NULL){ \
-		try { \
-		  x->close(); _CLDELETE(x) \
-        } catch (CLuceneError& e) { \
-          if ( e.number() != CL_ERR_IO ) throw e; \
-		  if (ikeep==0)ikeep=e.number(); \
-          if (keep[0]==0) strcpy(keep,e.what()); \
-		} catch (...) { \
-			if (keep[0]==0) strcpy(keep,"Unknown error while closing " #x); \
-		} \
-	  }
-	}_CLFINALLY( \
-    char keep[200]; \
-	  int32_t ikeep=0;
-	  keep[0]=0; \
-	  _DOTVWCLOSE(tvx); \
-	  _DOTVWCLOSE(tvd); \
-	  _DOTVWCLOSE(tvf); \
-		if (keep[0] != 0 ) { \
-			_CLTHROWA(ikeep,keep); \
-		}
-	);
-  }
-
-  
-
-  void TermVectorsWriter::writeField()  {
-    // remember where this field is written
-    currentField->tvfPointer = tvf->getFilePointer();
-    //System.out.println("Field Pointer: " + currentField.tvfPointer);
-    int32_t size = terms.size();
-
-    tvf->writeVInt(size);
-
-    bool storePositions = currentField->storePositions;
-    bool storeOffsets = currentField->storeOffsets;
-    uint8_t bits = 0x0;
-    if (storePositions) 
-      bits |= STORE_POSITIONS_WITH_TERMVECTOR;
-    if (storeOffsets) 
-      bits |= STORE_OFFSET_WITH_TERMVECTOR;
-    tvf->writeByte(bits);
-
-    const TCHAR* lastTermText = LUCENE_BLANK_STRING;
-	int32_t lastTermTextLen = 0;
-
-    for (int32_t i = 0; i < size; ++i) {
-      TVTerm* term = terms[i];
-	    int32_t start = CL_NS(util)::Misc::stringDifference(lastTermText, lastTermTextLen, 
-		  term->getTermText(),term->getTermTextLen());
-      int32_t length = term->getTermTextLen() - start;
-      tvf->writeVInt(start);			  // write shared prefix length
-      tvf->writeVInt(length);			  // write delta length
-      tvf->writeChars(term->getTermText()+start, length);  // write delta chars
-      tvf->writeVInt(term->freq);
-
-      lastTermText = term->getTermText();
-	  lastTermTextLen = term->getTermTextLen();
-
-	  if(storePositions){
-        if(term->positions == NULL)
-			_CLTHROWA(CL_ERR_IllegalState, "Trying to write positions that are NULL!");
-        
-        // use delta encoding for positions
-        int32_t position = 0;
-        for (int32_t j = 0; j < term->freq; ++j){
-          tvf->writeVInt((*term->positions)[j] - position);
-          position = (*term->positions)[j];
+            // use delta encoding for offsets
+            int32_t lastEndOffset = 0;
+            for(int k=0;k<offsets.length;k++) {
+              const int32_t startOffset = offsets[k]->getStartOffset();
+              const int32_t endOffset = offsets[k]->getEndOffset();
+              tvf->writeVInt(startOffset-lastEndOffset);
+              tvf->writeVInt(endOffset-startOffset);
+              lastEndOffset = endOffset;
+            }
+          }
         }
       }
-      
-      if(storeOffsets){
-        if(term->offsets == NULL)
-          _CLTHROWA(CL_ERR_IllegalState, "Trying to write offsets that are NULL!");
-        
-        // use delta encoding for offsets
-        int32_t position = 0;
-        for (int32_t j = 0; j < term->freq; ++j) {
-          tvf->writeVInt((*term->offsets)[j]->getStartOffset() - position);
-          tvf->writeVInt((*term->offsets)[j]->getEndOffset() - (*term->offsets)[j]->getStartOffset()); //Save the diff between the two.
-          position = (*term->offsets)[j]->getEndOffset();
-        }
+
+      // 2nd pass: write field pointers to tvd
+      int64_t lastFieldPointer = 0;
+      for (int32_t i=0; i<numFields; i++) {
+        const int64_t fieldPointer = fieldPointers[i];
+        tvd->writeVLong(fieldPointer-lastFieldPointer);
+        lastFieldPointer = fieldPointer;
       }
-    }
+    } else
+      tvd->writeVInt(0);
   }
-
-
-
-
-  void TermVectorsWriter::writeDoc()  {
-    if (isFieldOpen()) 
-		_CLTHROWA(CL_ERR_InvalidState,"Field is still open while writing document");
-
-	// write document index record
-    tvx->writeLong(currentDocPointer);
-
-    // write document data record
-    int32_t size = fields.size();
-
-    // write the number of fields
-    tvd->writeVInt(size);
-
-    // write field numbers
-	for (int32_t j = 0; j < size; ++j) {
-	  tvd->writeVInt(fields[j]->number);
-	}
-
-    // write field pointers
-    int64_t lastFieldPointer = 0;
-	for (int32_t i = 0; i < size; ++i) {
-	  TVField* field = (TVField*) fields[i];
-	  tvd->writeVLong(field->tvfPointer - lastFieldPointer);
-
-	  lastFieldPointer = field->tvfPointer;
-	}
-  }
-
-
-  const TCHAR* TermVectorsWriter::TVTerm::getTermText() const{
-      return termText;
-  }
-    size_t TermVectorsWriter::TVTerm::getTermTextLen(){ 
-		if (termTextLen==-1)
-			termTextLen = _tcslen(termText);
-		return termTextLen; 
-	}
-	void TermVectorsWriter::TVTerm::setTermText(const TCHAR* val){ 
-    _CLDELETE_CARRAY(termText);
-		termText = STRDUP_TtoT(val);
-		termTextLen = -1;
-
-	}
-	TermVectorsWriter::TVTerm::TVTerm(): 
-		freq(0),
-		positions(NULL),
-		offsets(NULL)
-	{
-        termText=NULL;  
-        termTextLen=-1;
-    }
-    TermVectorsWriter::TVTerm::~TVTerm(){ 
-        _CLDELETE_CARRAY(termText)
-    }
 
 CL_NS_END

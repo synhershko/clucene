@@ -1002,7 +1002,7 @@ public:
   * @throws CorruptIndexException if the index is corrupt
   * @throws IOException if there is a low-level IO error
   */
-  void addIndexesNoOptimize(CL_NS(store)::Directory** dirs);
+  void addIndexesNoOptimize(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs);
 
   /** Merges the provided indexes into this index.
    * <p>After this completes, the index is optimized. </p>
@@ -1025,7 +1025,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  void addIndexes(IndexReader** readers);
+  //NOT IMPLEMENTED YET: void addIndexes(CL_NS(util)::ArrayBase<IndexReader*>& readers);
 
   /** Merges all segments from an array of indexes into this index.
    *
@@ -1083,7 +1083,7 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  void addIndexes(CL_NS(store)::Directory** dirs);
+  void addIndexes(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs);
 
   /** Expert:  Return the total size of all index files currently cached in memory.
    * Useful for size management with flushRamDocs()

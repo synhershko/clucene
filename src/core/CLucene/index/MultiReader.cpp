@@ -41,8 +41,11 @@ public:
     _numDocs       = -1;
     ones           = NULL;
     _hasDeletions  = false;
+    decrefOnClose  = NULL;
 	}
 	~Internal(){
+    _CLDELETE_ARRAY(ones);
+    _CLDELETE_ARRAY(decrefOnClose);
 	}
 };
 
@@ -84,8 +87,6 @@ MultiReader::~MultiReader() {
 
 	_CLDELETE(_internal);
   _CLDELETE_ARRAY(starts);
-  _CLDELETE_ARRAY(_internal->ones);
-  _CLDELETE_ARRAY(_internal->decrefOnClose);
   subReaders->deleteValues();
 }
 
@@ -243,18 +244,10 @@ uint8_t* MultiReader::norms(const TCHAR* field){
 
 void MultiReader::norms(const TCHAR* field, uint8_t* result) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-    ensureOpen();
-	uint8_t* bytes = _internal->normsCache.get((TCHAR*)field);
-	if (bytes==NULL && !hasNorms(field))
-		bytes=fakeNorms();
-
-	if (bytes != NULL){                            // cache hit
-	   int32_t len = maxDoc();
-	   memcpy(result,bytes,len * sizeof(int32_t));
+	uint8_t* bytes = norms(field);
+	if (bytes != NULL){                            // return
+	   memcpy(result,bytes, maxDoc() * sizeof(int32_t));
 	}
-
-	for (size_t i = 0; i < subReaders->length; i++)      // read from segments
-	  (*subReaders)[i]->norms(field, result + starts[i]);
 }
 
 

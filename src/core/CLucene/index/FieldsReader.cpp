@@ -208,10 +208,8 @@ void FieldsReader::addFieldLazy(CL_NS(document)::Document& doc, const FieldInfo*
 		int32_t toRead = fieldsStream->readVInt();
 		int64_t pointer = fieldsStream->getFilePointer();
 		if (compressed) {
-			//was: doc.add(new Field(fi.name, uncompress(b), Field.Store.COMPRESS));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_COMPRESS, toRead, pointer));
 		} else {
-			//was: doc.add(new Field(fi.name, b, Field.Store.YES));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_YES, toRead, pointer));
 		}
 		//Need to move the pointer ahead by toRead positions
@@ -302,16 +300,13 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 
 int32_t FieldsReader::addFieldSize(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed) {
 	const int32_t size = fieldsStream->readVInt();
-	/*
-	const int32_t bytesize = binary || compressed ? size : 2*size;
-	uint8_t* sizebytes = _CL_NEWARRAY(uint8_t, 4);
-	sizebytes[0] = (byte) (bytesize>>>24);
-	sizebytes[1] = (byte) (bytesize>>>16);
-	sizebytes[2] = (byte) (bytesize>>> 8);
-	sizebytes[3] = (byte)  bytesize      ;
-	//todo: doc->add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES));
-	_CLDELETE_ARRAY(sizebytes); // todo: remove this once doc is being used
-	*/
+	const uint32_t bytesize = binary || compressed ? size : 2*size;
+	ValueArray<uint8_t>* sizebytes = _CLNEW ValueArray<uint8_t>(4);
+	sizebytes[0] = (uint8_t) (bytesize>>24);
+	sizebytes[1] = (uint8_t) (bytesize>>16);
+	sizebytes[2] = (uint8_t) (bytesize>> 8);
+	sizebytes[3] = (uint8_t)  bytesize      ;
+	doc.add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES, false));
 	return size;
 }
 

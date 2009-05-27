@@ -1146,7 +1146,7 @@ void IndexWriter::checkpoint() {
   }
 }
 
-void IndexWriter::addIndexes(Directory** dirs){
+void IndexWriter::addIndexes(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs){
 
   ensureOpen();
 
@@ -1166,7 +1166,7 @@ void IndexWriter::addIndexes(Directory** dirs){
     try {
 
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (int32_t i = 0; dirs[i] != NULL; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           SegmentInfos sis;	  // read infos from dir
           sis.read(dirs[i]);
           for (int32_t j = 0; j < sis.size(); j++) {
@@ -1199,7 +1199,7 @@ void IndexWriter::resetMergeExceptions() {
   mergeGen++;
 }
 
-void IndexWriter::addIndexesNoOptimize(Directory** dirs)
+void IndexWriter::addIndexesNoOptimize(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs)
 {
   ensureOpen();
 
@@ -1218,7 +1218,7 @@ void IndexWriter::addIndexesNoOptimize(Directory** dirs)
     try {
 
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (int32_t i = 0; dirs[i] != NULL; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           if (directory == dirs[i]) {
             // cannot add this index: segments may be deleted in merge before added
             _CLTHROWA(CL_ERR_IllegalArgument,"Cannot add this index to itself");
