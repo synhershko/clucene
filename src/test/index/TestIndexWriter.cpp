@@ -57,7 +57,7 @@ void testAddIndexes(CuTest *tc){
     ValueArray<Directory*> dirs(2);
     dirs[0] = FSDirectory::getDirectory(reuters_origdirectory);
     dirs[1] = FSDirectory::getDirectory(reuters_origdirectory);
-    w.addIndexes(dirs);
+    w.addIndexesNoOptimize(dirs);
     w.flush();
     CLUCENE_ASSERT(w.docCount()==62); //31 docs in reuters...
   }
@@ -68,7 +68,7 @@ void testAddIndexes(CuTest *tc){
     ValueArray<Directory*> dirs(2);
     dirs[0] = FSDirectory::getDirectory(reuters_origdirectory);
     dirs[1] = FSDirectory::getDirectory(reuters_origdirectory);
-    w.addIndexesNoOptimize(dirs);
+    w.addIndexes(dirs);
     w.flush();
     CLUCENE_ASSERT(w.docCount()==62); //31 docs in reuters...
   }
@@ -76,8 +76,8 @@ void testAddIndexes(CuTest *tc){
 CuSuite *testindexwriter(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
+	SUITE_ADD_TEST(suite, testAddIndexes);
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
-	//SUITE_ADD_TEST(suite, testAddIndexes);//TODO:
 
   return suite;
 }

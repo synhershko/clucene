@@ -106,10 +106,10 @@ Field::~Field(){
 
 /*===============FIELDS=======================*/
 const TCHAR* Field::name() const	{ return _name; } ///<returns reference
-const TCHAR* Field::stringValue() const	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
+const TCHAR* Field::stringValue()	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
 const ValueArray<uint8_t>* Field::binaryValue() { return (valueType & VALUE_BINARY) ? static_cast<ValueArray<uint8_t>*>(fieldsData) : NULL; } ///<returns reference
-Reader* Field::readerValue() const	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
-CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
+Reader* Field::readerValue()	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
+CL_NS(analysis)::TokenStream* Field::tokenStreamValue() { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
 	    
 bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
 bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }

@@ -985,7 +985,7 @@ void IndexWriter::rollbackTransaction() {
   // attempt to commit using this instance of IndexWriter
   // will always write to a _CLNEW generation ("write once").
   segmentInfos->clear();
-  segmentInfos->insert(localRollbackSegmentInfos);
+  segmentInfos->insert(localRollbackSegmentInfos, true);
   _CLDELETE(localRollbackSegmentInfos);
 
   // Ask deleter to locate unreferenced files we had
@@ -1065,7 +1065,7 @@ void IndexWriter::abort() {
       // will always write to a _CLNEW generation ("write
       // once").
       segmentInfos->clear();
-      segmentInfos->insert(rollbackSegmentInfos);
+      segmentInfos->insert(rollbackSegmentInfos, false);
 
       docWriter->abort(NULL);
 
@@ -1169,9 +1169,7 @@ void IndexWriter::addIndexes(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& d
         for (int32_t i = 0; i< dirs.length; i++) {
           SegmentInfos sis;	  // read infos from dir
           sis.read(dirs[i]);
-          for (int32_t j = 0; j < sis.size(); j++) {
-            segmentInfos->insert(sis.info(j));	  // add each info
-          }
+          segmentInfos->insert(&sis,true);	  // add each info
         }
       }
 
@@ -1226,10 +1224,7 @@ void IndexWriter::addIndexesNoOptimize(CL_NS(util)::ArrayBase<CL_NS(store)::Dire
 
           SegmentInfos sis; // read infos from dir
           sis.read(dirs[i]);
-          for (int32_t j = 0; j < sis.size(); j++) {
-            SegmentInfo* info = sis.info(j);
-            segmentInfos->insert(info); // add each info
-          }
+          segmentInfos->insert(&sis, true);
         }
       }
 
@@ -1282,7 +1277,6 @@ void IndexWriter::copyExternalSegments() {
     if (_merge != NULL) {
       if (registerMerge(_merge)) {
         PendingMergesType::iterator p = std::find(pendingMerges->begin(),pendingMerges->end(), _merge);
-        assert(false);//test me
         pendingMerges->remove(p,true);
         runningMerges->insert(_merge);
         any = true;
@@ -1463,7 +1457,8 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
             // deletes could have changed any of the
             // SegmentInfo instances:
             segmentInfos->clear();
-            segmentInfos->insert(rollback);
+            assert(false);//test me..
+            segmentInfos->insert(rollback, false);
 
           } else {
             // Remove segment we added, if any:
@@ -1709,10 +1704,11 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
       if (infoStream != NULL)
         message(string("hit exception when checkpointing after merge"));
       segmentInfos->clear();
-      segmentInfos->insert(rollback);
+      segmentInfos->insert(rollback,true);
       deletePartialSegmentsFile();
       deleter->refresh(_merge->info->name.c_str());
     }
+    _CLDELETE(rollback);
   )
 
   if (_merge->optimize)

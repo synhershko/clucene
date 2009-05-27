@@ -121,22 +121,22 @@ CL_NS_DEF(index)
 			/** The value of the field in Binary, or null.  If null, the Reader value,
 			* String value, or TokenStream value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
+			virtual const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
 
 			/** The value of the field as a Reader, or null.  If null, the String value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(util)::Reader* readerValue() const;
+			virtual CL_NS(util)::Reader* readerValue();
 
 			/** The value of the field as a String, or null.  If null, the Reader value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			const TCHAR* stringValue();
+			virtual const TCHAR* stringValue();
 
 			/** The value of the field as a TokesStream, or null.  If null, the Reader value,
 			* String value, or binary value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
+			virtual CL_NS(analysis)::TokenStream* tokenStreamValue();
 
 			int64_t getPointer() const;
 			void setPointer(const int64_t _pointer);

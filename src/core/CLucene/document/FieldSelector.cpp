@@ -43,7 +43,7 @@ MapFieldSelector::MapFieldSelector(std::vector<const TCHAR*>& fields) :
 MapFieldSelector::MapFieldSelector(ArrayBase<const TCHAR*>& fields):
   fieldSelections(_CLNEW FieldSelectionsType(true,false))
 {
-  for ( int32_t i=0;i<fields.length;i++ ){
+  for ( size_t i=0;i<fields.length;i++ ){
     add(fields[i]);
   }
 }

@@ -694,8 +694,12 @@ string SegmentInfo::segString(Directory* dir) {
   void SegmentInfos::clear() { infos.clear(); }
 
 
-  void SegmentInfos::insert(SegmentInfos* _infos){
+  void SegmentInfos::insert(SegmentInfos* _infos, bool takeMemory){
     infos.insert(infos.end(),_infos->infos.begin(),_infos->infos.end());
+    if ( takeMemory ){
+      while (_infos->infos.size() > 0 )
+        _infos->infos.remove(_infos->infos.begin(), true );
+    }
   }
 	void SegmentInfos::insert(SegmentInfo* info){
     infos.push_back(info);

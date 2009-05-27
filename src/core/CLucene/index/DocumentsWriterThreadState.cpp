@@ -835,7 +835,7 @@ void DocumentsWriter::ThreadState::FieldData::processField(Analyzer* analyzer) {
     }
   )
 }
-void DocumentsWriter::ThreadState::FieldData::invertField(const Field* field, Analyzer* analyzer, const int32_t maxFieldLength) {
+void DocumentsWriter::ThreadState::FieldData::invertField(Field* field, Analyzer* analyzer, const int32_t maxFieldLength) {
 
   if (length>0)
     position += analyzer->getPositionIncrementGap(fieldInfo->name);

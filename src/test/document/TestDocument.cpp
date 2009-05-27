@@ -71,7 +71,7 @@ public:
     doc.add(*_CLNEW Field(_T("f4"), _T("value"), Field::INDEX_TOKENIZED));
     CLUCENE_ASSERT( doc.getFields()->size() == 5);
 
-    doc.fields();//just fetch the fields
+    _CLLDELETE(doc.fields());//just fetch the fields (to test deprecated loads)
 
     doc.removeField(_T("f3"));
     CLUCENE_ASSERT( doc.getFields()->size() == 4);
@@ -131,6 +131,7 @@ public:
 
   void TestFieldSelectors(CuTest *tc){
     RAMDirectory dir;
+    const TCHAR* longStrValue = _T("too long a field...");
     {
       WhitespaceAnalyzer a;
       IndexWriter w(&dir,&a,true);
@@ -140,7 +141,7 @@ public:
         doc.add(*_CLNEW Field(_T("f2"), _T("value2"), Field::STORE_YES));
         doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::STORE_YES));
         doc.add(*_CLNEW Field(_T("f4"), _T("value4"), Field::STORE_YES));
-        doc.add(*_CLNEW Field(_T("f5"), _T("too long a field..."), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f5"), longStrValue, Field::STORE_YES));
 
         w.addDocument(&doc);
       }
@@ -156,17 +157,16 @@ public:
     CLUCENE_ASSERT(reader->document(0,doc,&fieldsToLoad));
     CLUCENE_ASSERT(doc.getFields()->size()==3);
     CuAssertStrEquals(tc,_T("check f2"), _T("value2"), doc.get(_T("f2")) );
-    //CuAssertStrEquals(tc,_T("check f3"), _T("value3"), doc.get(_T("f3")) );
+    CuAssertStrEquals(tc,_T("check f3"), _T("value3"), doc.get(_T("f3")) );
 
     Field* byteField = doc.getField(_T("f5"));
     const ValueArray<uint8_t>& bytes = *byteField->binaryValue();
-    uint32_t shouldBeInt = 21;
+    uint32_t shouldBeInt = 2 * _tcslen(longStrValue);
     ValueArray<uint8_t> shouldBe(4);
     shouldBe[0] = (uint8_t) (shouldBeInt>>24);
     shouldBe[1] = (uint8_t) (shouldBeInt>>16);
     shouldBe[2] = (uint8_t) (shouldBeInt>> 8);
     shouldBe[3] = (uint8_t)  shouldBeInt      ;
-    printf("%d %d %d %d\n", bytes[0], bytes[1], bytes[2], bytes[3]);
     CLUCENE_ASSERT(byteField!=NULL);
     CLUCENE_ASSERT(memcmp(shouldBe.values,bytes.values,4)==0);
 

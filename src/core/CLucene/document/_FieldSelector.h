@@ -17,7 +17,7 @@ CL_NS_DEF(document)
  * what Fields get loaded on a {@link Document} by {@link org.apache.lucene.index.IndexReader#document(int,org.apache.lucene.document.FieldSelector)}
  *
  **/
-class FieldSelector :LUCENE_BASE {
+class CLUCENE_EXPORT FieldSelector :LUCENE_BASE {
 public:
 
   /**

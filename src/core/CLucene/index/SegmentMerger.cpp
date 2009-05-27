@@ -762,7 +762,7 @@ void SegmentMerger::mergeNorms() {
 			    CND_CONDITION(reader != NULL, "No reader found");
 
 			    //Get the total number of documents including the documents that have been marked deleted
-			    int32_t maxDoc = reader->maxDoc();
+			    size_t maxDoc = reader->maxDoc();
 
 			    //Get an IndexInput to the norm file for this field in this segment
           if ( normBuffer.length < maxDoc ){
@@ -776,7 +776,7 @@ void SegmentMerger::mergeNorms() {
             // this segment has deleted docs, so we have to
             // check for every doc if it is deleted or not
 
-				    for(int32_t k = 0; k < maxDoc; k++) {
+				    for(size_t k = 0; k < maxDoc; k++) {
 					    //Check if document k is deleted
 					    if (!reader->isDeleted(k)){
 						    //write the new norm

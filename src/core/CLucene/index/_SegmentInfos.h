@@ -360,7 +360,7 @@ CL_NS_DEF(index)
 		void setElementAt(SegmentInfo* si, int32_t pos);
 		void clear();
     
-		void insert(SegmentInfos* infos);
+		void insert(SegmentInfos* infos, bool takeMemory);
 		void insert(SegmentInfo* info);
 		int32_t indexOf(const SegmentInfo* info) const;
 		void range(size_t from, size_t to, SegmentInfos& ret) const;
