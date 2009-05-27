@@ -140,14 +140,18 @@ CL_NS_DEF(document)
 
    void Document::removeFields(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
-
-    for ( FieldsType::iterator itr = _fields->begin();
-      itr != _fields->end(); itr++ ){
-
-      if ( _tcscmp( (*itr)->name(), name) == 0 ){
-        _fields->remove(itr);
-        itr--;
-      }
+    bool flag = true;
+    //TODO: make this more efficient
+    while(flag){
+      for ( FieldsType::iterator itr = _fields->begin();
+        itr != _fields->end(); itr++ ){
+        if ( _tcscmp( (*itr)->name(), name) == 0 ){
+          _fields->remove(itr);
+          flag = false; //no modifications allowed on an iterator
+          break;
+        }
+     }
+      flag = !flag;
     }
    }
 

@@ -406,8 +406,10 @@ void SegmentMerger::mergeVectors(){
 			}
 		}
 	}_CLFINALLY( 
-    termVectorsWriter->close();
-    _CLDELETE(termVectorsWriter); 
+    if ( termVectorsWriter != NULL ){
+      termVectorsWriter->close();
+      _CLDELETE(termVectorsWriter); 
+    }
   );
 
   CND_PRECONDITION(4+mergedDocs*8 == directory->fileLength( (segment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str() ),
@@ -445,14 +447,22 @@ void SegmentMerger::mergeTerms() {
       //And merge the Term Infos
       mergeTermInfos();	      
     }_CLFINALLY(
-      freqOutput->close();
-      _CLDELETE(freqOutput);
-      proxOutput->close();
-      _CLDELETE(proxOutput);
-      termInfosWriter->close();
-      _CLDELETE(termInfosWriter);
-      queue->close();
-      _CLDELETE(queue);
+      if ( freqOutput != NULL ){
+        freqOutput->close();
+        _CLDELETE(freqOutput);
+      }
+      if ( proxOutput != NULL ){
+        proxOutput->close();
+        _CLDELETE(proxOutput);
+      }
+      if ( termInfosWriter != NULL ){
+        termInfosWriter->close();
+        _CLDELETE(termInfosWriter);
+      }
+      if ( queue != NULL ){
+        queue->close();
+        _CLDELETE(queue);
+      }
     );
 }
 
@@ -780,8 +790,10 @@ void SegmentMerger::mergeNorms() {
 	    }
 	  }
   }_CLFINALLY(
-    output->close();
-    _CLDELETE(output);
+    if ( output != NULL ){
+      output->close();
+      _CLDELETE(output);
+    }
   );
 }
 
