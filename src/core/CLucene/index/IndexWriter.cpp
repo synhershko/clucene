@@ -200,6 +200,10 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool 
   this->autoCommit = true;
   this->segmentInfos = _CLNEW SegmentInfos;
   this->mergeGen = 0;
+  this->rollbackSegmentInfos = NULL;
+  this->deleter = NULL;
+  this->docWriter = NULL;
+  this->writeLock = NULL;
 
   if (create) {
     // Clear the write lock in case it's leftover:
@@ -906,9 +910,9 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
     spec = mergePolicy->findMergesForOptimize(segmentInfos, this, maxNumSegmentsOptimize, *segmentsToOptimize);
 
     if (spec != NULL) {
-      const int32_t numMerges = spec->merges.size();
+      const int32_t numMerges = spec->merges->size();
       for(int32_t i=0;i<numMerges;i++) {
-        MergePolicy::OneMerge* _merge = spec->merges[i];
+        MergePolicy::OneMerge* _merge = (*spec->merges)[i];
         _merge->optimize = true;
         _merge->maxNumSegmentsOptimize = maxNumSegmentsOptimize;
       }
@@ -918,9 +922,9 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
     spec = mergePolicy->findMerges(segmentInfos, this);
 
   if (spec != NULL) {
-    const int32_t numMerges = spec->merges.size();
+    const int32_t numMerges = spec->merges->size();
     for(int32_t i=0;i<numMerges;i++)
-      registerMerge(spec->merges[i]);
+      registerMerge((*spec->merges)[i]);
   }
   _CLDELETE(spec);
 }
@@ -2296,6 +2300,7 @@ void IndexWriter::Internal::applyDeletes(const DocumentsWriter::TermNumMapType& 
   DocumentsWriter::TermNumMapType::const_iterator iter = deleteTerms.begin();
   while (iter != deleteTerms.end()) {
     reader->deleteDocuments(iter->first);
+    iter++;
   }
 }
 

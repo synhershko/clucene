@@ -520,10 +520,11 @@ CL_NS_DEF(index)
     	friend class SegmentInfos::FindSegmentsVersion;
 
 		class FindSegmentsRead: public FindSegmentsFile<bool> {
+      	  SegmentInfos* _this;
     	public:
-			  FindSegmentsRead( CL_NS(store)::Directory* dir );
-    	  FindSegmentsRead( const char* dir );
-    		bool doBody( const char* segmentFileName );
+		  FindSegmentsRead( CL_NS(store)::Directory* dir, SegmentInfos* _this );
+    	  FindSegmentsRead( const char* dir, SegmentInfos* _this );
+    	  bool doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsRead;
   };

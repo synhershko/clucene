@@ -979,7 +979,13 @@ const std::vector<int32_t>* DocumentsWriter::getBufferedDeleteDocIDs() {
 // Reset buffered deletes.
 void DocumentsWriter::clearBufferedDeletes() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-  bufferedDeleteTerms->clear();
+  DocumentsWriter::TermNumMapType::iterator term = bufferedDeleteTerms->begin();
+  while ( term != bufferedDeleteTerms->end() ){
+    Term* t = term->first;
+    bufferedDeleteTerms->erase(term);
+    _CLDECDELETE(t);
+    term = bufferedDeleteTerms->begin();
+  }
   bufferedDeleteDocIDs.clear();
   numBufferedDeleteTerms = 0;
   if (numBytesUsed > 0)
@@ -988,8 +994,9 @@ void DocumentsWriter::clearBufferedDeletes() {
 
 bool DocumentsWriter::bufferDeleteTerms(const ArrayBase<Term*>* terms) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-  while(pauseThreads != 0 || flushPending)
+  while(pauseThreads != 0 || flushPending){
     CONDITION_WAIT(THIS_LOCK, THIS_WAIT_CONDITION)
+  }
   for (size_t i = 0; i < terms->length; i++)
     addDeleteTerm((*terms)[i], numDocsInRAM);
   return timeToFlushDeletes();
@@ -997,8 +1004,9 @@ bool DocumentsWriter::bufferDeleteTerms(const ArrayBase<Term*>* terms) {
 
 bool DocumentsWriter::bufferDeleteTerm(Term* term) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-  while(pauseThreads != 0 || flushPending)
+  while(pauseThreads != 0 || flushPending){
     CONDITION_WAIT(THIS_LOCK, THIS_WAIT_CONDITION)
+  }
   addDeleteTerm(term, numDocsInRAM);
   return timeToFlushDeletes();
 }
@@ -1032,7 +1040,7 @@ void DocumentsWriter::addDeleteTerm(Term* term, int32_t docCount) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
   Num* num = bufferedDeleteTerms->get(term);
   if (num == NULL) {
-    bufferedDeleteTerms->put(term, new Num(docCount));
+    bufferedDeleteTerms->put(_CL_POINTER(term), new Num(docCount));
     // This is coarse approximation of actual bytes used:
     numBytesUsed += ( _tcslen(term->field()) + term->textLength()) * BYTES_PER_CHAR
         + 4 + 5 * OBJECT_HEADER_BYTES + 5 * OBJECT_POINTER_BYTES;

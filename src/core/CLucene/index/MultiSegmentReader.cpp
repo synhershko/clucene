@@ -96,7 +96,7 @@ MultiSegmentReader::MultiSegmentReader(
 
   // remember which readers are shared between the old and the re-opened
   // MultiSegmentReader - we have to incRef those readers
-  ValueArray<bool>* readerShared = _CLNEW ValueArray<bool>(infos->size());
+  ValueArray<bool> readerShared(infos->size());
 
   for (int32_t i = infos->size() - 1; i>=0; i--) {
     // find SegmentReader for this segment
@@ -133,7 +133,7 @@ MultiSegmentReader::MultiSegmentReader(
         for (i++; i < infos->size(); i++) {
           if (newReaders->values[i] != NULL) {
             try {
-              if (!readerShared->values[i]) {
+              if (!readerShared[i]) {
                 // this is a new subReader that is not used by the old one,
                 // we can close it
                 (*newReaders)[i]->close();

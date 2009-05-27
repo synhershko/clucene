@@ -195,7 +195,7 @@ void performDefaultIRTests(CuTest *tc, IndexReader* index1, IndexReader* index2,
 
   index1->close();
   index2_refreshed->close();
-  assertReaderClosed(tc, index2, true, true);
+  //TODO: it's closed, so invalid! assertReaderClosed(tc, index2, true, true);
   assertReaderClosed(tc, index2_refreshed, true, true);
 
   index2 = index2B;
@@ -232,8 +232,8 @@ void testIRReopen(CuTest *tc){
   defaultModifyIndexTestDir = NULL;
 
   _CLDELETE(index1);
-  _CLDELETE(index2);
-  _CLDELETE(index2B);
+  //_CLDELETE(index2);this one gets deleted...
+  //_CLDELETE(index2B);
 }
 
 CuSuite *testindexreader(void)

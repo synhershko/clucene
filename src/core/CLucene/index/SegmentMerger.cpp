@@ -405,7 +405,10 @@ void SegmentMerger::mergeVectors(){
             checkAbort->work(300);
 			}
 		}
-	}_CLFINALLY( _CLDELETE(termVectorsWriter); );
+	}_CLFINALLY( 
+    termVectorsWriter->close();
+    _CLDELETE(termVectorsWriter); 
+  );
 
   CND_PRECONDITION(4+mergedDocs*8 == directory->fileLength( (segment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str() ),
     (string("after mergeVectors: tvx size mismatch: ") + Misc::toString(mergedDocs) + " docs vs " + Misc::toString(directory->fileLength( (segment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str() )) + " length in bytes of " + segment + "." + IndexFileNames::VECTORS_INDEX_EXTENSION).c_str() )
@@ -442,9 +445,13 @@ void SegmentMerger::mergeTerms() {
       //And merge the Term Infos
       mergeTermInfos();	      
     }_CLFINALLY(
+      freqOutput->close();
       _CLDELETE(freqOutput);
+      proxOutput->close();
       _CLDELETE(proxOutput);
+      termInfosWriter->close();
       _CLDELETE(termInfosWriter);
+      queue->close();
       _CLDELETE(queue);
     );
 }
@@ -713,8 +720,7 @@ void SegmentMerger::mergeNorms() {
 //Func - Merges the norms for all fields 
 //Pre  - fieldInfos != NULL
 //Post - The norms for all fields have been merged
-  uint8_t* normBuffer = NULL;
-  size_t normBufferLen = 0;
+  ValueArray<uint8_t> normBuffer;
 	IndexOutput*  output  = NULL;
   try {
 
@@ -749,17 +755,13 @@ void SegmentMerger::mergeNorms() {
 			    int32_t maxDoc = reader->maxDoc();
 
 			    //Get an IndexInput to the norm file for this field in this segment
-			    if ( normBufferLen < maxDoc ){
-				    if ( normBufferLen > 0 )
-					    normBuffer = (uint8_t*)realloc(normBuffer,maxDoc * sizeof(uint8_t));
-				    else
-					    normBuffer = (uint8_t*)malloc(maxDoc * sizeof(uint8_t));
-				    normBufferLen = maxDoc;
+          if ( normBuffer.length < maxDoc ){
+            normBuffer.resize(maxDoc);
 			    }
 
           if (!reader->hasDeletions()) {
             //optimized case for segments without deleted docs
-            output->writeBytes(normBuffer, maxDoc);
+            output->writeBytes(normBuffer.values, maxDoc);
           } else {
             // this segment has deleted docs, so we have to
             // check for every doc if it is deleted or not
@@ -778,8 +780,8 @@ void SegmentMerger::mergeNorms() {
 	    }
 	  }
   }_CLFINALLY(
+    output->close();
     _CLDELETE(output);
-    free(normBuffer);
   );
 }
 

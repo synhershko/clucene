@@ -366,7 +366,7 @@ CL_NS_DEF(store)
 
     FileMap::const_iterator itr = files->begin();
     while (itr != files->end()){
-        names->push_back(itr->first);
+        names->push_back( string(itr->first) );
         ++itr;
     }
     return true;

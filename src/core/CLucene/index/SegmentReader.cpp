@@ -100,7 +100,7 @@ CL_NS_DEF(index)
       this->dirty = false;
     }
 
-  void SegmentReader::initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores){
+  void SegmentReader::initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores, bool doingReopen){
     //Pre  - si-> is a valid reference to SegmentInfo instance
     //       identified by si->
     //Post - All files of the segment have been read
@@ -136,6 +136,8 @@ CL_NS_DEF(index)
     this->segment = si->name;
     this->si = si;
     this->readBufferSize = readBufferSize;
+
+    if ( doingReopen ) return; // the rest is done in the reopen code...
 
     bool success = false;
 
@@ -280,7 +282,7 @@ CL_NS_DEF(index)
                                   bool doOpenStores){
     SegmentReader* instance = _CLNEW SegmentReader(); //todo: make this configurable...
     instance->init(dir, sis, closeDir);
-    instance->initialize(si, readBufferSize, doOpenStores);
+    instance->initialize(si, readBufferSize, doOpenStores, false);
     return instance;
   }
 
@@ -997,22 +999,20 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
 
       // clone reader
-    SegmentReader* clone = _CLNEW SegmentReader();
+    SegmentReader* clone = NULL;
     bool success = false;
     try {
+      clone = _CLNEW SegmentReader();
+      clone->init(_directory, NULL, false);
+      clone->initialize(si, readBufferSize, false, true);
       clone->_directory = _directory;
-      clone->si = si;
-      clone->segment = segment;
-      clone->readBufferSize = readBufferSize;
       clone->cfsReader = cfsReader;
       clone->storeCFSReader = storeCFSReader;
-
       clone->_fieldInfos = _fieldInfos;
       clone->tis = tis;
       clone->freqStream = freqStream;
       clone->proxStream = proxStream;
       clone->termVectorsReaderOrig = termVectorsReaderOrig;
-
 
       // we have to open a new FieldsReader, because it is not thread-safe
       // and can thus not be shared among multiple SegmentReaders
@@ -1067,6 +1067,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
           Norm* norm = _norms[field];
           norm->incRef();
           clone->_norms.put(field, norm);
+          it++;
         }
       }
 
@@ -1081,7 +1082,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
             }
 
             string ext = string(".") + IndexFileNames::NORMS_EXTENSION;
-            assert(false);//test this...
             if (fileName.compare(fileName.length()-ext.length(),ext.length(),ext)==0) {
               clone->singleNormStream = d->openInput(fileName.c_str(), readBufferSize);
               break;

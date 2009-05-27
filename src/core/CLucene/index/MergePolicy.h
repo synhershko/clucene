@@ -44,7 +44,7 @@ class IndexWriter;
  * <p><b>NOTE:</b> This API is new and still experimental
  * (subject to change suddenly in the next release)</p>
  */
-class CLUCENE_EXPORT CLUCENE_EXPORT MergePolicy: public CL_NS(util)::NamedObject {
+class CLUCENE_EXPORT MergePolicy: public CL_NS(util)::NamedObject {
 public:
   /** OneMerge provides the information necessary to perform
    *  an individual primitive merge operation, resulting in
@@ -103,11 +103,13 @@ public:
 
   class CLUCENE_EXPORT MergeSpecification {
   public:
+    MergeSpecification();
+    ~MergeSpecification();
+
     /**
      * The subset of segments to be included in the primitive merge.
      */
-
-    CL_NS(util)::CLArrayList<OneMerge*> merges;
+    CL_NS(util)::CLArrayList<OneMerge*>* merges;
 
     void add(OneMerge* merge);
 
