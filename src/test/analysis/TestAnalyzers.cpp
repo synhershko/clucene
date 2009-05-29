@@ -200,6 +200,24 @@
 	
 	CLUCENE_ASSERT(filter.next(&token)==NULL);
   }
+  
+  
+  void testTokenLengths(CuTest *tc){
+	  TCHAR str[10000];
+	  _tcscpy(str,_T("Some words like Honorificabilitudinitatibus are long, but Antidisestablishmentarianism is longer"));
+	  
+		StringReader reader(str);
+		WhitespaceTokenizer ws(&reader);
+		LengthFilter filter(&ws,4,27);
+		CL_NS(analysis)::Token token;
+	
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Some"), token.termBuffer());
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("words"), token.termBuffer());
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("like"), token.termBuffer());
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Honorificabilitudinitatibus"), token.termBuffer());
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("long,"), token.termBuffer());
+		CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("longer"), token.termBuffer());
+	}
 
   void testWordlistLoader(CuTest *tc){
 	  char stopwordsfile[1024];
@@ -246,6 +264,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
     SUITE_ADD_TEST(suite, testWordlistLoader);
+    SUITE_ADD_TEST(suite, testTokenLengths);
     return suite; 
 }
 // EOF
