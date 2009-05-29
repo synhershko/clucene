@@ -45,7 +45,6 @@ bool atomicSearchFailed = false;
       atomicSearchFailed = true;
     }
     
-     _LUCENE_THREAD_FUNC_RETURN(atomicSearchFailed);
   }
 
   _LUCENE_THREAD_FUNC(atomicSearchTest, _directory){
@@ -75,7 +74,6 @@ bool atomicSearchFailed = false;
       fprintf(stderr, "err: %d:%s\n", e.number(), e.what());
       atomicSearchFailed = true;
     }
-    _LUCENE_THREAD_FUNC_RETURN(atomicSearchFailed);
   }
 
 /*
