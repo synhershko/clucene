@@ -71,8 +71,6 @@ DONE ISH	queryParser\TokenMgrError.java		- Integrated within QueryParserTokenMan
 ?	search\ConstantScoreRangeQuery.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
-?	search\DisjunctionMaxScorer.java
-?	search\DisjunctionSumScorer.java
 ?	search\ExactPhraseScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
@@ -110,7 +108,7 @@ DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for
 ?	search\Searchable.java
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
-?	search\SloppyPhraseScorer.java
+?	search\SloppyPhraseScorer.java		- Is this finished? Looks like some work was done in a patch
 ?	search\TermQuery.java
 ?	search\TopDocCollector.java
 ?	search\TopFieldDocCollector.java
@@ -246,9 +244,10 @@ DONE ISH	index\SegmentTermPositionVector.java
 DONE BEN	index\SerialMergeScheduler.java
 
 
+DONE ISH	search\DisjunctionSumScorer.java
 DONE ISH	search\ComplexExplanation.java
-DONE	search\HitQueue.java                - no changes
-DONE BEN   search\Weight.java
+DONE BEN	search\HitQueue.java                - no changes
+DONE BEN  search\Weight.java
 DONE BEN	search\NonMatchingScorer.java		- no changes
 DONE BEN	search\TopDocs.java
 DONE ISH	search\PrefixQuery.java
@@ -302,6 +301,6 @@ DONE BEN	util\Constants.java
 DONE BEN	util\Parameter.java
 DONE BEN	util\SmallFloat.java
 DONE BEN	util\StringHelper.java
-DONE BEN	util\ToStringUtils.java
+DONE ISH	util\ToStringUtils.java
 DONE JW		util\PriorityQueue.java
 

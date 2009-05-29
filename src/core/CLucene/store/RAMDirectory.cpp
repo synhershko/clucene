@@ -527,13 +527,16 @@ CL_NS_DEF(store)
 
     SCOPED_LOCK_MUTEX(files_mutex);
 
-    char* n = files->getKey((char*)name);
-    if (n != NULL) {
-	    RAMFile* rf = files->get((char*)name);
-      _CLDELETE(rf);
-    } else {
-      n = STRDUP_AtoA(name);
-    }
+	// get the actual pointer to the output name
+    char* n = NULL;
+	FileMap::const_iterator itr = files->find(const_cast<char*>(name));
+	if ( itr!=files->end() )  {
+		n = itr->first;
+		RAMFile* rf = itr->second;
+		_CLDELETE(rf);
+	} else {
+		n = STRDUP_AtoA(name);
+	}
 
     RAMFile* file = _CLNEW RAMFile();
     #ifdef _DEBUG

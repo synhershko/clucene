@@ -17,7 +17,6 @@
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-	//TermScorer takes TermDocs and delets it when TermScorer is cleaned up
 	TermScorer::TermScorer(Weight* w, CL_NS(index)::TermDocs* td, 
 			Similarity* similarity,uint8_t* _norms):
 	    Scorer(similarity),
@@ -86,10 +85,10 @@ CL_NS_DEF(search)
       pointer++;
     }
     if (tf == 0) {
-      if (termDocs->skipTo(doc)){
-          if (termDocs->doc() == doc){
-              tf = termDocs->freq();
-          }
+      if (termDocs->skipTo(doc)) {
+        if (termDocs->doc() == doc) {
+          tf = termDocs->freq();
+        }
       }
     }
     termDocs->close();
@@ -120,5 +119,7 @@ CL_NS_DEF(search)
 
       return raw * Similarity::decodeNorm(norms[_doc]); // normalize for field
   }
+
+  int32_t TermScorer::doc() const { return _doc; }
 	
 CL_NS_END

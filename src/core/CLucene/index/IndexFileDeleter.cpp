@@ -198,7 +198,6 @@ IndexFileDeleter::IndexFileDeleter(Directory* directory, IndexDeletionPolicy* po
 	}
 
 	// We keep commits list in sorted order (oldest to newest):
-  assert(commits.size() < 3);//test this...
   std::sort(commits.begin(), commits.end(), CommitPoint::sort);
 
 	// Now delete anything with ref count at 0.  These are
