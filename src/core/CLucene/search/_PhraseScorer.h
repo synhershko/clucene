@@ -7,15 +7,11 @@
 #ifndef _lucene_search_PhraseScorer_
 #define _lucene_search_PhraseScorer_
 
-
-CL_CLASS_DEF(search,Explanation)
-
 #include "_PhraseQueue.h"
-//#include "PhrasePositions.h"
-//#include "Scorer.h"
-//#include "Similarity.h"
 
 CL_NS_DEF(search)
+
+	class Explanation;
 /** Expert: Scoring functionality for phrase queries.
 * <br>A document is considered matching if it contains the phrase-query terms  
 * at "valid" positons. What "valid positions" are
@@ -29,13 +25,14 @@ CL_NS_DEF(search)
 	class PhraseScorer: public Scorer {
 	private:
 		Weight* weight;
-		float_t freq; //phrase frequency in current doc as computed by phraseFreq().
-		bool firstTime;
-		bool more;
-
 	protected:
 		uint8_t* norms;
 		float_t value;
+	private:
+		bool firstTime;
+		bool more;
+	protected:
+		float_t freq; //phrase frequency in current doc as computed by phraseFreq().
 
 		PhraseQueue* pq;        //is used to order the list point to by first and last
 		PhrasePositions* first; //Points to the first in the list of PhrasePositions
@@ -43,11 +40,11 @@ CL_NS_DEF(search)
 
 	public:
 		//Constructor
-		PhraseScorer(Weight* weight, CL_NS(index)::TermPositions** tps, 
-		int32_t* offsets, Similarity* similarity, uint8_t* norms);
+		PhraseScorer(Weight* _weight, CL_NS(index)::TermPositions** tps, 
+						int32_t* offsets, Similarity* similarity, uint8_t* _norms);
 		virtual ~PhraseScorer();
 
-		int32_t doc() const { return first->doc; }
+		int32_t doc() const;
 		bool next();
 		float_t score();
 		bool skipTo(int32_t target);

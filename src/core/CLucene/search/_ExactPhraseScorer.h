@@ -7,9 +7,7 @@
 #ifndef _lucene_search_ExactPhraseScorer_
 #define _lucene_search_ExactPhraseScorer_
 
-
 #include "_PhraseScorer.h"
-//#include "CLucene/index/Terms.h"
 
 CL_NS_DEF(search)
 
@@ -18,8 +16,7 @@ CL_NS_DEF(search)
     ExactPhraseScorer(Weight* weight, CL_NS(index)::TermPositions** tps, int32_t* offsets, 
        Similarity* similarity, uint8_t* norms );
        
-	~ExactPhraseScorer(){
-	}
+	virtual ~ExactPhraseScorer();
 
 	virtual TCHAR* toString();
 
