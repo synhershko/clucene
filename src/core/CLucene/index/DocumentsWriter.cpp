@@ -837,8 +837,8 @@ DocumentsWriter::ThreadState* DocumentsWriter::getThreadState(Document* doc, Ter
   // First, find a thread state.  If this thread already
   // has affinity to a specific ThreadState, use that one
   // again.
-  ThreadState* state = threadBindings[_LUCENE_CURRTHREADID];
-  if (state == NULL) {
+  ThreadState* state = NULL;
+  if ( threadBindings.find(_LUCENE_CURRTHREADID) == threadBindings.end() ){
     // First time this thread has called us since last flush
     ThreadState* minThreadState = NULL;
     for(size_t i=0;i<threadStates.length;i++) {
@@ -856,6 +856,8 @@ DocumentsWriter::ThreadState* DocumentsWriter::getThreadState(Document* doc, Ter
       state = threadStates.values[threadStates.length-1] = _CLNEW ThreadState(this);
     }
     threadBindings.put(_LUCENE_CURRTHREADID, state);
+  }else{
+    state = threadBindings[_LUCENE_CURRTHREADID];
   }
 
   // Next, wait until my thread state is idle (in case

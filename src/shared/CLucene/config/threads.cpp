@@ -81,10 +81,12 @@ CL_NS_DEF(util)
 		delete _internal;
 	}
 	void shared_condition::Wait(mutex_thread* shared_lock){
-		WaitForSingleObject( _internal->_event, 0xFFFFFFFF );
+    shared_lock->unlock();
+		assert ( 0x0 == WaitForSingleObject( _internal->_event, 0xFFFFFFFF ) );
+    shared_lock->lock();
 	}
 	void shared_condition::NotifyAll(){
-		SetEvent(_internal->_event);
+		assert ( 0 != SetEvent(_internal->_event) );
 	}
     
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){

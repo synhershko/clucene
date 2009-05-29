@@ -34,6 +34,7 @@ CL_NS_USE2(analysis,standard)
 
 #include "CuTest.h"
 
+CuSuite *testatomicupdates(void);
 CuSuite *testindexwriter(void);
 CuSuite *testindexreader(void);
 CuSuite *teststore(void);

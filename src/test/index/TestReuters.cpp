@@ -213,19 +213,19 @@ CL_NS_USE(util)
 		CLUCENE_ASSERT(reuters_ready);
 		IndexSearcher searcher(reuters_origdirectory);
 
-        //read using multiple threads...
-        _LUCENE_THREADID_TYPE threads[threadsCount];
+    //read using multiple threads...
+    _LUCENE_THREADID_TYPE threads[threadsCount];
 
-        int i;
-        for ( i=0;i<threadsCount;i++ )
-             threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, &searcher);
+    int i;
+    for ( i=0;i<threadsCount;i++ )
+         threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, &searcher);
 
-        CL_NS(util)::Misc::sleep(3000);
+    CL_NS(util)::Misc::sleep(3000);
 
-        for ( i=0;i<threadsCount;i++ )
-            _LUCENE_THREAD_JOIN(threads[i]);
+    for ( i=0;i<threadsCount;i++ )
+        _LUCENE_THREAD_JOIN(threads[i]);
 
-        searcher.close();
+    searcher.close();
 	}
 
 CuSuite *testreuters(void)

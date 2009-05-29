@@ -7,6 +7,7 @@
 #include "test.h"
 
 unittest tests[] = {
+    {"threads", testatomicupdates},
     {"indexreader", testindexreader},
     {"reuters", testreuters},
     {"analyzers", testanalyzers},

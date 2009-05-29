@@ -20,7 +20,7 @@ class CLuceneThreadIdCompare;
 	#define CONDITION_WAIT(theMutex, theCondition)
 	#define CONDITION_NOTIFYALL(theCondition)
 	#define _LUCENE_CURRTHREADID 1
-	#define _LUCENE_THREADID_TYPE char
+	#define _LUCENE_THREADID_TYPE int
 	#define _LUCENE_THREAD_FUNC(name, argName) int name(void* argName)
 	#define _LUCENE_THREAD_FUNC_RETURN(val) return (int)val;
 	#define _LUCENE_THREAD_CREATE(func, arg) (*func)(arg)
