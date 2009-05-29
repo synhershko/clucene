@@ -139,7 +139,7 @@ void testFSThreading(CuTest *tc){
 	strcat(tmpfsdirectory,"/threading-index");
 
   // Second in an FSDirectory:
-  Directory* directory = FSDirectory::getDirectory(tmpfsdirectory);
+  Directory* directory = FSDirectory::getDirectory(tmpfsdirectory, true);
   runThreadingTests(tc,*directory);
   directory->close();
   _CLDECDELETE(directory);
@@ -150,7 +150,7 @@ CuSuite *testatomicupdates(void)
   srand ( (unsigned int)Misc::currentTimeMillis() );
 	CuSuite *suite = CuSuiteNew(_T("CLucene Atomic Updates Test"));
   SUITE_ADD_TEST(suite, testRAMThreading);
-  //SUITE_ADD_TEST(suite, testFSThreading);
+  SUITE_ADD_TEST(suite, testFSThreading);
 
   return suite;
 }
