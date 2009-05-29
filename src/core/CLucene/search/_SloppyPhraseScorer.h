@@ -42,7 +42,9 @@ CL_NS_DEF(search)
 		*/
 		float_t phraseFreq();
 	private:
-		typedef CL_NS(util)::CLHashMap<PhrasePositions*, const void*, CL_NS(util)::Compare::Void<PhrasePositions>, CL_NS(util)::Equals::Void<PhrasePositions>>
+		typedef CL_NS(util)::CLHashMap<PhrasePositions*, 
+			const void*, CL_NS(util)::Compare::Void<PhrasePositions>, 
+			CL_NS(util)::Equals::Void<PhrasePositions> >
 			PhrasePositionsMap;
 		static int comparePhrasePositions(const void* x, const void* y){
 			return static_cast<const PhrasePositions*>(y)->offset - static_cast<const PhrasePositions*>(x)->offset;
