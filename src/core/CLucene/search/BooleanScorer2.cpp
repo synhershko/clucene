@@ -11,6 +11,7 @@
 #include "SearchHeader.h"
 #include "Similarity.h"
 #include "ScorerDocQueue.h"
+#include "Explanation.h"
 
 #include "_BooleanScorer.h"
 #include "_BooleanScorer.h"
@@ -54,7 +55,7 @@ public:
 
 
 
-class BooleanScorer2::Coordinator/*: LUCENE_BASE*/ {
+class BooleanScorer2::Coordinator {
 public:
 	int32_t maxCoord;
 	int32_t nrMatchers;
@@ -62,7 +63,7 @@ public:
 	Scorer* parentScorer;
 
 	Coordinator( Scorer* parent );
-	~Coordinator();
+	virtual ~Coordinator();
 	
 	void init();
 	
@@ -82,7 +83,7 @@ public:
 	int32_t lastScoredDoc;
 	
 	SingleMatchScorer( Scorer* scorer, Coordinator* coordinator );
-	~SingleMatchScorer();
+	virtual ~SingleMatchScorer();
 	
 	float_t score();
 	
@@ -102,16 +103,18 @@ public:
 		return scorer->toString();
 	}
 	
-	void explain(int32_t doc, Explanation* ret) {
-		scorer->explain( doc, ret );	
+	Explanation* explain(int32_t doc) {
+		return scorer->explain( doc );
 	}
 	
 };
 
+/** A scorer that matches no document at all. */
 class BooleanScorer2::NonMatchingScorer: public Scorer {
 public:
 	
 	NonMatchingScorer();
+	virtual ~NonMatchingScorer() {};
 	
 	int32_t doc() const {
 		_CLTHROWA(CL_ERR_UnsupportedOperation, "UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::doc");
@@ -125,25 +128,39 @@ public:
 	bool skipTo( int32_t target ) { return false; }
 	virtual TCHAR* toString() { return stringDuplicate(_T("NonMatchingScorer")); }
 
-	void explain( int32_t doc, Explanation* ret ) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::explain");								
+	Explanation* explain( int32_t doc ) {
+		Explanation* e = _CLNEW Explanation();
+		e->setDescription(_T("No document matches."));
+		return e;
 	}
 	
 };
 
+/** A Scorer for queries with a required part and an optional part.
+ * Delays skipTo() on the optional part until a score() is needed.
+ * <br>
+ * This <code>Scorer</code> implements {@link Scorer#skipTo(int)}.
+ */
 class BooleanScorer2::ReqOptSumScorer: public Scorer {
 private:
+	/** The scorers passed from the constructor.
+	* These are set to null as soon as their next() or skipTo() returns false.
+	*/
 	Scorer* reqScorer;
 	Scorer* optScorer;
 	bool firstTimeOptScorer;
 	
 public:
+	/** Construct a <code>ReqOptScorer</code>.
+	* @param reqScorer The required scorer. This must match.
+	* @param optScorer The optional scorer. This is used for scoring only.
+	*/
 	ReqOptSumScorer( Scorer* reqScorer, Scorer* optScorer );
-	~ReqOptSumScorer();
+	virtual ~ReqOptSumScorer();
 	
 	int32_t doc() const {
 		return reqScorer->doc();
-}
+	}
 	
 	bool next() {
 		return reqScorer->next();
@@ -157,14 +174,32 @@ public:
 		return stringDuplicate(_T("ReqOptSumScorer"));
 	}
 	
-	void explain( int32_t doc, Explanation* ret ) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::ReqOptScorer::explain");								
+	/** Explain the score of a document.
+	* @todo Also show the total score.
+	* See BooleanScorer.explain() on how to do this.
+	*/
+	Explanation* explain( int32_t doc ) {
+		Explanation* res = _CLNEW Explanation();
+		res->setDescription(_T("required, optional"));
+		res->addDetail(reqScorer->explain(doc));
+		res->addDetail(optScorer->explain(doc));
+		return res;
 	}
 
+	/** Returns the score of the current document matching the query.
+	* Initially invalid, until {@link #next()} is called the first time.
+	* @return The score of the required scorer, eventually increased by the score
+	* of the optional scorer when it also matches the current document.
+	*/
 	float_t score();
-
 };
 
+
+/** A Scorer for queries with a required subscorer and an excluding (prohibited) subscorer.
+* <br>
+* This <code>Scorer</code> implements {@link Scorer#skipTo(int)},
+* and it uses the skipTo() on the given scorers.
+*/
 class BooleanScorer2::ReqExclScorer: public Scorer {
 private:
 	Scorer* reqScorer;
@@ -172,13 +207,21 @@ private:
 	bool firstTime;
 	
 public:
+	/** Construct a <code>ReqExclScorer</code>.
+	* @param reqScorer The scorer that must match, except where
+	* @param exclScorer indicates exclusion.
+	*/
 	ReqExclScorer( Scorer* reqScorer, Scorer* exclScorer );
-	~ReqExclScorer();
+	virtual ~ReqExclScorer();
 	
 	int32_t doc() const {
 		return reqScorer->doc();
 	}
 	
+	/** Returns the score of the current document matching the query.
+	* Initially invalid, until {@link #next()} is called the first time.
+	* @return The score of the required scorer.
+	*/
 	float_t score() {
 		return reqScorer->score();
 	}
@@ -187,14 +230,39 @@ public:
 		return stringDuplicate(_T("ReqExclScorer"));
 	}
 	
-	void explain( int32_t doc, Explanation* ret ) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::ReqExclScorer::explain");								
+	Explanation* explain( int32_t doc ) {
+		Explanation* res = _CLNEW Explanation();
+		if (exclScorer->skipTo(doc) && (exclScorer->doc() == doc)) {
+			res->setDescription(_T("excluded"));
+		} else {
+			res->setDescription(_T("not excluded"));
+			res->addDetail(reqScorer->explain(doc));
+		}
+		return res;
 	}
 	
 	bool next();
+
+	/** Skips to the first match beyond the current whose document number is
+	* greater than or equal to a given target.
+	* <br>When this method is used the {@link #explain(int)} method should not be used.
+	* @param target The target document number.
+	* @return true iff there is such a match.
+	*/
 	bool skipTo( int32_t target );
 	
 private:
+	/** Advance to non excluded doc.
+	* <br>On entry:
+	* <ul>
+	* <li>reqScorer != null,
+	* <li>exclScorer != null,
+	* <li>reqScorer was advanced once via next() or skipTo()
+	*      and reqScorer.doc() may still be excluded.
+	* </ul>
+	* Advances reqScorer a non excluded required doc, if any.
+	* @return true iff there is a non excluded required doc.
+	*/
 	bool toNonExcluded();
 	
 };
@@ -528,9 +596,13 @@ TCHAR* BooleanScorer2::toString()
 	return stringDuplicate(_T("BooleanScorer2"));
 }
 
-void BooleanScorer2::explain( int32_t doc, Explanation* ret )
+Explanation* BooleanScorer2::explain( int32_t doc )
 {
-	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::explain");	
+	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::explain");
+	/* How to explain the coordination factor?
+	initCountingSumScorer();
+	return countingSumScorer.explain(doc); // misses coord factor. 
+	*/
 }
 
 bool BooleanScorer2::score( HitCollector* hc, int32_t max )

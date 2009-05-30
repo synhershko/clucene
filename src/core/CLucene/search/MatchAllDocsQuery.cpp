@@ -21,8 +21,9 @@ MatchAllDocsQuery::MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _re
 	_score = w->getValue();
 }
 
-void MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc, Explanation* ret) {
-	// not called... see MatchAllDocsWeight.explain()
+Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc) {
+	// not called... see MatchAllDocsWeight::explain()
+	return NULL;
 }
 
 int32_t MatchAllDocsQuery::MatchAllScorer::doc() const {

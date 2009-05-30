@@ -123,7 +123,7 @@ public:
 	* {@link #score(HitCollector)} methods should not be used.
 	* @param doc The document number for the explanation.
 	*/
-	virtual void explain(int32_t doc, Explanation* ret) = 0;
+	virtual Explanation* explain(int32_t doc) = 0;
 
 	/** Returns a string which explains the object */
 	virtual TCHAR* toString() = 0;

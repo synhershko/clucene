@@ -76,8 +76,9 @@ CL_NS_DEF(search)
       return result;
   }
 
-  void TermScorer::explain(int32_t doc, Explanation* tfExplanation) {
+  Explanation* TermScorer::explain(int32_t doc) {
     TermQuery* query = (TermQuery*)weight->getQuery();
+	Explanation* tfExplanation = _CLNEW Explanation();
     int32_t tf = 0;
     while (pointer < pointerMax) {
       if (docs[pointer] == doc)
@@ -97,8 +98,9 @@ CL_NS_DEF(search)
     TCHAR buf[LUCENE_SEARCH_EXPLANATION_DESC_LEN+1];
 	TCHAR* termToString = query->getTerm(false)->toString();
 	_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,_T("tf(termFreq(%s)=%d)"), termToString, tf);
-    _CLDELETE_CARRAY(termToString);
+    _CLDELETE_LCARRAY(termToString);
     tfExplanation->setDescription(buf);
+	return tfExplanation;
   }
 
   TCHAR* TermScorer::toString() { 

@@ -191,7 +191,9 @@ CL_NS_DEF(search)
 	}
 
 
-	void PhraseScorer::explain(int32_t _doc, Explanation* tfExplanation) {
+	Explanation* PhraseScorer::explain(int32_t _doc) {
+		Explanation* tfExplanation = _CLNEW Explanation();
+
 		while (next() && doc() < _doc){
 		}
 
@@ -203,6 +205,8 @@ CL_NS_DEF(search)
 		buf.appendFloat(phraseFreq,2);
 		buf.append(_T(")"));
 		tfExplanation->setDescription(buf.getBuffer());
+
+		return tfExplanation;
 	}
 
 	TCHAR* PhraseScorer::toString() { 

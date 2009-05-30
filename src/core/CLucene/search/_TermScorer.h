@@ -73,7 +73,7 @@ public:
 	* and the {@link #score(HitCollector)} method should not be used.
 	* @param doc The document number for the explanation.
 	*/
-	void explain(int32_t doc, Explanation* ret);
+	Explanation* explain(int32_t doc);
 
 	/** Returns a string representation of this <code>TermScorer</code>. */
 	virtual TCHAR* toString();

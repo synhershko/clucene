@@ -40,7 +40,7 @@ CL_NS_DEF(search)
 			MatchAllScorer(CL_NS(index)::IndexReader* _reader, Similarity* similarity, Weight* w);
 			virtual ~MatchAllScorer(){}
 
-			void explain(int32_t doc, Explanation* ret);
+			Explanation* explain(int32_t doc);
 
 			int32_t doc() const;
 

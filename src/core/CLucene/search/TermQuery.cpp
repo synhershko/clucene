@@ -204,8 +204,7 @@ CL_NS_DEF(search)
 		fieldExpl->setDescription(buf);
 
         Scorer* sc = scorer(reader);
-		Explanation* tfExpl = _CLNEW Explanation;
-		sc->explain(doc, tfExpl);
+		Explanation* tfExpl = sc->explain(doc);
         _CLLDELETE(sc);
 		fieldExpl->addDetail(tfExpl);
 		fieldExpl->addDetail(idfExpl);

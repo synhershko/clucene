@@ -50,7 +50,7 @@ CL_NS_DEF(search)
 		bool skipTo(int32_t target);
 
 
-		void explain(int32_t doc, Explanation* ret);
+		Explanation* explain(int32_t doc);
 		virtual TCHAR* toString();
 	protected:
 		/**

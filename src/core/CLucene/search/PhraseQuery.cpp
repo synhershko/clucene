@@ -427,8 +427,7 @@ CL_NS_DEF(search)
 	  fieldExpl->setDescription(descbuf);
 
 
-	  Explanation* tfExpl = _CLNEW Explanation();
-	  scorer(reader)->explain(doc, tfExpl);
+	  Explanation* tfExpl = scorer(reader)->explain(doc);
 	  fieldExpl->addDetail(tfExpl);
 	  fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
 

@@ -105,7 +105,7 @@ public:
 	virtual TCHAR* toString();
 
 	/** @return An explanation for the score of a given document. */
-	void explain( int32_t doc, Explanation* ret );
+	Explanation* explain( int32_t doc );
 	
 protected:
 	/** Expert: Collects matching documents in a range.  Hook for optimization.

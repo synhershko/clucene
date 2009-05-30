@@ -61,17 +61,17 @@ DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation i
 DONE ISH	queryParser\Token.java			- If LUCENE_TOKEN_WORD_LENGTH is still necessary, it needs to be implemented in the new code, and have tests written to make sure it works flawlessly with the new QP. Currently it's half implemented.
 DONE ISH	queryParser\TokenMgrError.java		- Integrated within QueryParserTokenManager as functions
 
-?	search\BooleanQuery.java
-?	search\BooleanScorer.java
-?	search\BooleanScorer2.java
+WORKING ISH	search\BooleanQuery.java
+WORKING ISH	search\BooleanScorer.java
+WORKING ISH	search\BooleanScorer2.java
 ?	search\CachingSpanFilter.java
 ?	search\CachingWrapperFilter.java
-?	search\ConjunctionScorer.java
-?	search\ConstantScoreQuery.java
-?	search\ConstantScoreRangeQuery.java
+WORKING ISH	search\ConjunctionScorer.java
+WORKING ISH	search\ConstantScoreQuery.java
+WORKING ISH	search\ConstantScoreRangeQuery.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
-?	search\ExactPhraseScorer.java
+WORKING ISH	search\ExactPhraseScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
@@ -92,23 +92,23 @@ DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFi
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
 DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
-?	search\MultiPhraseQuery.java
+WORKING ISH	search\MultiPhraseQuery.java
 ?	search\MultiSearcher.java
 DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
 DONE BEN	search\PhraseQueue.java
-?	search\PhraseScorer.java
+WORKING ISH	search\PhraseScorer.java
 DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
 ?	search\QueryFilter.java
 ?	search\QueryTermVector.java
 ?	search\QueryWrapperFilter.java
 ?	search\RemoteSearchable.java
 DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
-?	search\Searchable.java
+?	search\Searchable.java			- Any idea why the explain() function in Searchable and derived differs from Java (accepts Query* instead of Weight*)? can we safely confrom with Java now?
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
-?	search\SloppyPhraseScorer.java		- Is this finished? Looks like some work was done in a patch
+WORKING ISH	search\SloppyPhraseScorer.java		- Is this finished? Looks like some work was done in a patch
 ?	search\TermQuery.java
 ?	search\TopDocCollector.java
 ?	search\TopFieldDocCollector.java
@@ -141,7 +141,7 @@ update Internal* internal to be named otherwise (internal is a preserved word in
 
 Post v1 Final:
 
-WORKING ISH	index\CheckIndex.java
+?	index\CheckIndex.java
 ?	search\SpanFilter.java
 ?	search\SpanFilterResult.java
 ?	search\SpanQueryFilter.java
@@ -248,12 +248,12 @@ DONE ISH	search\DisjunctionSumScorer.java
 DONE ISH	search\ComplexExplanation.java
 DONE BEN	search\HitQueue.java                - no changes
 DONE BEN  search\Weight.java
-DONE BEN	search\NonMatchingScorer.java		- no changes
+DONE BEN	search\NonMatchingScorer.java		- This class is under BooleanScorer2 - should this ever be used anywhere else in the namespace it's going to be a problem. Perhaps we should move it now already outside to the namespace scope?
 DONE BEN	search\TopDocs.java
 DONE ISH	search\PrefixQuery.java
 DONE BEN	search\RangeQuery.java
-DONE BEN	search\ReqExclScorer.java 		  - no changes
-DONE BEN	search\ReqOptSumScorer.java		  - no changes
+DONE BEN	search\ReqExclScorer.java 		  	- This class is under BooleanScorer2 - should this ever be used anywhere else in the namespace it's going to be a problem. Perhaps we should move it now already outside to the namespace scope?
+DONE BEN	search\ReqOptSumScorer.java		  - This class is under BooleanScorer2 - should this ever be used anywhere else in the namespace it's going to be a problem. Perhaps we should move it now already outside to the namespace scope?
 DONE ISH	search\ScoreDocComparator.java
 DONE ISH	search\Scorer.java
 DONE BEN	search\Searcher.java			- no changes

@@ -15,7 +15,7 @@ CL_NS_DEF(search)
 	class BooleanScorer: public Scorer {
 	private:
 			
-		class Bucket/*: LUCENE_BASE*/ {
+		class Bucket {
 		public:
 			int32_t	doc;				  // tells if bucket is valid
 			float_t	score;				  // incremental score
@@ -24,10 +24,10 @@ CL_NS_DEF(search)
 			Bucket*	next;				  // next valid bucket
 
 			Bucket();
-			~Bucket();
+			virtual ~Bucket();
 		};
 
-		class SubScorer/*: LUCENE_BASE*/ {
+		class SubScorer {
 		public:
 			bool done;
 			Scorer* scorer;
@@ -36,10 +36,10 @@ CL_NS_DEF(search)
 			HitCollector* collector;
 			SubScorer* next;
 			SubScorer(Scorer* scr, const bool r, const bool p, HitCollector* c, SubScorer* nxt);
-			~SubScorer();
+			virtual ~SubScorer();
 		};
 
-		class BucketTable/*:LUCENE_BASE*/ {
+		class BucketTable {
 		private:
 			BooleanScorer* scorer;
 		public:
@@ -50,8 +50,7 @@ CL_NS_DEF(search)
 			int32_t size() const;
 			HitCollector* newCollector(const int32_t mask);
 			void clear();
-			~BucketTable();
-	      
+			virtual ~BucketTable();
 		};
 
 		class Collector: public HitCollector {
@@ -83,14 +82,14 @@ CL_NS_DEF(search)
 
     	BooleanScorer(Similarity* similarity);
     	BooleanScorer( Similarity* similarity, int32_t minNrShouldMatch );
-		~BooleanScorer();
+		virtual ~BooleanScorer();
 		void add(Scorer* scorer, const bool required, const bool prohibited);
 		int32_t doc() const { return current->doc; }
 		bool next();
 		float_t score();
 		void score( HitCollector* hc );
 		bool skipTo(int32_t target);
-		void explain(int32_t doc, Explanation* ret);
+		Explanation* explain(int32_t doc);
 		virtual TCHAR* toString();
 		void computeCoordFactors();
 		

@@ -9,6 +9,9 @@
 #include "Scorer.h"
 #include "ScorerDocQueue.h"
 #include "SearchHeader.h"
+#include "Explanation.h"
+
+#include "CLucene/util/StringBuffer.h"
 
 #include "_DisjunctionSumScorer.h"
 
@@ -96,35 +99,43 @@ TCHAR* DisjunctionSumScorer::toString()
 	return stringDuplicate(_T("DisjunctionSumScorer"));
 }
 
-void DisjunctionSumScorer::explain( int32_t doc, Explanation* ret )
-{
-	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: DisjunctionSumScorer::explain");								
-	// TODO: Change return type to Explain* before porting this
-	/*
-	ScorersType::iterator ssi = subScorers.begin();
+Explanation* DisjunctionSumScorer::explain( int32_t doc ){
+	Explanation* res = _CLNEW Explanation();
 	float_t sumScore = 0.0f;
-	int_t nrMatches = 0;
+	int32_t nrMatches = 0;
+	ScorersType::iterator ssi = subScorers.begin();
 	while (ssi != subScorers.end()) {
-		Explanation es = ((Scorer*)ssi)->explain(doc, ret);
-		if (es.getValue() > 0.0f) { // indicates match
-			sumScore += es.getValue();
+		Explanation* es = reinterpret_cast<Scorer*>(*ssi)->explain(doc);
+		if (es->getValue() > 0.0f) { // indicates match
+			sumScore += es->getValue();
 			nrMatches++;
 		}
-		res.addDetail(es);
+		res->addDetail(es);
 		++ssi;
 	}
-	if (nrMatchers >= minimumNrMatchers) {
-		res.setValue(sumScore);
-		res.setDescription("sum over at least " + minimumNrMatchers
-			+ " of " + subScorers.size() + ":");
+
+	CL_NS(util)::StringBuffer buf(50);
+	if (_nrMatchers >= minimumNrMatchers) {
+		buf.append(_T("sum over at least "));
+		buf.appendInt(minimumNrMatchers);
+		buf.append(_T(" of "));
+		buf.appendInt(subScorers.size());
+		buf.appendChar(_T(':'));
+
+		res->setValue(sumScore);
+		res->setDescription(buf.getBuffer());
 	} else {
-		res.setValue(0.0f);
-		res.setDescription(nrMatches + " match(es) but at least "
-			+ minimumNrMatchers + " of "
-			+ subScorers.size() + " needed");
+		buf.appendInt(nrMatches);
+		buf.append(_T(" match(es) but at least "));
+		buf.appendInt(minimumNrMatchers);
+		buf.append(_T(" of "));
+		buf.appendInt(subScorers.size());
+		buf.append(_T(" needed"));
+
+		res->setValue(0.0f);
+		res->setDescription(buf.getBuffer());
 	}
 	return res;
-	*/
 }
 
 bool DisjunctionSumScorer::score( HitCollector* hc, const int32_t max )

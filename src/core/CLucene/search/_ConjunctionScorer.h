@@ -34,11 +34,7 @@ public:
   bool next();
   bool skipTo(int32_t target);
   virtual float_t score();
-  virtual void explain(int32_t doc, Explanation* ret) {
-    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: ConjunctionScorer::explain");
-  }
-
-
+  virtual Explanation* explain(int32_t doc);
 };
 
 CL_NS_END
