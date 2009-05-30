@@ -19,6 +19,7 @@
 #include "CLucene/index/Term.h"
 #include "CLucene/util/BitSet.h"
 #include "FieldSortedHitQueue.h"
+#include "Explanation.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -355,7 +356,7 @@ CL_NS_DEF(search)
 
     void IndexSearcher::explain(Query* query, int32_t doc, Explanation* ret){
         Weight* weight = query->weight(this);
-        weight->explain(reader, doc, ret);
+        ret->addDetail(weight->explain(reader, doc)); // TODO: A hack until this function will return Explanation* as well
 
         Query* wq = weight->getQuery();
 	    if ( query != wq ) //query was re-written

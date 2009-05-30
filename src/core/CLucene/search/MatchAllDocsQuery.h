@@ -59,7 +59,7 @@ CL_NS_DEF(search)
 			Similarity* similarity;
 			float_t queryWeight;
 			float_t queryNorm;
-			MatchAllDocsQuery* _enclosingInstance;
+			MatchAllDocsQuery* parentQuery;
 
 		public:
 			MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher);
@@ -76,7 +76,7 @@ CL_NS_DEF(search)
 
 			Scorer* scorer(CL_NS(index)::IndexReader* reader);
 
-			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+			Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
 		};
 
 		/** Prints a query to a string, with <code>field</code> assumed to be the 

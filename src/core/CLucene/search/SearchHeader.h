@@ -124,7 +124,7 @@ CL_NS_DEF(search)
       virtual Scorer* scorer(CL_NS(index)::IndexReader* reader) = 0;
 
       /** An explanation of the score computation for the named document. */
-      virtual void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret) = 0;
+      virtual Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc) = 0;
 
       virtual TCHAR* toString();
    };
