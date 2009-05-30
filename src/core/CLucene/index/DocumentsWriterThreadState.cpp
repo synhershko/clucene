@@ -87,6 +87,9 @@ DocumentsWriter::ThreadState::~ThreadState(){
   _CLDELETE(stringReader);
   _CLDELETE(tvfLocal);
   _CLDELETE(fdtLocal);
+
+  for ( int i=0; i<allFieldDataArray.length;i++)
+    _CLDELETE(allFieldDataArray.values[i]);
 }
 
 void DocumentsWriter::ThreadState::resetPostings() {
@@ -482,6 +485,7 @@ void DocumentsWriter::ThreadState::trimFields() {
       if (_parent->infoStream != NULL)
         (*_parent->infoStream) << "  remove field=" << fp->fieldInfo->name << "\n";
 
+      _CLDELETE(fp);
     } else {
       // Reset
       fp->lastGen = -1;
@@ -499,6 +503,10 @@ void DocumentsWriter::ThreadState::trimFields() {
           fp->rehashPostings(hashSize);
       }
     }
+  }
+  //delete everything after up to in allFieldDataArray
+  for ( int i=upto;i<allFieldDataArray.length;i++ ){
+    allFieldDataArray[i] = NULL;
   }
 
   // If we didn't see any norms for this field since
@@ -709,7 +717,8 @@ DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, Th
   this->postingsCompacted = false;
 }
 DocumentsWriter::ThreadState::FieldData::~FieldData(){
-
+  _CLDELETE(vectorSliceReader);
+  _CLDELETE(localToken);
 }
 bool DocumentsWriter::ThreadState::FieldData::sort(FieldData* e1, FieldData* e2){
   return _tcscmp(e1->fieldInfo->name, e2->fieldInfo->name) < 0;

@@ -60,8 +60,6 @@ CL_NS_DEF(index)
 
 
     maxSkipLevels = 10;
-    lastTermText = NULL;
-    lastTermTextBufLen = 0;
     lastTermTextLength = 0;
     lastFieldNumber = -1;
     termTextBuffer = NULL;
@@ -156,7 +154,7 @@ CL_NS_DEF(index)
       (isIndex && termTextLength == 0 && lastTermTextLength == 0),
       (string("Terms are out of order: field=")  + Misc::toString(fieldInfos->fieldName(fieldNumber)) + " (number " + Misc::toString(fieldNumber) + ")" +
       " lastField=" + Misc::toString(fieldInfos->fieldName(lastFieldNumber)) + " (number " + Misc::toString(lastFieldNumber) + ")" +
-      " text=" + Misc::toString(termText, termTextLength) + " lastText=" + Misc::toString(lastTermText, lastTermTextLength)
+      " text=" + Misc::toString(termText, termTextLength) + " lastText=" + Misc::toString(lastTermText.values, lastTermTextLength)
       ).c_str() );
 
     CND_PRECONDITION(ti->freqPointer >= lastTi->freqPointer, ("freqPointer out of order (" + Misc::toString(ti->freqPointer) + " < " + Misc::toString(lastTi->freqPointer) + ")").c_str());
@@ -164,7 +162,7 @@ CL_NS_DEF(index)
 
 		if (!isIndex && size % indexInterval == 0){
       //add an index term
-      other->add(lastFieldNumber, lastTermText, lastTermTextLength, lastTi);                      // add an index term
+      other->add(lastFieldNumber, lastTermText.values, lastTermTextLength, lastTi);                      // add an index term
 		}
 
 		//write term
@@ -182,17 +180,13 @@ CL_NS_DEF(index)
 			output->writeVLong(other->output->getFilePointer() - lastIndexPointer);
 			lastIndexPointer = other->output->getFilePointer(); // write pointer
 		}
-    if ( lastTermText == NULL ){
-      lastTermTextBufLen = (int32_t)(termTextLength*1.25);
-      lastTermText = (TCHAR*)malloc(sizeof(TCHAR) * cl_max(10, lastTermTextBufLen));
-    }else if (lastTermTextBufLen < termTextLength){
-      lastTermTextBufLen = (int32_t)(termTextLength*1.25);
-      lastTermText = (TCHAR*)realloc(lastTermText, sizeof(TCHAR) * lastTermTextBufLen);
+    if (lastTermText.length < termTextLength || lastTermText.length == 0){
+      lastTermText.resize( cl_max(10,termTextLength*1.25) );
     }
     if ( termText != NULL )
-      _tcsncpy(lastTermText,termText,termTextLength);
+      _tcsncpy(lastTermText.values,termText,termTextLength);
     else
-      *lastTermText = 0;
+      lastTermText.values[0] = 0;
 
     lastTermTextLength = termTextLength;
     lastFieldNumber = fieldNumber;
@@ -229,7 +223,7 @@ CL_NS_DEF(index)
     int32_t start = 0;
     const int32_t limit = termTextLength < lastTermTextLength ? termTextLength : lastTermTextLength;
     while(start < limit) {
-      if (termText[start] != lastTermText[start])
+      if (termText[start] != lastTermText.values[start])
         break;
       start++;
     }

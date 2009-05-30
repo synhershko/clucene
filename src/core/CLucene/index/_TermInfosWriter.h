@@ -1,12 +1,13 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_TermInfosWriter_
 #define _lucene_index_TermInfosWriter_
 
+#include "CLucene/util/Array.h"
 
 CL_CLASS_DEF(store,Directory)
 //#include "FieldInfos.h"
@@ -18,7 +19,7 @@ class FieldInfos;
 class TermInfo;
 
 	// This stores a monotonically increasing set of <Term, TermInfo> pairs in a
-	// Directory.  A TermInfos can be written once, in order.  
+	// Directory.  A TermInfos can be written once, in order.
 	class TermInfosWriter :LUCENE_BASE{
 	private:
 		FieldInfos* fieldInfos;
@@ -28,22 +29,21 @@ class TermInfo;
 
     int64_t lastIndexPointer;
     bool isIndex;
-    TCHAR* lastTermText;
-    size_t lastTermTextBufLen; //current length of lastTermText buffer
-    int32_t lastTermTextLength; 
+    CL_NS(util)::ValueArray<TCHAR> lastTermText;
+    int32_t lastTermTextLength;
     int32_t lastFieldNumber;
 
     TCHAR* termTextBuffer;
     size_t termTextBufferLen; //current length of termTextBuffer buffer
 
 		TermInfosWriter* other;
-	
+
 		//inititalize
 		TermInfosWriter(CL_NS(store)::Directory* directory, const char* segment, FieldInfos* fis, int32_t interval, bool isIndex);
 
     int32_t compareToLastTerm(int32_t fieldNumber, const TCHAR* termText, int32_t length);
 	public:
-    /** Expert: The maximum number of skip levels. Smaller values result in 
+    /** Expert: The maximum number of skip levels. Smaller values result in
     * slightly smaller indexes, but slower skipping in big posting lists.
     */
     int32_t maxSkipLevels;
@@ -73,7 +73,7 @@ class TermInfo;
 		* used to accellerate {@link TermDocs#SkipTo(int32_t)}.  Larger values result in
 		* smaller indexes, greater acceleration, but fewer accelerable cases, while
 		* smaller values result in bigger indexes, less acceleration and more
-		* accelerable cases. More detailed experiments would be useful here. 
+		* accelerable cases. More detailed experiments would be useful here.
 		*/
 		int32_t skipInterval;// = 16
 
@@ -81,7 +81,7 @@ class TermInfo;
 
 		~TermInfosWriter();
 
-      
+
     void add(Term* term, TermInfo* ti);
 
     /** Adds a new <<fieldNumber, termText>, TermInfo> pair to the set.

@@ -81,7 +81,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
 	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true)) //todo: memory!
+  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true))
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -1313,7 +1313,7 @@ void DocumentsWriter::balanceRAM() {
       }
 
       if ((1 == iter % 3) && freeCharBlocks.size() > 0) {
-        freeCharBlocks.remove(freeCharBlocks.size()-1, true); //TODO: this will leak...
+        freeCharBlocks.remove(freeCharBlocks.size()-1);
         numBytesAlloc -= CHAR_BLOCK_SIZE * CHAR_NUM_BYTE;
       }
 
@@ -1324,7 +1324,7 @@ void DocumentsWriter::balanceRAM() {
         else
           numToFree = this->postingsFreeCountDW;
         for ( size_t i = this->postingsFreeCountDW-numToFree;i< this->postingsFreeListDW.length; i++ ){
-          this->postingsFreeListDW.values[i] = NULL; //TODO: memleak!
+          _CLDELETE(this->postingsFreeListDW.values[i]);
         }
         this->postingsFreeCountDW -= numToFree;
         this->postingsAllocCountDW -= numToFree;
@@ -1622,7 +1622,7 @@ void DocumentsWriter::ByteBlockPool::reset() {
 
     // Partial zero fill the final buffer
     memset(buffers.values[bufferUpto], 0, tUpto);
-      
+
     if (bufferUpto > 0)
       // Recycle all but the first buffer
       parent->recycleBlocks(buffers, 1, 1+bufferUpto);

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -19,9 +19,9 @@
 			q = QueryParser::parse(qry , _T("contents"), analyzer);
 			if ( q != NULL ){
 			    h = search->search( q );
-			    
+
 			    if ( h->length() > 0 ){
-			        //check for explanation memory leaks...
+			    //check for explanation memory leaks...
 					Explanation expl1;
 					search->explain(q, h->id(0), &expl1);
 					TCHAR* tmp = expl1.toString();
@@ -39,7 +39,7 @@
 		_CLDELETE(q);
 		);
 	}
-	
+
 	void testSrchOpenIndex(CuTest *tc ){
 		char loc[1024];
 		strcpy(loc, clucene_data_location);
@@ -54,7 +54,7 @@
 			_CLDELETE(s);
 		}
     }
-	
+
 	void testSrchPunctuation(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 
@@ -63,7 +63,7 @@
 		_TestSearchesRun(&a,s, _T("a&&b") );
 		_TestSearchesRun(&a,s, _T(".NET") );
 	}
-	
+
 	void testSrchSlop(CuTest *tc ){
 #ifdef NO_FUZZY_QUERY
 		CuNotImpl(tc,_T("Fuzzy"));
@@ -77,7 +77,7 @@
 		_TestSearchesRun(&a,s, _T("\"term germ\"~2^2") );
 #endif
 	}
-	
+
 	void testSrchNumbers(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 
@@ -90,7 +90,7 @@
 		_TestSearchesRun(&aStd,s, _T("term 1.0 1 2") );
 		_TestSearchesRun(&aStd,s, _T("term term1 term2") );
 	}
-	
+
 	void testSrchWildcard(CuTest *tc ){
 #ifdef NO_WILDCARD_QUERY
 		CuNotImpl(tc,_T("Wildcard"));
@@ -128,7 +128,7 @@
 		);
 #endif
 	}
-	
+
 	void testSrchEscapes(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 		//testEscaped
@@ -138,7 +138,7 @@
 		_TestSearchesRun(&aWS,s, _T("\\+blah") );
 		_TestSearchesRun(&aWS,s, _T("\\(blah") );
 	}
-	
+
 	void testSrchRange(CuTest *tc ){
 #ifdef NO_RANGE_QUERY
 		CuNotImpl(tc,_T("Range"));
@@ -157,7 +157,7 @@
 		_TestSearchesRun(&a,s, _T("gack ( bar blar { j m}) ") );
 #endif
 	}
-	
+
 	void testSrchSimple(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
     	//simple tests
@@ -169,7 +169,7 @@
 		TCHAR tmp1[100];
 		lucene_utf8towcs(tmp1,"t\xc3\xbcrm term term",100);
 		_TestSearchesRun(&a,s, tmp1 );
-		
+
 		lucene_utf8towcs(tmp1,"\xc3\xbcmlaut",100);
 		_TestSearchesRun(&a,s, tmp1 );
 #endif
@@ -207,10 +207,10 @@
 		_TestSearchesRun(&a,s, _T("(foo OR bar) AND (baz OR boo)") );
 		_TestSearchesRun(&a,s, _T("((a OR b) AND NOT c) OR d") );
 		_TestSearchesRun(&a,s, _T("+(apple \"steve jobs\") -(foo bar baz)") );
-		
+
 		_TestSearchesRun(&a,s, _T("+title:(dog OR cat) -author:\"bob dole\"") );
 
-		
+
 		_TestSearchesRun(&a,s, _T(".*") );
 		_TestSearchesRun(&a,s, _T("<*") );
 		_TestSearchesRun(&a,s, _T("/*") );
@@ -224,13 +224,13 @@ void SearchTest(CuTest *tc, bool bram) {
 
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.search");
-	Directory* ram = (bram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir, true) ); 
+	Directory* ram = (bram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir, true) );
 
 	IndexWriter writer( ram, &analyzer, true);
 	writer.setUseCompoundFile(false);
 
 	const TCHAR* docs[] = { _T("a b c d e"),
-		_T("a b c d e a b c d e"),	
+		_T("a b c d e a b c d e"),
 		_T("a b c d e f g h i j"),
 		_T("a c e"),
 		_T("e c a"),
@@ -238,7 +238,7 @@ void SearchTest(CuTest *tc, bool bram) {
 		_T("a c e a b c")
 	};
 
-	for (int j = 0; j < 7; j++) {		
+	for (int j = 0; j < 7; j++) {
 		Document* d = _CLNEW Document();
 		//no need to delete fields... document takes ownership
 		d->add(*_CLNEW Field(_T("contents"),docs[j],Field::STORE_YES | Field::INDEX_TOKENIZED));
@@ -257,21 +257,21 @@ void SearchTest(CuTest *tc, bool bram) {
 	IndexReader* reader = IndexReader::open(ram);
 	IndexSearcher searcher(reader);
 	const TCHAR* queries[] = {
-		_T("\"a b\""),	 	
-		_T("\"a b c\""),	
-		_T("a AND b"),		
-		_T("a c"),		 	
-		_T("\"a c\""),			
-		_T("\"a c e\""),     
+		_T("\"a b\""),
+		_T("\"a b c\""),
+		_T("a AND b"),
+		_T("a c"),
+		_T("\"a c\""),
+		_T("\"a c e\""),
 	};
 	int shouldbe[] = {4,4,4,7,3,3};
 	Hits* hits = NULL;
 	QueryParser parser(_T("contents"), &analyzer);
 
-	for (int k = 0; k < 6; k++) {		
+	for (int k = 0; k < 6; k++) {
 		Query* query = parser.parse(queries[k]);
 		TCHAR* qryInfo = query->toString(_T("contents"));
-		
+
 		hits = searcher.search(query);
 		CLUCENE_ASSERT( hits->length() == shouldbe[k] );
 
@@ -279,7 +279,7 @@ void SearchTest(CuTest *tc, bool bram) {
 		_CLDELETE(hits);
 		_CLDELETE(query);
 	}
-	searcher.close(); 
+	searcher.close();
     reader->close();
 	_CLDELETE( reader );
 
@@ -292,7 +292,7 @@ void SearchTest(CuTest *tc, bool bram) {
 void testNormEncoding(CuTest *tc) {
 	//just a quick test of the default similarity
 	CLUCENE_ASSERT(Similarity::getDefault()->queryNorm(1)==1.0);
-	    
+
     float_t f = Similarity::getDefault()->queryNorm(9);
     f -= (1.0/3.0);
     if ( f < 0 )
@@ -310,7 +310,7 @@ void testNormEncoding(CuTest *tc) {
 	CLUCENE_ASSERT( Similarity::encodeNorm(1)==124 );
 	CLUCENE_ASSERT( Similarity::encodeNorm(7516192768.0 )==255);
 
-	
+
 	CLUCENE_ASSERT( Similarity::decodeNorm(124)==1 );
 	CLUCENE_ASSERT( Similarity::decodeNorm(255)==7516192768.0 );
 
@@ -327,7 +327,7 @@ void testSrchManyHits(CuTest *tc) {
 	IndexWriter writer( &ram, &analyzer, true);
 
 	const TCHAR* docs[] = { _T("a b c d e"),
-		_T("a b c d e a b c d e"),	
+		_T("a b c d e a b c d e"),
 		_T("a b c d e f g h i j"),
 		_T("a c e"),
 		_T("e c a"),
@@ -335,7 +335,7 @@ void testSrchManyHits(CuTest *tc) {
 		_T("a c e a b c")
 	};
 
-	for (int j = 0; j < 140; j++) {		
+	for (int j = 0; j < 140; j++) {
 		Document* d = _CLNEW Document();
 		//no need to delete fields... document takes ownership
 		int x = j%7;
@@ -347,7 +347,7 @@ void testSrchManyHits(CuTest *tc) {
 	writer.close();
 
 	IndexSearcher searcher(&ram);
-	
+
 	BooleanQuery query;
 	Term* t = _CLNEW Term(_T("contents"), _T("a"));
 	query.add(_CLNEW TermQuery(t),true,false, false);
@@ -357,7 +357,7 @@ void testSrchManyHits(CuTest *tc) {
 	      hits->doc(x);
 	}
 	_CLDELETE(hits);
-	searcher.close(); 
+	searcher.close();
 }
 
 void ramSearchTest(CuTest *tc) { SearchTest(tc, true); }
@@ -380,7 +380,7 @@ CuSuite *testsearch(void)
 	SUITE_ADD_TEST(suite, testSrchRange);
 	SUITE_ADD_TEST(suite, testSrchSimple);
 	SUITE_ADD_TEST(suite, testSrchCloseIndex);
-	
-    return suite; 
+
+    return suite;
 }
 // EOF

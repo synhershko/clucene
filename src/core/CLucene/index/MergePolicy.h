@@ -70,6 +70,7 @@ public:
     CLuceneError error;
 
     OneMerge(SegmentInfos* segments, bool _useCompoundFile);
+    ~OneMerge();
 
     /** Record that an exception occurred while executing
      *  this merge */

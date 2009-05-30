@@ -84,6 +84,7 @@ IndexWriter::~IndexWriter(){
   _CLDELETE(mergeScheduler);
   _CLDELETE(mergePolicy);
   _CLDELETE(deleter);
+  _CLDELETE(docWriter);
   delete _internal;
 }
 

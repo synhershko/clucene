@@ -306,7 +306,7 @@ int32_t FieldsReader::addFieldSize(CL_NS(document)::Document& doc, const FieldIn
 	sizebytes->values[1] = (uint8_t) (bytesize>>16);
 	sizebytes->values[2] = (uint8_t) (bytesize>> 8);
 	sizebytes->values[3] = (uint8_t)  bytesize      ;
-	doc.add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES, true)); //TODO: memory...
+	doc.add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES, false));
 	return size;
 }
 
