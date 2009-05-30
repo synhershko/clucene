@@ -186,6 +186,8 @@ steps I followed to create a nice html report. You'll need the lcov package
 installed to generate html. Also, I recommend using an out-of-source build
 directory as there are lots of files that will be generated.
 
+NOTE: you must have lcov installed for this to work
+
 * It is normally recommended to compile with no optimisations, so change CMAKE_BUILD_TYPE
 to Debug.
 
@@ -193,16 +195,15 @@ to Debug.
 already. So all you need to do is
 # make test-gcov
 
-If everything goes well, there will be a coverage file hidden away in the cmake
-folders. 
+If everything goes well, there will be a directory called code-coverage containing the report.
 
-* Then I used lcov to generate html:
+If you want to do this process manually, then:
 # lcov --directory ./src/test/CMakeFiles/cl_test-gcov.dir/__/core/CLucene -c -o clucene-coverage.info
 # lcov --remove clucene-coverage.info "/usr/*" > clucene-coverage.clean
-# genhtml -o coverage-html clucene-coverage.clean
+# genhtml -o clucene-coverage clucene-coverage.clean
 
 If both those commands pass, then there will be a clucene coverage report in the 
-coverage-html directory.
+clucene-coverage directory.
 
 Benchmarks
 ----------
