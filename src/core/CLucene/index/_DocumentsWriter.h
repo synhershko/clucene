@@ -648,7 +648,7 @@ private:
 
     DocumentsWriter* parent;
   public:
-    CL_NS(util)::ValueArray< T* > buffers;
+    CL_NS(util)::ObjectArray< T > buffers;
     int32_t tOffset;          // Current head offset
     int32_t tUpto;             // Where we are in head buffer
     T* buffer;                              // Current head buffer
@@ -656,7 +656,7 @@ private:
     virtual T* getNewBlock(bool trackAllocations) = 0;
 
     BlockPool(DocumentsWriter* _parent, int32_t _blockSize, bool trackAllocations):
-      buffers(CL_NS(util)::ValueArray<T*>(10))
+      buffers(CL_NS(util)::ObjectArray<T>(10))
     {
 	    this->blockSize = _blockSize;
       this->parent = _parent;
@@ -696,6 +696,7 @@ private:
   class CharBlockPool: public BlockPool<TCHAR>{
   public:
     CharBlockPool(DocumentsWriter* _parent);
+    virtual ~CharBlockPool();
     TCHAR* getNewBlock(bool trackAllocations);
     void reset();
     friend class DocumentsWriter::FieldMergeState;
@@ -703,6 +704,7 @@ private:
   class ByteBlockPool: public BlockPool<uint8_t>{
   public:
     ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent);
+    virtual ~ByteBlockPool();
     uint8_t* getNewBlock(bool trackAllocations);
     int32_t newSlice(const int32_t size);
     int32_t allocSlice(uint8_t* slice, const int32_t upto);

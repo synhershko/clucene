@@ -130,7 +130,7 @@ public:
   }
 
   void TestFieldSelectors(CuTest *tc){
-    RAMDirectory dir; _CL_DECREF(dir); //derefence since we are on the stack...
+    RAMDirectory dir;
     const TCHAR* longStrValue = _T("too long a field...");
     {
       WhitespaceAnalyzer a;
@@ -171,6 +171,7 @@ public:
     CLUCENE_ASSERT(memcmp(shouldBe.values,bytes.values,4)==0);
 
     _CLDELETE(reader);
+    _CL_DECREF(&dir); //derefence since we are on the stack...
   }
 
   void _TestDocumentWithOptions(CuTest *tc, int storeBit, FieldSelector::FieldSelectorResult fieldSelectorBit){

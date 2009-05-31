@@ -1221,10 +1221,9 @@ uint8_t* DocumentsWriter::getByteBlock(bool trackAllocations) {
 
 void DocumentsWriter::recycleBlocks(ArrayBase<uint8_t*>& blocks, int32_t start, int32_t end) {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
-  uint8_t* block;
   for(int32_t i=start;i<end;i++){
-    block = blocks[i];
-    freeByteBlocks.push_back(block);
+    freeByteBlocks.push_back(blocks[i]);
+    blocks[i] = NULL;
   }
 }
 
@@ -1569,6 +1568,8 @@ DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, Documents
   BlockPool<uint8_t>(_parent, BYTE_BLOCK_SIZE, _trackAllocations)
 {
 }
+DocumentsWriter::ByteBlockPool::~ByteBlockPool(){
+}
 uint8_t* DocumentsWriter::ByteBlockPool::getNewBlock(bool _trackAllocations){
   return parent->getByteBlock(_trackAllocations);
 }
@@ -1637,6 +1638,8 @@ void DocumentsWriter::ByteBlockPool::reset() {
 DocumentsWriter::CharBlockPool::CharBlockPool(DocumentsWriter* _parent):
     BlockPool<TCHAR>(_parent, CHAR_BLOCK_SIZE, false)
 {
+}
+DocumentsWriter::CharBlockPool::~CharBlockPool(){
 }
 TCHAR* DocumentsWriter::CharBlockPool::getNewBlock(bool){
     return parent->getCharBlock();
