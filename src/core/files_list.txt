@@ -24,33 +24,17 @@ DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or sim
 ?	analysis\Token.java
 ?	analysis\TokenFilter.java
 DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
-DONE ISH	analysis\WhitespaceAnalyzer.java
 ?	analysis\WhitespaceTokenizer.java
 DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
 DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
 DONE ISH	document\Document.java				- getBinaryValue(s) were and are not implemented. All Fieldable mentiones were kept Field*.
 DONE ISH	document\Field.java				- Still need to complete all TODOs in file
 
-?	document\MapFieldSelector.java
-?	document\SetBasedFieldSelector.java
-
 PARTIAL ISH	index\FieldsReader.java - still need gzip impl
 PARTIAL BEN	index\FieldsWriter.java - still need gzip impl
-? index\PositionBasedTermVectorMapper.java
-DONE ISH/BEN	index\SegmentInfo.java
 PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
 DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
-? index\SortedTermVectorMapper.java
-DONE BEN	index\StaleReaderException.java
-DONE BEN	index\TermBuffer.java (actually, not nessary, Term has the same functionality)
 DONE ISH/BEN index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
-DONE BEN	index\TermInfosWriter.java
-?	index\TermVectorEntry.java
-?	index\TermVectorEntryFreqSortedComparator.java
-DONE ISH	index\TermVectorMapper.java
-DONE ISH	index\TermVectorOffsetInfo.java
-DONE ISH	index\TermVectorsReader.java
-?	index\TermVectorsWriter.java
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
@@ -72,7 +56,6 @@ WORKING ISH	search\ConstantScoreRangeQuery.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
 WORKING ISH	search\ExactPhraseScorer.java
-DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
 ?	search\FieldCache.java
@@ -97,14 +80,12 @@ WORKING ISH	search\MultiPhraseQuery.java
 DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
-DONE BEN	search\PhraseQueue.java
 WORKING ISH	search\PhraseScorer.java
 DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
 ?	search\QueryFilter.java
 ?	search\QueryTermVector.java
 ?	search\QueryWrapperFilter.java
 ?	search\RemoteSearchable.java
-DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
 ?	search\Searchable.java			- Any idea why the explain() function in Searchable and derived differs from Java (accepts Query* instead of Weight*)? can we safely confrom with Java now?
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
@@ -113,7 +94,6 @@ WORKING ISH	search\SloppyPhraseScorer.java		- Is this finished? Looks like some 
 ?	search\TopDocCollector.java
 ?	search\TopFieldDocCollector.java
 
-DONE ISH	store\IndexInput.java			- Clone method implemented as constructor only
 DONE JW	store\NativeFSLockFactory.java - 1 class implemented as FSLockFactory
 DONE JW	store\SimpleFSLockFactory.java - 1 class implemented as FSLockFactory
 ?	store\VerifyingLockFactory.java
@@ -141,6 +121,9 @@ update Internal* internal to be named otherwise (internal is a preserved word in
 
 Post v1 Final:
 
+? 	index\SortedTermVectorMapper.java			-alt
+?	index\TermVectorEntryFreqSortedComparator.java 		-alt
+? 	index\PositionBasedTermVectorMapper.java 		-alt
 ?	index\CheckIndex.java
 ?	search\SpanFilter.java
 ?	search\SpanFilterResult.java
@@ -190,7 +173,16 @@ DONE ISH	document\FieldSelector.java
 DONE ISH	document\FieldSelectorResult.java
 DONE ISH	document\LoadFirstFieldSelector.java
 DONE ISH	document\NumberTools.java
+DONE BEN	document\MapFieldSelector.java
+DONE BEN	document\SetBasedFieldSelector.java (Irrelevent, actually, we achive both in MapFieldSelector)
 
+DONE ISH	index\TermVectorMapper.java
+DONE ISH	index\TermVectorOffsetInfo.java
+DONE ISH	index\TermVectorsReader.java
+DONE ISH/BEN	index\SegmentInfo.java
+DONE BEN	index\StaleReaderException.java
+DONE BEN	index\TermBuffer.java (actually, not nessary, Term has the same functionality)
+DONE BEN	index\TermInfosWriter.java
 DONE ISH	index\FieldInfo.java
 DONE ISH	index\MultipleTermPositions.java
 DONE ISH	index\SegmentMergeInfo.java
@@ -242,8 +234,11 @@ DONE BEN	index\SegmentTermDocs.java
 DONE BEN	index\SegmentTermEnum.java
 DONE ISH	index\SegmentTermPositionVector.java
 DONE BEN	index\SerialMergeScheduler.java
+DONE BEN	index\TermVectorEntry.java
+DONE BEN	index\TermVectorsWriter.java
 
 
+DONE BEN	search\PhraseQueue.java
 DONE ISH	search\DisjunctionSumScorer.java
 DONE ISH	search\ComplexExplanation.java
 DONE BEN	search\HitQueue.java                - no changes
@@ -268,14 +263,18 @@ BEN DONE  search\PrefixFilter.java      - all done
 BEN DONE  search\SortField.java
 BEN DONE  search\Sort.java
 BEN DONE search\TermScorer.java
+DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
+DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
 
 
+DONE ISH	analysis\WhitespaceAnalyzer.java
 DONE ISH	analysis\PerFieldAnalyzerWrapper.java
 DONE ISH	analysis\LengthFilter.java
 DONE ISH	analysis\KeywordAnalyzer.java
 DONE ISH	analysis\SimpleAnalyzer.java
 DONE ISH	analysis\Tokenizer.java
 
+DONE ISH	store\IndexInput.java			- Clone method implemented as constructor only
 IRRELEVANT	store\AlreadyClosedException.java		- Using CL_ERR_IllegalState for this
 DONE JW		store\Directory.java
 DONE JW		store\FSDirectory.java
