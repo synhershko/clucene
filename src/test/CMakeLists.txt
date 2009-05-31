@@ -37,6 +37,8 @@ SET(test_files ./tests.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
 ./index/TestIndexWriter.cpp
+./index/TestIndexReader.cpp
+./index/TestThreading.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
@@ -164,6 +166,9 @@ IF ( GccFlagGcov )
 	ADD_CUSTOM_TARGET(test-gcov
 	    COMMENT "Running cl_test-gcov"
 	    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-gcov
+      COMMAND lcov --directory CMakeFiles/cl_test-gcov.dir/__/core/CLucene -c -o clucene-coverage.info
+      COMMAND lcov --remove clucene-coverage.info "\"/usr/*\"" -o clucene-coverage.clean
+      COMMAND genhtml -o ${CMAKE_BINARY_DIR}/clucene-coverage clucene-coverage.clean
 	    DEPENDS cl_test-gcov)
 ENDIF ( GccFlagGcov )
 

@@ -23,6 +23,7 @@
 #include "_SegmentMerger.h"
 #include "_SegmentHeader.h"
 #include "CLucene/search/Similarity.h"
+#include "CLucene/index/MergePolicy.h"
 #include "MergePolicy.h"
 #include "MergeScheduler.h"
 #include "_IndexFileDeleter.h"
@@ -83,6 +84,7 @@ IndexWriter::~IndexWriter(){
   _CLDELETE(mergeScheduler);
   _CLDELETE(mergePolicy);
   _CLDELETE(deleter);
+  _CLDELETE(docWriter);
   delete _internal;
 }
 
@@ -199,6 +201,10 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool 
   this->autoCommit = true;
   this->segmentInfos = _CLNEW SegmentInfos;
   this->mergeGen = 0;
+  this->rollbackSegmentInfos = NULL;
+  this->deleter = NULL;
+  this->docWriter = NULL;
+  this->writeLock = NULL;
 
   if (create) {
     // Clear the write lock in case it's leftover:
@@ -905,9 +911,9 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
     spec = mergePolicy->findMergesForOptimize(segmentInfos, this, maxNumSegmentsOptimize, *segmentsToOptimize);
 
     if (spec != NULL) {
-      const int32_t numMerges = spec->merges.size();
+      const int32_t numMerges = spec->merges->size();
       for(int32_t i=0;i<numMerges;i++) {
-        MergePolicy::OneMerge* _merge = spec->merges[i];
+        MergePolicy::OneMerge* _merge = (*spec->merges)[i];
         _merge->optimize = true;
         _merge->maxNumSegmentsOptimize = maxNumSegmentsOptimize;
       }
@@ -917,9 +923,9 @@ void IndexWriter::updatePendingMerges(int32_t maxNumSegmentsOptimize, bool optim
     spec = mergePolicy->findMerges(segmentInfos, this);
 
   if (spec != NULL) {
-    const int32_t numMerges = spec->merges.size();
+    const int32_t numMerges = spec->merges->size();
     for(int32_t i=0;i<numMerges;i++)
-      registerMerge(spec->merges[i]);
+      registerMerge((*spec->merges)[i]);
   }
   _CLDELETE(spec);
 }
@@ -980,7 +986,7 @@ void IndexWriter::rollbackTransaction() {
   // attempt to commit using this instance of IndexWriter
   // will always write to a _CLNEW generation ("write once").
   segmentInfos->clear();
-  segmentInfos->insert(localRollbackSegmentInfos);
+  segmentInfos->insert(localRollbackSegmentInfos, true);
   _CLDELETE(localRollbackSegmentInfos);
 
   // Ask deleter to locate unreferenced files we had
@@ -1060,7 +1066,7 @@ void IndexWriter::abort() {
       // will always write to a _CLNEW generation ("write
       // once").
       segmentInfos->clear();
-      segmentInfos->insert(rollbackSegmentInfos);
+      segmentInfos->insert(rollbackSegmentInfos, false);
 
       docWriter->abort(NULL);
 
@@ -1141,7 +1147,7 @@ void IndexWriter::checkpoint() {
   }
 }
 
-void IndexWriter::addIndexes(Directory** dirs){
+void IndexWriter::addIndexes(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs){
 
   ensureOpen();
 
@@ -1161,12 +1167,10 @@ void IndexWriter::addIndexes(Directory** dirs){
     try {
 
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (int32_t i = 0; dirs[i] != NULL; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           SegmentInfos sis;	  // read infos from dir
           sis.read(dirs[i]);
-          for (int32_t j = 0; j < sis.size(); j++) {
-            segmentInfos->insert(sis.info(j));	  // add each info
-          }
+          segmentInfos->insert(&sis,true);	  // add each info
         }
       }
 
@@ -1194,7 +1198,7 @@ void IndexWriter::resetMergeExceptions() {
   mergeGen++;
 }
 
-void IndexWriter::addIndexesNoOptimize(Directory** dirs)
+void IndexWriter::addIndexesNoOptimize(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& dirs)
 {
   ensureOpen();
 
@@ -1213,7 +1217,7 @@ void IndexWriter::addIndexesNoOptimize(Directory** dirs)
     try {
 
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (int32_t i = 0; dirs[i] != NULL; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           if (directory == dirs[i]) {
             // cannot add this index: segments may be deleted in merge before added
             _CLTHROWA(CL_ERR_IllegalArgument,"Cannot add this index to itself");
@@ -1221,10 +1225,7 @@ void IndexWriter::addIndexesNoOptimize(Directory** dirs)
 
           SegmentInfos sis; // read infos from dir
           sis.read(dirs[i]);
-          for (int32_t j = 0; j < sis.size(); j++) {
-            SegmentInfo* info = sis.info(j);
-            segmentInfos->insert(info); // add each info
-          }
+          segmentInfos->insert(&sis, true);
         }
       }
 
@@ -1277,7 +1278,6 @@ void IndexWriter::copyExternalSegments() {
     if (_merge != NULL) {
       if (registerMerge(_merge)) {
         PendingMergesType::iterator p = std::find(pendingMerges->begin(),pendingMerges->end(), _merge);
-        assert(false);//test me
         pendingMerges->remove(p,true);
         runningMerges->insert(_merge);
         any = true;
@@ -1458,7 +1458,8 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
             // deletes could have changed any of the
             // SegmentInfo instances:
             segmentInfos->clear();
-            segmentInfos->insert(rollback);
+            assert(false);//test me..
+            segmentInfos->insert(rollback, false);
 
           } else {
             // Remove segment we added, if any:
@@ -1704,10 +1705,11 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
       if (infoStream != NULL)
         message(string("hit exception when checkpointing after merge"));
       segmentInfos->clear();
-      segmentInfos->insert(rollback);
+      segmentInfos->insert(rollback,true);
       deletePartialSegmentsFile();
       deleter->refresh(_merge->info->name.c_str());
     }
+    _CLDELETE(rollback);
   )
 
   if (_merge->optimize)
@@ -2295,6 +2297,7 @@ void IndexWriter::Internal::applyDeletes(const DocumentsWriter::TermNumMapType& 
   DocumentsWriter::TermNumMapType::const_iterator iter = deleteTerms.begin();
   while (iter != deleteTerms.end()) {
     reader->deleteDocuments(iter->first);
+    iter++;
   }
 }
 

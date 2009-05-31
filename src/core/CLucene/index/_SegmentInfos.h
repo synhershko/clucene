@@ -81,10 +81,10 @@ CL_NS_DEF(index)
 
 	public:
 		SegmentInfo(const char* _name, const int32_t _docCount, CL_NS(store)::Directory* _dir,
-			bool _isCompoundFile=SegmentInfo::CHECK_DIR, 
+			bool _isCompoundFile=SegmentInfo::CHECK_DIR,
       bool _hasSingleNormFile=false,
-			int32_t _docStoreOffset = -1, 
-      const char* _docStoreSegment = NULL, 
+			int32_t _docStoreOffset = -1,
+      const char* _docStoreSegment = NULL,
       bool _docStoreIsCompoundFile = false);
 
 		/**
@@ -189,7 +189,7 @@ CL_NS_DEF(index)
 		CL_NS(store)::Directory* getDir() const{ return dir; } //todo: since dir is public, consider removing this function
 
 	    friend class SegmentReader;
-	   
+
 	    /** Used for debugging */
 	    std::string segString(CL_NS(store)::Directory* dir);
 	};
@@ -359,8 +359,8 @@ CL_NS_DEF(index)
 		SegmentInfo* elementAt(int32_t pos);
 		void setElementAt(SegmentInfo* si, int32_t pos);
 		void clear();
-    
-		void insert(SegmentInfos* infos);
+
+		void insert(SegmentInfos* infos, bool takeMemory);
 		void insert(SegmentInfo* info);
 		int32_t indexOf(const SegmentInfo* info) const;
 		void range(size_t from, size_t to, SegmentInfos& ret) const;
@@ -520,10 +520,11 @@ CL_NS_DEF(index)
     	friend class SegmentInfos::FindSegmentsVersion;
 
 		class FindSegmentsRead: public FindSegmentsFile<bool> {
+      	  SegmentInfos* _this;
     	public:
-			  FindSegmentsRead( CL_NS(store)::Directory* dir );
-    	  FindSegmentsRead( const char* dir );
-    		bool doBody( const char* segmentFileName );
+		  FindSegmentsRead( CL_NS(store)::Directory* dir, SegmentInfos* _this );
+    	  FindSegmentsRead( const char* dir, SegmentInfos* _this );
+    	  bool doBody( const char* segmentFileName );
     	};
     	friend class SegmentInfos::FindSegmentsRead;
   };

@@ -311,9 +311,8 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) 
     t = _CLNEW Token();
     try {
       Token* _t = source->next(t);
-	  if (_t == NULL) _CLDELETE(t);
-    }
-    _CLCATCH_ERR(CL_ERR_IO, _CLLDELETE(source);_CLLDELETE(t);_CLDELETE_LCARRAY(queryText);,{
+      if (_t == NULL) _CLDELETE(t);
+    }_CLCATCH_ERR(CL_ERR_IO, _CLLDELETE(source);_CLLDELETE(t);_CLDELETE_LCARRAY(queryText);,{
       t = NULL;
     });
     if (t == NULL)

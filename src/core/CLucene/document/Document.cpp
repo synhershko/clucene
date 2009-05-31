@@ -14,36 +14,18 @@ CL_NS_USE(util)
 CL_NS_DEF(document)
 
 
-  DocumentFieldEnumeration::DocumentFieldList::DocumentFieldList(Field* f, DocumentFieldList* n ) {
-    field = f;
-    next  = n;
-  }
-  DocumentFieldEnumeration::DocumentFieldList::~DocumentFieldList(){
-    if (!field) {
-        return; // nothing to do; deleted by different invocation of dtor
-    }
-
-    DocumentFieldList* cur = next;
-    while (cur != NULL)
-    {
-      DocumentFieldList* temp = cur->next;
-      cur->next = NULL;
-
-      _CLDELETE(cur);
-      cur = temp;
-    }
-    field = NULL;
-  }
-  DocumentFieldEnumeration::DocumentFieldEnumeration(const DocumentFieldList* fl){
-    //Func - Constructor
-  //Pre  - fl may be NULL
-  //Post - Instance has been created
-
-    fields = fl;
+  struct DocumentFieldEnumeration::Internal {
+    Document::FieldsType::iterator itr;
+    Document::FieldsType::iterator end;
+  };
+  DocumentFieldEnumeration::DocumentFieldEnumeration(Document::FieldsType::iterator itr, Document::FieldsType::iterator end){
+    this->_internal = new DocumentFieldEnumeration::Internal;
+    this->_internal->itr = itr;
+    this->_internal->end = end;
   }
 
   bool DocumentFieldEnumeration::hasMoreElements() const {
-    return fields == NULL ? false : true;
+    return _internal->itr != _internal->end;
   }
 
   Field* DocumentFieldEnumeration::nextElement() {
@@ -51,30 +33,22 @@ CL_NS_DEF(document)
   //Pre  - true
   //Post - The next element is returned or NULL
 
-
     Field* result = NULL;
-    //Check if fields is still valid
-    if (fields){
-      result = fields->field;
-      fields = fields->next;
+    if ( _internal->itr != _internal->end ){
+      result = *_internal->itr;
+      _internal->itr++;
     }
     return result;
   }
 
   DocumentFieldEnumeration::~DocumentFieldEnumeration(){
     //Func - Destructor
-  //Pre  - true
-  //Post - Instance has been destroyed
+    //Pre  - true
+    //Post - Instance has been destroyed
+    delete _internal;
   }
   DocumentFieldEnumeration* Document::fields() {
-    if ( fieldListCache == NULL ){
-      for ( FieldsType::const_iterator itr = _fields->begin();
-        itr != _fields->end(); itr ++ ){
-
-        fieldListCache = _CLNEW DocumentFieldEnumeration::DocumentFieldList(*itr, fieldListCache);
-      }
-    }
-    return _CLNEW DocumentFieldEnumeration(fieldListCache);
+    return _CLNEW DocumentFieldEnumeration(_fields->begin(), _fields->end());
   }
 
   /** Constructs a new document with no fields-> */
@@ -85,7 +59,6 @@ CL_NS_DEF(document)
 	//Pre  - true
 	//Post - Instance has been created
     boost = 1.0f;
-    fieldListCache = NULL;
 	}
 
 	Document::~Document(){
@@ -98,12 +71,10 @@ CL_NS_DEF(document)
 
 	void Document::clear(){
 		_fields->clear();
-    _CLDELETE(fieldListCache);
 	}
 
 	void Document::add(Field& field) {
 		_fields->push_back(&field);
-    _CLDELETE(fieldListCache);
 	}
 
    void Document::setBoost(const float_t boost) {
@@ -156,6 +127,7 @@ CL_NS_DEF(document)
 
    void Document::removeField(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
+
     for ( FieldsType::iterator itr = _fields->begin();
       itr != _fields->end(); itr++ ){
 
@@ -164,20 +136,23 @@ CL_NS_DEF(document)
         return;
       }
     }
-    _CLDELETE(fieldListCache);
    }
 
    void Document::removeFields(const TCHAR* name) {
 	  CND_PRECONDITION(name != NULL, "name is NULL");
-    for ( FieldsType::iterator itr = _fields->begin();
-      itr != _fields->end(); itr++ ){
-
-      if ( _tcscmp( (*itr)->name(), name) == 0 ){
-        _fields->remove(itr);
-        itr--;
-      }
+    bool flag = true;
+    //TODO: make this more efficient
+    while(flag){
+      for ( FieldsType::iterator itr = _fields->begin();
+        itr != _fields->end(); itr++ ){
+        if ( _tcscmp( (*itr)->name(), name) == 0 ){
+          _fields->remove(itr);
+          flag = false; //no modifications allowed on an iterator
+          break;
+        }
+     }
+      flag = !flag;
     }
-    _CLDELETE(fieldListCache);
    }
 
    TCHAR** Document::getValues(const TCHAR* name) {

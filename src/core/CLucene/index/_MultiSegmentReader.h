@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_MultiSegmentReader
@@ -48,24 +48,24 @@ protected:
 	void commitChanges();
 	// synchronized
 	void doClose();
-	
+
 	// synchronized
 	void doDelete(const int32_t n);
   DirectoryIndexReader* doReopen(SegmentInfos* infos);
-  
+
   void initialize( CL_NS(util)::ArrayBase<IndexReader*>* subReaders);
 
 public:
-	
+
   /** Construct reading the named set of readers. */
   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
 
   /** This contructor is only used for {@link #reopen()} */
   MultiSegmentReader(
-      CL_NS(store)::Directory* directory, 
+      CL_NS(store)::Directory* directory,
       SegmentInfos* sis,
       bool closeDirectory,
-      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders, 
+      CL_NS(util)::ArrayBase<IndexReader*>* oldReaders,
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache);
 
@@ -99,7 +99,7 @@ public:
 
 	TermEnum* terms();
 	TermEnum* terms(const Term* term);
-	
+
 	//Returns the document frequency of the current term in the set
 	int32_t docFreq(const Term* t=NULL);
 	TermDocs* termDocs();
@@ -111,10 +111,12 @@ public:
   void setTermInfosIndexDivisor(int32_t indexDivisor);
   int32_t getTermInfosIndexDivisor();
 
+  const CL_NS(util)::ArrayBase<IndexReader*>* getSubReaders() const;
+
   friend class MultiReader;
   friend class SegmentReader;
   friend class DirectoryIndexReader;
-    
+
   static const char* getClassName();
   const char* getObjectName() const;
 };
@@ -150,7 +152,7 @@ public:
   /** Optimized implementation. */
   int32_t read(int32_t* docs, int32_t* freqs, int32_t length);
 
-   /* A Possible future optimization could skip entire segments */ 
+   /* A Possible future optimization could skip entire segments */
   bool skipTo(const int32_t target);
 
   void close();

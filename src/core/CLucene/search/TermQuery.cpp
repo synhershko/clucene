@@ -35,7 +35,7 @@ CL_NS_DEF(search)
 
 	public:
 		TermWeight(Searcher* searcher, TermQuery* _this, CL_NS(index)::Term* _term);
-		~TermWeight();
+		virtual ~TermWeight();
 		TCHAR* toString();
 		Query* getQuery() { return (Query*)_this; }
 		float_t getValue() { return value; }
@@ -43,7 +43,7 @@ CL_NS_DEF(search)
 		float_t sumOfSquaredWeights();
 		void normalize(float_t queryNorm);
 		Scorer* scorer(CL_NS(index)::IndexReader* reader);
-		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+		Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
 	};
 
 
@@ -153,18 +153,20 @@ CL_NS_DEF(search)
 								reader->norms(_term->field()));
 	}
 
-	void TermWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
+	Explanation* TermWeight::explain(IndexReader* reader, int32_t doc){
+		ComplexExplanation* result = _CLNEW ComplexExplanation();
+
 		TCHAR buf[LUCENE_SEARCH_EXPLANATION_DESC_LEN];
         TCHAR* tmp;
 
         tmp = getQuery()->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("weight(%s in %d), product of:"),tmp,doc);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		result->setDescription(buf);
 
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-			_T("idf(docFreq=%d)"), searcher->docFreq(_term) );
+			_T("idf(docFreq=%d, numDocs=%d)"), reader->docFreq(_term), reader->numDocs() );
 		Explanation* idfExpl = _CLNEW Explanation(idf, buf);
 
 		// explain query weight
@@ -172,7 +174,7 @@ CL_NS_DEF(search)
         tmp = getQuery()->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("queryWeight(%s), product of:"), tmp);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		queryExpl->setDescription(buf);
 
 		Explanation* boostExpl = _CLNEW Explanation(_this->getBoost(), _T("boost"));
@@ -186,24 +188,24 @@ CL_NS_DEF(search)
 		Explanation* queryNormExpl = _CLNEW Explanation(queryNorm,_T("queryNorm"));
 		queryExpl->addDetail(queryNormExpl);
 		    
-		queryExpl->setValue(_this->getBoost()* // always 1.0
+		queryExpl->setValue(_this->getBoost()* // always 1.0 | TODO: original Java code is boostExpl.getValue()
 							idfExpl->getValue() *
 							queryNormExpl->getValue());
+		result->addDetail(queryExpl);
 		    
 		// explain field weight
 		const TCHAR* field = _term->field();
-		Explanation* fieldExpl = _CLNEW Explanation();
+		ComplexExplanation* fieldExpl = _CLNEW ComplexExplanation();
 
         tmp = _term->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("fieldWeight(%s in %d), product of:"),tmp,doc);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		fieldExpl->setDescription(buf);
 
         Scorer* sc = scorer(reader);
-		Explanation* tfExpl = _CLNEW Explanation;
-		sc->explain(doc, tfExpl);
-        _CLDELETE(sc);
+		Explanation* tfExpl = sc->explain(doc);
+        _CLLDELETE(sc);
 		fieldExpl->addDetail(tfExpl);
 		fieldExpl->addDetail(idfExpl);
 
@@ -217,21 +219,24 @@ CL_NS_DEF(search)
 			_T("fieldNorm(field=%s, doc=%d)"),field,doc);
 		fieldNormExpl->setDescription(buf);
 		fieldExpl->addDetail(fieldNormExpl);
-
+		
+		fieldExpl->setMatch(tfExpl->isMatch());
 		fieldExpl->setValue(tfExpl->getValue() *
 							idfExpl->getValue() *
 							fieldNormExpl->getValue());
 
-        /*if (queryExpl->getValue() == 1.0f){
-			_CLDELETE(result);
+        if (queryExpl->getValue() == 1.0f){
+			_CLLDELETE(result);
             return fieldExpl;
-        }else{*/
-		    result->addDetail(queryExpl);
-		    result->addDetail(fieldExpl);
+        }
 
-		    // combine them
-		    result->setValue(queryExpl->getValue() * fieldExpl->getValue());
-        //}
+		// combine them
+		result->setValue(queryExpl->getValue() * fieldExpl->getValue());
+
+		result->addDetail(fieldExpl);
+		result->setMatch(fieldExpl->getMatch());
+
+		return result;
 	}
 	
 	Weight* TermQuery::_createWeight(Searcher* searcher) {

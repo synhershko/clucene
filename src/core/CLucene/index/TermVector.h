@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_termvector_h
@@ -13,11 +13,10 @@
 
 CL_NS_DEF(index)
 
-//predefine classes
-struct TermVectorOffsetInfo;
 class TermPositionVector;
 
-/** Provides access to stored term vector of 
+
+/** Provides access to stored term vector of
  *  a document field.  The vector consists of the name of the field, an array of the terms tha occur in the field of the
  * {@link org.apache.lucene.document.Document} and a parallel array of frequencies.  Thus, getTermFrequencies()[5] corresponds with the
  * frequency of getTerms()[5], assuming there are at least 5 terms in the Document.
@@ -28,21 +27,21 @@ public:
 	}
 
 	/**
-	* The Field name. 
+	* The Field name.
 	* @return The name of the field this vector is associated with.
-	* 
-	*/ 
+	*
+	*/
 	virtual const TCHAR* getField() = 0;
 
-	/** 
+	/**
 	* @return The number of terms in the term vector.
 	*/
 	virtual int32_t size() = 0;
 
-	/** 
+	/**
 	* @return An Array of term texts in ascending order.
 	*/
-	virtual const TCHAR** getTerms() = 0;
+	virtual const CL_NS(util)::ArrayBase<const TCHAR*>* getTerms() = 0;
 
 
 	/** Array of term frequencies. Locations of the array correspond one to one
@@ -53,7 +52,7 @@ public:
 	*  The size of the returned array is size()
 	*  @memory Returning a pointer to internal data. Do not delete.
 	*/
-	virtual const CL_NS(util)::ValueArray<int32_t>* getTermFrequencies() = 0;
+	virtual const CL_NS(util)::ArrayBase<int32_t>* getTermFrequencies() = 0;
 
 
 	/** Return an index in the term numbers array returned from
@@ -62,7 +61,6 @@ public:
 	*  return -1.
 	*/
 	virtual int32_t indexOf(const TCHAR* term) = 0;
-
 
 	/** Just like <code>indexOf(int32_t)</code> but searches for a number of terms
 	*  at the same time. Returns an array that has the same size as the number
@@ -73,7 +71,7 @@ public:
 	*  @param start index in the array where the list of terms starts
 	*  @param len the number of terms in the list
 	*/
-	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, CL_NS(util)::ValueArray<int32_t>& ret) = 0;
+	virtual CL_NS(util)::ArrayBase<int32_t>* indexesOf(const CL_NS(util)::ArrayBase<TCHAR*>& terms, const int32_t start, const int32_t len) = 0;
 
 	/** Solve the diamond inheritence problem by providing a reinterpret function.
     *	No dynamic casting is required and no RTTI data is needed to do this
@@ -88,13 +86,9 @@ public:
 * original content).
 */
 struct CLUCENE_EXPORT TermVectorOffsetInfo {
-public:
-	/**
-	* Convenience declaration when creating a {@link org.apache.lucene.index.TermPositionVector} that stores only position information.
-	*/
 private:
-    int startOffset;
-    int endOffset;
+    int32_t startOffset;
+    int32_t endOffset;
 public: // TODO: Remove after TermVectorWriter has been ported;
     TermVectorOffsetInfo();
     ~TermVectorOffsetInfo();
@@ -123,6 +117,11 @@ public: // TODO: Remove after TermVectorWriter has been ported;
     bool equals(TermVectorOffsetInfo* o);
     size_t hashCode() const;
 };
+
+
+/**
+* Convenience declaration when creating a {@link org.apache.lucene.index.TermPositionVector} that stores only position information.
+*/
 extern CL_NS(util)::ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO;
 
 /** Extends <code>TermFreqVector</code> to provide additional information about
@@ -137,22 +136,24 @@ public:
      *  term String array obtained from the <code>indexOf</code> method.
      *  May return null if positions have not been stored.
      */
-    virtual CL_NS(util)::ValueArray<int32_t>* getTermPositions(const size_t index) = 0;
-  
+    virtual const CL_NS(util)::ArrayBase<int32_t>* getTermPositions(const size_t index) = 0;
+
     /**
      * Returns an array of TermVectorOffsetInfo in which the term is found.
      * May return null if offsets have not been stored.
-     * 
+     *
      * @see org.apache.lucene.analysis.Token
-     * 
+     *
      * @param index The position in the array to get the offsets from
      * @return An array of TermVectorOffsetInfo objects or the empty list
-     */ 
-     virtual CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* getOffsets(const size_t index) = 0;
-     
+     */
+     virtual const CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* getOffsets(const size_t index) = 0;
+
      virtual ~TermPositionVector(){
 	 }
 };
+
+
 
 CL_NS_END
 #endif

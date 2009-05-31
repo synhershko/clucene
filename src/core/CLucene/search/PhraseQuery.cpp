@@ -52,7 +52,7 @@ CL_NS_DEF(search)
 		float_t sumOfSquaredWeights();
 		void normalize(float_t queryNorm);
 		Scorer* scorer(CL_NS(index)::IndexReader* reader);
-		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+		Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
 		TCHAR* toString(TCHAR* f);
 		bool equals(PhraseWeight* o);
 	};
@@ -363,100 +363,102 @@ CL_NS_DEF(search)
     return ret;
   }
 
- void PhraseWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
-   TCHAR descbuf[LUCENE_SEARCH_EXPLANATION_DESC_LEN+1];
-   TCHAR* tmp;
-   
-   tmp = getQuery()->toString();
-   _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,_T("weight(%s in %d), product of:"),
-	   tmp,doc);
-   _CLDELETE_CARRAY(tmp);
-   result->setDescription(descbuf);
-   
-   StringBuffer docFreqs;
-   StringBuffer query;
-   query.appendChar('\"');
-   for (uint32_t i = 0; i < _this->terms->size(); i++) {
-     if (i != 0) {
-       docFreqs.appendChar(' ');
-       query.appendChar(' ');
-     }
+  Explanation* PhraseWeight::explain(IndexReader* reader, int32_t doc){
+	  Explanation* result = _CLNEW Explanation();
+	  TCHAR descbuf[LUCENE_SEARCH_EXPLANATION_DESC_LEN+1];
+	  TCHAR* tmp;
 
-     Term* term = (*_this->terms)[i];
+	  tmp = getQuery()->toString();
+	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,_T("weight(%s in %d), product of:"),
+		  tmp,doc);
+	  _CLDELETE_LCARRAY(tmp);
+	  result->setDescription(descbuf);
 
-     docFreqs.append(term->text());
-     docFreqs.appendChar('=');
-     docFreqs.appendInt(searcher->docFreq(term));
+	  StringBuffer docFreqs;
+	  StringBuffer query;
+	  query.appendChar('"');
+	  for (size_t i = 0; i < _this->terms->size(); i++) {
+		  if (i != 0) {
+			  docFreqs.appendChar(' ');
+			  query.appendChar(' ');
+		  }
 
-     query.append(term->text());
-   }
-   query.appendChar('\"');
+		  Term* term = (*_this->terms)[i];
 
-   _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-	   _T("idf(%s: %s)"),_this->field,docFreqs.getBuffer());
-   Explanation* idfExpl = _CLNEW Explanation(idf, descbuf);
-   
-   // explain query weight
-   Explanation* queryExpl = _CLNEW Explanation;
-   tmp = getQuery()->toString();
-   _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-		_T("queryWeight(%s), product of:"),tmp);
-   _CLDELETE_CARRAY(tmp);
-   queryExpl->setDescription(descbuf);
+		  docFreqs.append(term->text());
+		  docFreqs.appendChar('=');
+		  docFreqs.appendInt(searcher->docFreq(term));
 
-   Explanation* boostExpl = _CLNEW Explanation(_this->getBoost(), _T("boost"));
-   if (_this->getBoost() != 1.0f)
-     queryExpl->addDetail(boostExpl);
-   queryExpl->addDetail(idfExpl);
-   
-   Explanation* queryNormExpl = _CLNEW Explanation(queryNorm,_T("queryNorm"));
-   queryExpl->addDetail(queryNormExpl);
+		  query.append(term->text());
+	  }
+	  query.appendChar('\"');
 
-   queryExpl->setValue(boostExpl->getValue() *
-                      idfExpl->getValue() *
-                      queryNormExpl->getValue());
+	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
+		  _T("idf(%s: %s)"),_this->field,docFreqs.getBuffer());
+	  Explanation* idfExpl = _CLNEW Explanation(idf, descbuf);
 
-   result->addDetail(queryExpl);
-   
-   // explain field weight
-   Explanation* fieldExpl = _CLNEW Explanation;
-    _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-		_T("fieldWeight(%s:%s in %d), product of:"),
-		_this->field,query.getBuffer(),doc);
-   fieldExpl->setDescription(descbuf);
+	  // explain query weight
+	  Explanation* queryExpl = _CLNEW Explanation();
+	  tmp = getQuery()->toString();
+	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
+		  _T("queryWeight(%s), product of:"),tmp);
+	  _CLDELETE_LCARRAY(tmp);
+	  queryExpl->setDescription(descbuf);
 
-   
-   Explanation* tfExpl = _CLNEW Explanation;
-   scorer(reader)->explain(doc, tfExpl);
-   fieldExpl->addDetail(tfExpl);
-   fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
+	  Explanation* boostExpl = _CLNEW Explanation(_this->getBoost(), _T("boost"));
+	  if (_this->getBoost() != 1.0f)
+		  queryExpl->addDetail(boostExpl);
+	  queryExpl->addDetail(idfExpl);
 
-   Explanation* fieldNormExpl = _CLNEW Explanation();
-   uint8_t* fieldNorms = reader->norms(_this->field);
-   float_t fieldNorm =
-     fieldNorms!=NULL ? Similarity::decodeNorm(fieldNorms[doc]) : 0.0f;
-   fieldNormExpl->setValue(fieldNorm);
+	  Explanation* queryNormExpl = _CLNEW Explanation(queryNorm,_T("queryNorm"));
+	  queryExpl->addDetail(queryNormExpl);
 
-   
-    _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-		_T("fieldNorm(field=%s, doc=%d)"),_this->field,doc);
-   fieldNormExpl->setDescription(descbuf);
-   fieldExpl->addDetail(fieldNormExpl);
-   
-   fieldExpl->setValue(tfExpl->getValue() *
-                      idfExpl->getValue() *
-                      fieldNormExpl->getValue());
-   
-   if (queryExpl->getValue() == 1.0f){
-     result->set(*fieldExpl);
-     _CLDELETE(fieldExpl);
-   } else {
-	   result->addDetail(fieldExpl);
+	  queryExpl->setValue(boostExpl->getValue() *
+		  idfExpl->getValue() *
+		  queryNormExpl->getValue());
 
-	   // combine them
-	   result->setValue(queryExpl->getValue() * fieldExpl->getValue());
-   }
- }
+	  result->addDetail(queryExpl);
+
+	  // explain field weight
+	  Explanation* fieldExpl = _CLNEW Explanation();
+	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
+		  _T("fieldWeight(%s:%s in %d), product of:"),
+		  _this->field,query.getBuffer(),doc);
+	  fieldExpl->setDescription(descbuf);
+
+
+	  Explanation* tfExpl = scorer(reader)->explain(doc);
+	  fieldExpl->addDetail(tfExpl);
+	  fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
+
+	  Explanation* fieldNormExpl = _CLNEW Explanation();
+	  uint8_t* fieldNorms = reader->norms(_this->field);
+	  float_t fieldNorm =
+		  fieldNorms!=NULL ? Similarity::decodeNorm(fieldNorms[doc]) : 0.0f;
+	  fieldNormExpl->setValue(fieldNorm);
+
+
+	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
+		  _T("fieldNorm(field=%s, doc=%d)"),_this->field,doc);
+	  fieldNormExpl->setDescription(descbuf);
+	  fieldExpl->addDetail(fieldNormExpl);
+
+	  fieldExpl->setValue(tfExpl->getValue() *
+		  idfExpl->getValue() *
+		  fieldNormExpl->getValue());
+
+	  if (queryExpl->getValue() == 1.0f){
+		  _CLLDELETE(result);
+		  return fieldExpl;
+	  }
+
+	  result->addDetail(fieldExpl);
+
+	  // combine them
+	  result->setValue(queryExpl->getValue() * fieldExpl->getValue());
+
+	  return result;
+  }
 
 
 CL_NS_END

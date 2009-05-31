@@ -248,7 +248,7 @@ class SegmentReader: public DirectoryIndexReader {
 	CL_NS(util)::ThreadLocal<TermVectorsReader*,
 		CL_NS(util)::Deletor::Object<TermVectorsReader> >termVectorsLocal;
 
-	void initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores);
+	void initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores, bool doingReopen);
 
 	/**
 	* Create a clone from the initial TermVectorsReader and store it in the ThreadLocal.
@@ -417,6 +417,10 @@ public:
 
   static const char* getClassName();
   const char* getObjectName() const;
+
+  // for testing only
+  bool normsClosed();
+
 private:
 	//Open all norms files for all fields
 	void openNorms(CL_NS(store)::Directory* cfsDir, int32_t readBufferSize);

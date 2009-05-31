@@ -191,6 +191,15 @@ public:
    * lower values are at the front. */
    LUCENE_STATIC_CONSTANT(int32_t, FLOAT=5);
 
+    /** Sort using term values as encoded Longs.  Sort values are Long and
+    * lower values are at the front. */
+   LUCENE_STATIC_CONSTANT(int32_t, LONG=6);
+
+    /** Sort using term values as encoded Doubles.  Sort values are Double and
+    * lower values are at the front. */
+   LUCENE_STATIC_CONSTANT(int32_t, DOUBLE=7);
+
+
   /** Sort using a custom Comparator.  Sort values are any Comparable and
    * sorting is done according to natural order. */
    LUCENE_STATIC_CONSTANT(int32_t, CUSTOM=9);

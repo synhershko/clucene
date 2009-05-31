@@ -15,16 +15,16 @@ CL_NS_DEF(index)
 
 ValueArray<int32_t> SegmentTermPositionVector::EMPTY_TERM_POS;
 
-SegmentTermVector::SegmentTermVector(const TCHAR* _field, TCHAR** _terms, ValueArray<int32_t>* _termFreqs) {
+SegmentTermVector::SegmentTermVector(const TCHAR* _field,
+    ArrayBase<const TCHAR*>* _terms, ArrayBase<int32_t>* _termFreqs) {
 	this->field = STRDUP_TtoT(_field); // TODO: Try and avoid this dup (using intern'ing perhaps?)
 	this->terms = _terms;
-	this->termsLen = -1; //lazily get the size of the terms array
 	this->termFreqs = _termFreqs;
 }
 
 SegmentTermVector::~SegmentTermVector(){
   _CLDELETE_LCARRAY(field);
-  _CLDELETE_LCARRAY_ALL(terms);
+  _CLDELETE(terms);
   _CLDELETE(termFreqs);
 }
 TermPositionVector* SegmentTermVector::__asTermPositionVector(){
@@ -42,10 +42,10 @@ TCHAR* SegmentTermVector::toString() const{
 	sb.append(_T(": "));
 
 	int32_t i=0;
-	while ( terms && terms[i] != NULL ){
+	while ( terms && terms->values[i] != NULL ){
 		if (i>0)
 			sb.append(_T(", "));
-		sb.append(terms[i]);
+		sb.append(terms->values[i]);
 		sb.appendChar('/');
 
 		sb.appendInt((*termFreqs)[i]);
@@ -58,26 +58,21 @@ int32_t SegmentTermVector::size() {
 	if ( terms == NULL )
 		return 0;
 
-	if ( termsLen == -1 ){
-		termsLen=0;
-		while ( terms[termsLen] != 0 )
-			termsLen++;
-	}
-	return termsLen;
+	return terms->length;
 }
 
-const TCHAR** SegmentTermVector::getTerms() {
-	return (const TCHAR**)terms;
+const CL_NS(util)::ArrayBase<const TCHAR*>* SegmentTermVector::getTerms() {
+	return terms;
 }
 
-const ValueArray<int32_t>* SegmentTermVector::getTermFrequencies() {
+const ArrayBase<int32_t>* SegmentTermVector::getTermFrequencies() {
 	return termFreqs;
 }
 
-int32_t SegmentTermVector::binarySearch(TCHAR** a, const int32_t arraylen, const TCHAR* key) const
+int32_t SegmentTermVector::binarySearch(const ArrayBase<const TCHAR*>& a, const TCHAR* key) const
 {
 	int32_t low = 0;
-	int32_t hi = arraylen - 1;
+	int32_t hi = a.length - 1;
 	int32_t mid = 0;
 	while (low <= hi)
 	{
@@ -97,31 +92,28 @@ int32_t SegmentTermVector::binarySearch(TCHAR** a, const int32_t arraylen, const
 int32_t SegmentTermVector::indexOf(const TCHAR* termText) {
 	if(terms == NULL)
 		return -1;
-	int32_t res = binarySearch(terms, size(), termText);
+	int32_t res = binarySearch(*terms, termText);
 	return res >= 0 ? res : -1;
 }
 
-ValueArray<int32_t>* SegmentTermVector::indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len) {
+ArrayBase<int32_t>* SegmentTermVector::indexesOf(const CL_NS(util)::ArrayBase<TCHAR*>& termNumbers, const int32_t start, const int32_t len) {
 	// TODO: there must be a more efficient way of doing this.
 	//       At least, we could advance the lower bound of the terms array
 	//       as we find valid indexes. Also, it might be possible to leverage
 	//       this even more by starting in the middle of the termNumbers array
 	//       and thus dividing the terms array maybe in half with each found index.
-	ValueArray<int32_t>* ret = _CLNEW ValueArray<int32_t>(len);
+	ArrayBase<int32_t>* ret = _CLNEW ValueArray<int32_t>(len);
 	for (int32_t i=0; i<len; ++i) {
 	  ret->values[i] = indexOf(termNumbers[start+ i]);
 	}
 	return ret;
 }
-void SegmentTermVector::indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, ValueArray<int32_t>& ret){
-	ret = *indexesOf(terms,start,len);
-}
 
 
-
-SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, ValueArray<int32_t>* termFreqs,
-  ArrayBase< ValueArray<int32_t>* >* _positions,
-  ArrayBase< ArrayBase<TermVectorOffsetInfo*>* >* _offsets)
+SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field,
+  ArrayBase<const TCHAR*>* terms, ArrayBase<int32_t>* termFreqs,
+    ArrayBase< ArrayBase<int32_t>* >* _positions,
+    ArrayBase< ArrayBase<TermVectorOffsetInfo*>* >* _offsets)
 	: SegmentTermVector(field,terms,termFreqs),
   positions(_positions),
   offsets(_offsets)
@@ -132,14 +124,16 @@ SegmentTermPositionVector::~SegmentTermPositionVector(){
 	_CLLDELETE(positions);
 }
 
-ValueArray<int32_t>* SegmentTermPositionVector::indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len)
-	{ return SegmentTermVector::indexesOf(termNumbers, start, len); }
+ArrayBase<int32_t>* SegmentTermPositionVector::indexesOf(const ArrayBase<TCHAR*>& termNumbers, const int32_t start, const int32_t len)
+{
+  return SegmentTermVector::indexesOf(termNumbers, start, len);
+}
 
 TermPositionVector* SegmentTermPositionVector::__asTermPositionVector(){
 	return this;
 }
 
-ArrayBase<TermVectorOffsetInfo*>* SegmentTermPositionVector::getOffsets(const size_t index) {
+const ArrayBase<TermVectorOffsetInfo*>* SegmentTermPositionVector::getOffsets(const size_t index) {
 	if(offsets == NULL)
 		return NULL;
 	if (index >=0 && index < offsets->length)
@@ -148,7 +142,7 @@ ArrayBase<TermVectorOffsetInfo*>* SegmentTermPositionVector::getOffsets(const si
 		return TermVectorOffsetInfo_EMPTY_OFFSET_INFO;
 }
 
-ValueArray<int32_t>* SegmentTermPositionVector::getTermPositions(const size_t index) {
+const ArrayBase<int32_t>* SegmentTermPositionVector::getTermPositions(const size_t index) {
 	if(positions == NULL)
 		return NULL;
 
@@ -156,11 +150,6 @@ ValueArray<int32_t>* SegmentTermPositionVector::getTermPositions(const size_t in
 		return positions->values[index];
 	else
 		return &EMPTY_TERM_POS;
-}
-
-void SegmentTermPositionVector::indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, CL_NS(util)::ValueArray<int32_t>& ret)
-{
-	ret = *indexesOf(termNumbers,start,len);
 }
 
 CL_NS_END

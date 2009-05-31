@@ -95,7 +95,7 @@ CL_NS_DEF(search)
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::skipTo");
 	}
 
-	void BooleanScorer::explain(int32_t doc, Explanation* ret) {
+	Explanation* BooleanScorer::explain(int32_t doc) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::explain");
 	}
 

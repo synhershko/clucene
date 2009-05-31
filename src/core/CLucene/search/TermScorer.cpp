@@ -17,7 +17,6 @@
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-	//TermScorer takes TermDocs and delets it when TermScorer is cleaned up
 	TermScorer::TermScorer(Weight* w, CL_NS(index)::TermDocs* td, 
 			Similarity* similarity,uint8_t* _norms):
 	    Scorer(similarity),
@@ -77,8 +76,9 @@ CL_NS_DEF(search)
       return result;
   }
 
-  void TermScorer::explain(int32_t doc, Explanation* tfExplanation) {
+  Explanation* TermScorer::explain(int32_t doc) {
     TermQuery* query = (TermQuery*)weight->getQuery();
+	Explanation* tfExplanation = _CLNEW Explanation();
     int32_t tf = 0;
     while (pointer < pointerMax) {
       if (docs[pointer] == doc)
@@ -86,7 +86,7 @@ CL_NS_DEF(search)
       pointer++;
     }
     if (tf == 0) {
-      while (termDocs->next()) {
+      if (termDocs->skipTo(doc)) {
         if (termDocs->doc() == doc) {
           tf = termDocs->freq();
         }
@@ -98,8 +98,9 @@ CL_NS_DEF(search)
     TCHAR buf[LUCENE_SEARCH_EXPLANATION_DESC_LEN+1];
 	TCHAR* termToString = query->getTerm(false)->toString();
 	_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,_T("tf(termFreq(%s)=%d)"), termToString, tf);
-    _CLDELETE_CARRAY(termToString);
+    _CLDELETE_LCARRAY(termToString);
     tfExplanation->setDescription(buf);
+	return tfExplanation;
   }
 
   TCHAR* TermScorer::toString() { 
@@ -120,5 +121,7 @@ CL_NS_DEF(search)
 
       return raw * Similarity::decodeNorm(norms[_doc]); // normalize for field
   }
+
+  int32_t TermScorer::doc() const { return _doc; }
 	
 CL_NS_END

@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include "CLucene/document/_FieldSelector.h"
 
 //an in memory input stream for testing binary data
 class MemReader: public CL_NS(util)::Reader{
@@ -70,11 +71,35 @@ public:
     doc.add(*_CLNEW Field(_T("f4"), _T("value"), Field::INDEX_TOKENIZED));
     CLUCENE_ASSERT( doc.getFields()->size() == 5);
 
+    _CLLDELETE(doc.fields());//just fetch the fields (to test deprecated loads)
+
     doc.removeField(_T("f3"));
     CLUCENE_ASSERT( doc.getFields()->size() == 4);
 
+    //test deprecated enumerator
+    DocumentFieldEnumeration* e = doc.fields();
+    int count = 0;
+    while ( e->hasMoreElements() ) {
+      Field* field4 = e->nextElement();
+      CLUCENE_ASSERT(field4!=NULL);
+      count++;
+    }
+    CLUCENE_ASSERT(count==4);
+    _CLDELETE(e);
+
     doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::INDEX_TOKENIZED));
     CLUCENE_ASSERT( doc.getFields()->size() == 5);
+
+    //test deprecated enumerator
+    e = doc.fields();
+    count = 0;
+    while ( e->hasMoreElements() ) {
+      Field* field5 = e->nextElement();
+      CLUCENE_ASSERT(field5!=NULL);
+      count++;
+    }
+    CLUCENE_ASSERT(count==5);
+    _CLDELETE(e);
 
     doc.removeFields(_T("f3"));
     CLUCENE_ASSERT( doc.getFields()->size() == 3);
@@ -102,6 +127,50 @@ public:
 			CuFail(tc, _T("timeToString failed\n"), buf, xpt);
 	  }
 	  _CLDELETE_ARRAY(t);
+  }
+
+  void TestFieldSelectors(CuTest *tc){
+    RAMDirectory dir;
+    const TCHAR* longStrValue = _T("too long a field...");
+    {
+      WhitespaceAnalyzer a;
+      IndexWriter w(&dir,&a,true);
+      for (int i=0;i<3;i++){
+        Document doc;
+        doc.add(*_CLNEW Field(_T("f1"), _T("value1"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f2"), _T("value2"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f3"), _T("value3"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f4"), _T("value4"), Field::STORE_YES));
+        doc.add(*_CLNEW Field(_T("f5"), longStrValue, Field::STORE_YES));
+
+        w.addDocument(&doc);
+      }
+      w.flush();
+    }
+
+    IndexReader* reader = IndexReader::open(&dir);
+    MapFieldSelector fieldsToLoad;
+    fieldsToLoad.add(_T("f2"), FieldSelector::LOAD );
+    fieldsToLoad.add(_T("f3"), FieldSelector::LAZY_LOAD );
+    fieldsToLoad.add(_T("f5"), FieldSelector::SIZE );
+    Document doc;
+    CLUCENE_ASSERT(reader->document(0,doc,&fieldsToLoad));
+    CLUCENE_ASSERT(doc.getFields()->size()==3);
+    CuAssertStrEquals(tc,_T("check f2"), _T("value2"), doc.get(_T("f2")) );
+    CuAssertStrEquals(tc,_T("check f3"), _T("value3"), doc.get(_T("f3")) );
+
+    Field* byteField = doc.getField(_T("f5"));
+    const ValueArray<uint8_t>& bytes = *byteField->binaryValue();
+    uint32_t shouldBeInt = 2 * _tcslen(longStrValue);
+    ValueArray<uint8_t> shouldBe(4);
+    shouldBe[0] = (uint8_t) (shouldBeInt>>24);
+    shouldBe[1] = (uint8_t) (shouldBeInt>>16);
+    shouldBe[2] = (uint8_t) (shouldBeInt>> 8);
+    shouldBe[3] = (uint8_t)  shouldBeInt      ;
+    CLUCENE_ASSERT(byteField!=NULL);
+    CLUCENE_ASSERT(memcmp(shouldBe.values,bytes.values,4)==0);
+
+    _CLDELETE(reader);
   }
 
   void TestBinaryDocument(CuTest *tc){
@@ -189,7 +258,6 @@ public:
     CLUCENE_ASSERT(i == _tcslen(_ts));
     doc.clear();
 
-
     reader->close();
     _CLDELETE(reader);
   }
@@ -198,6 +266,7 @@ CuSuite *testdocument(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Document Test"));
 
+	SUITE_ADD_TEST(suite, TestFieldSelectors);
 	SUITE_ADD_TEST(suite, TestFields);
 	SUITE_ADD_TEST(suite, TestBinaryDocument);
 	SUITE_ADD_TEST(suite, TestDateTools);

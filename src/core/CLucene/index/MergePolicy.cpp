@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -18,7 +18,7 @@ CL_NS_DEF(index)
 #define MESSAGE(msg) if ( writer != NULL && writer->getInfoStream() != NULL ) message(msg)
 
 const int32_t LogMergePolicy::DEFAULT_MAX_MERGE_DOCS = LUCENE_INT32_MAX_SHOULDBE;
-  
+
 MergePolicy::OneMerge::OneMerge(SegmentInfos* segments, bool _useCompoundFile):
   useCompoundFile(_useCompoundFile)
 {
@@ -30,6 +30,9 @@ MergePolicy::OneMerge::OneMerge(SegmentInfos* segments, bool _useCompoundFile):
   this->mergeGen = 0;
   this->maxNumSegmentsOptimize = 0;
   aborted = mergeDocStores = optimize = increfDone = registerDone = isExternal = false;
+}
+MergePolicy::OneMerge::~OneMerge(){
+  _CLDELETE(this->segmentsClone);
 }
 
 const char* MergePolicy::OneMerge::getClassName(){
@@ -79,19 +82,24 @@ std::string MergePolicy::OneMerge::segString(CL_NS(store)::Directory* dir) const
 }
 
 
-
+MergePolicy::MergeSpecification::MergeSpecification(){
+  merges = _CLNEW CLArrayList<OneMerge*>;
+}
+MergePolicy::MergeSpecification::~MergeSpecification(){
+  _CLDELETE(merges);
+}
 void MergePolicy::MergeSpecification::add(OneMerge* merge) {
-  merges.push_back(merge);
+  merges->push_back(merge);
 }
 
 std::string MergePolicy::MergeSpecification::segString(CL_NS(store)::Directory* dir) {
   std::string b = "MergeSpec:\n";
-  int32_t count = merges.size();
+  int32_t count = merges->size();
   for(int32_t i=0;i<count;i++){
     b.append("  ");
     b.append(Misc::toString(1 + i));
     b.append(": ");
-    b.append(merges[i]->segString(dir));
+    b.append((*merges)[i]->segString(dir));
   }
   return b;
 }
@@ -221,7 +229,7 @@ MergePolicy::MergeSpecification* LogMergePolicy::findMergesForOptimize(SegmentIn
 
       // Only if there are no full merges pending do we
       // add a final partial (< mergeFactor segments) merge:
-      if (0 == spec->merges.size()) {
+      if (0 == spec->merges->size()) {
         if (maxNumSegments == 1) {
 
           // Since we must optimize down to 1 segment, the

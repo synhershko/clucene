@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 //msvc test for memory leaks:
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 {
 	#ifdef _MSC_VER
 	#ifdef _DEBUG
-		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF ); // | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF
+		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); // | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_CHECK_CRT_DF 
 		_crtBreakAlloc=-1;
 	#endif
 	#endif
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     }
 
 	startTime = Misc::currentTimeMillis();
-    
+
 	printf("Key: .= pass N=not implemented F=fail\n");
 	if ( silent )
 		CuSuiteListRun(alltests);
@@ -218,8 +218,125 @@ exit_point:
 		return i > 0 ? 1 : 0;
 
 	//Debuggin techniques:
-	//For msvc, use this for breaking on memory leaks: 
+	//For msvc, use this for breaking on memory leaks:
 	//	_crtBreakAlloc
 	//for linux, use valgrind
+}
+
+
+void TestAssertIndexReaderEquals(CuTest *tc,  IndexReader* index1, IndexReader* index2){
+  const Document::FieldsType* fields1, *fields2;
+  Document::FieldsType::const_iterator it1, it2;
+
+  //misc
+  CuAssertIntEquals(tc,_T("IndexReaders have different values for numDocs"), index1->numDocs(), index2->numDocs());
+  CuAssertIntEquals(tc,_T("IndexReaders have different values for maxDoc"), index1->maxDoc(), index2->maxDoc());
+  CuAssertIntEquals(tc,_T("Only one IndexReader has deletions"), index1->hasDeletions(), index2->hasDeletions());
+  CuAssertIntEquals(tc,_T("Only one IndexReader is optimized"), index1->isOptimized(), index2->isOptimized());
+
+  //test field names
+  StringArrayWithDeletor fn1;
+  StringArrayWithDeletor fn2;
+  index1->getFieldNames(IndexReader::ALL, fn1);
+  index2->getFieldNames(IndexReader::ALL, fn2);
+
+  //make sure field length is the same
+  int fn1count = fn1.size();
+  int fn2count = fn2.size();
+  CuAssertIntEquals(tc, _T("reader fieldnames count not equal"), fn1count, fn2count );
+  for (int n=0;n<fn1count;n++ ){
+    //field names aren't always in the same order, so find it.
+    int fn2n = 0;
+    bool foundField = false;
+    while ( fn2[fn2n] != NULL ){
+        if ( _tcscmp(fn1[n],fn2[fn2n])==0 ){
+            foundField = true;
+            break;
+        }
+        fn2n++;
+    }
+    CLUCENE_ASSERT( foundField==true );
+
+    //test field norms
+    uint8_t* norms1 = index1->norms(fn1[n]);
+    uint8_t* norms2 = index2->norms(fn1[n]);
+    if ( norms1 != NULL ){
+      CLUCENE_ASSERT(norms2 != NULL);
+      for ( int i=0;i<index1->maxDoc();i++ ){
+        int diff = norms1[i]-norms2[i];
+        if ( diff < 0 )
+            diff *= -1;
+        if ( diff > 16 ){
+                      TCHAR tmp[1024];
+                      _sntprintf(tmp,1024,_T("Norms are off by more than the threshold! %d, should be %d"), (int32_t)norms2[i], (int32_t)norms1[i]);
+          CuAssert(tc,tmp,false);
+        }
+      }
+    }else
+      CLUCENE_ASSERT(norms2 == NULL);
+    ////////////////////
+  }
+  fn1.clear(); //save memory
+  fn2.clear(); //save memory
+
+
+  // check deletions
+  for (int i = 0; i < index1->maxDoc(); i++) {
+    CuAssertIntEquals( tc, _T("only deleted in one index."), index1->isDeleted(i), index2->isDeleted(i));
+  }
+
+
+  // check stored fields
+  Document doc1;
+  Document doc2;
+  for (int i = 0; i < index1->maxDoc(); i++) {
+    if (!index1->isDeleted(i)) {
+      doc1.clear(); doc2.clear();
+      index1->document(i, doc1);
+      index2->document(i, doc2);
+      fields1 = doc1.getFields();
+      fields2 = doc2.getFields();
+      CuAssertIntEquals(tc, _T("Different numbers of fields for doc "), fields1->size(), fields2->size());
+      it1 = fields1->begin();
+      it2 = fields2->begin();
+      while ( it1 != fields1->end() ) {
+        Field* curField1 = *it1;
+        Field* curField2 = *it2;
+        CuAssertStrEquals( tc, _T("Different fields names for doc "), curField1->name(), curField2->name());
+        CuAssertStrEquals( tc, _T("Different field values for doc "), curField1->stringValue(), curField2->stringValue());
+        it1++;
+        it2++;
+      }
+    }
+  }
+
+
+  // check dictionary and posting lists
+  TermEnum* enum1 = index1->terms();
+  TermEnum* enum2 = index2->terms();
+  TermPositions* tp1 = index1->termPositions();
+  TermPositions* tp2 = index2->termPositions();
+  while(enum1->next()) {
+
+    CuAssertTrue(tc,enum2->next());
+    CuAssertStrEquals(tc, _T("Different term field in dictionary."), enum1->term(false)->field(), enum2->term(false)->field() );
+    CuAssertStrEquals(tc, _T("Different term field in dictionary."), enum1->term(false)->text(), enum2->term(false)->text() );
+    CuAssert(tc, _T("Different term in dictionary."), enum1->term(false)->equals(enum2->term(false)) );
+
+    tp1->seek(enum1->term(false));
+    tp2->seek(enum1->term(false));
+    while(tp1->next()) {
+      CuAssertTrue(tc, tp2->next());
+      CuAssertIntEquals(tc,_T("Different doc id in postinglist of term"), tp1->doc(), tp2->doc());
+      CuAssertIntEquals(tc,_T("Different term frequence in postinglist of term"), tp1->freq(), tp2->freq());
+      for (int i = 0; i < tp1->freq(); i++) {
+        CuAssertIntEquals(tc,_T("Different positions in postinglist of term"), tp1->nextPosition(), tp2->nextPosition());
+      }
+    }
+  }
+  _CLDELETE(enum1);
+  _CLDELETE(enum2);
+  _CLDELETE(tp1);
+  _CLDELETE(tp2);
 }
 

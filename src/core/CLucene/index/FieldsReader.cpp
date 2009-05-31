@@ -208,10 +208,8 @@ void FieldsReader::addFieldLazy(CL_NS(document)::Document& doc, const FieldInfo*
 		int32_t toRead = fieldsStream->readVInt();
 		int64_t pointer = fieldsStream->getFilePointer();
 		if (compressed) {
-			//was: doc.add(new Field(fi.name, uncompress(b), Field.Store.COMPRESS));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_COMPRESS, toRead, pointer));
 		} else {
-			//was: doc.add(new Field(fi.name, b, Field.Store.YES));
 			doc.add(*_CLNEW LazyField(this, fi->name, Field::STORE_YES, toRead, pointer));
 		}
 		//Need to move the pointer ahead by toRead positions
@@ -302,16 +300,13 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 
 int32_t FieldsReader::addFieldSize(CL_NS(document)::Document& doc, const FieldInfo* fi, const bool binary, const bool compressed) {
 	const int32_t size = fieldsStream->readVInt();
-	/*
-	const int32_t bytesize = binary || compressed ? size : 2*size;
-	uint8_t* sizebytes = _CL_NEWARRAY(uint8_t, 4);
-	sizebytes[0] = (byte) (bytesize>>>24);
-	sizebytes[1] = (byte) (bytesize>>>16);
-	sizebytes[2] = (byte) (bytesize>>> 8);
-	sizebytes[3] = (byte)  bytesize      ;
-	//todo: doc->add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES));
-	_CLDELETE_ARRAY(sizebytes); // todo: remove this once doc is being used
-	*/
+	const uint32_t bytesize = binary || compressed ? size : 2*size;
+	ValueArray<uint8_t>* sizebytes = _CLNEW ValueArray<uint8_t>(4);
+  sizebytes->values[0] = (uint8_t) (bytesize>>24);
+	sizebytes->values[1] = (uint8_t) (bytesize>>16);
+	sizebytes->values[2] = (uint8_t) (bytesize>> 8);
+	sizebytes->values[3] = (uint8_t)  bytesize      ;
+	doc.add(*_CLNEW Field(fi->name, sizebytes, Field::STORE_YES, false));
 	return size;
 }
 
@@ -374,7 +369,7 @@ const ValueArray<uint8_t>* FieldsReader::LazyField::binaryValue(){
     try {
       localFieldsStream->seek(pointer);
       localFieldsStream->readBytes(b->values, toRead);
-      /*if (isCompressed == true) {
+      /*TODO: if (isCompressed == true) {
         fieldsData = uncompress(b);
       } else {*/
         fieldsData = b;
@@ -390,13 +385,13 @@ const ValueArray<uint8_t>* FieldsReader::LazyField::binaryValue(){
 	return static_cast<ValueArray<uint8_t>*>(fieldsData);
 }
 
-CL_NS(util)::Reader* FieldsReader::LazyField::readerValue() const {
+CL_NS(util)::Reader* FieldsReader::LazyField::readerValue(){
 	parent->ensureOpen();
 	return (valueType & VALUE_READER) ? static_cast<CL_NS(util)::Reader*>(fieldsData) : NULL;
 }
 
 
-CL_NS(analysis)::TokenStream* FieldsReader::LazyField::tokenStreamValue() const {
+CL_NS(analysis)::TokenStream* FieldsReader::LazyField::tokenStreamValue(){
 	parent->ensureOpen();
 	return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL;
 }
@@ -417,8 +412,9 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
 			//fieldsData = new String(uncompress(b), "UTF-8");
 		} else {
 			//read in chars b/c we already know the length we need to read
-			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead);
+			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead+1);
 			localFieldsStream->readChars(chars, 0, toRead);
+      chars[toRead] = NULL;
 			_resetValue();
 			fieldsData = chars;
 		}

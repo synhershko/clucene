@@ -456,7 +456,7 @@ private:
       void processField(CL_NS(analysis)::Analyzer* analyzer);
 
       /* Invert one occurrence of one field in the document */
-      void invertField(const CL_NS(document)::Field* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
+      void invertField(CL_NS(document)::Field* field, CL_NS(analysis)::Analyzer* analyzer, int32_t maxFieldLength);
 
       static bool sort(FieldData*, FieldData*);
 

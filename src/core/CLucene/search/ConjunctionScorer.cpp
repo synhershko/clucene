@@ -120,7 +120,9 @@ CL_NS_DEF(search)
     score *= coord;
     return score;
   }
-
+  Explanation* ConjunctionScorer::explain(int32_t doc) {
+	  _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: ConjunctionScorer::explain");
+  }
 
 
 CL_NS_END

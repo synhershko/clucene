@@ -277,42 +277,42 @@ public:
 	*/
 	virtual void norms(const TCHAR* field, uint8_t* bytes) = 0;
 
-    /** Expert: Resets the normalization factor for the named field of the named
-    * document.
-    *
-    * @see #norms(TCHAR*)
-    * @see Similarity#decodeNorm(uint8_t)
-    *
-    * @throws StaleReaderException if the index has changed
-    *  since this reader was opened
-    * @throws CorruptIndexException if the index is corrupt
-    * @throws LockObtainFailedException if another writer
-    *  has this index open (<code>write.lock</code> could not
-    *  be obtained)
-    * @throws IOException if there is a low-level IO error
-    */
-    void setNorm(int32_t doc, const TCHAR* field, float_t value);
+  /** Expert: Resets the normalization factor for the named field of the named
+  * document.
+  *
+  * @see #norms(TCHAR*)
+  * @see Similarity#decodeNorm(uint8_t)
+  *
+  * @throws StaleReaderException if the index has changed
+  *  since this reader was opened
+  * @throws CorruptIndexException if the index is corrupt
+  * @throws LockObtainFailedException if another writer
+  *  has this index open (<code>write.lock</code> could not
+  *  be obtained)
+  * @throws IOException if there is a low-level IO error
+  */
+  void setNorm(int32_t doc, const TCHAR* field, float_t value);
 
-    /** Expert: Resets the normalization factor for the named field of the named
-    * document.  The norm represents the product of the field's {@link
-    * Field#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
-    * int32_t) length normalization}.  Thus, to preserve the length normalization
-    * values when resetting this, one should base the new value upon the old.
-    *
-    * @see #norms(TCHAR*)
-    * @see Similarity#decodeNorm(uint8_t)
-    * @throws StaleReaderException if the index has changed
-    *  since this reader was opened
-    * @throws CorruptIndexException if the index is corrupt
-    * @throws LockObtainFailedException if another writer
-    *  has this index open (<code>write.lock</code> could not
-    *  be obtained)
-    * @throws IOException if there is a low-level IO error
-    */
-    void setNorm(int32_t doc, const TCHAR* field, uint8_t value);
+  /** Expert: Resets the normalization factor for the named field of the named
+  * document.  The norm represents the product of the field's {@link
+  * Field#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
+  * int32_t) length normalization}.  Thus, to preserve the length normalization
+  * values when resetting this, one should base the new value upon the old.
+  *
+  * @see #norms(TCHAR*)
+  * @see Similarity#decodeNorm(uint8_t)
+  * @throws StaleReaderException if the index has changed
+  *  since this reader was opened
+  * @throws CorruptIndexException if the index is corrupt
+  * @throws LockObtainFailedException if another writer
+  *  has this index open (<code>write.lock</code> could not
+  *  be obtained)
+  * @throws IOException if there is a low-level IO error
+  */
+  void setNorm(int32_t doc, const TCHAR* field, uint8_t value);
 
-	/// Release the write lock, if needed.
-    virtual ~IndexReader();
+  /// Release the write lock, if needed.
+  virtual ~IndexReader();
 
 	/**
 	* Returns the time the index in the named directory was last modified.

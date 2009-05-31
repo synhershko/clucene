@@ -244,7 +244,7 @@ string SegmentInfo::segString(Directory* dir) {
         if (gen >= YES) {
           // Definitely a separate norm file, with generation:
           string gens = string(".") + IndexFileNames::SEPARATE_NORMS_EXTENSION;
-          gens += i;
+          gens += Misc::toString((int64_t)i);
           _files.push_back(IndexFileNames::fileNameFromGeneration(name.c_str(), gens.c_str(), gen));
         } else if (NO == gen) {
           // No separate norms but maybe plain norms
@@ -261,10 +261,10 @@ string SegmentInfo::segString(Directory* dir) {
           string fileName;
           if (useCompoundFile) {
             fileName = name + "." + IndexFileNames::SEPARATE_NORMS_EXTENSION;
-            fileName += i;
+            fileName += Misc::toString((int64_t)i);
           } else if (!hasSingleNormFile) {
             fileName = name + "." + IndexFileNames::PLAIN_NORMS_EXTENSION;
-            fileName += i;
+            fileName += Misc::toString((int64_t)i);
           }
           if ( !fileName.empty() && dir->fileExists(fileName.c_str())) {
             _files.push_back(fileName);
@@ -694,8 +694,12 @@ string SegmentInfo::segString(Directory* dir) {
   void SegmentInfos::clear() { infos.clear(); }
 
 
-  void SegmentInfos::insert(SegmentInfos* _infos){
+  void SegmentInfos::insert(SegmentInfos* _infos, bool takeMemory){
     infos.insert(infos.end(),_infos->infos.begin(),_infos->infos.end());
+    if ( takeMemory ){
+      while (_infos->infos.size() > 0 )
+        _infos->infos.remove(_infos->infos.begin(), true );
+    }
   }
 	void SegmentInfos::insert(SegmentInfo* info){
     infos.push_back(info);
@@ -778,7 +782,7 @@ string SegmentInfo::segString(Directory* dir) {
   void SegmentInfos::read(Directory* directory) {
 	  generation = lastGeneration = -1;
 
-	  FindSegmentsRead find(directory);
+	  FindSegmentsRead find(directory, this);
 
 	  find.run();
   }
@@ -1075,19 +1079,13 @@ string SegmentInfo::segString(Directory* dir) {
       }
     }
   }
-  SegmentInfos::FindSegmentsRead::FindSegmentsRead( CL_NS(store)::Directory* dir ) :
+  SegmentInfos::FindSegmentsRead::FindSegmentsRead( CL_NS(store)::Directory* dir, SegmentInfos* _this ) :
     SegmentInfos::FindSegmentsFile<bool>(dir) {
+      this->_this = _this;
   }
   bool SegmentInfos::FindSegmentsRead::doBody( const char* segmentFileName ) {
-	  //Instantiate SegmentInfos
-	  SegmentInfos* infos = _CLNEW SegmentInfos;
-	  try{
-		  //Have SegmentInfos read the segments file in directory
-		  infos->read(directory, segmentFileName);
-	  } _CLFINALLY(
-		  //make sure infos is cleaned up
-		  _CLDELETE(infos);
-	  );
+	  //Have SegmentInfos read the segments file in directory
+	  _this->read(directory, segmentFileName);
     return true;
   }
 

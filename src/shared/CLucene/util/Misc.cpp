@@ -195,7 +195,6 @@ int64_t Misc::file_Size(const char* path){
 	else
 		return -1;
 }
-
 //static
 TCHAR* Misc::join ( const TCHAR* a, const TCHAR* b, const TCHAR* c, const TCHAR* d,const TCHAR* e,const TCHAR* f ) {
 #define LEN(x) (x == NULL ? 0 : _tcslen(x))

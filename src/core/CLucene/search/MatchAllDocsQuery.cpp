@@ -21,8 +21,9 @@ MatchAllDocsQuery::MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _re
 	_score = w->getValue();
 }
 
-void MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc, Explanation* ret) {
-	// not called... see MatchAllDocsWeight.explain()
+Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc) {
+	// not called... see MatchAllDocsWeight::explain()
+	return NULL;
 }
 
 int32_t MatchAllDocsQuery::MatchAllScorer::doc() const {
@@ -52,7 +53,7 @@ TCHAR* MatchAllDocsQuery::MatchAllScorer::toString(){
 	return stringDuplicate(_T("MatchAllScorer"));
 }
 
-MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):_enclosingInstance(enclosingInstance){
+MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):parentQuery(enclosingInstance){
 	this->similarity = searcher->getSimilarity();
 }
 
@@ -60,7 +61,7 @@ TCHAR* MatchAllDocsQuery::MatchAllDocsWeight::toString() {
 	CL_NS(util)::StringBuffer buf(50, false);
 	buf.append(_T("weight("));
 	
-	TCHAR* t = _enclosingInstance->toString();
+	TCHAR* t = parentQuery->toString();
 	buf.append(t);
 	_CLDELETE_LCARRAY(t);
 
@@ -69,7 +70,7 @@ TCHAR* MatchAllDocsQuery::MatchAllDocsWeight::toString() {
 }
 
 Query* MatchAllDocsQuery::MatchAllDocsWeight::getQuery() {
-	return _enclosingInstance;
+	return parentQuery;
 }
 
 float_t MatchAllDocsQuery::MatchAllDocsWeight::getValue() {
@@ -77,7 +78,7 @@ float_t MatchAllDocsQuery::MatchAllDocsWeight::getValue() {
 }
 
 float_t MatchAllDocsQuery::MatchAllDocsWeight::sumOfSquaredWeights() {
-	queryWeight = _enclosingInstance->getBoost();
+	queryWeight = parentQuery->getBoost();
 	return queryWeight * queryWeight;
 }
 
@@ -90,17 +91,14 @@ Scorer* MatchAllDocsQuery::MatchAllDocsWeight::scorer(CL_NS(index)::IndexReader*
 	return _CLNEW MatchAllScorer(reader, similarity, this);
 }
 
-void MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* queryExpl) {
+Explanation* MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc) {
 	// explain query weight
-	//Explanation* queryExpl = new ComplexExplanation(true, getValue(), _T("MatchAllDocsQuery, product of:"));
-	queryExpl->setDescription(_T("MatchAllDocsQuery, product of:"));
-	queryExpl->setValue(getValue());
-	// TODO: queryExpl->setMatch(true); 
-	if (_enclosingInstance->getBoost() != 1.0f) {
-		queryExpl->addDetail(new Explanation(_enclosingInstance->getBoost(),_T("boost")));
+	Explanation* queryExpl = _CLNEW ComplexExplanation(true, getValue(), _T("MatchAllDocsQuery, product of:"));
+	if (parentQuery->getBoost() != 1.0f) {
+		queryExpl->addDetail(_CLNEW Explanation(parentQuery->getBoost(),_T("boost")));
 	}
-	queryExpl->addDetail(new Explanation(queryNorm,_T("queryNorm")));
-	//return queryExpl;
+	queryExpl->addDetail(_CLNEW Explanation(queryNorm,_T("queryNorm")));
+	return queryExpl;
 }
 
 MatchAllDocsQuery::MatchAllDocsQuery(){}
