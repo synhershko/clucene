@@ -29,6 +29,7 @@ IndexFileDeleter::CommitPoint::CommitPoint(IndexFileDeleter* _this, SegmentInfos
       files.insert(files.end(),ff.begin(), ff.end());
 	  }
 	}
+
 }
 IndexFileDeleter::CommitPoint::~CommitPoint(){
 }

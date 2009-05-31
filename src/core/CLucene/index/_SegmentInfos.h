@@ -364,7 +364,7 @@ CL_NS_DEF(index)
 		void insert(SegmentInfo* info);
 		int32_t indexOf(const SegmentInfo* info) const;
 		void range(size_t from, size_t to, SegmentInfos& ret) const;
-    void remove(size_t index);
+    void remove(size_t index, bool dontDelete=false);
 
 		/**
 		* Read a particular segmentFileName.  Note that this may

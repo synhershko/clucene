@@ -73,7 +73,7 @@ public:
     */
     SIZE = 5,
 
-    /** Expert: Like {@link #SIZE} but immediately break from the field loading loop, i.e., stop loading further fields, after the size is loaded */
+    /** Expert: Like {@link #SIZE} but immediately break from the field loading loop, i.e., stop loading further fields, after the size is loaded 		*/
     SIZE_AND_BREAK = 6
   };
 

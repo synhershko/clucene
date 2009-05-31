@@ -45,6 +45,7 @@ CL_NS_DEF(index)
 
 		DEFINE_MUTEX(THIS_LOCK)
 		CL_NS(util)::ThreadLocal<CL_NS(store)::IndexInput*, CL_NS(util)::Deletor::Object<CL_NS(store)::IndexInput> > fieldsStreamTL;
+    static void uncompress(const CL_NS(util)::ValueArray<uint8_t>& input, CL_NS(util)::ValueArray<uint8_t>& output);
 	public:
 		FieldsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fn,
 			int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE, int32_t docStoreOffset = -1, int32_t size = 0);
@@ -145,7 +146,8 @@ CL_NS_DEF(index)
 			void setToRead(const int32_t _toRead);
 		};
 		friend class LazyField;
-		friend class SegmentMerger;
+    friend class SegmentMerger;
+    friend class FieldsWriter;
 
 		// Instances of this class hold field properties and data
 		// for merge
@@ -158,6 +160,9 @@ CL_NS_DEF(index)
 
 			FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
       virtual ~FieldForMerge();
+
+      virtual const char* getObjectName() const;
+      static const char* getClassName();
 		};
 	};
 CL_NS_END

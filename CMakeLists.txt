@@ -77,7 +77,7 @@ SET(LUCENE_SYS_INCLUDES "" CACHE PATH
       )
 #install path options
 SET(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)" )
-SET(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Library directory name" FORCE)
+SET(LIB_DESTINATION "lib${LIB_SUFFIX}")
 
 
 SET ( ENABLE_COMPILE_TESTS_VALUE ON )
@@ -114,18 +114,11 @@ IF ( CMAKE_COMPILER_IS_GNUCC )
 ENDIF(CMAKE_COMPILER_IS_GNUCC) 
 
 
-IF (ENABLE_PACKAGING)
-    INCLUDE(CreateClucenePackages)
-    CREATE_CLUCENE_PACKAGES()
-ENDIF ( ENABLE_PACKAGING)
-
-
 #Single output directory for building all executables and libraries.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output Directory" FORCE)
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Library Output Directory" FORCE)
 
 #add tests
-#todo: why does 'make test' not work???
 ENABLE_TESTING()
 ADD_TEST(SimpleTest ${EXECUTABLE_OUTPUT_PATH}/cl_test )
 
@@ -155,3 +148,8 @@ CONFIGURE_FILE(
   
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+#this must go last...
+IF (ENABLE_PACKAGING)
+  INCLUDE(CreateClucenePackages)
+ENDIF ( ENABLE_PACKAGING)

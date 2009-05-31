@@ -18,6 +18,7 @@
 #include "_FieldsWriter.h"
 #include "_FieldsReader.h"
 #include "CLucene/analysis/AnalysisHeader.h"
+#include <sstream>
 
 CL_NS_USE(store)
 CL_NS_USE(document)
@@ -263,7 +264,16 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
     fieldsStream->readBytes(b->values,toRead);
 		if (compressed) {
 			// we still do not support compressed fields
-			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_COMPRESS, false)); // todo: uncompress(subStream->getStream())
+      ValueArray<uint8_t>* data = _CLNEW ValueArray<uint8_t>;
+      try{
+        uncompress(*b, *data);
+      }catch(CLuceneError& err){
+        _CLDELETE(data);
+        _CLDELETE(b);
+        throw err;
+      }
+      _CLDELETE(b);
+			doc.add(* _CLNEW Field(fi->name, data, Field::STORE_COMPRESS, false));
     }else{
 			doc.add(* _CLNEW Field(fi->name, b, Field::STORE_YES, false));
     }
@@ -279,12 +289,26 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
       const int32_t toRead = fieldsStream->readVInt();
       ValueArray<uint8_t>* b = _CLNEW ValueArray<uint8_t>(toRead);
       fieldsStream->readBytes(b->values,toRead);
+      ValueArray<uint8_t> data;
+      try{
+        uncompress(*b, data);
+      }_CLFINALLY( _CLDELETE(b) )
 
-      //todo: we dont have gzip inputstream available, must alert user
-      //to somehow use a gzip inputstream
+      //convert to utf8
+      TCHAR* result = _CL_NEWARRAY(TCHAR, data.length);
+      size_t l = lucene_utf8towcs(result, (const char*)data.values, data.length);
+      result[l] = 0;
+
+      //if we were a bit too pesimistic with the size, then shrink the memory...
+      if ( l < data.length/2 ){
+        TCHAR* tmp = result;
+        result = STRDUP_TtoT(result);
+        _CLDELETE_ARRAY(tmp);
+      }
+
       f = _CLNEW Field(fi->name,      // field name
-        //todo: new String(uncompress(subStream->getStream()), "UTF-8"), // uncompress the value and add as string
-        b, bits);
+        result, // uncompress the value and add as string
+        bits, false);
       f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
@@ -369,11 +393,19 @@ const ValueArray<uint8_t>* FieldsReader::LazyField::binaryValue(){
     try {
       localFieldsStream->seek(pointer);
       localFieldsStream->readBytes(b->values, toRead);
-      /*TODO: if (isCompressed == true) {
-        fieldsData = uncompress(b);
-      } else {*/
+      if (isCompressed() == true) {
+        ValueArray<uint8_t>* data = _CLNEW ValueArray<uint8_t>;
+        try{
+          uncompress(*b, *data);
+        }catch (CLuceneError& err){
+          _CLDELETE(data);
+          _CLDELETE(b);
+        }
+        _CLDELETE(b);
+        fieldsData = data;
+      } else {
         fieldsData = b;
-      //}
+      }
 		  valueType = VALUE_BINARY;
 
     }catch(CLuceneError& err){
@@ -406,10 +438,23 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
 		CL_NS(store)::IndexInput* localFieldsStream = getFieldStream();
 		localFieldsStream->seek(pointer);
 		if (isCompressed()) {
-			uint8_t* b = _CL_NEWARRAY(uint8_t, toRead);
-			localFieldsStream->readBytes(b, toRead);
+      ValueArray<uint8_t> b(toRead);
+      ValueArray<uint8_t> uncompressed;
+			localFieldsStream->readBytes(b.values, toRead);
 			_resetValue();
-			//fieldsData = new String(uncompress(b), "UTF-8");
+      uncompress(b, uncompressed); //no need to catch error, memory all in frame
+
+      TCHAR* str = _CL_NEWARRAY(TCHAR, uncompressed.length);
+      size_t l = lucene_utf8towcs(str, (const char*)uncompressed.values, uncompressed.length);
+      str[l] = 0;
+
+      if ( l < uncompressed.length/2 ){
+        //too pesimistic with size...
+        fieldsData = STRDUP_TtoT(str);
+        _CLDELETE_ARRAY(str);
+      }else{
+        fieldsData = str;
+      }
 		} else {
 			//read in chars b/c we already know the length we need to read
 			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead+1);
@@ -485,6 +530,29 @@ FieldsReader::FieldForMerge::FieldForMerge(void* _value, ValueType _type, const 
 	setConfig(bits);
 }
 FieldsReader::FieldForMerge::~FieldForMerge(){
+}
+const char* FieldsReader::FieldForMerge::getClassName(){
+  return "FieldsReader::FieldForMerge";
+}
+const char* FieldsReader::FieldForMerge::getObjectName() const{
+  return getClassName();
+}
+
+void FieldsReader::uncompress(const CL_NS(util)::ValueArray<uint8_t>& input, CL_NS(util)::ValueArray<uint8_t>& output){
+  stringstream out;
+  string err;
+  if ( ! Misc::inflate(input.values, input.length, out, err) ){
+    _CLTHROWA(CL_ERR_IO, err.c_str());
+  }
+
+  // get length of file:
+  out.seekg (0, ios::end);
+  size_t length = out.tellg();
+  out.seekg (0, ios::beg);
+
+  output.resize(length+1);
+  out.read((char*)output.values,length);
+  output.values[length] = 0;//null-terminate in case we want to use it as utf8
 }
 
 CL_NS_END

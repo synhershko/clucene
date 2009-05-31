@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -16,12 +16,14 @@
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
 #include "_FieldInfos.h"
+#include "_FieldsReader.h"
+#include <sstream>
 
 CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_USE(document)
 CL_NS_DEF(index)
-	
+
 FieldsWriter::FieldsWriter(Directory* d, const char* segment, FieldInfos* fn):
 	fieldInfos(fn)
 {
@@ -35,9 +37,9 @@ FieldsWriter::FieldsWriter(Directory* d, const char* segment, FieldInfos* fn):
   fieldsStream = d->createOutput ( Misc::segmentname(segment,".fdt").c_str() );
 
 	CND_CONDITION(fieldsStream != NULL,"fieldsStream is NULL");
-    
+
   indexStream = d->createOutput( Misc::segmentname(segment,".fdx").c_str() );
-      
+
 	CND_CONDITION(indexStream != NULL,"indexStream is NULL");
 
 	doClose = true;
@@ -122,7 +124,7 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 	// if the field as an instanceof FieldsReader.FieldForMerge, we're in merge mode
 	// and field.binaryValue() already returns the compressed value for a field
 	// with isCompressed()==true, so we disable compression in that case
-	//bool disableCompression = (field instanceof FieldsReader.FieldForMerge);
+	bool disableCompression = (field->instanceOf(FieldsReader::FieldForMerge::getClassName()));
 
 	fieldsStream->writeVInt(fi->number);
 	uint8_t bits = 0;
@@ -136,10 +138,54 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
 	fieldsStream->writeByte(bits);
 
 	if ( field->isCompressed() ){
-    //TODO: implement this...
-		_CLTHROWA(CL_ERR_Runtime, "CLucene does not directly support compressed fields. Write a compressed byte array instead");
+    // compression is enabled for the current field
+    CL_NS(util)::ValueArray<uint8_t> dataB;
+    const CL_NS(util)::ValueArray<uint8_t>* data = &dataB;
+
+    if (disableCompression) {
+      // optimized case for merging, the data
+      // is already compressed
+      data = field->binaryValue();
+    } else {
+      // check if it is a binary field
+      if (field->isBinary()) {
+        compress(*field->binaryValue(), dataB);
+      }else if ( field->stringValue() == NULL ){ //we must be using readerValue
+        CND_PRECONDITION(!field->isIndexed(), "Cannot store reader if it is indexed too")
+        Reader* r = field->readerValue();
+
+        int32_t sz = r->size();
+        if ( sz < 0 )
+          sz = 10000000; //todo: we should warn the developer here....
+
+        //read the entire string
+        const TCHAR* rv = NULL;
+        int64_t rl = r->read(rv, sz, 1);
+        if ( rl > LUCENE_INT32_MAX_SHOULDBE )
+          _CLTHROWA(CL_ERR_Runtime,"Field length too long");
+        else if ( rl < 0 )
+          rl = 0;
+
+        string str = lucene_wcstoutf8string(rv, rl);
+        CL_NS(util)::ValueArray<uint8_t> utfstr;
+        utfstr.length = str.length();
+        utfstr.values = (uint8_t*)str.c_str();
+        compress(utfstr, dataB);
+        utfstr.values = NULL;
+      }else if ( field->stringValue() != NULL ){
+        string str = lucene_wcstoutf8string(field->stringValue(), LUCENE_INT32_MAX_SHOULDBE);
+        CL_NS(util)::ValueArray<uint8_t> utfstr;
+        utfstr.length = str.length();
+        utfstr.values = (uint8_t*)str.c_str();
+        compress(utfstr, dataB);
+        utfstr.values = NULL;
+      }
+    }
+    fieldsStream->writeVInt(data->length);
+    fieldsStream->writeBytes(data->values, data->length);
+
 	}else{
-    
+
 		//FEATURE: this problem in Java Lucene too, if using Reader, data is not stored.
 		//todo: this is a logic bug...
 		//if the field is stored, and indexed, and is using a reader the field wont get indexed
@@ -202,6 +248,22 @@ void FieldsWriter::addRawDocuments(CL_NS(store)::IndexInput* stream, const int32
 	}
 	fieldsStream->copyBytes(stream, position-start);
 	CND_CONDITION(fieldsStream->getFilePointer() == position,"fieldsStream->getFilePointer() != position");
+}
+
+void FieldsWriter::compress(const CL_NS(util)::ValueArray<uint8_t>& input, CL_NS(util)::ValueArray<uint8_t>& output){
+  stringstream out;
+  string err;
+  if ( ! Misc::deflate(input.values, input.length, out, err) ){
+    _CLTHROWA(CL_ERR_IO, err.c_str());
+  }
+
+  // get length of file:
+  out.seekg (0, ios::end);
+  size_t length = out.tellg();
+  out.seekg (0, ios::beg);
+
+  output.resize(length);
+  out.read((char*)output.values,length);
 }
 
 CL_NS_END

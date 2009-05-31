@@ -171,37 +171,38 @@ public:
     CLUCENE_ASSERT(memcmp(shouldBe.values,bytes.values,4)==0);
 
     _CLDELETE(reader);
+    _CL_DECREF(&dir); //derefence since we are on the stack...
   }
 
-  void TestBinaryDocument(CuTest *tc){
+  void _TestDocumentWithOptions(CuTest *tc, int storeBit, FieldSelector::FieldSelectorResult fieldSelectorBit){
     char factbook[1024];
     strcpy(factbook, clucene_data_location);
-	  strcat(factbook, "/reuters-21578/feldman-cia-worldfactbook-data.txt");
-	  CuAssert(tc,_T("Factbook file does not exist"),Misc::dir_Exists(factbook));
+    strcat(factbook, "/reuters-21578/feldman-cia-worldfactbook-data.txt");
+    CuAssert(tc,_T("Factbook file does not exist"),Misc::dir_Exists(factbook));
 
     Document doc;
     Field* f;
     const TCHAR *_ts, *_ts2;
-	  const ValueArray<uint8_t>* strm;
+    const ValueArray<uint8_t>* strm;
     RAMDirectory ram;
 
     const char* areaderString = "a binary field";
     const TCHAR* treaderString = _T("a string reader field");
     size_t readerStringLen = strlen(areaderString);
 
-	  SimpleAnalyzer an;
+    SimpleAnalyzer an;
     IndexWriter writer(&ram,&an,true); //no analyzer needed since we are not indexing...
 
     ValueArray<uint8_t> b( (uint8_t*)strdup(areaderString), strlen(areaderString) );
     //use binary utf8
     doc.add( *_CLNEW Field(_T("binaryField"), &b,
-        Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO,true) );
+        Field::TERMVECTOR_NO | storeBit | Field::INDEX_NO,true) );
     writer.addDocument(&doc);
     doc.clear();
 
     //use reader
     doc.add( *_CLNEW Field(_T("readerField"),_CLNEW StringReader (treaderString),
-        Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
+        Field::TERMVECTOR_NO | storeBit | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
 
@@ -211,7 +212,7 @@ public:
     //use big file
     doc.add( *_CLNEW Field(_T("fileField"),
         _CLNEW FileReader(factbook, SimpleInputStreamReader::ASCII),
-        Field::TERMVECTOR_NO | Field::STORE_YES | Field::INDEX_NO) );
+        Field::TERMVECTOR_NO | storeBit | Field::INDEX_NO) );
     writer.addDocument(&doc);
     doc.clear();
 
@@ -221,22 +222,27 @@ public:
 
     IndexReader* reader = IndexReader::open(&ram);
 
+    MapFieldSelector fieldsToLoad;
+    fieldsToLoad.add(_T("fileField"), fieldSelectorBit );
+    fieldsToLoad.add(_T("readerField"), fieldSelectorBit );
+    fieldsToLoad.add(_T("binaryField"), fieldSelectorBit );
+
     //now check binary field
     reader->document(0, doc);
     f = doc.getField(_T("binaryField"));
     strm = f->binaryValue();
 
-    CLUCENE_ASSERT(readerStringLen == b.length);
+    CuAssertIntEquals(tc, _T("Check binary length is correct"), readerStringLen, b.length);
     for ( int i=0;i<readerStringLen;i++){
-        CLUCENE_ASSERT((*strm)[i]==areaderString[i]);
+        CuAssertIntEquals(tc, _T("Check binary values are the same"), (*strm)[i], areaderString[i]);
     }
-	  doc.clear();
+    doc.clear();
 
     //and check reader stream
     reader->document(1, doc);
     f = doc.getField(_T("readerField"));
     _ts = f->stringValue();
-    CLUCENE_ASSERT(_tcscmp(treaderString,_ts)==0);
+    CuAssertStrEquals( tc, _T("Check readerField length is correct"), treaderString, _ts);
     doc.clear();
 
     //now check the large field field
@@ -260,15 +266,35 @@ public:
 
     reader->close();
     _CLDELETE(reader);
+    _CL_DECREF(&ram); //this is in the stack...
   }
+
+
+  void TestBinaryDocument(CuTest *tc){
+    _TestDocumentWithOptions(tc, Field::STORE_YES, FieldSelector::LOAD);
+  }
+  void TestCompressedDocument(CuTest *tc){
+    _TestDocumentWithOptions(tc, Field::STORE_COMPRESS, FieldSelector::LOAD);
+  }
+  void TestLazyBinaryDocument(CuTest *tc){
+    _TestDocumentWithOptions(tc, Field::STORE_YES, FieldSelector::LAZY_LOAD);
+  }
+  void TestLazyCompressedDocument(CuTest *tc){
+    _TestDocumentWithOptions(tc, Field::STORE_COMPRESS, FieldSelector::LAZY_LOAD);
+  }
+
+
 
 CuSuite *testdocument(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Document Test"));
 
+  SUITE_ADD_TEST(suite, TestCompressedDocument);
+  SUITE_ADD_TEST(suite, TestBinaryDocument);
+  SUITE_ADD_TEST(suite, TestLazyCompressedDocument);
+  SUITE_ADD_TEST(suite, TestLazyBinaryDocument);
 	SUITE_ADD_TEST(suite, TestFieldSelectors);
 	SUITE_ADD_TEST(suite, TestFields);
-	SUITE_ADD_TEST(suite, TestBinaryDocument);
 	SUITE_ADD_TEST(suite, TestDateTools);
     return suite;
 }

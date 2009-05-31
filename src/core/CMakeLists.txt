@@ -65,7 +65,7 @@ SET(clucene_core_Files
 	./CLucene/document/NumberTools.cpp
 	./CLucene/index/IndexFileNames.cpp
 	./CLucene/index/IndexFileNameFilter.cpp
-	#./CLucene/index/IndexDeletionPolicy.cpp
+	./CLucene/index/IndexDeletionPolicy.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp
 	./CLucene/index/MergeScheduler.cpp
@@ -221,6 +221,16 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake" "
     set(CLUCENE_VERSION ${CLUCENE_VERSION})
     set(CLUCENE_SOVERSION ${CLUCENE_SOVERSION})
 ")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake"
+        DESTINATION ${LIB_DESTINATION}/CLuceneConfig.cmake)
+
+# install pkg-config file
+IF(NOT WIN32)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libclucene.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libclucene.pc)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libclucene.pc
+          DESTINATION ${LIB_DESTINATION}/pkgconfig )
+ENDIF(NOT WIN32)
+
 
 #install non system-independent
 IF ( LUCENE_SYS_INCLUDES )

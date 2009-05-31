@@ -38,6 +38,12 @@ INCLUDE (CheckStdCallFunctionExists)
 find_package(Threads REQUIRED)
 INCLUDE (CheckPthread)
 
+find_package(ZLIB)
+IF ( ZLIB_FOUND )
+  SET ( EXTRA_LIBS ${EXTRA_LIBS} ${ZLIB_LIBRARY} )
+  INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ENDIF ( ZLIB_FOUND )
+
 ########################################################################
 # test for headers
 ########################################################################
@@ -282,15 +288,28 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/debug/condition.cpp
     	${rel}/CLucene/util/StringBuffer.cpp
     	${rel}/CLucene/util/Misc.cpp
-    	${rel}/CLucene/util/dirent.cpp
-	)	
+      ${rel}/CLucene/util/dirent.cpp
+    )
+    IF ( NOT ZLIB_FOUND )
+      SET(${result} ${${result}}
+        ${rel}/CLucene/util/zlib/adler32.c
+        ${rel}/CLucene/util/zlib/compress.c
+        ${rel}/CLucene/util/zlib/crc32.c
+        ${rel}/CLucene/util/zlib/deflate.c
+        ${rel}/CLucene/util/zlib/gzio.c
+        ${rel}/CLucene/util/zlib/inffast.c
+        ${rel}/CLucene/util/zlib/inflate.c
+        ${rel}/CLucene/util/zlib/inftrees.c
+        ${rel}/CLucene/util/zlib/trees.c
+        ${rel}/CLucene/util/zlib/zutil.c
+      )
+    ENDIF ( NOT ZLIB_FOUND )
 ENDMACRO (GET_SHARED_FILES)
 
 GET_SHARED_FILES(clucene_shared_Files ".")
 
 #find our headers
 file(GLOB_RECURSE HEADERS ${clucene-shared_SOURCE_DIR}/*.h)
-
 
 add_library(clucene-shared SHARED
 	${clucene_shared_Files} ${HEADERS}
@@ -302,14 +321,13 @@ SET_TARGET_PROPERTIES(clucene-shared PROPERTIES
     SOVERSION ${CLUCENE_SOVERSION}
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
-IF ( ${EXTRA_LIBS} )
+IF ( EXTRA_LIBS )
   TARGET_LINK_LIBRARIES(clucene-shared ${EXTRA_LIBS})
-ENDIF ( ${EXTRA_LIBS} )
+ENDIF ( EXTRA_LIBS )
 
 install(TARGETS clucene-shared 
         DESTINATION ${LIB_DESTINATION} 
         COMPONENT development )
-        
 
 IF ( BUILD_STATIC_LIBRARIES )
 	add_library(clucene-shared-static STATIC

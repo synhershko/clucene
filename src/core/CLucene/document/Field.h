@@ -29,11 +29,8 @@ value.  Values may be free text, provided as a String or as a Reader, or they
 may be atomic keywords, which are not further processed.  Such keywords may
 be used to represent dates, urls, etc.  Fields are optionally stored in the
 index, so that they may be returned with hits on the document.
-
-PORTING: CLucene doesn't directly support compressed fields. However, it is easy 
-to reproduce this functionality by using the GZip streams in the contrib package.
 */
-class CLUCENE_EXPORT Field : LUCENE_BASE{
+class CLUCENE_EXPORT Field : public CL_NS(util)::NamedObject{
 public:
 	enum Store{ 
 		/** Store the original field value in the index. This is useful for short texts
@@ -47,13 +44,9 @@ public:
 		STORE_NO=2,
 
 		/** Store the original field value in the index in a compressed form. This is
-	     * useful for long documents and for binary valued fields.
-	     * NOTE: CLucene does not directly support compressed fields, to store a
-	     * compressed field. 
-	     * //TODO: need better documentation on how to add a compressed field
-	     * //because actually we still need to write a GZipOutputStream...
-	     */
-	    STORE_COMPRESS=4
+    * useful for long documents and for binary valued fields.
+    */
+    STORE_COMPRESS=4
 	};
 
 	enum Index{ 
@@ -189,10 +182,6 @@ public:
 	bool isTokenized() const;
 	
 	/** True if the value of the field is stored and compressed within the index 
-	* NOTE: CLucene does not actually support compressed fields, Instead, a compressed
-  * binary array will be returned. A GZipInputStream and a UTF8 reader must be used 
-  * to actually read the content. This flag will only be set if the index was 
-  * created by another lucene implementation.
 	*/
 	bool isCompressed() const;
 
@@ -299,6 +288,9 @@ public:
 
 	/** Expert: change the value of this field.  See <a href="#setValue(TCHAR*)">setValue(TCHAR*)</a>. */
 	void setValue(CL_NS(analysis)::TokenStream* value);
+
+	virtual const char* getObjectName() const;
+	static const char* getClassName();
 
 protected:
 	/**

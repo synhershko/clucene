@@ -64,11 +64,15 @@ public:
     bool isExternal;             // used by IndexWriter
     int32_t maxNumSegmentsOptimize;     // used by IndexWriter
 
-    const SegmentInfos* segments;
+    SegmentInfos* segments;
     const bool useCompoundFile;
     bool aborted;
     CLuceneError error;
 
+    /**
+    * Constructor
+    * @memory, segments object is consumed. The SegmentInfo objects within are referenced
+    */
     OneMerge(SegmentInfos* segments, bool _useCompoundFile);
     ~OneMerge();
 

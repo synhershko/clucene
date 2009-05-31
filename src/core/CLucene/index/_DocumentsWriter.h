@@ -644,7 +644,7 @@ private:
     int32_t numBuffer;
 
     int32_t bufferUpto;           // Which buffer we are upto
-	  int32_t blockSize;
+    int32_t blockSize;
 
     DocumentsWriter* parent;
   public:
@@ -696,6 +696,7 @@ private:
   class CharBlockPool: public BlockPool<TCHAR>{
   public:
     CharBlockPool(DocumentsWriter* _parent);
+    virtual ~CharBlockPool();
     TCHAR* getNewBlock(bool trackAllocations);
     void reset();
     friend class DocumentsWriter::FieldMergeState;
@@ -703,6 +704,7 @@ private:
   class ByteBlockPool: public BlockPool<uint8_t>{
   public:
     ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent);
+    virtual ~ByteBlockPool();
     uint8_t* getNewBlock(bool trackAllocations);
     int32_t newSlice(const int32_t size);
     int32_t allocSlice(uint8_t* slice, const int32_t upto);
