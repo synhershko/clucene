@@ -7,15 +7,9 @@
 #ifndef _lucene_search_PhraseQuery_
 #define _lucene_search_PhraseQuery_
 
-
-//#include "SearchHeader.h"
-//#include "Scorer.h"
-//#include "BooleanQuery.h"
-//#include "TermQuery.h"
 #include "Query.h"
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(search,Scorer)
-CL_CLASS_DEF(util,StringBuffer)
 #include "CLucene/util/Array.h"
 
 CL_NS_DEF(search)
@@ -98,7 +92,7 @@ CL_NS_DEF(search)
         TCHAR* toString(const TCHAR* f) const;
 
 		Query* clone() const;
-		bool equals(CL_NS(search)::Query *) const;
+		bool equals(Query *) const;
 		
 		size_t hashCode() const;
 

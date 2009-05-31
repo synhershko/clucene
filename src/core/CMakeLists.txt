@@ -100,6 +100,7 @@ SET(clucene_core_Files
 	./CLucene/index/SegmentMergeQueue.cpp
 	./CLucene/index/FieldsReader.cpp
 	./CLucene/index/TermInfosReader.cpp
+	./CLucene/index/MultipleTermPositions.cpp
 	./CLucene/search/Compare.cpp
 	./CLucene/search/Scorer.cpp
 	./CLucene/search/ScorerDocQueue.cpp
@@ -140,6 +141,7 @@ SET(clucene_core_Files
 	./CLucene/search/FieldCache.cpp
 	./CLucene/search/DateFilter.cpp
 	./CLucene/search/MatchAllDocsQuery.cpp
+	./CLucene/search/MultiPhraseQuery.cpp
 )
 
 #if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)

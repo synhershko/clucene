@@ -27,7 +27,7 @@ CL_NS_DEF(search)
 * </p>
 * @see BooleanQuery#setAllowDocsOutOfOrder
 */
-class CLUCENE_EXPORT Scorer/*: LUCENE_BASE*/ {
+class CLUCENE_EXPORT Scorer {
 private:
 	Similarity* similarity;
 protected:

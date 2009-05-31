@@ -40,9 +40,10 @@ CL_NS_DEF(search)
 		float_t idf;
 		float_t queryNorm;
 		float_t queryWeight;
-		PhraseQuery* _this;
+
+		PhraseQuery* parentQuery;
 	public:
-		PhraseWeight(Searcher* searcher, PhraseQuery* _this);
+		PhraseWeight(Searcher* searcher, PhraseQuery* parentQuery);
 		virtual ~PhraseWeight();
 		TCHAR* toString();
 
@@ -121,7 +122,7 @@ CL_NS_DEF(search)
   //Post 0 The instance has been destroyed
       
 	  //Iterate through all the terms
-	  for (uint32_t i = 0; i < terms->size(); i++){
+	  for (size_t i = 0; i < terms->size(); i++){
         _CLLDECDELETE((*terms)[i]);
       }
 	  _CLLDELETE(terms);
@@ -133,11 +134,11 @@ CL_NS_DEF(search)
 		size_t ret = Similarity::floatToByte(getBoost()) ^ Similarity::floatToByte(slop);
 		
 		{ //msvc6 scope fix
-			for ( int32_t i=0;terms->size();i++ )
+			for ( size_t i=0;terms->size();i++ )
 				ret = 31 * ret + (*terms)[i]->hashCode();
 		}
 		{ //msvc6 scope fix
-			for ( int32_t i=0;positions->size();i++ )
+			for ( size_t i=0;positions->size();i++ )
 				ret = 31 * ret + (*positions)[i];
 		}
 		return ret;
@@ -174,7 +175,6 @@ CL_NS_DEF(search)
 		  //Check if the field of the _CLNEW term matches the field of the PhraseQuery
 		  //can use != because fields are interned
 		  if ( term->field() != field){
-			  //return false;
 			  TCHAR buf[200];
 			  _sntprintf(buf,200,_T("All phrase terms must be in the same field: %s"),term->field());
 			  _CLTHROWT(CL_ERR_IllegalArgument,buf);
@@ -266,8 +266,8 @@ CL_NS_DEF(search)
   }
 
   
- PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _this) {
-   this->_this=_this;
+ PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _parentQuery) {
+   this->parentQuery=_parentQuery;
    this->value = 0;
    this->idf = 0;
    this->queryNorm = 0;
@@ -282,12 +282,12 @@ CL_NS_DEF(search)
  }
 
  
- Query* PhraseWeight::getQuery() { return _this; }
+ Query* PhraseWeight::getQuery() { return parentQuery; }
  float_t PhraseWeight::getValue() { return value; }
 
  float_t PhraseWeight::sumOfSquaredWeights(){
-   idf = _this->getSimilarity(searcher)->idf(_this->terms, searcher);
-   queryWeight = idf * _this->getBoost();    // compute query weight
+   idf = parentQuery->getSimilarity(searcher)->idf(parentQuery->terms, searcher);
+   queryWeight = idf * parentQuery->getBoost();    // compute query weight
    return queryWeight * queryWeight;         // square it
  }
 
@@ -303,7 +303,7 @@ CL_NS_DEF(search)
   //Post -
 
 	  //Get the length of terms
-      int32_t tpsLength = _this->terms->size();
+      const size_t tpsLength = parentQuery->terms->size();
 
 	  //optimize zero-term case
       if (tpsLength == 0)			  
@@ -317,10 +317,9 @@ CL_NS_DEF(search)
     TermPositions* p = NULL;
 
 	//Iterate through all terms
-	int32_t size = _this->terms->size();
-    for (int32_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < tpsLength; i++) {
         //Get the termPostitions for the i-th term
-        p = reader->termPositions((*_this->terms)[i]);
+        p = reader->termPositions((*parentQuery->terms)[i]);
       
 		//Check if p is valid
 		if (p == NULL) {
@@ -340,18 +339,18 @@ CL_NS_DEF(search)
     Scorer* ret = NULL;
 
     ValueArray<int32_t> positions;
-	_this->getPositions(positions);
-	int32_t slop = _this->getSlop();
+	parentQuery->getPositions(positions);
+	int32_t slop = parentQuery->getSlop();
 	if ( slop != 0)
 		 // optimize exact case
 		 //todo: need to pass these: this, tps, 
          ret = _CLNEW SloppyPhraseScorer(this,tps,positions.values,
-								_this->getSimilarity(searcher), 
-								slop, reader->norms(_this->field));
+								parentQuery->getSimilarity(searcher), 
+								slop, reader->norms(parentQuery->field));
 	else
 	    ret = _CLNEW ExactPhraseScorer(this, tps, positions.values, 
-									_this->getSimilarity(searcher),
-                                    reader->norms(_this->field));
+									parentQuery->getSimilarity(searcher),
+                                    reader->norms(parentQuery->field));
 	positions.deleteArray();
 
     CND_CONDITION(ret != NULL,"Could not allocate memory for ret");
@@ -359,7 +358,7 @@ CL_NS_DEF(search)
 	//tps can be deleted safely. SloppyPhraseScorer or ExactPhraseScorer will take care
 	//of its values
 
-    _CLDELETE_ARRAY(tps);
+    _CLDELETE_LARRAY(tps);
     return ret;
   }
 
@@ -377,13 +376,13 @@ CL_NS_DEF(search)
 	  StringBuffer docFreqs;
 	  StringBuffer query;
 	  query.appendChar('"');
-	  for (size_t i = 0; i < _this->terms->size(); i++) {
+	  for (size_t i = 0; i < parentQuery->terms->size(); i++) {
 		  if (i != 0) {
 			  docFreqs.appendChar(' ');
 			  query.appendChar(' ');
 		  }
 
-		  Term* term = (*_this->terms)[i];
+		  Term* term = (*parentQuery->terms)[i];
 
 		  docFreqs.append(term->text());
 		  docFreqs.appendChar('=');
@@ -394,7 +393,7 @@ CL_NS_DEF(search)
 	  query.appendChar('\"');
 
 	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-		  _T("idf(%s: %s)"),_this->field,docFreqs.getBuffer());
+		  _T("idf(%s: %s)"),parentQuery->field,docFreqs.getBuffer());
 	  Explanation* idfExpl = _CLNEW Explanation(idf, descbuf);
 
 	  // explain query weight
@@ -405,8 +404,8 @@ CL_NS_DEF(search)
 	  _CLDELETE_LCARRAY(tmp);
 	  queryExpl->setDescription(descbuf);
 
-	  Explanation* boostExpl = _CLNEW Explanation(_this->getBoost(), _T("boost"));
-	  if (_this->getBoost() != 1.0f)
+	  Explanation* boostExpl = _CLNEW Explanation(parentQuery->getBoost(), _T("boost"));
+	  if (parentQuery->getBoost() != 1.0f)
 		  queryExpl->addDetail(boostExpl);
 	  queryExpl->addDetail(idfExpl);
 
@@ -423,7 +422,7 @@ CL_NS_DEF(search)
 	  Explanation* fieldExpl = _CLNEW Explanation();
 	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 		  _T("fieldWeight(%s:%s in %d), product of:"),
-		  _this->field,query.getBuffer(),doc);
+		  parentQuery->field,query.getBuffer(),doc);
 	  fieldExpl->setDescription(descbuf);
 
 
@@ -432,14 +431,14 @@ CL_NS_DEF(search)
 	  fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
 
 	  Explanation* fieldNormExpl = _CLNEW Explanation();
-	  uint8_t* fieldNorms = reader->norms(_this->field);
+	  uint8_t* fieldNorms = reader->norms(parentQuery->field);
 	  float_t fieldNorm =
 		  fieldNorms!=NULL ? Similarity::decodeNorm(fieldNorms[doc]) : 0.0f;
 	  fieldNormExpl->setValue(fieldNorm);
 
 
 	  _sntprintf(descbuf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-		  _T("fieldNorm(field=%s, doc=%d)"),_this->field,doc);
+		  _T("fieldNorm(field=%s, doc=%d)"),parentQuery->field,doc);
 	  fieldNormExpl->setDescription(descbuf);
 	  fieldExpl->addDetail(fieldNormExpl);
 

@@ -8,6 +8,7 @@
 #define _lucene_search_PhraseScorer_
 
 #include "_PhraseQueue.h"
+#include "Scorer.h"
 
 CL_NS_DEF(search)
 
