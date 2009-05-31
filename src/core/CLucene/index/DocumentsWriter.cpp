@@ -1211,7 +1211,7 @@ uint8_t* DocumentsWriter::getByteBlock(bool trackAllocations) {
     b = _CL_NEWARRAY(uint8_t, BYTE_BLOCK_SIZE);
     memset(b,0,sizeof(uint8_t) * BYTE_BLOCK_SIZE);
   } else {
-    b = *freeByteBlocks.begin();
+    b = *freeByteBlocks.begin();    
     freeByteBlocks.remove(freeByteBlocks.begin(),true);
   }
   if (trackAllocations)

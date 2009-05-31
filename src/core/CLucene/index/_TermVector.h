@@ -44,13 +44,13 @@ public:
 class SegmentTermVector: public /*virtual*/ TermFreqVector {
 private:
 	TCHAR* field;
-	CL_NS(util)::ArrayBase<const TCHAR*>* terms;
+	CL_NS(util)::ArrayBase<TCHAR*>* terms;
 	CL_NS(util)::ArrayBase<int32_t>* termFreqs;
 
-	int32_t binarySearch(const CL_NS(util)::ArrayBase<const TCHAR*>& array, const TCHAR* key) const;
+	int32_t binarySearch(const CL_NS(util)::ArrayBase<TCHAR*>& array, const TCHAR* key) const;
 public:
 	//note: termFreqs must be the same length as terms
-	SegmentTermVector(const TCHAR* field, CL_NS(util)::ArrayBase<const TCHAR*>* terms,
+	SegmentTermVector(const TCHAR* field, CL_NS(util)::ArrayBase<TCHAR*>* terms,
     CL_NS(util)::ArrayBase<int32_t>* termFreqs);
 	virtual ~SegmentTermVector();
 
@@ -174,7 +174,7 @@ protected:
 	static CL_NS(util)::ValueArray<int32_t> EMPTY_TERM_POS;
 public:
 	SegmentTermPositionVector(const TCHAR* field,
-	  CL_NS(util)::ArrayBase<const TCHAR*>* terms,
+	  CL_NS(util)::ArrayBase<TCHAR*>* terms,
 	  CL_NS(util)::ArrayBase<int32_t>* termFreqs,
 		CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<int32_t>* >* _positions,
 		CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* >* _offsets);
@@ -293,7 +293,7 @@ public:
 class ParallelArrayTermVectorMapper : public TermVectorMapper
 {
 private:
-	CL_NS(util)::ArrayBase<const TCHAR*>* terms;
+	CL_NS(util)::ArrayBase<TCHAR*>* terms;
 	CL_NS(util)::ArrayBase<int32_t>* termFreqs;
 	CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<int32_t>* >* positions;
 	CL_NS(util)::ArrayBase< CL_NS(util)::ArrayBase<TermVectorOffsetInfo*>* >* offsets;

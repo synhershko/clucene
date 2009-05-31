@@ -16,7 +16,7 @@ CL_NS_DEF(index)
 ValueArray<int32_t> SegmentTermPositionVector::EMPTY_TERM_POS;
 
 SegmentTermVector::SegmentTermVector(const TCHAR* _field,
-    ArrayBase<const TCHAR*>* _terms, ArrayBase<int32_t>* _termFreqs) {
+    ArrayBase<TCHAR*>* _terms, ArrayBase<int32_t>* _termFreqs) {
 	this->field = STRDUP_TtoT(_field); // TODO: Try and avoid this dup (using intern'ing perhaps?)
 	this->terms = _terms;
 	this->termFreqs = _termFreqs;
@@ -62,14 +62,14 @@ int32_t SegmentTermVector::size() {
 }
 
 const CL_NS(util)::ArrayBase<const TCHAR*>* SegmentTermVector::getTerms() {
-	return terms;
+	return (CL_NS(util)::ArrayBase<const TCHAR*>*)terms;
 }
 
 const ArrayBase<int32_t>* SegmentTermVector::getTermFrequencies() {
 	return termFreqs;
 }
 
-int32_t SegmentTermVector::binarySearch(const ArrayBase<const TCHAR*>& a, const TCHAR* key) const
+int32_t SegmentTermVector::binarySearch(const ArrayBase<TCHAR*>& a, const TCHAR* key) const
 {
 	int32_t low = 0;
 	int32_t hi = a.length - 1;
@@ -111,7 +111,7 @@ ArrayBase<int32_t>* SegmentTermVector::indexesOf(const CL_NS(util)::ArrayBase<TC
 
 
 SegmentTermPositionVector::SegmentTermPositionVector(const TCHAR* field,
-  ArrayBase<const TCHAR*>* terms, ArrayBase<int32_t>* termFreqs,
+  ArrayBase<TCHAR*>* terms, ArrayBase<int32_t>* termFreqs,
     ArrayBase< ArrayBase<int32_t>* >* _positions,
     ArrayBase< ArrayBase<TermVectorOffsetInfo*>* >* _offsets)
 	: SegmentTermVector(field,terms,termFreqs),
