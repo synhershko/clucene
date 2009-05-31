@@ -36,7 +36,7 @@ SET(CPACK_SOURCE_PACKAGE_FILE_NAME "clucene-core-${CPACK_PACKAGE_VERSION}-Source
 
 #don't include the current binary dir.
 get_filename_component(clucene_BINARY_DIR_name ${clucene_BINARY_DIR} NAME)
-SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;\\\\.swp$;\\\\.#;/#;.*~;.*\\\\.tmp;/${clucene_BINARY_DIR_name}/")
+SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;/\\\\.git/;\\\\.swp$;\\\\.#;/#;.*~;.*\\\\.tmp;/${clucene_BINARY_DIR_name}/")
 
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make

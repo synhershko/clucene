@@ -17,6 +17,7 @@
 #include "analysis/TestAnalysis.cpp"
 #include "analysis/TestAnalyzers.cpp"
 #include "index/TestHighFreqTerms.cpp"
+#include "index/TestThreading.cpp"
 #include "index/TestIndexWriter.cpp"
 #include "index/TestIndexReader.cpp"
 #include "index/TestReuters.cpp"
