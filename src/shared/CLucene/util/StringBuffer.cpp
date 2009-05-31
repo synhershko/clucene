@@ -83,8 +83,11 @@ CL_NS_DEF(util)
   //Pre  - true
   //Post - pre(buffer) has been destroyed and a new one has been allocated
 
+	  // TODO:	Should we really delete and recreate the buffer - perhaps just reseting len should suffice?
+	  //		We should really look into at least providing both options
+
       //Destroy the current buffer if present
-	  _CLDELETE_CARRAY(buffer);
+	  _CLDELETE_LCARRAY(buffer);
 
 	  //Initialize 
       len = 0;
