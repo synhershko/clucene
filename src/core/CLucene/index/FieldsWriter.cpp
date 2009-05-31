@@ -159,21 +159,21 @@ void FieldsWriter::writeField(FieldInfo* fi, CL_NS(document)::Field* field)
           sz = 10000000; //todo: we should warn the developer here....
 
         //read the entire string
-        const TCHAR* rv;
+        const TCHAR* rv = NULL;
         int64_t rl = r->read(rv, sz, 1);
         if ( rl > LUCENE_INT32_MAX_SHOULDBE )
           _CLTHROWA(CL_ERR_Runtime,"Field length too long");
         else if ( rl < 0 )
           rl = 0;
 
-        string str = lucene_wcstoutf8string(rv);
+        string str = lucene_wcstoutf8string(rv, rl);
         CL_NS(util)::ValueArray<uint8_t> utfstr;
         utfstr.length = str.length();
         utfstr.values = (uint8_t*)str.c_str();
         compress(utfstr, dataB);
         utfstr.values = NULL;
       }else if ( field->stringValue() != NULL ){
-        string str = lucene_wcstoutf8string(field->stringValue());
+        string str = lucene_wcstoutf8string(field->stringValue(), LUCENE_INT32_MAX_SHOULDBE);
         CL_NS(util)::ValueArray<uint8_t> utfstr;
         utfstr.length = str.length();
         utfstr.values = (uint8_t*)str.c_str();
