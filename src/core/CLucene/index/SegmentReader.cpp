@@ -352,7 +352,7 @@ CL_NS_DEF(index)
         _CLDELETE(referencedSegmentReader);
       }
 
-      deletedDocs = NULL;
+      _CLDELETE(deletedDocs);
 
       // close the single norms stream
       if (singleNormStream != NULL) {
@@ -394,7 +394,7 @@ CL_NS_DEF(index)
 
         if (cfsReader != NULL){
           cfsReader->close();
-          _CLDELETE(cfsReader);
+          _CLDECDELETE(cfsReader);
         }
 
         if (storeCFSReader != NULL){

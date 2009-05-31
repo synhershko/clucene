@@ -15,8 +15,9 @@ CL_NS_DEF(index)
 
 class IndexCommitPoint {
 public:
+  virtual ~IndexCommitPoint();
   /**
-   * Get the segments file (<code>segments_N</code>) associated 
+   * Get the segments file (<code>segments_N</code>) associated
    * with this commit point.
    */
   virtual std::string getSegmentsFileName() = 0;
@@ -25,15 +26,15 @@ public:
    * Returns all index files referenced by this commit point.
    */
   virtual const std::vector<std::string>& getFileNames() = 0;
-  
+
   /**
    * Delete this commit point.
    * <p>
-   * Upon calling this, the writer is notified that this commit 
-   * point should be deleted. 
+   * Upon calling this, the writer is notified that this commit
+   * point should be deleted.
    * <p>
    * Decision that a commit-point should be deleted is taken by the {@link IndexDeletionPolicy} in effect
-   * and therefore this should only be called by its {@link IndexDeletionPolicy#onInit onInit()} or 
+   * and therefore this should only be called by its {@link IndexDeletionPolicy#onInit onInit()} or
    * {@link IndexDeletionPolicy#onCommit onCommit()} methods.
   */
   virtual void deleteCommitPoint() = 0;
@@ -68,6 +69,8 @@ public:
  */
 class IndexDeletionPolicy: public CL_NS(util)::NamedObject{
 public:
+  virtual ~IndexDeletionPolicy();
+
   /**
    * <p>This is called once when a writer is first
    * instantiated to give the policy a chance to remove old
@@ -130,6 +133,7 @@ public:
 
 class KeepOnlyLastCommitDeletionPolicy: public IndexDeletionPolicy {
 public:
+  virtual ~KeepOnlyLastCommitDeletionPolicy();
   /**
    * Deletes all commits except the most recent one.
    */

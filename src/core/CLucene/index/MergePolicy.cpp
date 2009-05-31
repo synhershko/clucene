@@ -33,6 +33,11 @@ MergePolicy::OneMerge::OneMerge(SegmentInfos* segments, bool _useCompoundFile):
 }
 MergePolicy::OneMerge::~OneMerge(){
   _CLDELETE(this->segmentsClone);
+
+  while ( this->segments->size() > 0 ){
+    this->segments->remove(0,true);//don't delete...
+  }
+  _CLDELETE(this->segments);//and finally delete the segments object itself
 }
 
 const char* MergePolicy::OneMerge::getClassName(){

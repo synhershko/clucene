@@ -65,7 +65,7 @@ SET(clucene_core_Files
 	./CLucene/document/NumberTools.cpp
 	./CLucene/index/IndexFileNames.cpp
 	./CLucene/index/IndexFileNameFilter.cpp
-	#./CLucene/index/IndexDeletionPolicy.cpp
+	./CLucene/index/IndexDeletionPolicy.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp
 	./CLucene/index/MergeScheduler.cpp

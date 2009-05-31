@@ -440,10 +440,9 @@ void MultiSegmentReader::doClose() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	for (size_t i = 0; i < subReaders->length; i++){
 	  (*subReaders)[i]->decRef();
-
+	}
     // maybe close directory
     DirectoryIndexReader::doClose();
-	}
 }
 
 void MultiSegmentReader::getFieldNames(FieldOption fieldNames, StringArrayWithDeletor& retarray, CL_NS(util)::ArrayBase<IndexReader*>* subReaders) {

@@ -1,4 +1,20 @@
+/*------------------------------------------------------------------------------
+* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
+* the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
+#include "CLucene/_ApiHeader.h"
+#include "IndexDeletionPolicy.h"
 
+CL_NS_DEF(index)
+
+KeepOnlyLastCommitDeletionPolicy::~KeepOnlyLastCommitDeletionPolicy(){
+}
+IndexDeletionPolicy::~IndexDeletionPolicy(){
+}
+IndexCommitPoint::~IndexCommitPoint(){
+}
 
 
 
@@ -17,7 +33,7 @@
  *  gives you the freedom to continue using whatever {@link
  *  IndexDeletionPolicy} you would normally want to use with your
  *  index.
- */
+
 class SnapshotDeletionPolicy: public IndexDeletionPolicy {
 private:
   IndexCommitPoint lastCommit;
@@ -71,7 +87,7 @@ public:
     lastCommit = (IndexCommitPoint) commits.get(commits.size()-1);
   }
 
-  /** Take a snapshot of the most recent commit to the
+  ** Take a snapshot of the most recent commit to the
    *  index.  You must call release() to free this snapshot.
    *  Note that while the snapshot is held, the files it
    *  references will not be deleted, which will consume
@@ -79,7 +95,7 @@ public:
    *  snapshot at a particularly bad time (say just before
    *  you call optimize()) then in the worst case this could
    *  consume an extra 1X of your total index size, until
-   *  you release the snapshot. */
+   *  you release the snapshot. *
   IndexCommitPoint snapshot() {
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     if (snapshot == null)
@@ -89,7 +105,7 @@ public:
     return snapshot;
   }
 
-  /** Release the currently held snapshot. */
+  ** Release the currently held snapshot. *
   void release() {
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     if (snapshot != null)
@@ -98,3 +114,8 @@ public:
       throw new IllegalStateException("snapshot was not set; please call snapshot() first");
   }
 }
+*/
+
+
+CL_NS_END
+

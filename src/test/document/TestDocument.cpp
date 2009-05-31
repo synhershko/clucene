@@ -130,7 +130,7 @@ public:
   }
 
   void TestFieldSelectors(CuTest *tc){
-    RAMDirectory dir;
+    RAMDirectory dir; _CL_DECREF(dir); //derefence since we are on the stack...
     const TCHAR* longStrValue = _T("too long a field...");
     {
       WhitespaceAnalyzer a;
@@ -265,6 +265,7 @@ public:
 
     reader->close();
     _CLDELETE(reader);
+    _CL_DECREF(&ram); //this is in the stack...
   }
 
 

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_debug_mem_h
@@ -17,19 +17,9 @@
    #define _CLNEW new
 #else
    #define _CLNEW new
-   //todo: get this working again...
-   //#define LUCENE_BASE_CHECK(obj) if (obj) obj->dummy__see_mem_h_for_details
 #endif
 #define _CL_POINTER(x) (x==NULL?NULL:(x->__cl_addref()>=0?x:x)) //return a add-ref'd object
-
-#if defined(_DEBUG)
-  #if !defined(LUCENE_BASE_CHECK)
-		#define LUCENE_BASE_CHECK(x)
-	#endif
-#else
-	#undef LUCENE_BASE_CHECK
-	#define LUCENE_BASE_CHECK(x)
-#endif
+#define _CL_DECREF(x) ((x)==NULL?NULL:((x)->__cl_decref()>=0?(x):(x))) //return a add-ref'd object
 
 //Macro for creating new arrays
 #define _CL_NEWARRAY(type,size) (type*)calloc(size, sizeof(type))

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -52,13 +52,13 @@ Searcher* sort_getIndex (bool even, bool odd){
 			Document doc;
 			doc.add (*_CLNEW Field ( _T("tracer"),   data[i][0], Field::STORE_YES));
 			doc.add (*_CLNEW Field ( _T("contents"), data[i][1], Field::INDEX_TOKENIZED));
-			if (data[i][2] != NULL) 
+			if (data[i][2] != NULL)
                 doc.add (*_CLNEW Field (_T("int"),   data[i][2], Field::INDEX_UNTOKENIZED));
-			if (data[i][3] != NULL) 
+			if (data[i][3] != NULL)
                 doc.add (*_CLNEW Field (_T("float"),    data[i][3], Field::INDEX_UNTOKENIZED));
-			if (data[i][4] != NULL) 
+			if (data[i][4] != NULL)
                 doc.add (*_CLNEW Field (_T("string"),   data[i][4], Field::INDEX_UNTOKENIZED));
-			if (data[i][5] != NULL) 
+			if (data[i][5] != NULL)
                 doc.add (*_CLNEW Field (_T("custom"),   data[i][5], Field::INDEX_UNTOKENIZED));
 			writer.addDocument (&doc);
 		}
@@ -73,7 +73,7 @@ void testSortSetup(CuTest *tc) {
     sort_full = sort_getIndex (true, true);
 	sort_searchX = sort_getIndex (true, false);
 	sort_searchY = sort_getIndex (false, true);
-    
+
     Term* tmp;
 
     tmp = _CLNEW Term (_T("contents"), _T("x"));
@@ -129,7 +129,7 @@ void sortSameValues (CuTest* tc, sortScores* m1, sortScores* m2, bool deleteM1=f
 	float_t m=pow(10.0,-8);
 	while (iter != m1->end()) {
 		TCHAR* key = iter->first;
-		
+
 		sortScores::iterator i1 = m1->find(key);
 		sortScores::iterator i2 = m2->find(key);
 
@@ -140,7 +140,7 @@ void sortSameValues (CuTest* tc, sortScores* m1, sortScores* m2, bool deleteM1=f
 		if ( diff < 0 )
 		    diff *= -1;
 		if ( diff>m )
-			CuAssert(tc,_T("sortSameValue f1!=f2"),false);	
+			CuAssert(tc,_T("sortSameValue f1!=f2"),false);
 		iter++;
 	}
 
@@ -257,7 +257,7 @@ void sort_runMultiSorts (CuTest* tc, Searcher* multi) {
 			if ( diff < 0 )
 				diff *= -1;
 			if ( diff>m )
-				CuAssert(tc,_T("sort_getScores(multi or incorrect) f1!=f2"),false);	
+				CuAssert(tc,_T("sort_getScores(multi or incorrect) f1!=f2"),false);
 
 			_CLDELETE_CARRAY_ALL(v);
 		}else{
@@ -396,7 +396,7 @@ void testSortCombos(CuTest *tc) {
 	_sort->setSort ( sorts1 );
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("IGEAC"));
 
-	SortField* sorts2[3] = { _CLNEW SortField (_T("int"), SortField::AUTO, true), 
+	SortField* sorts2[3] = { _CLNEW SortField (_T("int"), SortField::AUTO, true),
 		_CLNEW SortField (NULL, SortField::DOC, true), NULL };
 	_sort->setSort ( sorts2);
 	sortMatches (tc, sort_full, sort_queryX, _sort, _T("CEAGI"));
@@ -529,7 +529,7 @@ CuSuite *testsort(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Sort Test"));
     SUITE_ADD_TEST(suite, testSortSetup);
-    
+
     SUITE_ADD_TEST(suite, testBuiltInSorts);
     SUITE_ADD_TEST(suite, testTypedSort);
     SUITE_ADD_TEST(suite, testEmptyIndex);
@@ -540,8 +540,8 @@ CuSuite *testsort(void)
 	SUITE_ADD_TEST(suite, testMultiSort);
 	SUITE_ADD_TEST(suite, testNormalizedScores);
 	SUITE_ADD_TEST(suite, testReverseSort);
-    
+
     SUITE_ADD_TEST(suite, testSortCleanup);
-    return suite; 
+    return suite;
 }
 // EOF

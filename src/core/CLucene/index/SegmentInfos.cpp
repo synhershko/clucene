@@ -725,8 +725,8 @@ string SegmentInfo::segString(Directory* dir) {
       itr++;
     }
   }
-  void SegmentInfos::remove(size_t index){
-    infos.remove(index);
+  void SegmentInfos::remove(size_t index, bool dontDelete){
+    infos.remove(index, dontDelete);
   }
 
   void SegmentInfos::read(Directory* directory, const char* segmentFileName){

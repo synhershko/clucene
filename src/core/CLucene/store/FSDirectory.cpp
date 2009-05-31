@@ -149,7 +149,7 @@ CL_NS_USE(util)
 #ifndef _CL_DISABLE_MULTITHREADING
     delete handle->THIS_LOCK;
 #endif
-	  _CLDELETE(handle);
+	  _CLDECDELETE(handle);
 	  return false;
   }
 

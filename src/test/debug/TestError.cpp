@@ -19,7 +19,7 @@ void testError ( CuTest *tc )
 	IndexReader* reader = NULL;
 	try
 	{
-		RAMDirectory dir;
+		RAMDirectory dir; _CL_DECREF(dir);
 		reader = IndexReader::open ( &dir,true );
 	}
 	catch ( CLuceneError& )
