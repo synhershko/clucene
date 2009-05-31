@@ -1569,6 +1569,9 @@ DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, Documents
 {
 }
 DocumentsWriter::ByteBlockPool::~ByteBlockPool(){
+  reset();
+  //delete the first block
+  _CLDELETE_ARRAY(buffer);
 }
 uint8_t* DocumentsWriter::ByteBlockPool::getNewBlock(bool _trackAllocations){
   return parent->getByteBlock(_trackAllocations);

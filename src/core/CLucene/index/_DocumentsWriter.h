@@ -644,11 +644,11 @@ private:
     int32_t numBuffer;
 
     int32_t bufferUpto;           // Which buffer we are upto
-	  int32_t blockSize;
+    int32_t blockSize;
 
     DocumentsWriter* parent;
   public:
-    CL_NS(util)::ObjectArray< T > buffers;
+    CL_NS(util)::ValueArray< T* > buffers;
     int32_t tOffset;          // Current head offset
     int32_t tUpto;             // Where we are in head buffer
     T* buffer;                              // Current head buffer
@@ -656,7 +656,7 @@ private:
     virtual T* getNewBlock(bool trackAllocations) = 0;
 
     BlockPool(DocumentsWriter* _parent, int32_t _blockSize, bool trackAllocations):
-      buffers(CL_NS(util)::ObjectArray<T>(10))
+      buffers(CL_NS(util)::ValueArray<T*>(10))
     {
 	    this->blockSize = _blockSize;
       this->parent = _parent;
