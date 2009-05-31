@@ -214,8 +214,7 @@ public:
 */
 class CLUCENE_INLINE_EXPORT TCharArray: public ArrayBase<TCHAR*>{
 public:
-    TCharArray():ArrayBase<TCHAR*>(){}
-	TCharArray(TCHAR** values, size_t length):ArrayBase<TCHAR*>(values,length){}
+  TCharArray():ArrayBase<TCHAR*>(){}
 	TCharArray(size_t length):ArrayBase<TCHAR*>(length){}
 
   void deleteValues(){
@@ -238,8 +237,7 @@ public:
 */
 class CLUCENE_INLINE_EXPORT CharArray: public ArrayBase<char*>{
 public:
-    CharArray():ArrayBase<char*>(){}
-	CharArray(char** values, size_t length):ArrayBase<char*>(values,length){}
+  CharArray():ArrayBase<char*>(){}
 	CharArray(size_t length):ArrayBase<char*>(length){}
 
     void deleteValues(){
@@ -259,8 +257,7 @@ public:
 */
 class CLUCENE_INLINE_EXPORT TCharConstArray: public ArrayBase<const TCHAR*>{
 public:
-    TCharConstArray():ArrayBase<const TCHAR*>(){}
-	TCharConstArray(const TCHAR** values, size_t length):ArrayBase<const TCHAR*>(values,length){}
+  TCharConstArray():ArrayBase<const TCHAR*>(){}
 	TCharConstArray(size_t length):ArrayBase<const TCHAR*>(length){}
 
     void deleteValues(){
@@ -279,7 +276,6 @@ public:
 class CLUCENE_INLINE_EXPORT CharConstArray: public ArrayBase<const char*>{
 public:
     CharConstArray():ArrayBase<const char*>(){}
-	CharConstArray(const char** values, size_t length):ArrayBase<const char*>(values,length){}
 	CharConstArray(size_t length):ArrayBase<const char*>(length){}
 
     void deleteValues(){

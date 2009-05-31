@@ -48,7 +48,7 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   vectorFieldNumbers(ValueArray<int32_t>(10)),
   fieldDataArray(ValueArray<FieldData*>(8)),
   fieldDataHash(ValueArray<FieldData*>(16)),
-  postingsVectors(ValueArray<PostingVector*>(1)),
+  postingsVectors(ObjectArray<PostingVector>(1)),
   allFieldDataArray(ValueArray<FieldData*>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent) ),
   vectorsPool( _CLNEW ByteBlockPool(false, __parent) ),
@@ -401,11 +401,11 @@ void DocumentsWriter::ThreadState::quickSort(Posting** postings, int32_t lo, int
   quickSort(postings, left + 1, hi);
 }
 
-void DocumentsWriter::ThreadState::doVectorSort(ValueArray<PostingVector*>& postings, int32_t numPosting) {
+void DocumentsWriter::ThreadState::doVectorSort(ArrayBase<PostingVector*>& postings, int32_t numPosting) {
   quickSort(postings, 0, numPosting-1);
 }
 
-void DocumentsWriter::ThreadState::quickSort(ValueArray<PostingVector*>& postings, int32_t lo, int32_t hi) {
+void DocumentsWriter::ThreadState::quickSort(ArrayBase<PostingVector*>& postings, int32_t lo, int32_t hi) {
   if (lo >= hi)
     return;
 

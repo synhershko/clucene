@@ -352,24 +352,20 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
   int32_t start = 0;
   int32_t deltaLength = 0;
   int32_t totalLength = 0;
-  int32_t bufferLen=10; // init the buffer with a length of 10 character
-  TCHAR* buffer = (TCHAR*)malloc(bufferLen * sizeof(TCHAR));
+  ValueArray<TCHAR> buffer(10); // init the buffer with a length of 10 character
 
   for (int32_t i = 0; i < numTerms; ++i) {
 		start = tvf->readVInt();
 		deltaLength = tvf->readVInt();
 		totalLength = start + deltaLength;
-		if (bufferLen < totalLength) // increase buffer
+    if (buffer.length < totalLength + 1) // increase buffer
 		{
-			buffer=(TCHAR*)realloc(buffer,totalLength * sizeof(TCHAR));
-			bufferLen = totalLength;
+      buffer.resize(totalLength+1);
 		}
 
 		//read the term
-		tvf->readChars(buffer, start, deltaLength);
-		TCHAR* term = _CL_NEWARRAY(TCHAR,totalLength+1);
-		_tcsncpy(term,buffer,totalLength);
-		term[totalLength] = '\0'; //null terminate term
+    tvf->readChars(buffer.values, start, deltaLength);
+    buffer.values[totalLength] = '\0'; //null terminate term
 
 		//read the frequency
 		int32_t freq = tvf->readVInt();
@@ -414,9 +410,8 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 				}
 			}
 		}
-		mapper->map(term, totalLength, freq, offsets, positions);
+    mapper->map(buffer.values, totalLength, freq, offsets, positions);
 	}
-  free(buffer);
 }
 
 ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO = _CLNEW ObjectArray<TermVectorOffsetInfo>;
@@ -500,14 +495,15 @@ ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():
 {
 }
 ParallelArrayTermVectorMapper::~ParallelArrayTermVectorMapper(){
-	//_CLDELETE_LCARRAY(field);
+	_CLDELETE_LCARRAY(field);
 }
 
 void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const int32_t numTerms,
 													const bool storeOffsets, const bool storePositions) {
-	this->field = const_cast<TCHAR*>(_field);
+	_CLDELETE_LCARRAY(field);
+	this->field = STRDUP_TtoT(_field);
 
-	terms = _CLNEW CL_NS(util)::ValueArray<const TCHAR*>(numTerms);
+  terms = _CLNEW CL_NS(util)::TCharArray(numTerms);
 	termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
 
 	this->storingOffsets = storeOffsets;
@@ -523,7 +519,7 @@ void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const i
 void ParallelArrayTermVectorMapper::map(const TCHAR* term, int32_t termLen, const int32_t frequency,
     ArrayBase<TermVectorOffsetInfo*>* _offsets,
     ArrayBase<int32_t>* _positions) {
-	terms->values[currentPosition] = term;
+	terms->values[currentPosition] = STRDUP_TtoT(term);
 
 	termFreqs->values[currentPosition] = frequency;
 

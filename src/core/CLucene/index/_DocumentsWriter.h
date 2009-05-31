@@ -488,7 +488,7 @@ private:
 
     int32_t fieldGen;
 
-    CL_NS(util)::ValueArray<PostingVector*> postingsVectors;
+    CL_NS(util)::ObjectArray<PostingVector> postingsVectors;
     int32_t maxPostingsVectors;
 
     // Used to read a string value for a field
@@ -526,9 +526,9 @@ private:
     void quickSort(Posting** postings, int32_t lo, int32_t hi);
 
     /** Do in-place sort of PostingVector array */
-    void doVectorSort(CL_NS(util)::ValueArray<PostingVector*>& postings, int32_t numPosting);
+    void doVectorSort(CL_NS(util)::ArrayBase<PostingVector*>& postings, int32_t numPosting);
 
-    void quickSort(CL_NS(util)::ValueArray<PostingVector*>& postings, int32_t lo, int32_t hi);
+    void quickSort(CL_NS(util)::ArrayBase<PostingVector*>& postings, int32_t lo, int32_t hi);
 
     // USE ONLY FOR DEBUGGING!
     /*
