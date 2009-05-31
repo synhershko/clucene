@@ -308,7 +308,7 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
 
       f = _CLNEW Field(fi->name,      // field name
         result, // uncompress the value and add as string
-        bits, true);
+        bits, false);
       f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
