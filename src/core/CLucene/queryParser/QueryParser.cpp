@@ -24,6 +24,7 @@
 #include "CLucene/search/PrefixQuery.h"
 #include "CLucene/search/RangeQuery.h"
 #include "CLucene/search/MatchAllDocsQuery.h"
+#include "CLucene/search/MultiPhraseQuery.h"
 
 #include "CLucene/index/Term.h"
 #include "QueryToken.h"
@@ -348,35 +349,42 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) 
         }
         return q;
       }
-      else {
-        _CLDELETE_LCARRAY(queryText);
-        _CLTHROWA(CL_ERR_UnsupportedOperation, "MultiPhraseQuery NOT Implemented");
-        /*
-        // TODO: phrase query:
-        MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
-        mpq.setSlop(phraseSlop);
-        List multiTerms = new ArrayList();
-        int32_t position = -1;
-        for (int32_t i = 0; i < v.size(); i++) {
-        t = (org.apache.lucene.analysis.Token) v.elementAt(i);
-        if (t.getPositionIncrement() > 0 && multiTerms.size() > 0) {
-        if (enablePositionIncrements) {
-        mpq.add((Term[])multiTerms.toArray(new Term[0]),position);
-        } else {
-        mpq.add((Term[])multiTerms.toArray(new Term[0]));
-        }
-        multiTerms.clear();
-        }
-        position += t.getPositionIncrement();
-        multiTerms.add(_CLNEW Term(field, t.termText()));
-        }
-        if (enablePositionIncrements) {
-        mpq.add((Term[])multiTerms.toArray(new Term[0]),position);
-        } else {
-        mpq.add((Term[])multiTerms.toArray(new Term[0]));
-        }
-        return mpq;
-        */
+	  else {
+		  MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
+		  mpq->setSlop(phraseSlop);
+		  CLArrayList<Term*> multiTerms;
+		  int32_t position = -1;
+		  for (size_t i = 0; i < v.size(); i++) {
+			  t = v.at(i);
+			  if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
+				  if (enablePositionIncrements) {
+					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
+					  multiTerms.toArray(termsArray);
+					  mpq->add(termsArray,position);
+					  _CLDELETE_LARRAY(termsArray);
+				  } else {
+					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
+					  multiTerms.toArray(termsArray);
+					  mpq->add(termsArray);
+					  _CLDELETE_LARRAY(termsArray);
+				  }
+				  multiTerms.clear();
+			  }
+			  position += t->getPositionIncrement();
+			  multiTerms.push_back(_CLNEW Term(field, t->termText()));
+		  }
+		  if (enablePositionIncrements) {
+			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
+			  multiTerms.toArray(termsArray);
+			  mpq->add(termsArray,position);
+			  _CLDELETE_LARRAY(termsArray);
+		  } else {
+			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
+			  multiTerms.toArray(termsArray);
+			  mpq->add(termsArray);
+			  _CLDELETE_LARRAY(termsArray);
+		  }
+		  return mpq;
       }
     }
     else {
@@ -403,15 +411,13 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) 
 Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop) {
   Query* query = getFieldQuery(_field, queryText);
 
-  if ( query && query->instanceOf(PhraseQuery::getClassName()) ) {
-    static_cast<PhraseQuery*>(query)->setSlop(slop);
+  if (query) {
+	  if ( query->instanceOf(PhraseQuery::getClassName()) ) {
+		  static_cast<PhraseQuery*>(query)->setSlop(slop);
+	  } else if ( query->instanceOf(MultiPhraseQuery::getClassName()) ) {
+		  static_cast<MultiPhraseQuery*>(query)->setSlop(slop);
+	  }
   }
-  /*
-  // TODO: Add MultiPhraseQuery support
-  if (query instanceof MultiPhraseQuery) {
-  ((MultiPhraseQuery) query).setSlop(slop);
-  }
-  */
   return query;
 }
 

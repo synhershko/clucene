@@ -288,7 +288,7 @@ Weight* MultiPhraseQuery::_createWeight(Searcher* searcher) {
 	return _CLNEW MultiPhraseWeight(searcher, this);
 }
 
-TCHAR* MultiPhraseQuery::toString(const TCHAR* f) {
+TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 	StringBuffer buffer(100, false);
 	if (_tcscmp(f, field)!=0) {
 		buffer.append(field);

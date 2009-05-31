@@ -110,7 +110,7 @@ protected:
 
 public:
 	/** Prints a user-readable version of this query. */
-	TCHAR* toString(const TCHAR* f);
+	TCHAR* toString(const TCHAR* f) const;
 
 	/** Returns true if <code>o</code> is equal to this. */
 	bool equals(Query* o) const;
