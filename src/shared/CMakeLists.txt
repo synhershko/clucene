@@ -283,8 +283,17 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/util/StringBuffer.cpp
     	${rel}/CLucene/util/Misc.cpp
       ${rel}/CLucene/util/dirent.cpp
-      ${rel}/CLucene/util/deflate.cpp
-	)	
+      ${rel}/CLucene/util/zlib/adler32.c
+      ${rel}/CLucene/util/zlib/compress.c
+      ${rel}/CLucene/util/zlib/crc32.c
+      ${rel}/CLucene/util/zlib/deflate.c
+      ${rel}/CLucene/util/zlib/gzio.c
+      ${rel}/CLucene/util/zlib/inffast.c
+      ${rel}/CLucene/util/zlib/inflate.c
+      ${rel}/CLucene/util/zlib/inftrees.c
+      ${rel}/CLucene/util/zlib/trees.c
+      ${rel}/CLucene/util/zlib/zutil.c
+	)
 ENDMACRO (GET_SHARED_FILES)
 
 GET_SHARED_FILES(clucene_shared_Files ".")

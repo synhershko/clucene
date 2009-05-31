@@ -302,5 +302,10 @@ void Field::_resetValue() {
 	}
 	valueType=VALUE_NONE;
 }
-
+const char* Field::getObjectName() const{
+	return getClassName();
+}
+const char* Field::getClassName(){
+	return "Field";
+}
 CL_NS_END

@@ -211,10 +211,10 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
 
   while (rp < result + result_length && *sp!=0){
     size_t r = lucene_utf8towc(*rp,sp);
-	if ( r == -1 )
-		return 0;
-	sp += r;
-	rp++;
+    if ( r == -1 )
+      return 0;
+    sp += r;
+    rp++;
   }
 
   size_t ret = sp-str;
@@ -232,4 +232,16 @@ size_t lucene_utf8charlen(const unsigned char c)
 
   UTF8_COMPUTE (c, mask, len);
   return len;
+}
+//convert unicode string to a utf8 string
+std::string lucene_wcstoutf8string(const wchar_t* str){
+  int i = 0;
+  std::string result;
+  char p[6];
+
+  while (str[i] != 0){
+    result.append(p, lucene_wctoutf8(p,str[i++]));
+  }
+
+  return result;
 }

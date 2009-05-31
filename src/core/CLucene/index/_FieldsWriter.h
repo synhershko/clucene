@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_FieldsWriter_
@@ -15,7 +15,7 @@ CL_CLASS_DEF(store,RAMOutputStream)
 CL_CLASS_DEF(document,Document)
 CL_CLASS_DEF(document,Field)
 CL_CLASS_DEF(index,FieldInfos)
-//#include "FieldInfos.h"
+#include "CLucene/util/Array.h"
 
 CL_NS_DEF(index)
 class FieldsWriter :LUCENE_BASE{
@@ -26,6 +26,8 @@ private:
 	CL_NS(store)::IndexOutput* indexStream;
 
 	bool doClose;
+
+  static void compress(const CL_NS(util)::ValueArray<uint8_t>& input, CL_NS(util)::ValueArray<uint8_t>& output);
 
 public:
 	LUCENE_STATIC_CONSTANT(uint8_t, FIELD_IS_TOKENIZED = 0x1);

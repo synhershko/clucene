@@ -7,6 +7,7 @@
 #include "CLucene/_ApiHeader.h"
 #include "Misc.h"
 #include <assert.h>
+#include <iostream>
 
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
@@ -30,6 +31,18 @@
 #include <cctype>
 #include <limits.h>
 #include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
+
+//for zlib...
+#include "zlib/zlib.h"
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
+#  include <fcntl.h>
+#  include <io.h>
+#  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#else
+#  define SET_BINARY_MODE(file)
+#endif
+#define CL_Z_DEFAULT_CHUNK 1024
+
 
 #ifdef _CL_HAVE_FUNCTION_SLEEP
 	//don't ignore windows.h... breaks mingw32 in some cases. Define Sleep instead
@@ -436,6 +449,160 @@ std::string Misc::toString(const float_t value){
   char buf[20];
   _snprintf(buf,20,"%0.2f",(double)value);
   return buf;
+}
+
+void Misc::zerr(int ret, string& err)
+{
+  switch (ret) {
+  case Z_ERRNO:
+    err = "error occurred while reading or writing from the zlib streams";
+    break;
+  case Z_STREAM_ERROR:
+    err = "invalid compression level";
+    break;
+  case Z_DATA_ERROR:
+    err = "invalid or incomplete deflate data";
+    break;
+  case Z_MEM_ERROR:
+    err = "out of memory";
+    break;
+  case Z_VERSION_ERROR:
+    err ="zlib version mismatch";
+  }
+}
+
+
+
+/* Compress from file source to file dest until EOF on source.
+   def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
+   allocated for processing, Z_STREAM_ERROR if an invalid compression
+   level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
+   version of the library linked do not match, or Z_ERRNO if there is
+   an error reading or writing the files. */
+bool Misc::deflate(const uint8_t* in, size_t inlen, std::ostream& dest, string& err, int CHUNK, int level)
+{
+  int ret, flush;
+  unsigned have;
+  z_stream strm;
+  if ( level == -1 ) level = Z_BEST_COMPRESSION;
+  if ( CHUNK == -1 ) CHUNK = CL_Z_DEFAULT_CHUNK;
+  uint8_t* out = (uint8_t*)malloc(CHUNK);
+
+  /* allocate deflate state */
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  ret = deflateInit(&strm, level);
+  if (ret != Z_OK){
+    free(out);
+    zerr(ret, err);
+    return false;
+  }
+
+  /* compress until end of file */
+  do {
+    strm.avail_in = inlen;
+    strm.next_in = (uint8_t*)in;
+    flush = Z_FINISH;
+
+    /* run deflate() on input until output buffer not full, finish
+       compression if all of source has been read in */
+    do {
+      strm.avail_out = CHUNK;
+      strm.next_out = out;
+      ret = ::deflate(&strm, flush);  /* no bad return value */
+      assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+      have = CHUNK - strm.avail_out;
+      dest.write( (char*)out,have);
+      if ( dest.fail() ) {
+        (void)deflateEnd(&strm);
+        free(out);
+        zerr(Z_ERRNO, err);
+        return false;
+      }
+    } while (strm.avail_out == 0);
+    assert(strm.avail_in == 0);   /* all input will be used */
+
+    /* done when last data in file processed */
+  } while (flush != Z_FINISH);
+  assert(ret == Z_STREAM_END);    /* stream will be complete */
+
+  /* clean up and return */
+  (void)deflateEnd(&strm);
+  free(out);
+  return true;
+}
+
+/* Decompress from file source to file dest until stream ends or EOF.
+   inf() returns Z_OK on success, Z_MEM_ERROR if memory could not be
+   allocated for processing, Z_DATA_ERROR if the deflate data is
+   invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
+   the version of the library linked do not match, or Z_ERRNO if there
+   is an error reading or writing the files. */
+bool Misc::inflate(const uint8_t* in, size_t inlen, std::ostream& dest, string& err, int CHUNK)
+{
+  int ret;
+  unsigned have;
+  z_stream strm;
+  if ( CHUNK == -1 ) CHUNK = CL_Z_DEFAULT_CHUNK;
+  uint8_t* out = (uint8_t*)malloc(CHUNK);
+
+  /* allocate inflate state */
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  strm.avail_in = 0;
+  strm.next_in = Z_NULL;
+  ret = inflateInit(&strm);
+  if (ret != Z_OK){
+    free(out);
+    zerr(ret, err);
+    return false;
+  }
+
+  /* decompress until deflate stream ends or end of file */
+  do {
+    strm.avail_in = inlen;
+    if (strm.avail_in == 0)
+      break;
+    strm.next_in = (uint8_t*)in;
+
+    /* run inflate() on input until output buffer not full */
+    do {
+      strm.avail_out = CHUNK;
+      strm.next_out = out;
+      ret = ::inflate(&strm, Z_NO_FLUSH);
+      assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+      switch (ret) {
+      case Z_NEED_DICT:
+        ret = Z_DATA_ERROR;   /* and fall through */
+      case Z_DATA_ERROR:
+      case Z_MEM_ERROR:
+        (void)inflateEnd(&strm);
+        free(out);
+        zerr(ret, err);
+        return false;
+      }
+      have = CHUNK - strm.avail_out;
+      dest.write( (char*)out,have);
+      if ( dest.fail() ) {
+        (void)inflateEnd(&strm);
+        free(out);
+        zerr(Z_ERRNO, err);
+        return false;
+      }
+    } while (strm.avail_out == 0);
+
+    /* done when inflate() says it's done */
+  } while (ret != Z_STREAM_END);
+
+  /* clean up and return */
+  (void)inflateEnd(&strm);
+  free(out);
+  if ( ret == Z_STREAM_END )
+    return true;
+  zerr(Z_DATA_ERROR, err);
+  return false;
 }
 
 CL_NS_END

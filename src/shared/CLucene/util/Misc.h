@@ -13,6 +13,7 @@ CL_NS_DEF(util)
   /** A class containing various functions.
   */
   class CLUCENE_SHARED_EXPORT Misc{
+    static void zerr(int ret, std::string& err);
   public:
     static uint64_t currentTimeMillis();
     static const TCHAR* replace_all( const TCHAR* val, const TCHAR* srch, const TCHAR* repl );
@@ -78,6 +79,16 @@ CL_NS_DEF(util)
 		* @param bool fullPath True to return entire path
 		*/
 		static bool listFiles(const char* dir, std::vector<std::string>& files, bool fullPath=false);
+
+    /** uncompress the source stream into the dest stream.
+    * Default CHUNK size is 1k
+    */
+    static bool inflate(const uint8_t* source, size_t sourcelen, std::ostream& dest, std::string& err, int CHUNK=-1);
+    /** compress the source stream into the dest stream.
+    * Default CHUNK size is 1k
+    * Default level is Z_BEST_COMPRESSION
+    */
+    static bool deflate(const uint8_t* source, size_t sourcelen, std::ostream& dest, std::string& err, int CHUNK=-1, int level=-1);
   };
 
 CL_NS_END
