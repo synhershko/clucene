@@ -125,7 +125,6 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Library Output Directory" FORCE)
 
 #add tests
-#todo: why does 'make test' not work???
 ENABLE_TESTING()
 ADD_TEST(SimpleTest ${EXECUTABLE_OUTPUT_PATH}/cl_test )
 
