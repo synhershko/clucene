@@ -31,10 +31,6 @@ CL_NS_DEF(search)
 	//Post - The instance has been created
 
 		CND_PRECONDITION(tps != NULL,"tps is NULL");
-		
-		//norms are only used if phraseFreq returns more than 0.0
-		//phraseFreq should only return more than 0.0 if norms != NULL
-		//CND_PRECONDITION(n != NULL,"n is NULL");
 
 		// convert tps to a list of phrase positions.
 		// note: phrase-position differs from term-position in that its position

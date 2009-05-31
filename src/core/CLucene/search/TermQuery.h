@@ -7,19 +7,12 @@
 #ifndef _lucene_search_TermQuery_
 #define _lucene_search_TermQuery_
 
-
-//#include "SearchHeader.h"
-//#include "Scorer.h"
 CL_CLASS_DEF(index,Term)
-//#include "TermScorer.h"
-#include "Query.h"
-//#include "CLucene/index/IndexReader.h"
 CL_CLASS_DEF(util,StringBuffer)
-//#include "CLucene/index/Terms.h"
+
+#include "Query.h"
 
 CL_NS_DEF(search)
-
-
     /** A Query that matches documents containing a term.
 	This may be combined with other terms with a {@link BooleanQuery}.
 	*/
@@ -32,17 +25,18 @@ CL_NS_DEF(search)
 	public:
 		// Constructs a query for the term <code>t</code>. 
 		TermQuery(CL_NS(index)::Term* t);
-		~TermQuery();
+		virtual ~TermQuery();
 
 		static const char* getClassName();
 		const char* getObjectName() const;
 	    
-		//added by search highlighter
+		/** Returns the term of this query. */
 		CL_NS(index)::Term* getTerm(bool pointer=true) const;
 	    
-		// Prints a user-readable version of this query. 
+		/** Prints a user-readable version of this query. */
 		TCHAR* toString(const TCHAR* field) const;
 
+		/** Returns true if <code>o</code> is equal to this. */
 		bool equals(Query* other) const;
 		Query* clone() const;
 

@@ -36,7 +36,7 @@ CL_NS_DEF(search)
 	}
 
 	TermScorer::~TermScorer(){
-		_CLDELETE(termDocs);
+		_CLLDELETE(termDocs);
 	}
   bool TermScorer::next(){
     pointer++;

@@ -54,7 +54,7 @@ DONE ISH	index\TermVectorsReader.java
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
-DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests. _tcstod.
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
 DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
@@ -71,7 +71,7 @@ WORKING ISH	search\ConstantScoreQuery.java
 WORKING ISH	search\ConstantScoreRangeQuery.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
-WORKING ISH	search\ExactPhraseScorer.java
+DONE ISH	search\ExactPhraseScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
@@ -98,7 +98,7 @@ DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
 DONE BEN	search\PhraseQueue.java
-WORKING ISH	search\PhraseScorer.java
+DONE ISH	search\PhraseScorer.java
 DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
 ?	search\QueryFilter.java
 ?	search\QueryTermVector.java
@@ -108,8 +108,8 @@ DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for
 ?	search\Searchable.java			- Any idea why the explain() function in Searchable and derived differs from Java (accepts Query* instead of Weight*)? can we safely confrom with Java now?
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
-WORKING ISH	search\SloppyPhraseScorer.java		- Is this finished? Looks like some work was done in a patch
-?	search\TermQuery.java
+DONE ISH	search\SloppyPhraseScorer.java
+DONE ISH	search\TermQuery.java			- Missing implementation for extractTerms(Set)
 ?	search\TopDocCollector.java
 ?	search\TopFieldDocCollector.java
 

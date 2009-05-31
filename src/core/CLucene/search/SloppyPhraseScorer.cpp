@@ -57,7 +57,7 @@ CL_NS_DEF(search)
 			  tpsDiffer = !pp->repeats || termPositionsDiffer(pp);
 		  }
 
-		  int32_t matchLength = end - start;
+		  const int32_t matchLength = end - start;
 		  if (matchLength <= slop)
 			  freq += getSimilarity()->sloppyFreq(matchLength); // score match
 
@@ -107,8 +107,8 @@ CL_NS_DEF(search)
 					  pp2->repeats = true;
 					  m->put(pp,NULL);
 					  m->put(pp2,NULL);
-						}
-					}
+				  }
+			  }
 		  }
 		  if (m!=NULL) {
 			  repeatsLen = m->size();
@@ -119,7 +119,7 @@ CL_NS_DEF(search)
 				  repeats[pos] = itr->first;
 				  ++itr;
 				  ++pos;
-					}
+			  }
 			  repeats[repeatsLen + 1] = NULL; // NULL terminate the array
 		  }
 		  delete m;
