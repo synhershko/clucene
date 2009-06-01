@@ -295,10 +295,9 @@ void QueryParser::addClause(std::vector<BooleanClause*>& clauses, int32_t conj, 
   }
 }
 
-Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) {
+Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
   // Use the analyzer to get all the tokens, and then build a TermQuery,
   // PhraseQuery, or nothing based on the term count
-  TCHAR* queryText = (TCHAR*)_queryText; //TODO: this is horrible, getFieldQuery shouldn't consume queryText!!!!
 
   StringReader reader(queryText);
   TokenStream* source = analyzer->tokenStream(_field, &reader);
@@ -408,7 +407,7 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* _queryText) 
   }
 }
 
-Query* QueryParser::getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop) {
+Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText, const int32_t slop) {
   Query* query = getFieldQuery(_field, queryText);
 
   if (query) {

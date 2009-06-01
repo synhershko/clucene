@@ -28,7 +28,7 @@ MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** _fields, CL_NS(analys
 MultiFieldQueryParser::~MultiFieldQueryParser(){
 }
 
-Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, const TCHAR* queryText, const int32_t slop){
+Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, TCHAR* queryText, const int32_t slop){
 	if (field == NULL) {
 		vector<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {

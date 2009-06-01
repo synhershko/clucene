@@ -63,8 +63,8 @@ public:
 
 
 protected:
-  CL_NS(search)::Query* getFieldQuery(const TCHAR* field, const TCHAR* queryText, const int32_t slop);
-  CL_NS(search)::Query* getFieldQuery(const TCHAR* field, const TCHAR* queryText) { return getFieldQuery(field,queryText,0); }
+  CL_NS(search)::Query* getFieldQuery(const TCHAR* field, TCHAR* queryText, const int32_t slop);
+  CL_NS(search)::Query* getFieldQuery(const TCHAR* field, TCHAR* queryText) { return getFieldQuery(field,queryText,0); }
   CL_NS(search)::Query* getFuzzyQuery(const TCHAR* field, TCHAR* termStr, const float_t minSimilarity);
   CL_NS(search)::Query* getPrefixQuery(const TCHAR* field, TCHAR* termStr);
   CL_NS(search)::Query* getWildcardQuery(const TCHAR* field, TCHAR* termStr);
