@@ -362,7 +362,7 @@ TermDocs* MultiSegmentReader::termDocs() {
 
 TermPositions* MultiSegmentReader::termPositions() {
     ensureOpen();
-	TermPositions* ret = (TermPositions*)_CLNEW MultiTermPositions(subReaders, starts);
+	TermPositions* ret = static_cast<TermPositions*>(_CLNEW MultiTermPositions(subReaders, starts));
 	return ret;
 }
 

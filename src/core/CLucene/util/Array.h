@@ -190,9 +190,7 @@ public:
     this->deleteArray();
 	}
   void deleteValue(T v){} //nothing to do...
-	virtual ~ValueArray(){
-	  deleteValues();
-	}
+  virtual ~ValueArray(){/*deleteValues();*/}
 };
 
 /** A value array for const values (never deleted) */

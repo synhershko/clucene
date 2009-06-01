@@ -4,8 +4,8 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#ifndef _lucene_search_PriorityQueue_
-#define _lucene_search_PriorityQueue_
+#ifndef _lucene_search_PhraseQueue_
+#define _lucene_search_PhraseQueue_
 
 
 #include "CLucene/util/PriorityQueue.h"

@@ -203,7 +203,7 @@ protected:
   TermDocs* termDocs(IndexReader* reader);
 public:
   MultiTermPositions(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, const int32_t* s);
-  ~MultiTermPositions() {};
+  virtual ~MultiTermPositions() {};
   int32_t nextPosition();
 
   /**

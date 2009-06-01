@@ -35,10 +35,11 @@ PARTIAL BEN	index\FieldsWriter.java - still need gzip impl
 PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
 DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
 DONE ISH/BEN index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
+DONE ISH	index\MultipleTermPositions.java			- IntQueue::sort is not implemented yet
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
-DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests. _tcstod.
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
 DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
@@ -55,7 +56,7 @@ WORKING ISH	search\ConstantScoreQuery.java
 WORKING ISH	search\ConstantScoreRangeQuery.java
 ?	search\DefaultSimilarity.java
 ?	search\DisjunctionMaxQuery.java
-WORKING ISH	search\ExactPhraseScorer.java
+DONE ISH	search\ExactPhraseScorer.java
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
 ?	search\FieldCache.java
@@ -75,12 +76,11 @@ DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFi
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
 DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
-WORKING ISH	search\MultiPhraseQuery.java
+DONE ISH	search\MultiPhraseQuery.java	- Complete TODOs (2 unported functions, test hashCode(), clone(), and decide on memory contract for rewrite)
 ?	search\MultiSearcher.java
 DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
-WORKING ISH	search\PhraseScorer.java
 DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
 ?	search\QueryFilter.java
 ?	search\QueryTermVector.java
@@ -89,8 +89,8 @@ DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extr
 ?	search\Searchable.java			- Any idea why the explain() function in Searchable and derived differs from Java (accepts Query* instead of Weight*)? can we safely confrom with Java now?
 ?	search\Similarity.java
 ?	search\SimilarityDelegator.java
-WORKING ISH	search\SloppyPhraseScorer.java		- Is this finished? Looks like some work was done in a patch
-?	search\TermQuery.java
+DONE ISH	search\SloppyPhraseScorer.java
+DONE ISH	search\TermQuery.java			- Missing implementation for extractTerms(Set)
 ?	search\TopDocCollector.java
 ?	search\TopFieldDocCollector.java
 
@@ -173,7 +173,6 @@ DONE ISH	document\FieldSelector.java
 DONE ISH	document\FieldSelectorResult.java
 DONE ISH	document\LoadFirstFieldSelector.java
 DONE ISH	document\NumberTools.java
-
 DONE BEN	document\MapFieldSelector.java
 DONE BEN	document\SetBasedFieldSelector.java (Irrelevent, actually, we achive both in MapFieldSelector)
 
@@ -185,7 +184,6 @@ DONE BEN	index\StaleReaderException.java
 DONE BEN	index\TermBuffer.java (actually, not nessary, Term has the same functionality)
 DONE BEN	index\TermInfosWriter.java
 DONE ISH	index\FieldInfo.java
-DONE ISH	index\MultipleTermPositions.java
 DONE ISH	index\SegmentMergeInfo.java
 DONE ISH	index\SegmentMergeQueue.java
 DONE ISH	index\SegmentTermVector.java
@@ -235,12 +233,12 @@ DONE BEN	index\SegmentTermDocs.java
 DONE BEN	index\SegmentTermEnum.java
 DONE ISH	index\SegmentTermPositionVector.java
 DONE BEN	index\SerialMergeScheduler.java
-
 DONE BEN	index\TermVectorEntry.java
 DONE BEN	index\TermVectorsWriter.java
 
 
 DONE BEN	search\PhraseQueue.java
+DONE ISH	search\PhraseScorer.java
 DONE ISH	search\DisjunctionSumScorer.java
 DONE ISH	search\ComplexExplanation.java
 DONE BEN	search\HitQueue.java                - no changes
@@ -259,8 +257,7 @@ DONE BEN	search\SortComparatorSource.java
 DONE BEN	search\TopFieldDocs.java			- no changes
 DONE BEN	search\WildcardQuery.java
 DONE BEN	search\WildcardTermEnum.java		- no changes
-DONE ISH	search\BooleanClause.java
-
+DONE ISH	search\BooleanClause.java			- Should we change the flags in Occur to be named with an OCCUR_ prefix, since they're being used as BooleanClause::SHOULD all throughout the code?
 DONE BEN  search\RangeFilter.java   - no changes
 BEN DONE  search\PrefixFilter.java      - all done
 BEN DONE  search\SortField.java
