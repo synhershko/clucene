@@ -284,8 +284,7 @@ CL_NS_DEF(store)
 
   IndexInput* RAMInputStream::clone() const
   {
-    RAMInputStream* ret = _CLNEW RAMInputStream(*this);
-    return ret;
+    return _CLNEW RAMInputStream(*this);
   }
 
   int64_t RAMInputStream::length() const {

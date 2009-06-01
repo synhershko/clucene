@@ -8,7 +8,7 @@
 
 #include "IndexReader.h"
 #include "CLucene/document/Document.h"
-#include "CLucene/document/_FieldSelector.h"
+#include "CLucene/document/FieldSelector.h"
 #include "Term.h"
 #include "Terms.h"
 #include "CLucene/util/PriorityQueue.h"

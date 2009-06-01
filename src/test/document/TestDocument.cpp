@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include "CLucene/document/_FieldSelector.h"
+#include "CLucene/document/FieldSelector.h"
 
 //an in memory input stream for testing binary data
 class MemReader: public CL_NS(util)::Reader{
