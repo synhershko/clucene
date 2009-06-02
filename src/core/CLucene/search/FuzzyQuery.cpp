@@ -8,366 +8,459 @@
 #include "CLucene/index/Term.h"
 #include "CLucene/index/IndexReader.h"
 #include "Similarity.h"
-#include "CLucene/util/StringBuffer.h"
 #include "FuzzyQuery.h"
+#include "BooleanQuery.h"
+#include "BooleanClause.h"
+#include "TermQuery.h"
+
+#include "CLucene/util/StringBuffer.h"
+#include "CLucene/util/PriorityQueue.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
   
-	/** Finds and returns the smallest of three integers 
-		precondition: Must define int32_t __t for temporary storage and result
-	*/
-	#define min3(a, b, c) __t = (a < b) ? a : b; __t = (__t < c) ? __t : c;
+/** Finds and returns the smallest of three integers 
+ *	precondition: Must define int32_t __t for temporary storage and result
+ */
+#define min3(a, b, c) __t = (a < b) ? a : b; __t = (__t < c) ? __t : c;
 
 
-	/**
-     * Constructor for enumeration of all terms from specified <code>reader</code> which share a prefix of
-     * length <code>prefixLength</code> with <code>term</code> and which have a fuzzy similarity &gt;
-     * <code>minSimilarity</code>. 
-     * 
-     * @param reader Delivers terms.
-     * @param term Pattern term.
-     * @param minSimilarity Minimum required similarity for terms from the reader. Default value is 0.5f.
-     * @param prefixLength Length of required common prefix. Default value is 0.
-     * @throws IOException
-     */
-	 FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
-        distance(0),
-        _endEnum(false),
-		prefix(STRDUP_TtoT(LUCENE_BLANK_STRING)),
-		prefixLength(0),
+	FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t _prefixLength): 
+		FilteredTermEnum(),d(NULL),dWidth(0),dHeight(0),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
+		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(_prefixLength),
 		minimumSimilarity(minSimilarity)
 	{
-	//Func - Constructor
-	//Pre  - reader contains a valid reference to an IndexReader
-	//       term != NULL
-	//Post - The instance has been created
-
 		CND_PRECONDITION(term != NULL,"term is NULL");
-		
-		scale_factor = 1.0f / (1.0f - minimumSimilarity);
-		searchTerm = _CL_POINTER(term);
-		
-		text = STRDUP_TtoT(term->text());
-		textLen = term->textLength();
-		
-		
+
+		if (minSimilarity >= 1.0f)
+			_CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity cannot be greater than or equal to 1");
+		else if (minSimilarity < 0.0f)
+			_CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity cannot be less than 0");
+		if(_prefixLength < 0)
+			_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength cannot be less than 0");
+
+		scale_factor = 1.0f / (1.0f - minimumSimilarity); // only now we are safe from a division by zero
+		//TODO: this.field = searchTerm.field();
+
+		//The prefix could be longer than the word.
+		//It's kind of silly though.  It means we must match the entire word.
+		const size_t fullSearchTermLength = searchTerm->textLength();
+		const size_t realPrefixLength = prefixLength > fullSearchTermLength ? fullSearchTermLength : prefixLength;
+
+		text = STRDUP_TtoT(searchTerm->text() + realPrefixLength);
+		textLen = fullSearchTermLength - realPrefixLength;
+
+		// TODO: what is safer to use, prefixLength or realPrefixLength?
+		prefix = _CL_NEWARRAY(TCHAR,realPrefixLength+1);
+		_tcsncpy(prefix, searchTerm->text(), realPrefixLength);
+		prefix[realPrefixLength]='\0';
+
+		initializeMaxDistances();
+		dWidth = LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX; // default length of the d array
+		dHeight = textLen + 1;
+
+		Term* trm = _CLNEW Term(searchTerm->field(), prefix, true); // _CLNEW Term(term, prefix); -- not intern'd?
+		setEnum(reader->terms(trm));
+		_CLDECDELETE(trm);
+
+
+		/* LEGACY:
 		//Initialize e to NULL
 		e          = NULL;
 		eWidth     = 0;
 		eHeight    = 0;
-		
+
 		if(prefixLength > 0 && prefixLength < textLen){
-			this->prefixLength = prefixLength;
-		
-			prefix = _CL_NEWARRAY(TCHAR,prefixLength+1);
-			_tcsncpy(prefix,text,prefixLength);
-			prefix[prefixLength]='\0';
-		
-			textLen = prefixLength;
-			text[textLen]='\0';
+		this->prefixLength = prefixLength;
+
+		prefix = _CL_NEWARRAY(TCHAR,prefixLength+1);
+		_tcsncpy(prefix,text,prefixLength);
+		prefix[prefixLength]='\0';
+
+		textLen = prefixLength;
+		text[textLen]='\0';
 		}
-		
-		
-		//Set the enumeration 
-		Term* trm = _CLNEW Term(term, prefix);
-		setEnum(reader->terms(trm));
-		_CLDECDELETE(trm);
-  }
-
-  FuzzyTermEnum::~FuzzyTermEnum(){
-  //Func - Destructor
-  //Pre  - true
-  //Post - FuzzyTermEnum has been destroyed
-
-	  //Close the enumeration
-	  close();
-  }
+		*/
+	}
+	
+	FuzzyTermEnum::~FuzzyTermEnum(){
+		close();
+	}
 
 	const char* FuzzyTermEnum::getObjectName() const{ return getClassName(); }
 	const char* FuzzyTermEnum::getClassName(){ return "FuzzyTermEnum"; }
 
-  bool FuzzyTermEnum::endEnum() {
-  //Func - Returns the fact if the current term in the enumeration has reached the end
-  //Pre  - true
-  //Post - The boolean value of endEnum has been returned
+	bool FuzzyTermEnum::endEnum() {
+		return _endEnum;
+	}
 
-      return _endEnum;
-  }
+	void FuzzyTermEnum::close(){
 
-  void FuzzyTermEnum::close(){
-  //Func - Close the enumeration
-  //Pre  - true
-  //Post - The enumeration has been closed
+		FilteredTermEnum::close();
 
-      FilteredTermEnum::close();
-	  
-      //Finalize the searchTerm
-      _CLDECDELETE(searchTerm);
-	  //Destroy e
-      _CLDELETE_ARRAY(e);
+		//Finalize the searchTerm
+		_CLDECDELETE(searchTerm);
 
-	  _CLDELETE_CARRAY(text);
+		free(d);
+		d=NULL;
 
-	  _CLDELETE_CARRAY(prefix);
-  }
+		_CLDELETE_CARRAY(text);
 
-  bool FuzzyTermEnum::termCompare(Term* term) {
-  //Func - Compares term with the searchTerm using the Levenshtein distance.
-  //Pre  - term is NULL or term points to a Term
-  //Post - if pre(term) is NULL then false is returned otherwise
-  //       if the distance of the current term in the enumeration is bigger than the FUZZY_THRESHOLD
-  //       then true is returned 
-	  
-	  if (term == NULL){
-		  return false;  //Note that endEnum is not set to true!
-	  }
+		_CLDELETE_CARRAY(prefix);
+	}
 
-	  const TCHAR* termText = term->text();
-	  size_t termTextLen = term->textLength();
+	bool FuzzyTermEnum::termCompare(Term* term) {
+		//Func - Compares term with the searchTerm using the Levenshtein distance.
+		//Pre  - term is NULL or term points to a Term
+		//Post - if pre(term) is NULL then false is returned otherwise
+		//       if the distance of the current term in the enumeration is bigger than the FUZZY_THRESHOLD
+		//       then true is returned 
 
-		  //Check if the field name of searchTerm of term match
-		  //(we can use == because fields are interned)
-      if ( searchTerm->field() == term->field() && 
-		  	(prefixLength==0 || _tcsncmp(termText,prefix,prefixLength)==0 )) {
+		if (term == NULL){
+			return false;  //Note that endEnum is not set to true!
+		}
 
-			const TCHAR* target = termText+prefixLength;
-			size_t targetLen = termTextLen-prefixLength;
+		const TCHAR* termText = term->text();
+		const size_t termTextLen = term->textLength();
 
-		    //Calculate the Levenshtein distance
-			int32_t dist = editDistance(text, target, textLen, targetLen);
-			distance = 1 - ((float_t)dist / (float_t)cl_min(textLen, targetLen));
-			return (distance > minimumSimilarity);
-      }
+		//Check if the field name of searchTerm of term match
+		//(we can use == because fields are interned)
+		if ( searchTerm->field() == term->field() && 
+			(prefixLength==0 || _tcsncmp(termText,prefix,prefixLength)==0 )) {
+
+				const TCHAR* target = termText+prefixLength;
+				const size_t targetLen = termTextLen-prefixLength;
+				_similarity = similarity(target, targetLen);
+				return (_similarity > minimumSimilarity);
+
+				/* LEGACY:
+				//Calculate the Levenshtein distance
+				int32_t dist = editDistance(text, target, textLen, targetLen);
+				distance = 1 - ((float_t)dist / (float_t)cl_min(textLen, targetLen));
+				return (distance > minimumSimilarity);
+				*/
+		}
 		_endEnum = true;
 		return false;
-  }
+	}
 
-  float_t FuzzyTermEnum::difference() {
-  //Func - Returns the difference between the distance and the fuzzy threshold
-  //       multiplied by the scale factor
-  //Pre  - true
-  //Post - The difference is returned
+	float_t FuzzyTermEnum::difference() {
+		return (float_t)((_similarity - minimumSimilarity) * scale_factor );
+	}
 
-     return (float_t)((distance - minimumSimilarity) * scale_factor );
-  }
-  
+	// TODO: had synchronized in definition
+	float_t FuzzyTermEnum::similarity(const TCHAR* target, const size_t m) {
+		const size_t n = textLen; // TODO: remove after replacing n with textLen
+		if (n == 0)  {
+			//we don't have anything to compare.  That means if we just add
+			//the letters for m we get the new word
+			return prefixLength == 0 ? 0.0f : 1.0f - ((float_t) m / prefixLength);
+		}
+		if (m == 0) {
+			return prefixLength == 0 ? 0.0f : 1.0f - ((float_t) n / prefixLength);
+		}
 
-  int32_t FuzzyTermEnum::editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m) {
-  //Func - Calculates the Levenshtein distance also known as edit distance is a measure of similiarity
-  //       between two strings where the distance is measured as the number of character
-  //       deletions, insertions or substitutions required to transform one string to
-  //       the other string.
-  //Pre  - s != NULL and contains the source string
-  //       t != NULL and contains the target string
-  //       n >= 0 and contains the length of the source string
-  //       m >= 0 and containts the length of th target string
-  //Post - The distance has been returned
+		const int32_t maxDistance = getMaxDistance(m);
 
-      CND_PRECONDITION(s != NULL, "s is NULL");
-      CND_PRECONDITION(t != NULL, "t is NULL");
-	  CND_PRECONDITION(n >= 0," n is a negative number");
-	  CND_PRECONDITION(n >= 0," n is a negative number");
+		if (maxDistance < abs((int32_t)(m-n))) {
+			//just adding the characters of m to n or vice-versa results in
+			//too many edits
+			//for example "pre" length is 3 and "prefixes" length is 8.  We can see that
+			//given this optimal circumstance, the edit distance cannot be less than 5.
+			//which is 8-3 or more precisesly Math.abs(3-8).
+			//if our maximum edit distance is 4, then we can discard this word
+			//without looking at it.
+			return 0.0f;
+		}
 
-      int32_t i;     // iterates through s
-      int32_t j;     // iterates through t
-      TCHAR s_i; // ith character of s
+		//let's make sure we have enough room in our array to do the distance calculations.
+		//Check if the array must be reallocated because it is too small or does not exist
 
-      if (n == 0) 
-          return m;
-      if (m == 0) 
-          return n;
+		// TODO:	realloc should be able to allocate memory for NULL pointers; if thats the case the NULL
+		//			check here is redundant
+		if (d == NULL){
+			dWidth  = cl_max(dWidth, n+1);
+			dHeight = cl_max(dHeight, m+1);
+			d = reinterpret_cast<int32_t*>(malloc(sizeof(int32_t)*dWidth*dHeight));
+		} else if (dWidth <= n || dHeight <= m) {
+			//growDistanceArray
+			dWidth  = cl_max(dWidth, n+1);
+			dHeight = cl_max(dHeight, m+1);
+			d = reinterpret_cast<int32_t*>(realloc(d, sizeof(int32_t)*dWidth*dHeight));
+		}
 
-	//Check if the array must be reallocated because it is too small or does not exist
-    if (e == NULL || eWidth <= n || eHeight <= m) {
-        //Delete e if possible
-        _CLDELETE_ARRAY(e);
-        //resize e
-		eWidth  = cl_max(eWidth, n+1);
-        eHeight = cl_max(eHeight, m+1);
-        e = _CL_NEWARRAY(int32_t,eWidth*eHeight);
-    }
-    
-    CND_CONDITION(e != NULL,"e is NULL");
+		size_t i;     // iterates through the source string
+		size_t j;     // iterates through the target string
 
-    // init matrix e
-	for (i = 0; i <= n; i++){
-        e[i + (0*eWidth)] = i;
-    }
-	for (j = 0; j <= m; j++){
-        e[0 + (j*eWidth)] = j;
-    }
+		// init matrix d
+		for (i = 0; i <= n; i++){
+			d[i + (0*dWidth)] = i;
+		}
+		for (j = 0; j <= m; j++){
+			d[0 + (j*dWidth)] = j;
+		}
 
-	int32_t __t; //temporary variable for min3
+		int32_t __t; //temporary variable for min3
 
-    // start computing edit distance
-    for (i = 1; i <= n; i++) {
-        s_i = s[i - 1];
-        for (j = 1; j <= m; j++) {
-			if (s_i != t[j-1]){
-				min3(e[i + (j*eWidth) - 1], e[i + ((j-1)*eWidth)], e[i + ((j-1)*eWidth)-1]);
-                e[i + (j*eWidth)] = __t+1;
-			}else{
-				min3(e[i + (j*eWidth) -1]+1, e[i + ((j-1)*eWidth)]+1, e[i + ((j-1)*eWidth)-1]);
-                e[i + (j*eWidth)] = __t;
+		// start computing edit distance
+		TCHAR s_i; // ith character of s
+		for (i = 1; i <= n; i++) {
+			int32_t bestPossibleEditDistance = m;
+			s_i = text[i - 1];
+			for (j = 1; j <= m; j++) {
+				if (s_i != target[j-1]) {
+					min3(d[i-1 + (j*dWidth)], d[i + ((j-1)*dWidth)], d[i-1 + ((j-1)*dWidth)]);
+					d[i + (j*dWidth)] = __t+1;
+				}
+				else {
+					min3(d[i-1 + (j*dWidth)]+1, d[i + ((j-1)*dWidth)]+1, d[i-1 + ((j-1)*dWidth)]);
+					d[i + (j*dWidth)] = __t;
+				}
+				bestPossibleEditDistance = cl_min(bestPossibleEditDistance, d[i + (j*dWidth)]);
 			}
-        }
-    }
 
-    // we got the result!
-    return e[n + ((m)*eWidth)];
-  }
+			//After calculating row i, the best possible edit distance
+			//can be found by finding the smallest value in a given column.
+			//If the bestPossibleEditDistance is greater than the max distance, abort.
+
+			if (i > maxDistance && bestPossibleEditDistance > maxDistance) {  //equal is okay, but not greater
+				//the closest the target can be to the text is just too far away.
+				//this target is leaving the party early.
+				return 0.0f;
+			}
+		}
+
+		// this will return less than 0.0 when the edit distance is
+		// greater than the number of characters in the shorter word.
+		// but this was the formula that was previously used in FuzzyTermEnum,
+		// so it has not been changed (even though minimumSimilarity must be
+		// greater than 0.0)
+		return 1.0f - ((float_t)d[n + m*dWidth] / (float_t) (prefixLength + cl_min(n, m)));
+	}
+
+	int32_t FuzzyTermEnum::getMaxDistance(const size_t m) {
+		return (m < LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX) ? maxDistances[m] : calculateMaxDistance(m);
+	}
+
+	void FuzzyTermEnum::initializeMaxDistances() {
+		for (int32_t i = 0; i < LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX; i++) {
+			maxDistances[i] = calculateMaxDistance(i);
+		}
+	}
+
+	int32_t FuzzyTermEnum::calculateMaxDistance(const size_t m) const {
+		return (int32_t) ((1-minimumSimilarity) * (cl_min(textLen, m) + prefixLength));
+	}
+  
+	/* LEGACY:
+	int32_t FuzzyTermEnum::editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m) {
+		//Func - Calculates the Levenshtein distance also known as edit distance is a measure of similiarity
+		//       between two strings where the distance is measured as the number of character
+		//       deletions, insertions or substitutions required to transform one string to
+		//       the other string.
+		//Pre  - s != NULL and contains the source string
+		//       t != NULL and contains the target string
+		//       n >= 0 and contains the length of the source string
+		//       m >= 0 and containts the length of the target string
+		//Post - The distance has been returned
+
+		CND_PRECONDITION(s != NULL, "s is NULL");
+		CND_PRECONDITION(t != NULL, "t is NULL");
+		CND_PRECONDITION(n >= 0," n is a negative number");
+		CND_PRECONDITION(n >= 0," n is a negative number");
+
+		int32_t i;     // iterates through s
+		int32_t j;     // iterates through t
+		TCHAR s_i; // ith character of s
+
+		if (n == 0) 
+			return m;
+		if (m == 0) 
+			return n;
+
+		//Check if the array must be reallocated because it is too small or does not exist
+		if (e == NULL || eWidth <= n || eHeight <= m) {
+			//Delete e if possible
+			_CLDELETE_ARRAY(e);
+			//resize e
+			eWidth  = cl_max(eWidth, n+1);
+			eHeight = cl_max(eHeight, m+1);
+			e = _CL_NEWARRAY(int32_t,eWidth*eHeight);
+		}
+
+		CND_CONDITION(e != NULL,"e is NULL");
+
+		// init matrix e
+		for (i = 0; i <= n; i++){
+			e[i + (0*eWidth)] = i;
+		}
+		for (j = 0; j <= m; j++){
+			e[0 + (j*eWidth)] = j;
+		}
+
+		int32_t __t; //temporary variable for min3
+
+		// start computing edit distance
+		for (i = 1; i <= n; i++) {
+			s_i = s[i - 1];
+			for (j = 1; j <= m; j++) {
+				if (s_i != t[j-1]){
+					min3(e[i + (j*eWidth) - 1], e[i + ((j-1)*eWidth)], e[i + ((j-1)*eWidth)-1]);
+					e[i + (j*eWidth)] = __t+1;
+				}else{
+					min3(e[i + (j*eWidth) -1]+1, e[i + ((j-1)*eWidth)]+1, e[i + ((j-1)*eWidth)-1]);
+					e[i + (j*eWidth)] = __t;
+				}
+			}
+		}
+
+		// we got the result!
+		return e[n + ((m)*eWidth)];
+	}*/
+
+  class FuzzyQuery::ScoreTerm {
+  public:
+	  Term* term;
+	  float_t score;
+
+	  ScoreTerm(Term* _term, float_t _score):term(_term),score(_score){
+	  }
+	  virtual ~ScoreTerm(){
+	  }
+  };
+
+  class FuzzyQuery::ScoreTermQueue : public PriorityQueue<ScoreTerm*, CL_NS(util)::Deletor::Object<ScoreTerm> > {
+  public:
+	  ScoreTermQueue(int32_t size){
+		  initialize(size, true);
+	  }
+	  virtual ~ScoreTermQueue(){
+	  }
+
+  protected:
+	  bool lessThan(ScoreTerm* termA, ScoreTerm* termB) {
+		  if (termA->score == termB->score)
+			  return termA->term->compareTo(termB->term) > 0;
+		  else
+			  return termA->score < termB->score;
+	  }
+  };
 
 
-  /**
-   * Create a new FuzzyQuery that will match terms with a similarity 
-   * of at least <code>minimumSimilarity</code> to <code>term</code>.
-   * If a <code>prefixLength</code> &gt; 0 is specified, a common prefix
-   * of that length is also required.
-   * 
-   * @param term the term to search for
-   * @param minimumSimilarity a value between 0 and 1 to set the required similarity
-   *  between the query term and the matching terms. For example, for a
-   *  <code>minimumSimilarity</code> of <code>0.5</code> a term of the same length
-   *  as the query term is considered similar to the query term if the edit distance
-   *  between both terms is less than <code>length(term)*0.5</code>
-   * @param prefixLength length of common (non-fuzzy) prefix
-   * @throws IllegalArgumentException if minimumSimilarity is &gt; 1 or &lt; 0
-   * or if prefixLength &lt; 0 or &gt; <code>term.text().length()</code>.
-   */
-  FuzzyQuery::FuzzyQuery(Term* term, float_t minimumSimilarity, size_t prefixLength):
-	MultiTermQuery(term)
+  FuzzyQuery::FuzzyQuery(Term* term, float_t _minimumSimilarity, size_t _prefixLength):
+  MultiTermQuery(term),minimumSimilarity(_minimumSimilarity),prefixLength(_prefixLength)
   {
-  //Func - Constructor
-  //Pre  - term != NULL
-  //Post - The instance has been created
-        if ( minimumSimilarity < 0 )
-            minimumSimilarity = defaultMinSimilarity;
+	  if ( minimumSimilarity < 0 )
+		  minimumSimilarity = defaultMinSimilarity;
 
-	    CND_PRECONDITION(term != NULL,"term is NULL");
+	  CND_PRECONDITION(term != NULL,"term is NULL");
 
-	    if (minimumSimilarity > 1.0f)
-		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity > 1");
-        else if (minimumSimilarity < 0.0f)
+	  if (minimumSimilarity >= 1.0f)
+		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity >= 1");
+	  else if (minimumSimilarity < 0.0f)
 		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity < 0");
-    
-	    this->minimumSimilarity = minimumSimilarity;
-    
-		if(prefixLength >= term->textLength())
-			_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength >= term.textLength()");
-		this->prefixLength = prefixLength;
+	  if (prefixLength < 0)
+		  _CLTHROWA(CL_ERR_IllegalArgument,"prefixLength < 0");
 
-    }
-  
-  
-    float_t FuzzyQuery::defaultMinSimilarity = 0.5f;
-	int32_t FuzzyQuery::defaultPrefixLength = 0;
-
-    FuzzyQuery::~FuzzyQuery(){
-    //Func - Destructor
-	//Pre  - true
-	//Post - Instance has been destroyed
-    }
-
-    TCHAR* FuzzyQuery::toString(const TCHAR* field) const{
-      StringBuffer buffer(100, false); // TODO: Have a better estimation for the initial buffer length
-      Term* term = getTerm(false); // no need to increase ref count
-      if ( field==NULL || _tcscmp(term->field(),field)!=0 ) {
-        buffer.append(term->field());
-        buffer.append( _T(":"));
-      }
-      buffer.append(term->text());
-      buffer.append( _T("~") );
-      buffer.appendFloat(minimumSimilarity,1);
-      // todo: use ToStringUtils.boost()
-      if (getBoost() != 1.0f) {
-        buffer.appendChar ( '^' );
-        buffer.appendFloat( getBoost(),1);
-      }
-      return buffer.getBuffer();
-    }
-
-  const char* FuzzyQuery::getObjectName() const{
-  //Func - Returns the name of the query
-  //Pre  - true
-  //post - The string FuzzyQuery has been returned
-
-     return getClassName();
+	  /*
+	  TODO: Not in original Java version
+	  if(prefixLength >= term->textLength())
+	  _CLTHROWA(CL_ERR_IllegalArgument,"prefixLength >= term.textLength()");
+	  */
   }
-  const char* FuzzyQuery::getClassName(){
-  //Func - Returns the name of the query
-  //Pre  - true
-  //post - The string FuzzyQuery has been returned
+  
+  float_t FuzzyQuery::defaultMinSimilarity = 0.5f;
+  int32_t FuzzyQuery::defaultPrefixLength = 0;
 
-     return "FuzzyQuery";
+  FuzzyQuery::~FuzzyQuery(){
   }
 
-
-  /**
-   * Returns the minimum similarity that is required for this query to match.
-   * @return float value between 0.0 and 1.0
-   */
   float_t FuzzyQuery::getMinSimilarity() const {
     return minimumSimilarity;
   }
 
-  FuzzyQuery::FuzzyQuery(const FuzzyQuery& clone):
-		MultiTermQuery(clone)
-	{
-	  this->minimumSimilarity = clone.getMinSimilarity();
-	  this->prefixLength = clone.getPrefixLength();
-    
-		//if(prefixLength < 0)
-		//	_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength < 0");
-		//else 
-		if(prefixLength >= clone.getTerm()->textLength())
-			_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength >= term.textLength()");
-
-	}
-
-  Query* FuzzyQuery::clone() const{
-		return _CLNEW FuzzyQuery(*this);
-	}
-	size_t FuzzyQuery::hashCode() const{
-		//todo: we should give the query a seeding value... but
-		//need to do it for all hascode functions
-		size_t val = Similarity::floatToByte(getBoost()) ^ getTerm()->hashCode();
-		val ^= Similarity::floatToByte(this->getMinSimilarity());
-		val ^= this->getPrefixLength();
-		return val;
-	}
-	bool FuzzyQuery::equals(Query* other) const{
-		if (!(other->instanceOf(FuzzyQuery::getClassName())))
-			return false;
-
-		FuzzyQuery* fq = (FuzzyQuery*)other;
-		return (this->getBoost() == fq->getBoost())
-			&& this->getMinSimilarity() == fq->getMinSimilarity()
-			&& this->getPrefixLength() == fq->getPrefixLength()
-			&& getTerm()->equals(fq->getTerm());
-	}
-    
-  /**
-   * Returns the prefix length, i.e. the number of characters at the start
-   * of a term that must be identical (not fuzzy) to the query term if the query
-   * is to match that term. 
-   */
   size_t FuzzyQuery::getPrefixLength() const {
     return prefixLength;
   }
 
+  TCHAR* FuzzyQuery::toString(const TCHAR* field) const{
+	  StringBuffer buffer(100, false); // TODO: Have a better estimation for the initial buffer length
+	  Term* term = getTerm(false); // no need to increase ref count
+	  if ( field==NULL || _tcscmp(term->field(),field)!=0 ) {
+		  buffer.append(term->field());
+		  buffer.appendChar( _T(':'));
+	  }
+	  buffer.append(term->text());
+	  buffer.appendChar( _T('~') );
+	  buffer.appendFloat(minimumSimilarity,1);
+	  buffer.appendBoost(getBoost());
+	  return buffer.getBuffer();
+  }
+
+  const char* FuzzyQuery::getObjectName() const{
+	  //Func - Returns the name of the query
+	  //Pre  - true
+	  //post - The string FuzzyQuery has been returned
+
+	  return getClassName();
+  }
+  const char* FuzzyQuery::getClassName(){
+	  //Func - Returns the name of the query
+	  //Pre  - true
+	  //post - The string FuzzyQuery has been returned
+
+	  return "FuzzyQuery";
+  }
+
+  FuzzyQuery::FuzzyQuery(const FuzzyQuery& clone):
+  MultiTermQuery(clone)
+  {
+	  this->minimumSimilarity = clone.getMinSimilarity();
+	  this->prefixLength = clone.getPrefixLength();
+
+	  //if(prefixLength < 0)
+	  //	_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength < 0");
+	  //else 
+	  if(prefixLength >= clone.getTerm()->textLength())
+		  _CLTHROWA(CL_ERR_IllegalArgument,"prefixLength >= term.textLength()");
+
+  }
+
+  Query* FuzzyQuery::clone() const{
+	  return _CLNEW FuzzyQuery(*this);
+  }
+  size_t FuzzyQuery::hashCode() const{
+	  //todo: we should give the query a seeding value... but
+	  //need to do it for all hascode functions
+	  // TODO: does not conform with JL
+	  size_t val = Similarity::floatToByte(getBoost()) ^ getTerm()->hashCode();
+	  val ^= Similarity::floatToByte(this->getMinSimilarity());
+	  val ^= this->getPrefixLength();
+	  return val;
+  }
+  bool FuzzyQuery::equals(Query* other) const{
+	  if (this == other) return true;
+	  if (!(other->instanceOf(FuzzyQuery::getClassName())))
+		  return false;
+
+	  FuzzyQuery* fq = static_cast<FuzzyQuery*>(other);
+	  return (this->getBoost() == fq->getBoost())
+		  && this->minimumSimilarity == fq->getMinSimilarity()
+		  && this->prefixLength == fq->getPrefixLength()
+		  && getTerm()->equals(fq->getTerm());
+  }
+  
   FilteredTermEnum* FuzzyQuery::getEnum(IndexReader* reader){
 	  Term* term = getTerm(false);
 	  FuzzyTermEnum* ret = _CLNEW FuzzyTermEnum(reader, term, minimumSimilarity, prefixLength);
 	  return ret;
   }
 
-  /*
   Query* FuzzyQuery::rewrite(IndexReader* reader) {
 	  FilteredTermEnum* enumerator = getEnum(reader);
-	  int32_t maxClauseCount = BooleanQuery::getMaxClauseCount();
+	  const int32_t maxClauseCount = BooleanQuery::getMaxClauseCount();
 	  ScoreTermQueue* stQueue = _CLNEW ScoreTermQueue(maxClauseCount);
 	  ScoreTerm* reusableST = NULL;
 
@@ -375,7 +468,7 @@ CL_NS_DEF(search)
 		  do {
 			  float_t score = 0.0f;
 			  Term* t = enumerator->term();
-			  if (t != null) {
+			  if (t != NULL) {
 				  score = enumerator->difference();
 				  if (reusableST == NULL) {
 					  reusableST = _CLNEW ScoreTerm(t, score);
@@ -389,27 +482,28 @@ CL_NS_DEF(search)
 					  continue;
 				  }
 
-				  reusableST = (ScoreTerm) stQueue->insertWithOverflow(reusableST);
+				  reusableST = stQueue->insertWithOverflow(reusableST);
 			  }
 		  } while (enumerator->next());
 	  } _CLFINALLY({
 		  enumerator->close();
-		  _CLDELETE(enumerator);
-	  }
+		  _CLLDELETE(enumerator);
+	  })
 
-	  BooleanQuery query = _CLNEW BooleanQuery(true);
-	  int size = stQueue->size();
-	  for(int i = 0; i < size; i++){
-		ScoreTerm* st = (ScoreTerm) stQueue->pop();
-		TermQuery* tq = new TermQuery(st.term);      // found a match
-		tq->setBoost(getBoost() * st.score); // set the boost
-		query->add(tq, BooleanClause.Occur.SHOULD);          // add to query
+	  BooleanQuery* query = _CLNEW BooleanQuery(true);
+	  const size_t size = stQueue->size();
+	  for(size_t i = 0; i < size; i++){
+		  ScoreTerm* st = stQueue->pop();
+		  TermQuery* tq = _CLNEW TermQuery(st->term);      // found a match
+		  tq->setBoost(getBoost() * st->score); // set the boost
+		  query->add(tq, BooleanClause::SHOULD);          // add to query
 	  }
+	  _CLLDELETE(stQueue);
 
-	  _CLDELETE(reusableST);
+	  //_CLDELETE(reusableST);
 
 	  return query;
-	  }*/
+  }
 
 
 CL_NS_END

@@ -7,28 +7,30 @@
 #ifndef _lucene_search_FuzzyQuery_
 #define _lucene_search_FuzzyQuery_
 
-
-//#include "CLucene/index/IndexReader.h"
-CL_CLASS_DEF(index,Term)
-//#include "MultiTermQuery.h"
 #include "MultiTermQuery.h"
 #include "FilteredTermEnum.h"
 
+CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)
 
-  // class FuzzyQuery implements the fuzzy search query
-  class CLUCENE_EXPORT FuzzyQuery: public MultiTermQuery {
-    private:
-	  float_t minimumSimilarity;
-	  size_t prefixLength;
-  protected:
-	  FuzzyQuery(const FuzzyQuery& clone);
-   public:
-	  static float_t defaultMinSimilarity;
-	  static int32_t defaultPrefixLength;
+/** Implements the fuzzy search query. The similiarity measurement
+* is based on the Levenshtein (edit distance) algorithm.
+*/
+class CLUCENE_EXPORT FuzzyQuery: public MultiTermQuery {
+private:
+	class ScoreTerm;
+	class ScoreTermQueue;
 
-     /**
+	float_t minimumSimilarity;
+	size_t prefixLength;
+protected:
+	FuzzyQuery(const FuzzyQuery& clone);
+public:
+	static float_t defaultMinSimilarity;
+	static int32_t defaultPrefixLength;
+
+	/**
 	* Create a new FuzzyQuery that will match terms with a similarity 
 	* of at least <code>minimumSimilarity</code> to <code>term</code>.
 	* If a <code>prefixLength</code> &gt; 0 is specified, a common prefix
@@ -44,115 +46,192 @@ CL_NS_DEF(search)
 	* @throws IllegalArgumentException if minimumSimilarity is &gt; 1 or &lt; 0
 	* or if prefixLength &lt; 0 or &gt; <code>term.text().length()</code>.
 	*/
-     FuzzyQuery(CL_NS(index)::Term* term, float_t minimumSimilarity=-1, size_t prefixLength=0);
-	 //Destructor
-     ~FuzzyQuery();
+	FuzzyQuery(CL_NS(index)::Term* term, float_t minimumSimilarity=-1, size_t prefixLength=0);
+	virtual ~FuzzyQuery();
 
-     TCHAR* toString(const TCHAR* field) const;
+	/**
+	* Returns the minimum similarity that is required for this query to match.
+	* @return float value between 0.0 and 1.0
+	*/
+	float_t getMinSimilarity() const;
 
-	  //Returns the name "FuzzyQuery"
-	  static const char* getClassName();
-    const char* getObjectName() const;
+	/**
+	* Returns the prefix length, i.e. the number of characters at the start
+	* of a term that must be identical (not fuzzy) to the query term if the query
+	* is to match that term. 
+	*/
+	size_t getPrefixLength() const;
 
-	  Query* clone() const;
-	  bool equals(Query * other) const;
-	  size_t hashCode() const;
+	Query* rewrite(CL_NS(index)::IndexReader* reader);
 
-	  /**
-		* Returns the minimum similarity that is required for this query to match.
-		* @return float value between 0.0 and 1.0
-		*/
-		float_t getMinSimilarity() const;
+	TCHAR* toString(const TCHAR* field) const;
 
-		/**
-		* Returns the prefix length, i.e. the number of characters at the start
-		* of a term that must be identical (not fuzzy) to the query term if the query
-		* is to match that term. 
-		*/
-		size_t getPrefixLength() const;
+	//Returns the name "FuzzyQuery"
+	static const char* getClassName();
+	const char* getObjectName() const;
 
-		//Query* FuzzyQuery::rewrite(IndexReader* reader)
+	Query* clone() const;
+	bool equals(Query * other) const;
+	size_t hashCode() const;
 
-  protected:
-	  FilteredTermEnum* getEnum(CL_NS(index)::IndexReader* reader);
-  };
+protected:
+	FilteredTermEnum* getEnum(CL_NS(index)::IndexReader* reader);
+};
 
 /** Subclass of FilteredTermEnum for enumerating all terms that are similiar
- * to the specified filter term.
- *
- * <p>Term enumerations are always ordered by Term.compareTo().  Each term in
- * the enumeration is greater than all that precede it.
- */
+* to the specified filter term.
+*
+* <p>Term enumerations are always ordered by Term.compareTo().  Each term in
+* the enumeration is greater than all that precede it.
+*/
 class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
-  private:
-		float_t distance;
-		bool _endEnum;
+private:
+	/* Allows us save time required to create a new array
+	* everytime similarity is called.
+	*/
+	int32_t* d;
+	size_t dWidth;
+	size_t dHeight;
 
-		CL_NS(index)::Term* searchTerm; 
-		TCHAR* text;
-		size_t textLen;
-		TCHAR* prefix;
-		size_t prefixLength;
-		float_t minimumSimilarity;
-		double scale_factor;
+	//float_t distance;
+	float_t _similarity;
+	bool _endEnum;
 
-		
-		/**
-		* This static array saves us from the time required to create a new array
-		* everytime editDistance is called.
-		*/
-		int32_t* e;
-		int32_t eWidth;
-		int32_t eHeight;
+	CL_NS(index)::Term* searchTerm; 
+	//String field;
+	TCHAR* text;
+	size_t textLen;
+	TCHAR* prefix;
+	size_t prefixLength;
 
-		/******************************
-		* Compute Levenshtein distance
-		******************************/
- 
-		/**
-		Levenshtein distance also known as edit distance is a measure of similiarity
-		between two strings where the distance is measured as the number of character 
-		deletions, insertions or substitutions required to transform one string to 
-		the other string. 
-		<p>This method takes in four parameters; two strings and their respective 
-		lengths to compute the Levenshtein distance between the two strings.
-		The result is returned as an integer.
-		*/ 
-		int32_t editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m) ;
+	float_t minimumSimilarity;
+	double scale_factor;
+	int32_t maxDistances[LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX];
 
-    protected:
-		/**
-		* The termCompare method in FuzzyTermEnum uses Levenshtein distance to 
-		* calculate the distance between the given term and the comparing term. 
-		*/
-		bool termCompare(CL_NS(index)::Term* term) ;
-		
-		///Returns the fact if the current term in the enumeration has reached the end
-		bool endEnum();
-    public:
-		
-		/**
-		* Empty prefix and minSimilarity of 0.5f are used.
-		* 
-		* @param reader
-		* @param term
-		* @throws IOException
-		* @see #FuzzyTermEnum(IndexReader, Term, float_t, int32_t)
-		*/
-		FuzzyTermEnum(CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
-		/** Destructor */
-		~FuzzyTermEnum();
-		/** Close the enumeration */
-		void close();
-		
-		/** Returns the difference between the distance and the fuzzy threshold
-		*  multiplied by the scale factor
-		*/
-		float_t difference();
 
-		
-		const char* getObjectName() const;
-		static const char* getClassName();
-  };
+
+	/* LEGACY:
+	int32_t* e;
+	int32_t eWidth;
+	int32_t eHeight;
+	**
+	Levenshtein distance also known as edit distance is a measure of similiarity
+	between two strings where the distance is measured as the number of character 
+	deletions, insertions or substitutions required to transform one string to 
+	the other string. 
+	<p>This method takes in four parameters; two strings and their respective 
+	lengths to compute the Levenshtein distance between the two strings.
+	The result is returned as an integer.
+	*
+	int32_t editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m);
+	*/
+
+	/******************************
+	* Compute Levenshtein distance
+	******************************/
+
+	/**
+	* <p>Similarity returns a number that is 1.0f or less (including negative numbers)
+	* based on how similar the Term is compared to a target term.  It returns
+	* exactly 0.0f when
+	* <pre>
+	*    editDistance &lt; maximumEditDistance</pre>
+	* Otherwise it returns:
+	* <pre>
+	*    1 - (editDistance / length)</pre>
+	* where length is the length of the shortest term (text or target) including a
+	* prefix that are identical and editDistance is the Levenshtein distance for
+	* the two words.</p>
+	*
+	* <p>Embedded within this algorithm is a fail-fast Levenshtein distance
+	* algorithm.  The fail-fast algorithm differs from the standard Levenshtein
+	* distance algorithm in that it is aborted if it is discovered that the
+	* mimimum distance between the words is greater than some threshold.
+	*
+	* <p>To calculate the maximum distance threshold we use the following formula:
+	* <pre>
+	*     (1 - minimumSimilarity) * length</pre>
+	* where length is the shortest term including any prefix that is not part of the
+	* similarity comparision.  This formula was derived by solving for what maximum value
+	* of distance returns false for the following statements:
+	* <pre>
+	*   similarity = 1 - ((float)distance / (float) (prefixLength + Math.min(textlen, targetlen)));
+	*   return (similarity > minimumSimilarity);</pre>
+	* where distance is the Levenshtein distance for the two words.
+	* </p>
+	* <p>Levenshtein distance (also known as edit distance) is a measure of similiarity
+	* between two strings where the distance is measured as the number of character
+	* deletions, insertions or substitutions required to transform one string to
+	* the other string.
+	* @param target the target word or phrase
+	* @return the similarity,  0.0 or less indicates that it matches less than the required
+	* threshold and 1.0 indicates that the text and target are identical
+	*/
+	float_t similarity(const TCHAR* target, const size_t targetLen);
+
+	/**
+	* Grow the second dimension of the array, so that we can calculate the
+	* Levenshtein difference.
+	*/
+	/*
+	void growDistanceArray(int32_t m) {
+		for (int i = 0; i < d.length; i++) {
+			d[i] = new int[m+1];
+		}
+	}*/
+
+	/**
+	* The max Distance is the maximum Levenshtein distance for the text
+	* compared to some other value that results in score that is
+	* better than the minimum similarity.
+	* @param m the length of the "other value"
+	* @return the maximum levenshtein distance that we care about
+	*/
+	int32_t getMaxDistance(const size_t m);
+
+	void initializeMaxDistances();
+
+	int32_t calculateMaxDistance(const size_t m) const;
+
+protected:
+	/**
+	* The termCompare method in FuzzyTermEnum uses Levenshtein distance to 
+	* calculate the distance between the given term and the comparing term. 
+	*/
+	bool termCompare(CL_NS(index)::Term* term) ;
+
+	/** Returns the fact if the current term in the enumeration has reached the end */
+	bool endEnum();
+public:
+
+	/**
+	* Constructor for enumeration of all terms from specified <code>reader</code> which share a prefix of
+	* length <code>prefixLength</code> with <code>term</code> and which have a fuzzy similarity &gt;
+	* <code>minSimilarity</code>.
+	* <p>
+	* After calling the constructor the enumeration is already pointing to the first 
+	* valid term if such a term exists. 
+	* 
+	* @param reader Delivers terms.
+	* @param term Pattern term.
+	* @param minSimilarity Minimum required similarity for terms from the reader. Default value is 0.5f.
+	* @param prefixLength Length of required common prefix. Default value is 0.
+	* @throws IOException
+	*/
+	FuzzyTermEnum(CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
+	virtual ~FuzzyTermEnum();
+
+	/** Close the enumeration */
+	void close();
+
+	/** Returns the difference between the distance and the fuzzy threshold
+	*  multiplied by the scale factor
+	*/
+	float_t difference();
+
+	const char* getObjectName() const;
+	static const char* getClassName();
+};
+
 CL_NS_END
 #endif

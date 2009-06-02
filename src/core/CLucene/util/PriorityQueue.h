@@ -54,11 +54,7 @@ class CLUCENE_INLINE_EXPORT PriorityQueue {
 		}
 
 	protected:
-		PriorityQueue(){
-			this->_size = 0;
-			this->dk = false;
-			this->heap = NULL;
-            this->maxSize = 0;
+		PriorityQueue():_size(0),dk(false),maxSize(0),heap(NULL){
 		}
 
 		// Determines the ordering of objects in this priority queue.  Subclasses
