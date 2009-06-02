@@ -32,7 +32,7 @@ CL_NS_DEF(search)
 	* is thrown when accessing hit <code>n</code> &ge; current_{@link #length()} 
 	* (but <code>n</code> &lt; {@link #length()}_at_start). 
 	*/
-   class CLUCENE_EXPORT Hits:LUCENE_BASE {
+   class CLUCENE_EXPORT Hits {
     private:
 	    Query* query;
 		Searcher* searcher;
@@ -68,10 +68,10 @@ CL_NS_DEF(search)
 
     public:
 		Hits(Searcher* s, Query* q, Filter* f, const Sort* sort=NULL);
-		~Hits();
+		virtual ~Hits();
 
 		/** Returns the total number of hits available in this set. */
-		int32_t length() const;
+		size_t length() const;
 	    
 		/** Returns the stored fields of the n<sup>th</sup> document in this set.
 		* <p>Documents are cached, so that repeated requests for the same element may

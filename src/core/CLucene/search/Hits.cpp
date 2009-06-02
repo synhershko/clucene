@@ -81,7 +81,7 @@ CL_NS_DEF(search)
 		return cnt;
 	}
 
-	int32_t Hits::length() const {
+	size_t Hits::length() const {
 		return _length;
 	}
 
