@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 
-#include "_FieldSelector.h"
+#include "FieldSelector.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(document)

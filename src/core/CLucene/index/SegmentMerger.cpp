@@ -17,7 +17,7 @@
 #include "CLucene/index/_IndexFileNames.h"
 #include "_CompoundFile.h"
 #include "_SkipListWriter.h"
-#include "CLucene/document/_FieldSelector.h"
+#include "CLucene/document/FieldSelector.h"
 
 CL_NS_USE(util)
 CL_NS_USE(document)

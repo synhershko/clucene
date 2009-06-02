@@ -13,7 +13,7 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 #include "CLucene/document/Document.h"
-#include "CLucene/document/_FieldSelector.h"
+#include "CLucene/document/FieldSelector.h"
 #include "_FieldInfos.h"
 #include "_FieldsWriter.h"
 #include "_FieldsReader.h"
