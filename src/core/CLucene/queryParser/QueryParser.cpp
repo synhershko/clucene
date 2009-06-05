@@ -542,6 +542,7 @@ TCHAR* QueryParser::discardEscapeChar(TCHAR* input, TCHAR* output) {
   const size_t inputLen = _tcslen(input);
   bool outputOwned=false;
   if (output == NULL){
+    // TODO: Perhaps we can re-use an inner buffer instead of creating new char arrays here and in several other places
     output = _CL_NEWARRAY(TCHAR, inputLen + 1);
     outputOwned=true;
   }
@@ -565,7 +566,12 @@ TCHAR* QueryParser::discardEscapeChar(TCHAR* input, TCHAR* output) {
   for (size_t i = 0; i < inputLen; i++) {
     TCHAR curChar = input[i];
     if (codePointMultiplier > 0) {
-      codePoint += hexToInt(curChar) * codePointMultiplier;
+		try {
+			codePoint += hexToInt(curChar) * codePointMultiplier;
+		} catch (CLuceneError& e) {
+			if (outputOwned)_CLDELETE_LCARRAY(output);
+			throw e;
+		}
       codePointMultiplier = codePointMultiplier >> 4;
       if (codePointMultiplier == 0) {
         output[length++] = (TCHAR)codePoint;
@@ -621,7 +627,7 @@ int32_t QueryParser::hexToInt(TCHAR c) {
 }
 
 //static
-TCHAR* QueryParser::escape(TCHAR* s) {
+TCHAR* QueryParser::escape(const TCHAR* s) {
   size_t len = _tcslen(s);
   // Create a StringBuffer object a bit longer from the length of the query (to prevent some reallocations),
   // and declare we are the owners of the buffer (to save on a copy)
@@ -703,15 +709,16 @@ int32_t QueryParser::Modifiers() {
 }
 
 Query* QueryParser::TopLevelQuery(TCHAR* _field) {
-  Query* q;
+  Query* q = NULL;;
   try {
     q = fQuery(_field);
+	jj_consume_token(0);
   } catch (CLuceneError& e) {
     if (_field!=field)_CLDELETE_LCARRAY(_field);
+	_CLLDELETE(q);
     throw e;
   }
   if (_field!=field)_CLDELETE_LCARRAY(_field);
-  jj_consume_token(0);
   return q;
 }
 

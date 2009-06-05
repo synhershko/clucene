@@ -447,7 +447,7 @@ public:
   *
   * @memory caller is responsible to free the returned string
   */
-  static TCHAR* escape(TCHAR* s);
+  static TCHAR* escape(const TCHAR* s);
 
   // *   Query  ::= ( Clause )*
   // *   Clause ::= ["+", "-"] [<TERM> ":"] ( <TERM> | "(" Query ")" )

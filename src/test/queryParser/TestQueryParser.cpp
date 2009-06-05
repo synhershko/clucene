@@ -168,13 +168,51 @@ void assertTrue(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false
 	CuAssertTrue(tc,ret);
 }
 
-void assertParseException(CuTest *tc,TCHAR* queryString) {
+void assertParseException(CuTest *tc,const TCHAR* queryString) {
 	try {
 		Query* q = getQuery(tc,queryString, NULL, CL_ERR_Parse);
 	} catch (CLuceneError&){
 		return;
 	}
 	CuFail(tc,_T("ParseException expected, not thrown"));
+}
+
+void assertEscapedQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* result){
+	TCHAR* escapedQuery = QueryParser::escape(query);
+	if (_tcscmp(escapedQuery, result) != 0) {
+		TCHAR str[CL_MAX_PATH];
+		_tcscpy(str,escapedQuery);
+		_CLDELETE_LCARRAY(escapedQuery);
+		CuFail(tc, _T("Query /%s/ yielded /%s/, expecting /%s/\n"), query, escapedQuery, result);
+	}
+	_CLDELETE_LCARRAY(escapedQuery);
+}
+
+Query* getQueryDOA(const TCHAR* query, Analyzer* a=NULL) {
+	bool bOwnsAnalyzer=false;
+	if (a == NULL){
+		a = _CLNEW SimpleAnalyzer();
+		bOwnsAnalyzer=true;
+	}
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), a);
+	qp->setDefaultOperator(QueryParser::AND_OPERATOR);
+	Query* q = qp->parse(query);
+	_CLLDELETE(qp);
+	if (bOwnsAnalyzer) _CLLDELETE(a);
+	return q;
+}
+
+void assertQueryEqualsDOA(CuTest *tc,const TCHAR* query, Analyzer* a, TCHAR* result){
+	Query* q = getQueryDOA(query, a);
+	TCHAR* s = q->toString(_T("field"));
+	_CLLDELETE(q);
+	if (_tcscmp(s,result)!=0) {
+		TCHAR str[CL_MAX_PATH];
+		_tcscpy(str,s);
+		_CLDELETE_LCARRAY(s);
+		CuFail(tc,_T("Query /%s/ yielded /%s/, expecting /%s/"),query, str, result);
+	}
+	_CLDELETE_LCARRAY(s);
 }
 
 /// END Helper functions and classes
@@ -528,6 +566,122 @@ void testEscaped(CuTest *tc) {
 
 // TODO: testLegacyDateRange, testDateRange
 
+void testQueryStringEscaping(CuTest *tc) {
+	WhitespaceAnalyzer a;
+
+	assertEscapedQueryEquals(tc, _T("a-b:c"), &a, _T("a\\-b\\:c"));
+	assertEscapedQueryEquals(tc,_T("a+b:c"), &a, _T("a\\+b\\:c"));
+	assertEscapedQueryEquals(tc, _T("a:b:c"), &a, _T("a\\:b\\:c"));
+	assertEscapedQueryEquals(tc, _T("a\\b:c"), &a, _T("a\\\\b\\:c"));
+
+	assertEscapedQueryEquals(tc,_T("a:b-c"), &a, _T("a\\:b\\-c"));
+	assertEscapedQueryEquals(tc,_T("a:b+c"), &a, _T("a\\:b\\+c"));
+	assertEscapedQueryEquals(tc,_T("a:b:c"), &a, _T("a\\:b\\:c"));
+	assertEscapedQueryEquals(tc,_T("a:b\\c"), &a, _T("a\\:b\\\\c"));
+
+	assertEscapedQueryEquals(tc,_T("a:b-c*"), &a, _T("a\\:b\\-c\\*"));
+	assertEscapedQueryEquals(tc,_T("a:b+c*"), &a, _T("a\\:b\\+c\\*"));
+	assertEscapedQueryEquals(tc,_T("a:b:c*"), &a, _T("a\\:b\\:c\\*"));
+
+	assertEscapedQueryEquals(tc,_T("a:b\\\\c*"), &a, _T("a\\:b\\\\\\\\c\\*"));
+
+	assertEscapedQueryEquals(tc,_T("a:b-?c"), &a, _T("a\\:b\\-\\?c"));
+	assertEscapedQueryEquals(tc,_T("a:b+?c"), &a, _T("a\\:b\\+\\?c"));
+	assertEscapedQueryEquals(tc,_T("a:b:?c"), &a, _T("a\\:b\\:\\?c"));
+
+	assertEscapedQueryEquals(tc,_T("a:b?c"), &a, _T("a\\:b\\?c"));
+
+	assertEscapedQueryEquals(tc,_T("a:b-c~"), &a, _T("a\\:b\\-c\\~"));
+	assertEscapedQueryEquals(tc,_T("a:b+c~"), &a, _T("a\\:b\\+c\\~"));
+	assertEscapedQueryEquals(tc,_T("a:b:c~"), &a, _T("a\\:b\\:c\\~"));
+	assertEscapedQueryEquals(tc,_T("a:b\\c~"), &a, _T("a\\:b\\\\c\\~"));
+
+	assertEscapedQueryEquals(tc,_T("[ a - TO a+ ]"), NULL, _T("\\[ a \\- TO a\\+ \\]"));
+	assertEscapedQueryEquals(tc,_T("[ a : TO a~ ]"), NULL, _T("\\[ a \\: TO a\\~ \\]"));
+	assertEscapedQueryEquals(tc,_T("[ a\\ TO a* ]"), NULL, _T("\\[ a\\\\ TO a\\* \\]"));
+
+	// LUCENE-881
+	assertEscapedQueryEquals(tc,_T("|| abc ||"), &a, _T("\\|\\| abc \\|\\|"));
+	assertEscapedQueryEquals(tc,_T("&& abc &&"), &a, _T("\\&\\& abc \\&\\&"));
+}
+
+void testTabNewlineCarriageReturn(CuTest *tc){
+	assertQueryEqualsDOA(tc,_T("+weltbank +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+
+	assertQueryEqualsDOA(tc,_T("+weltbank\n+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \n+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \n +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+
+	assertQueryEqualsDOA(tc,_T("+weltbank\r+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \r+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \r +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+
+	assertQueryEqualsDOA(tc,_T("+weltbank\r\n+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \r\n+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \r\n +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \r \n +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+
+	assertQueryEqualsDOA(tc,_T("+weltbank\t+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \t+worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+	assertQueryEqualsDOA(tc,_T("weltbank \t +worlbank"), NULL,
+		_T("+weltbank +worlbank"));
+}
+
+void testSimpleDAO(CuTest *tc){
+	assertQueryEqualsDOA(tc,_T("term term term"), NULL, _T("+term +term +term"));
+	assertQueryEqualsDOA(tc,_T("term +term term"), NULL, _T("+term +term +term"));
+	assertQueryEqualsDOA(tc,_T("term term +term"), NULL, _T("+term +term +term"));
+	assertQueryEqualsDOA(tc,_T("term +term +term"), NULL, _T("+term +term +term"));
+	assertQueryEqualsDOA(tc,_T("-term term term"), NULL, _T("-term +term +term"));
+}
+
+void testBoost(CuTest *tc){
+	const TCHAR* stopWords[] = {_T("on"), NULL};
+	StandardAnalyzer* oneStopAnalyzer = _CLNEW StandardAnalyzer(reinterpret_cast<const TCHAR**>(&stopWords));
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), oneStopAnalyzer);
+	Query* q = qp->parse(_T("on^1.0"));
+	CLUCENE_ASSERT(q != NULL);
+	_CLLDELETE(q);
+	q = qp->parse(_T("\"hello\"^2.0"));
+	CLUCENE_ASSERT(q != NULL);
+	CLUCENE_ASSERT(q->getBoost() == 2.0f);
+	_CLLDELETE(q);
+	q = qp->parse(_T("hello^2.0"));
+	CLUCENE_ASSERT(q != NULL);
+	CLUCENE_ASSERT(q->getBoost() == 2.0f);
+	_CLLDELETE(q);
+	q = qp->parse(_T("\"on\"^1.0"));
+	CLUCENE_ASSERT(q != NULL);
+	_CLLDELETE(q);
+	_CLLDELETE(qp);
+	_CLLDELETE(oneStopAnalyzer);
+
+	StandardAnalyzer a;
+	QueryParser* qp2 = _CLNEW QueryParser(_T("field"), &a);
+	q = qp2->parse(_T("the^3"));
+	// "the" is a stop word so the result is an empty query:
+	CLUCENE_ASSERT(q != NULL);
+	TCHAR* tmp = q->toString();
+	CLUCENE_ASSERT( _tcscmp(tmp, _T("")) == 0 );
+	_CLDELETE_LCARRAY(tmp);
+	CLUCENE_ASSERT(1.0f == q->getBoost());
+	_CLLDELETE(q);
+	_CLLDELETE(qp2);
+}
+
 void testMatchAllDocs(CuTest *tc) {
 	WhitespaceAnalyzer a;
 	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
@@ -550,15 +704,18 @@ CuSuite *testQueryParser(void)
 	CuSuite *suite = CuSuiteNew(_T("CLucene Query Parser Test"));
 
 	SUITE_ADD_TEST(suite, testSimple);
+	SUITE_ADD_TEST(suite, testPunct);
+	SUITE_ADD_TEST(suite, testSlop);
+	SUITE_ADD_TEST(suite, testNumber);
+	SUITE_ADD_TEST(suite, testWildcard);
 	SUITE_ADD_TEST(suite, testLeadingWildcardType);
 	SUITE_ADD_TEST(suite, testQPA);
-	SUITE_ADD_TEST(suite, testEscaped);
-	SUITE_ADD_TEST(suite, testNumber);
-	SUITE_ADD_TEST(suite, testPunct);
-
-	SUITE_ADD_TEST(suite, testSlop);
 	SUITE_ADD_TEST(suite, testRange);
-	SUITE_ADD_TEST(suite, testWildcard);
+	SUITE_ADD_TEST(suite, testEscaped);
+	SUITE_ADD_TEST(suite, testQueryStringEscaping);
+	SUITE_ADD_TEST(suite, testTabNewlineCarriageReturn);
+	SUITE_ADD_TEST(suite, testSimpleDAO);
+	SUITE_ADD_TEST(suite, testBoost);
 
 	SUITE_ADD_TEST(suite, testMatchAllDocs);
 

@@ -1228,6 +1228,7 @@ QueryToken* QueryParserTokenManager::getNextToken() {
 		}
 		// TODO: TokenMgrError.LEXICAL_ERROR ?
 		TCHAR* err = getLexicalError(EOFSeen, curLexState, error_line, error_column, error_after, curChar);
+		_CLDELETE_LCARRAY(error_after);
 		_CLTHROWT_DEL(CL_ERR_TokenMgr,err);
 	}
 }
@@ -1235,6 +1236,7 @@ QueryToken* QueryParserTokenManager::getNextToken() {
 TCHAR* QueryParserTokenManager::getLexicalError(bool EOFSeen, int32_t lexState, int32_t errorLine,
 												int32_t errorColumn, TCHAR* errorAfter, TCHAR curChar)
 {
+	TCHAR* tmp = NULL;
 	CL_NS(util)::StringBuffer sb(100, false);
 	sb.append(_T("Lexical error at line "));
 	sb.appendInt(errorLine);
@@ -1252,7 +1254,11 @@ TCHAR* QueryParserTokenManager::getLexicalError(bool EOFSeen, int32_t lexState, 
 		sb.append(_T("), "));
 	}
 	sb.append(_T("after : \""));
-	sb.append(addEscapes(errorAfter));
+
+	tmp = addEscapes(errorAfter);
+	sb.append(tmp);
+	_CLDELETE_LCARRAY(tmp);
+
 	sb.appendChar(_T('"'));
 	return sb.getBuffer();
 }
