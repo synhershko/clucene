@@ -825,7 +825,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
       _CLTHROWT(CL_ERR_Parse,_T(""));
     }
   }
-  if (boost != NULL) {
+  if (q && boost != NULL) {
     float_t f = 1.0;
     try {
       f = _tcstod(boost->image, NULL);
@@ -969,11 +969,14 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
       else
         jj_la1[15] = jj_gen;
 
+	  // TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
       if (goop1->kind == RANGEIN_QUOTED) {
         _tcscpy(goop1->image, goop1->image+1);
+		goop1->image[_tcslen(goop1->image)-1]=NULL;
       }
       if (goop2->kind == RANGEIN_QUOTED) {
         _tcscpy(goop2->image, goop2->image+1);
+		goop2->image[_tcslen(goop2->image)-1]=NULL;
       }
       TCHAR* t1 = discardEscapeChar(goop1->image);
       TCHAR* t2 = discardEscapeChar(goop2->image);
@@ -1062,9 +1065,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
           s = _ttoi(fuzzySlop->image + 1);
         }
         catch (...) { /* ignore exceptions */ }
-      }
-      // TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
-	  
+      }	  
 	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
 	  const size_t st = _tcslen(term->image);
 	  term->image[st-1]=NULL;
@@ -1326,9 +1327,10 @@ void QueryParser::generateParseException() {
       }
     }
   }
+
+  _CLLDELETE(jj_expentry);
   for (int32_t i = 0; i < 33; i++) {
     if (la1tokens[i]) {
-      _CLLDELETE(jj_expentry);
       jj_expentry = _CLNEW ValueArray<int32_t>(1);
       jj_expentry->values[0] = i;
       jj_expentries->push_back(jj_expentry);

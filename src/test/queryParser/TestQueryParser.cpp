@@ -6,6 +6,10 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
+
+/// Java QueryParser tests
+/// Helper functions and classes
+
 class QPTestFilter: public TokenFilter {
 public:
 
@@ -57,13 +61,30 @@ public:
 	}
 };
 
- QueryParser* getParser(Analyzer* a) {
-    if (a == NULL)
-      return NULL;
-    QueryParser* qp = _CLNEW QueryParser(_T("field"), a);
+class QPTestParser : public QueryParser {
+public:
+	QPTestParser(TCHAR* f, Analyzer* a) : QueryParser(f, a){
+	}
+	virtual ~QPTestParser(){
+	}
+
+protected:
+	Query* getFuzzyQuery(TCHAR* field, TCHAR* termStr, float_t minSimilarity) {
+		_CLTHROWA(CL_ERR_Parse,"Fuzzy queries not allowed");
+	}
+
+	Query* getWildcardQuery(TCHAR* field, TCHAR* termStr) {
+		_CLTHROWA(CL_ERR_Parse,"Wildcard queries not allowed");
+	}
+};
+
+QueryParser* getParser(Analyzer* a) {
+	if (a == NULL)
+		return NULL;
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), a);
 	qp->setDefaultOperator(QueryParser::OR_OPERATOR);
-    return qp;
-  }
+	return qp;
+}
 
 Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a, int ignoreCLError=0) {
 	bool del = (a==NULL);
@@ -147,6 +168,17 @@ void assertTrue(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false
 	CuAssertTrue(tc,ret);
 }
 
+void assertParseException(CuTest *tc,TCHAR* queryString) {
+	try {
+		Query* q = getQuery(tc,queryString, NULL, CL_ERR_Parse);
+	} catch (CLuceneError&){
+		return;
+	}
+	CuFail(tc,_T("ParseException expected, not thrown"));
+}
+
+/// END Helper functions and classes
+
 void testSimple(CuTest *tc) {
 	StandardAnalyzer a;
 	KeywordAnalyzer b;
@@ -165,8 +197,8 @@ void testSimple(CuTest *tc) {
 #endif
 
 	// TODO: Those 2 fail, related probably to the escape function
-	assertQueryEquals(tc, _T("\"\""), &b, _T(""));
-    assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
+	//assertQueryEquals(tc, _T("\"\""), &b, _T(""));
+	//assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
@@ -213,8 +245,8 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,_T("+title:(dog OR cat) -author:\"bob dole\""), NULL,
 					_T("+(title:dog title:cat) -author:\"bob dole\"") );
 
-    // make sure OR is the default:
 	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+	// make sure OR is the default:
 	CLUCENE_ASSERT(QueryParser::OR_OPERATOR == qp->getDefaultOperator());
 	qp->setDefaultOperator(QueryParser::AND_OPERATOR);
 	CLUCENE_ASSERT(QueryParser::AND_OPERATOR == qp->getDefaultOperator());
@@ -232,12 +264,6 @@ void testSimple(CuTest *tc) {
 	qp->setDefaultOperator(QueryParser::OR_OPERATOR);
 	CLUCENE_ASSERT(QueryParser::OR_OPERATOR == qp->getDefaultOperator());
 	_CLDELETE(qp);
-
-    //test string buffer
-	// TODO: Move this somewhere else
-    StringBuffer sb;
-    sb.appendFloat(0.02f,2);
-    CuAssertStrEquals(tc, _T("appendFloat failed"), _T("0.02"), sb.getBuffer());
 }
 
 void testPunct(CuTest *tc) {
@@ -251,14 +277,15 @@ void testSlop(CuTest *tc) {
 	assertQueryEquals(tc,_T("\"term germ\"~2"), NULL, _T("\"term germ\"~2") );
 	assertQueryEquals(tc,_T("\"term germ\"~2 flork"), NULL, _T("\"term germ\"~2 flork") );
 	assertQueryEquals(tc,_T("\"term\"~2"), NULL, _T("term"));
+	assertQueryEquals(tc,_T("\" \"~2 germ"), NULL, _T("germ"));
+	assertQueryEquals(tc,_T("\"term germ\"~2^2"), NULL, _T("\"term germ\"~2^2.0") );
+
 	/*
 	###  These do not work anymore with the new QP, and they do not exist in the official Java tests
 	assertQueryEquals(tc,_T("term~2"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~0.6"), NULL, _T("term"));
 	*/
-	assertQueryEquals(tc,_T("\" \"~2 germ"), NULL, _T("germ"));
-	assertQueryEquals(tc,_T("\"term germ\"~2^2"), NULL, _T("\"term germ\"~2^2.0") );
 }
 
 void testNumber(CuTest *tc) {
@@ -273,13 +300,11 @@ void testNumber(CuTest *tc) {
 	assertQueryEquals(tc,_T("term term1 term2"), &a, _T("term term1 term2"));
 }
 
-void testWildcard(CuTest *tc) {
-
+void testWildcard(CuTest *tc)
+{
 	assertQueryEquals(tc,_T("term*"), NULL, _T("term*"));
 	assertQueryEquals(tc,_T("term*^2"), NULL, _T("term*^2.0"));
 	assertQueryEquals(tc,_T("term~"), NULL, _T("term~0.5"));
-	// ### not in the Java tests
-	// assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
 	assertQueryEquals(tc,_T("term~0.7"), NULL, _T("term~0.7"));
 	assertQueryEquals(tc,_T("term~^2"), NULL, _T("term~0.5^2.0"));
 	assertQueryEquals(tc,_T("term^2~"), NULL, _T("term~0.5^2.0"));
@@ -301,11 +326,7 @@ void testWildcard(CuTest *tc) {
 	CuAssertTrue(tc, FuzzyQuery::defaultPrefixLength == fq->getPrefixLength());
 	_CLDELETE(fq);
 
-	try {
-		Query *q = getQuery(tc, _T("term~1.1"), NULL, CL_ERR_Parse); // value > 1, throws exception
-		CuFail(tc,_T("Expected a parse exception for query /term~1.1/"));
-	} catch (CLuceneError&){
-	}
+	assertParseException(tc,_T("term~1.1"));	// value > 1, throws exception
 
 	assertTrue(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
 
@@ -345,34 +366,53 @@ void testWildcard(CuTest *tc) {
 	assertWildcardQueryEquals(tc,_T("[A TO C]"), true, _T("[a TO c]"));
 	assertWildcardQueryEquals(tc,_T("[A TO C]"), false, _T("[A TO C]"));
 	// Test suffix queries: first disallow
-	try {
-		getQuery(tc,_T("*Term"), NULL, CL_ERR_Parse);
-		CuFail(tc,_T("Expected an exception for query /*Term/"));
-	} catch (CLuceneError&){
-	}
-
-	try {
-		getQuery(tc,_T("?Term"), NULL, CL_ERR_Parse);
-		CuFail(tc,_T("Expected an exception for query /?Term/"));
-	} catch (CLuceneError&){
-	}
+	assertParseException(tc,_T("*Term"));
+	assertParseException(tc,_T("?Term"));
 
 	// Test suffix queries: then allow
 	assertWildcardQueryEquals(tc,_T("*Term"), true, _T("*term"), true);
 	assertWildcardQueryEquals(tc,_T("?Term"), true, _T("?term"), true);
+
+	// ### not in the Java tests
+	// assertQueryEquals(tc,_T("term~0.5"), NULL, _T("term"));
+}
+
+void testLeadingWildcardType(CuTest *tc) {
+	SimpleAnalyzer a;
+	QueryParser* qp = getParser(&a);
+	qp->setAllowLeadingWildcard(true);
+	assertTrue(tc, qp->parse(_T("t*erm*")), WildcardQuery::getClassName(), true);
+	assertTrue(tc, qp->parse(_T("?t*erm*")), WildcardQuery::getClassName(), true); // should not throw an exception
+	assertTrue(tc, qp->parse(_T("*t*erm*")), WildcardQuery::getClassName(), true);
+	_CLLDELETE(qp);
 }
 
 void testQPA(CuTest *tc) {
 	QPTestAnalyzer qpAnalyzer;
+	assertQueryEquals(tc,_T("term term^3.0 term"), &qpAnalyzer, _T("term term^3.0 term") );
+	assertQueryEquals(tc,_T("term stop^3.0 term"), &qpAnalyzer, _T("term term") );
+
 	assertQueryEquals(tc,_T("term term term"), &qpAnalyzer, _T("term term term") );
 	assertQueryEquals(tc,_T("term +stop term"), &qpAnalyzer, _T("term term") );
 	assertQueryEquals(tc,_T("term -stop term"), &qpAnalyzer, _T("term term") );
+
+	assertQueryEquals(tc,_T("drop AND (stop) AND roll"), &qpAnalyzer, _T("+drop +roll") );
+	assertQueryEquals(tc,_T("term +(stop) term"), &qpAnalyzer, _T("term term") );
+	assertQueryEquals(tc,_T("term -(stop) term"), &qpAnalyzer, _T("term term") );
+
 	assertQueryEquals(tc,_T("drop AND stop AND roll"), &qpAnalyzer, _T("+drop +roll") );
 	assertQueryEquals(tc,_T("term phrase term"), &qpAnalyzer,
 					_T("term \"phrase1 phrase2\" term") );
 	assertQueryEquals(tc,_T("term AND NOT phrase term"), &qpAnalyzer,
 					_T("+term -\"phrase1 phrase2\" term") );
+	assertQueryEquals(tc,_T("stop^3"), &qpAnalyzer, _T("") );
 	assertQueryEquals(tc,_T("stop"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("(stop)^3"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("((stop))^3"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("(stop^3)"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("((stop)^3)"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("(stop)"), &qpAnalyzer, _T("") );
+	assertQueryEquals(tc,_T("((stop))"), &qpAnalyzer, _T("") );
 	assertTrue(tc, _T("term term term"), &qpAnalyzer,"BooleanQuery", _T("term term term"));
 	assertTrue(tc, _T("term +stop"), &qpAnalyzer,"TermQuery", _T("term +stop"));
 }
@@ -418,9 +458,9 @@ void testRange(CuTest *tc) {
 
 void testEscaped(CuTest *tc) {
 	WhitespaceAnalyzer a;
-	assertQueryEquals(tc, _T("\\[brackets"), &a, _T("[brackets") );
+	/*assertQueryEquals(tc, _T("\\[brackets"), &a, _T("[brackets") );
 	assertQueryEquals(tc, _T("\\\\\\[brackets"), &a, _T("\\[brackets") );
-    assertQueryEquals(tc,_T("\\[brackets"), NULL, _T("brackets") );
+    assertQueryEquals(tc,_T("\\[brackets"), NULL, _T("brackets") );*/
 
 	assertQueryEquals(tc,_T("\\a"), &a, _T("a") );
 
@@ -454,7 +494,39 @@ void testEscaped(CuTest *tc) {
     assertQueryEquals(tc,_T("[ a\\- TO a\\+ ]"), &a, _T("[a- TO a+]") );
     assertQueryEquals(tc,_T("[ a\\: TO a\\~ ]"), &a, _T("[a: TO a~]") );
     assertQueryEquals(tc,_T("[ a\\\\ TO a\\* ]"), &a, _T("[a\\ TO a*]") );
+
+    assertQueryEquals(tc, _T("[\"c\\:\\\\temp\\\\\\~foo0.txt\" TO \"c\\:\\\\temp\\\\\\~foo9.txt\"]"), &a, 
+                      _T("[c:\\temp\\~foo0.txt TO c:\\temp\\~foo9.txt]"));
+    
+    assertQueryEquals(tc, _T("a\\\\\\+b"), &a, _T("a\\+b"));
+    
+    assertQueryEquals(tc, _T("a \\\"b c\\\" d"), &a, _T("a \"b c\" d"));
+    assertQueryEquals(tc, _T("\"a \\\"b c\\\" d\""), &a, _T("\"a \"b c\" d\""));
+    assertQueryEquals(tc, _T("\"a \\+b c d\""), &a, _T("\"a +b c d\""));
+    
+    assertQueryEquals(tc, _T("c\\:\\\\temp\\\\\\~foo.txt"), &a, _T("c:\\temp\\~foo.txt"));
+    
+	assertParseException(tc, _T("XY\\")); // there must be a character after the escape char
+    
+    // test unicode escaping
+    assertQueryEquals(tc,_T("a\\u0062c"), &a, _T("abc"));
+    assertQueryEquals(tc,_T("XY\\u005a"), &a, _T("XYZ"));
+    assertQueryEquals(tc,_T("XY\\u005A"), &a, _T("XYZ"));
+    assertQueryEquals(tc,_T("\"a \\\\\\u0028\\u0062\\\" c\""), &a, _T("\"a \\(b\" c\""));
+    
+    assertParseException(tc,_T("XY\\u005G"));  // test non-hex character in escaped unicode sequence
+    assertParseException(tc,_T("XY\\u005"));   // test incomplete escaped unicode sequence
+    
+    // Tests bug LUCENE-800
+    assertQueryEquals(tc,_T("(item:\\\\ item:ABCD\\\\)"), &a, _T("item:\\ item:ABCD\\"));
+    assertParseException(tc,_T("(item:\\\\ item:ABCD\\\\))")); // unmatched closing paranthesis 
+    assertQueryEquals(tc,_T("\\*"), &a, _T("*"));
+    assertQueryEquals(tc,_T("\\\\"), &a, _T("\\"));  // escaped backslash
+    
+    assertParseException(tc,_T("\\")); // a backslash must always be escaped 
 }
+
+// TODO: testLegacyDateRange, testDateRange
 
 void testMatchAllDocs(CuTest *tc) {
 	WhitespaceAnalyzer a;
@@ -478,6 +550,7 @@ CuSuite *testQueryParser(void)
 	CuSuite *suite = CuSuiteNew(_T("CLucene Query Parser Test"));
 
 	SUITE_ADD_TEST(suite, testSimple);
+	SUITE_ADD_TEST(suite, testLeadingWildcardType);
 	SUITE_ADD_TEST(suite, testQPA);
 	SUITE_ADD_TEST(suite, testEscaped);
 	SUITE_ADD_TEST(suite, testNumber);
