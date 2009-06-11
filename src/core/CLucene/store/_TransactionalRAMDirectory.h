@@ -56,6 +56,9 @@ CL_NS_DEF(store)
     IndexOutput* createOutput(const char* name);
 
     void close();
+    
+		static const char* getClassName();
+		const char* getObjectName() const;
   };
 
 CL_NS_END

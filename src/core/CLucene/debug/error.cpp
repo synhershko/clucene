@@ -28,7 +28,7 @@ CL_NS_USE(util)
 		_awhat=STRDUP_AtoA(str);
 		_twhat=NULL;
 		if ( ownstr )
-			_CLDELETE_CaARRAY(str);
+			_CLDELETE_LCaARRAY( (char*)str);
     }
 	
 	CLuceneError::CLuceneError(const CLuceneError& clone)
@@ -71,7 +71,7 @@ CL_NS_USE(util)
 		_awhat=STRDUP_AtoA(str);
 		error_number = num;
 		if ( ownstr )
-			_CLDELETE_CaARRAY(str);
+			_CLDELETE_LCaARRAY( (char*)str);
 	}
 	void CLuceneError::set(int num, const TCHAR* str, bool ownstr){
 		_CLDELETE_CARRAY(_twhat);
@@ -79,7 +79,7 @@ CL_NS_USE(util)
 		_twhat=STRDUP_TtoT(str);
 		error_number = num;
 		if ( ownstr )
-			_CLDELETE_CARRAY(str);
+			_CLDELETE_LCARRAY((TCHAR*)str);
 	}
 
 #ifndef _ASCII
@@ -89,7 +89,7 @@ CL_NS_USE(util)
 		_awhat=NULL;
 		_twhat=STRDUP_TtoT(str);
 		if ( ownstr )
-			_CLDELETE_CARRAY(str);
+			_CLDELETE_LCARRAY((TCHAR*)str);
     }
 #endif
 

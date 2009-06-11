@@ -42,7 +42,7 @@ CL_NS_DEF(index)
 
 
 		int32_t firstInt = input->readInt();
-      if (firstInt >= 0) {
+    if (firstInt >= 0) {
          // original-format file, without explicit format version number
          format = 0;
          size = firstInt;
@@ -149,6 +149,9 @@ CL_NS_DEF(index)
 			_CLDELETE(input);
 			}
 	}
+
+	const char* SegmentTermEnum::getObjectName() const{ return getClassName(); }
+	const char* SegmentTermEnum::getClassName(){ return "SegmentTermEnum"; }
 
 	bool SegmentTermEnum::next(){
 	//Func - Moves the current of the set to the next in the set
@@ -375,8 +378,8 @@ CL_NS_DEF(index)
 			return;
 
         //Store the new bufferLength
-		if ( length - bufferLength < LUCENE_SEGMENTTERMENUM_GROWSIZE )
-			bufferLength = length+LUCENE_SEGMENTTERMENUM_GROWSIZE;
+		if ( length - bufferLength < 8 )
+			bufferLength = length+8;
 		else
 			bufferLength = length+1;
 

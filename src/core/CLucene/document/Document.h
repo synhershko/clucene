@@ -7,32 +7,14 @@
 #ifndef _lucene_document_Document_
 #define _lucene_document_Document_
 
-CL_CLASS_DEF(document,Field)
+#include "CLucene/util/VoidList.h"
+#include "Field.h"
 
 ///todo: jlucene has change from using DocumentFieldList/Enumeration
 ///to using a java List... do we want to do this too?
 CL_NS_DEF(document)
 
-//predefine
-class Document;
-
-class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
-    class CLUCENE_EXPORT DocumentFieldList :LUCENE_BASE{
-    public:
-    	DocumentFieldList(Field* f, DocumentFieldList* n);
-    	~DocumentFieldList();
-    	Field* field;
-    	DocumentFieldList* next;
-    };
-	friend class Document;
-private:
-	const DocumentFieldList* fields;
-public:
-	DocumentFieldEnumeration(const DocumentFieldList* fl);
-	~DocumentFieldEnumeration();
-	bool hasMoreElements() const;
-	Field* nextElement();
-};
+class DocumentFieldEnumeration;
 
 /** Documents are the unit of indexing and search.
 *
@@ -48,8 +30,10 @@ public:
 * IndexReader#document(int32_t, Document*)}.
 */
 class CLUCENE_EXPORT Document:LUCENE_BASE {
+public:
+  typedef CL_NS(util)::CLArrayList<Field*,CL_NS(util)::Deletor::Object<Field> > FieldsType;
 private:
-	DocumentFieldEnumeration::DocumentFieldList* fieldList;
+	FieldsType* _fields;
 	float_t boost;
 public:
 	/** Constructs a new document with no fields. */
@@ -66,11 +50,11 @@ public:
 	* each field in this document.  Thus, this method in effect sets a default
 	* boost for the fields of this document.
 	*
-	* @see Field#setBoost(float)
+	* @see Field#setBoost(float_t)
 	*/
 	void setBoost(const float_t boost);
   
-	/** Returns, at indexing time, the boost factor as set by {@link #setBoost(float)}. 
+	/** Returns, at indexing time, the boost factor as set by {@link #setBoost(float_t)}. 
 	*
 	* <p>Note that once a document is indexed this value is no longer available
 	* from the index.  At search time, for retrieved documents, this method always 
@@ -80,7 +64,7 @@ public:
 	* information see the "norm(t,d)" part of the scoring formula in 
 	* {@link Similarity}.)
 	*
-	* @see #setBoost(float)
+	* @see #setBoost(float_t)
 	*/
 	float_t getBoost() const;
 
@@ -138,17 +122,26 @@ public:
 	*/
 	const TCHAR* get(const TCHAR* field) const;
 
-	/** Returns an Enumeration of all the fields in a document.
-	* @deprecated use {@link #getFields()} instead
-	*/
-	_CL_DEPRECATED(  getFields() ) DocumentFieldEnumeration* fields() const;
+  /** Returns an Enumeration of all the fields in a document.
+  * @deprecated use {@link #getFields()} instead
+  */
+  _CL_DEPRECATED(  getFields() ) DocumentFieldEnumeration* fields();
 
-	/** Returns a List of all the fields in a document.
-	* <p>Note that fields which are <i>not</i> {@link Field#isStored() stored} are
-	* <i>not</i> available in documents retrieved from the index, e.g. with {@link
-	* Hits#doc(int)}, {@link Searcher#doc(int)} or {@link IndexReader#document(int)}.
-	*/
-	DocumentFieldEnumeration* getFields() const;
+  /** Returns a List of all the fields in a document.
+   * <p>Note that fields which are <i>not</i> {@link Field#isStored() stored} are
+   * <i>not</i> available in documents retrieved from the index, e.g. with {@link
+   * Hits#doc(int)}, {@link Searcher#doc(int)} or {@link IndexReader#document(int)}.
+   */
+  const FieldsType* getFields() const;
+
+  /**
+   * Returns an array of {@link Field}s with the given name.
+   * This method can return <code>null</code>.
+   *
+   * @param name the name of the field
+   * @return a <code>Field[]</code> array or <code>null</code>
+   */
+  void getFields(const TCHAR* name, std::vector<Field*>& ret);
 
 	/** Prints the fields of a document for human consumption. */
 	TCHAR* toString() const;
@@ -168,6 +161,18 @@ public:
 	* Empties out the document so that it can be reused
 	*/
 	void clear();
+};
+
+
+class CLUCENE_EXPORT DocumentFieldEnumeration :LUCENE_BASE{
+private:
+  struct Internal;
+  Internal* _internal;
+public:
+  DocumentFieldEnumeration(Document::FieldsType::iterator itr, Document::FieldsType::iterator end);
+  ~DocumentFieldEnumeration();
+  bool hasMoreElements() const;
+  Field* nextElement();
 };
 CL_NS_END
 #endif

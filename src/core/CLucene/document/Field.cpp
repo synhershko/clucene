@@ -12,18 +12,15 @@
 #include "CLucene/analysis/AnalysisHeader.h"
 
 CL_NS_USE(util)
-CL_NS_DEF(document) 
+CL_NS_DEF(document)
 
 Field::Field(const TCHAR* Name, Reader* reader, int config):
-	/*_internal(new Internal),*/ lazy(false)
+	lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(reader != NULL, "reader cannot be NULL");
 
 	_name        = CLStringIntern::intern( Name );
-	//_internal->_stringValue = NULL;
-	//_internal->_readerValue = reader;
-	//_internal->_streamValue = NULL;
 	fieldsData = reader;
 	valueType = VALUE_READER;
 
@@ -34,7 +31,7 @@ Field::Field(const TCHAR* Name, Reader* reader, int config):
 
 
 Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool duplicateValue):
-	/*_internal(new Internal),*/ lazy(false)
+	lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
@@ -48,9 +45,6 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 	*/
 
 	_name        = CLStringIntern::intern( Name );
-	//_internal->_stringValue = stringDuplicate( Value );
-	//_internal->_readerValue = NULL;
-	//_internal->_streamValue = NULL;
 	if (duplicateValue)
 		fieldsData = stringDuplicate( Value );
 	else
@@ -64,18 +58,22 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 	setConfig(_config);
 }
 
-Field::Field(const TCHAR* Name, InputStream* Value, int config):
-	/*_internal(new Internal),*/ lazy(false)
+Field::Field(const TCHAR* Name, ValueArray<uint8_t>* Value, int config, bool duplicateValue):
+	lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
 
 	_name        = CLStringIntern::intern( Name );
-	//_internal->_stringValue = NULL;
-	//_internal->_readerValue = NULL;
-	//_internal->_streamValue = Value;
-	fieldsData = Value;
-	valueType = VALUE_STREAM;
+
+	if ( duplicateValue ){
+		ValueArray<uint8_t>* tmp = _CLNEW ValueArray<uint8_t>(Value->length);
+		memcpy(tmp->values, Value->values, Value->length * sizeof(uint8_t));
+		fieldsData = tmp;
+	}else{
+		fieldsData = Value;
+	}
+	valueType = VALUE_BINARY;
 
 	boost=1.0f;
 
@@ -83,7 +81,7 @@ Field::Field(const TCHAR* Name, InputStream* Value, int config):
 }
 
 Field::Field(const TCHAR* Name, int config):
-	/*_internal(new Internal),*/ lazy(false)
+	lazy(false)
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 
@@ -103,22 +101,21 @@ Field::~Field(){
 
 	CLStringIntern::unintern(_name);
 	_resetValue();
-	//delete _internal;
 }
 
 
 /*===============FIELDS=======================*/
 const TCHAR* Field::name() const	{ return _name; } ///<returns reference
-TCHAR* Field::stringValue() const	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
-Reader* Field::readerValue() const	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
-InputStream* Field::streamValue() const	{ return (valueType & VALUE_STREAM) ? static_cast<InputStream*>(fieldsData) : NULL; } ///<returns reference
-CL_NS(analysis)::TokenStream* Field::tokenStreamValue() const { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
+const TCHAR* Field::stringValue()	{ return (valueType & VALUE_STRING) ? static_cast<TCHAR*>(fieldsData) : NULL; } ///<returns reference
+const ValueArray<uint8_t>* Field::binaryValue() { return (valueType & VALUE_BINARY) ? static_cast<ValueArray<uint8_t>*>(fieldsData) : NULL; } ///<returns reference
+Reader* Field::readerValue()	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
+CL_NS(analysis)::TokenStream* Field::tokenStreamValue() { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
 	    
 bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
 bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
 bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
 bool 	Field::isCompressed() const	{ return (config & STORE_COMPRESS) != 0; }
-bool 	Field::isBinary() const		{ return (valueType & VALUE_STREAM) && fieldsData!=NULL; }
+bool 	Field::isBinary() const		{ return (valueType & VALUE_BINARY) && fieldsData!=NULL; }
 
 bool	Field::isTermVectorStored() const			{ return (config & TERMVECTOR_YES) != 0; }
 bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
@@ -138,15 +135,15 @@ void Field::setValue(TCHAR* value, const bool duplicateValue) {
 	valueType = VALUE_STRING;
 }
 
-void Field::setValue(CL_NS(util)::Reader* value) {
+void Field::setValue(Reader* value) {
 	_resetValue();
 	fieldsData = value;
 	valueType = VALUE_READER;
 }
-void Field::setValue(InputStream* value) {
+void Field::setValue(ValueArray<uint8_t>* value) {
 	_resetValue();
 	fieldsData = value;
-	valueType = VALUE_STREAM;
+	valueType = VALUE_BINARY;
 }
 
 /** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
@@ -228,7 +225,7 @@ void Field::setConfig(const uint32_t x){
 }
 
 TCHAR* Field::toString() {
-    CL_NS(util)::StringBuffer result;
+    StringBuffer result;
 	if (isStored()) {
       result.append( _T("stored") );
 	  if (isCompressed())
@@ -281,8 +278,8 @@ TCHAR* Field::toString() {
 			result.append(static_cast<const TCHAR*>(fieldsData));
 		else if (valueType & VALUE_READER)
 			result.append( _T("Reader") );
-		else if (valueType & VALUE_STREAM)
-			result.append( _T("Stream") );
+		else if (valueType & VALUE_BINARY)
+			result.append( _T("Binary") );
 		else
 			result.append( _T("NULL") );
 	}
@@ -299,11 +296,16 @@ void Field::_resetValue() {
 	} else if (valueType & VALUE_READER) {
 		Reader* r = static_cast<Reader*>(fieldsData);
 		_CLDELETE(r);
-	} else if (valueType & VALUE_STREAM) {
-		InputStream* v = static_cast<InputStream*>(fieldsData);
-		_CLVDELETE(v);
+	} else if (valueType & VALUE_BINARY) {
+		ValueArray<uint8_t>* v = static_cast<ValueArray<uint8_t>*>(fieldsData);
+		_CLDELETE(v);
 	}
 	valueType=VALUE_NONE;
 }
-
+const char* Field::getObjectName() const{
+	return getClassName();
+}
+const char* Field::getClassName(){
+	return "Field";
+}
 CL_NS_END

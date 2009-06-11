@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -18,11 +18,25 @@
 #include "_SegmentHeader.h"
 #include "MultiReader.h"
 #include "Terms.h"
-
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_USE(store)
 CL_NS_DEF(index)
+
+
+  class IndexReaderFindSegmentsFile: public SegmentInfos::FindSegmentsFile<uint64_t>{
+  public:
+		IndexReaderFindSegmentsFile( CL_NS(store)::Directory* dir ):
+			SegmentInfos::FindSegmentsFile<uint64_t>(dir){
+		}
+		IndexReaderFindSegmentsFile( const char* dir ):
+			SegmentInfos::FindSegmentsFile<uint64_t>(dir){
+		}
+    uint64_t doBody(const char* segmentFileName){
+      return directory->fileModified(segmentFileName);
+    }
+  };
 
 	class CloseCallbackCompare:public CL_NS(util)::Compare::_base{
 	public:
@@ -32,92 +46,50 @@ CL_NS_DEF(index)
 		static void doDelete(IndexReader::CloseCallback dummy){
 		}
 	};
-	
-	
-	class LockWith:public CL_NS(store)::LuceneLockWith<IndexReader*>{
-	public:
-		CL_NS(store)::Directory* directory;
-		IndexReader* indexReader;
 
-		//Constructor	
-		LockWith(CL_NS(store)::LuceneLock* lock, CL_NS(store)::Directory* dir);
-		~LockWith();
 
-		//Reads the segmentinfo file and depending on the number of segments found
-		//it returns a MultiReader or a SegmentReader
-		IndexReader* doBody();
+  class IndexReader::Internal: LUCENE_BASE{
+  public:
+    /**
+    * @deprecated will be deleted when IndexReader(Directory) is deleted
+    * @see #directory()
+    */
+    CL_NS(store)::Directory* directory;
 
-	};
+    typedef CL_NS(util)::CLSet<IndexReader::CloseCallback, void*,
+      CloseCallbackCompare,
+      CloseCallbackCompare> CloseCallbackMap;
+    CloseCallbackMap closeCallbacks;
 
-    class CommitLockWith:public CL_NS(store)::LuceneLockWith<void>{
-    private:
-	    IndexReader* reader;
-	public:
-	    //Constructor	
-	    CommitLockWith( CL_NS(store)::LuceneLock* lock, IndexReader* r );
-	    void doBody();
-	};
-	    
-	    
-    class IndexReader::Internal: LUCENE_BASE{
-    public:
-    	CL_NS(store)::LuceneLock* writeLock;
-    
-        bool directoryOwner;
-        bool stale;
-        bool hasChanges;
-        bool closeDirectory;
-        
-        SegmentInfos* segmentInfos;
-        CL_NS(store)::Directory* directory;
-        
-    	typedef CL_NS(util)::CLSet<IndexReader::CloseCallback, void*, 
-    		CloseCallbackCompare,
-    		CloseCallbackCompare> CloseCallbackMap;
-    	CloseCallbackMap closeCallbacks;
-    	
-    	Internal(Directory* dir):
-    		directory(_CL_POINTER(dir))
-    	{
-	      writeLock = NULL;
-	      segmentInfos = NULL;
-	      directoryOwner = false;
-	      closeDirectory = false;
-	      stale = false;
-	      hasChanges = false;
-    	}
-    	Internal(Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory){
-    		this->directory = _CL_POINTER(directory);
-		    this->segmentInfos = segmentInfos;
-		    directoryOwner = true;
-		    this->closeDirectory = closeDirectory;
-		    stale = false;
-		    hasChanges = false;
-		    writeLock = NULL;
-    	}
-    	~Internal(){
-	      if (writeLock != NULL) {
-			  //release writeLock
-	          writeLock->release();
-			  _CLDELETE(writeLock);
-	      }
-		  _CLDELETE(segmentInfos);
-		  _CLDECDELETE(directory);
-	    }
-    };
+    Internal(Directory* directory, IndexReader* _this)
+    {
+      if ( directory != NULL )
+        this->directory = _CL_POINTER(directory);
+      else
+        this->directory = NULL;
+      _this->refCount = 1;
+      _this->closed = false;
+      _this->hasChanges = false;
+    }
+    ~Internal(){
+      _CLDECDELETE(directory);
+    }
+  };
 
-  IndexReader::IndexReader(Directory* dir):
-  	internal(_CLNEW Internal(dir)){
+  IndexReader::IndexReader(Directory* dir){
   //Constructor.
   //Func - Creates an instance of IndexReader
   //Pre  - true
   //Post - An instance has been created with writeLock = NULL
-
+    _internal = _CLNEW Internal(dir, this);
   }
 
-   IndexReader::IndexReader(Directory* directory, SegmentInfos* segmentInfos, bool closeDirectory):
-   	internal(_CLNEW Internal(directory, segmentInfos, closeDirectory) )
-  {
+  IndexReader::IndexReader(){
+  //Constructor.
+  //Func - Creates an instance of IndexReader
+  //Pre  - true
+  //Post - An instance has been created with writeLock = NULL
+    _internal = _CLNEW Internal(NULL, this);
   }
 
   IndexReader::~IndexReader(){
@@ -125,21 +97,21 @@ CL_NS_DEF(index)
   //       Destroys the instance and releases the writeLock if needed
   //Pre  - true
   //Post - The instance has been destroyed if pre(writeLock) exists is has been released
-  	_CLDELETE(internal);
+  	_CLDELETE(_internal);
   }
 
-  IndexReader* IndexReader::open(const char* path){
+  IndexReader* IndexReader::open(const char* path, bool closeDirectoryOnCleanup, IndexDeletionPolicy* deletionPolicy){
   //Func - Static method.
-  //       Returns an IndexReader reading the index in an FSDirectory in the named path. 
-  //Pre  - path != NULL and contains the path of the index for which an IndexReader must be 
+  //       Returns an IndexReader reading the index in an FSDirectory in the named path.
+  //Pre  - path != NULL and contains the path of the index for which an IndexReader must be
   //       instantiated
   //       closeDir indicates if the directory needs to be closed
   //Post - An IndexReader has been returned that reads tnhe index located at path
 
 	  CND_PRECONDITION(path != NULL, "path is NULL");
 
-	  Directory* dir = FSDirectory::getDirectory(path,false);
-     IndexReader* reader = open(dir,true);
+	   Directory* dir = FSDirectory::getDirectory(path);
+     IndexReader* reader = open(dir,closeDirectoryOnCleanup,deletionPolicy);
      //because fsdirectory will now have a refcount of 1 more than
      //if the reader had been opened with a directory object,
      //we need to do a refdec
@@ -147,40 +119,55 @@ CL_NS_DEF(index)
      return reader;
   }
 
-  IndexReader* IndexReader::open( Directory* directory, bool closeDirectory){
+  IndexReader* IndexReader::open( Directory* directory, bool closeDirectory, IndexDeletionPolicy* deletionPolicy){
   //Func - Static method.
-  //       Returns an IndexReader reading the index in an FSDirectory in the named path. 
-  //Pre  - directory represents a directory 
+  //       Returns an IndexReader reading the index in an FSDirectory in the named path.
+  //Pre  - directory represents a directory
   //       closeDir indicates if the directory needs to be closed
   //Post - An IndexReader has been returned that reads the index located at directory
 
-	  // in- & inter-process sync
-      //SCOPED_LOCK_MUTEX(internal->directory->THIS_LOCK)
-      
-     IndexReader* ret = NULL;     
-
-	 //LuceneLock* lock = internal->directory->makeLock("commit.lock");
-     
-	  //Instantiate an IndexReader::LockWith which can produce an IndexReader
-      //IndexReader::LockWith with(lock,directory);
-
-     SegmentInfos::FindSegmentsReader find(directory);
-     
-	  //try{
-	  //Create an IndexReader reading the index
-		//ret = with.runAndReturn();
-        ret = (IndexReader*)find.run();
-	  //}_CLFINALLY(
-        //_CLDELETE( lock );
-	  //);
-
-	  ret->internal->closeDirectory = closeDirectory;
-
-	   CND_CONDITION(ret != NULL,"ret is NULL");
-	   //return reference 
-       return ret;
+       return DirectoryIndexReader::open(directory, closeDirectory, deletionPolicy);
   }
-  
+
+  IndexReader* IndexReader::reopen(){
+	  _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support reopen().");
+  }
+  CL_NS(store)::Directory* IndexReader::directory() {
+    ensureOpen();
+    if (NULL != _internal->directory) {
+      return _internal->directory;
+    } else {
+	  _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
+    }
+  }
+
+  void IndexReader::ensureOpen(){
+    if (refCount <= 0) {
+      _CLTHROWA(CL_ERR_AlreadyClosed, "this IndexReader is closed");
+    }
+  }
+
+  void IndexReader::incRef() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    refCount++;
+  }
+
+  void IndexReader::acquireWriteLock(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    /* NOOP */
+  }
+
+  void IndexReader::decRef(){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    assert (refCount > 0);
+    if (refCount == 1) {
+      commit();
+      doClose();
+    }
+    refCount--;
+  }
+
   CL_NS(document)::Document* IndexReader::document(const int32_t n){
     CL_NS(document)::Document* ret = _CLNEW CL_NS(document)::Document;
     if (!document(n,*ret) )
@@ -188,70 +175,71 @@ CL_NS_DEF(index)
     return ret;
   }
 
-  uint64_t IndexReader::lastModified(const char* directory) {
+  uint64_t IndexReader::lastModified(const char* directory2) {
   //Func - Static method
-  //       Returns the time the index in the named directory was last modified. 
+  //       Returns the time the index in the named directory was last modified.
   //Pre  - directory != NULL and contains the path name of the directory to check
   //Post - The last modified time of the index has been returned
 
-      CND_PRECONDITION(directory != NULL, "directory is NULL");
+    CND_PRECONDITION(directory2 != NULL, "directory is NULL");
 
-	  return FSDirectory::fileModified(directory,"segments");
+	  IndexReaderFindSegmentsFile runner(directory2);
+	  return (uint64_t)runner.run();
   }
 
   int64_t IndexReader::getCurrentVersion(Directory* directory) {
-//	SCOPED_LOCK_MUTEX(internal->directory->THIS_LOCK)                 // in- & inter-process sync
-//	LuceneLock* commitLock=directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-//	bool locked=false;
-	int64_t ret = 0;
-//	try {
-//		locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
-		ret = SegmentInfos::readCurrentVersion(directory);
-//	}_CLFINALLY(
-//		if (locked) {
-//			commitLock->release();
-//		}
-//	)
-	return ret;
+		return SegmentInfos::readCurrentVersion(directory);
   }
 
 
    int64_t IndexReader::getCurrentVersion(const char* directory){
-      Directory* dir = FSDirectory::getDirectory(directory, false);
+      Directory* dir = FSDirectory::getDirectory(directory);
       int64_t version = getCurrentVersion(dir);
-	  dir->close();
+      dir->close();
       _CLDECDELETE(dir);
       return version;
    }
     int64_t IndexReader::getVersion() {
-		return internal->segmentInfos->getVersion();
-	}
-	
-	bool IndexReader::isCurrent() {
-//		SCOPED_LOCK_MUTEX(internal->directory->THIS_LOCK)                 // in- & inter-process sync
-//		LuceneLock* commitLock = internal->directory->makeLock(IndexWriter::COMMIT_LOCK_NAME);
-//		bool locked=false;
-		bool ret = false;
-//		try {
-//			locked=commitLock->obtain(IndexWriter::COMMIT_LOCK_TIMEOUT);
-			ret = SegmentInfos::readCurrentVersion(internal->directory) == internal->segmentInfos->getVersion();
-//		} _CLFINALLY(
-//			if (locked) {
-//				commitLock->release();
-//			}
-//		)
-		return ret;
-	}
+          _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
+    }
 
-  uint64_t IndexReader::lastModified(const Directory* directory) {
-  //Func - Static method
-  //       Returns the time the index in this directory was last modified. 
-  //Pre  - directory contains a valid reference
-  //Post - The last modified time of the index has been returned
-
-      return directory->fileModified("segments");
+  void IndexReader::setTermInfosIndexDivisor(int32_t indexDivisor) {
+    _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
   }
 
+  int32_t IndexReader::getTermInfosIndexDivisor() {
+    _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
+  }
+
+  bool IndexReader::isCurrent() {
+    _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
+  }
+  bool IndexReader::isOptimized() {
+    _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
+  }
+
+  uint64_t IndexReader::lastModified(Directory* directory2) {
+  //Func - Static method
+  //       Returns the time the index in this directory was last modified.
+  //Pre  - directory contains a valid reference
+  //Post - The last modified time of the index has been returned
+    IndexReaderFindSegmentsFile runner(directory2);
+    return (uint64_t)runner.run();
+  }
+
+  void IndexReader::setNorm(int32_t doc, const TCHAR* field, uint8_t value){
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    this->ensureOpen();
+    this->acquireWriteLock();
+    this->hasChanges = true;
+    this->doSetNorm(doc, field, value);
+  }
+
+
+  void IndexReader::setNorm(int32_t doc, const TCHAR* field, float_t value){
+     ensureOpen();
+     setNorm(doc, field, CL_NS(search)::Similarity::encodeNorm(value));
+  }
 
   bool IndexReader::indexExists(const char* directory){
   //Func - Static method
@@ -260,52 +248,9 @@ CL_NS_DEF(index)
   //Post - Returns true if an index exists at the specified directory->
   //       If the directory does not exist or if there is no index in it.
   //       false is returned.
-
-       CND_PRECONDITION(directory != NULL, "directory is NULL");
-
-	   //Create a buffer of length CL_MAXDIR
-       char f[CL_MAX_PATH];
-	   //Copy the directory string to the buffer. leave room for /segments
-       strncpy(f,directory,CL_MAX_PATH-10);
-	   //Cat the name of the segments to buffer
-       strcat(f, "/segments");
-	   //Check if the segments file exists
-       return Misc::dir_Exists(f);
-  }
-    
-
-  void IndexReader::setNorm(int32_t doc, const TCHAR* field, uint8_t value){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    if(internal->directoryOwner)
-      aquireWriteLock();
-    doSetNorm(doc, field, value);
-    internal->hasChanges = true;
-  }
-
- void IndexReader::aquireWriteLock() {
-    if (internal->stale)
-      _CLTHROWA(CL_ERR_IO,"IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
-
-    if (internal->writeLock == NULL) {
-      LuceneLock* writeLock = internal->directory->makeLock("write.lock");
-      if (!writeLock->obtain(IndexWriter::WRITE_LOCK_TIMEOUT)) // obtain write lock
-       _CLTHROWA(CL_ERR_IO,"Index locked for write"); // + writeLock
-      this->internal->writeLock = writeLock;
-
-      // we have to check whether index has changed since this reader was opened.
-      // if so, this reader is no longer valid for deletion
-      if (SegmentInfos::readCurrentVersion(internal->directory) > internal->segmentInfos->getVersion()) {
-        internal->stale = true;
-        this->internal->writeLock->release();
-        _CLDELETE(this->internal->writeLock);
-        _CLTHROWA(CL_ERR_IO,"IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
-      }
-    }
-  }
-  
-
-  void IndexReader::setNorm(int32_t doc, const TCHAR* field, float_t value){
-     setNorm(doc, field, CL_NS(search)::Similarity::encodeNorm(value));
+    std::vector<std::string> files;
+    Misc::listFiles(directory, files);
+    return SegmentInfos::getCurrentSegmentGeneration(files) != -1;
   }
 
   bool IndexReader::indexExists(const Directory* directory){
@@ -316,24 +261,25 @@ CL_NS_DEF(index)
   //       If the directory does not exist or if there is no index in it.
   //       false is returned.
 
-      return directory->fileExists("segments");
+    return SegmentInfos::getCurrentSegmentGeneration(directory) != -1;
   }
 
-  TermDocs* IndexReader::termDocs(Term* term) const {
+  TermDocs* IndexReader::termDocs(Term* term) {
   //Func - Returns an enumeration of all the documents which contain
   //       term. For each document, the document number, the frequency of
   //       the term in that document is also provided, for use in search scoring.
-  //       Thus, this method implements the mapping: 
+  //       Thus, this method implements the mapping:
   //
   //       Term => <docNum, freq>*
   //	   The enumeration is ordered by document number.  Each document number
-  //       is greater than all that precede it in the enumeration. 
+  //       is greater than all that precede it in the enumeration.
   //Pre  - term != NULL
   //Post - A reference to TermDocs containing an enumeration of all found documents
   //       has been returned
 
       CND_PRECONDITION(term != NULL, "term is NULL");
 
+      ensureOpen();
       //Reference an instantiated TermDocs instance
       TermDocs* _termDocs = termDocs();
       //Seek all documents containing term
@@ -342,23 +288,24 @@ CL_NS_DEF(index)
       return _termDocs;
   }
 
-  TermPositions* IndexReader::termPositions(Term* term) const{
-  //Func - Returns an enumeration of all the documents which contain  term. For each 
-  //       document, in addition to the document number and frequency of the term in 
-  //       that document, a list of all of the ordinal positions of the term in the document 
+  TermPositions* IndexReader::termPositions(Term* term){
+  //Func - Returns an enumeration of all the documents which contain  term. For each
+  //       document, in addition to the document number and frequency of the term in
+  //       that document, a list of all of the ordinal positions of the term in the document
   //       is available.  Thus, this method implements the mapping:
   //
   //       Term => <docNum, freq,<pos 1, pos 2, ...pos freq-1>>*
   //
   //       This positional information faciliates phrase and proximity searching.
-  //       The enumeration is ordered by document number.  Each document number is greater than 
-  //       all that precede it in the enumeration. 
+  //       The enumeration is ordered by document number.  Each document number is greater than
+  //       all that precede it in the enumeration.
   //Pre  - term != NULL
   //Post - A reference to TermPositions containing an enumeration of all found documents
   //       has been returned
 
       CND_PRECONDITION(term != NULL, "term is NULL");
 
+      ensureOpen();
       //Reference an instantiated termPositions instance
       TermPositions* _termPositions = termPositions();
 	  //Seek all documents containing term
@@ -366,23 +313,27 @@ CL_NS_DEF(index)
 	  //return the enumeration
       return _termPositions;
   }
-  
+
   bool IndexReader::document(int32_t n, CL_NS(document)::Document* doc){
   	return document(n, *doc);
   }
+  bool IndexReader::document(int32_t n, CL_NS(document)::Document& doc){
+    ensureOpen();
+    return document(n, doc, NULL);
+  }
 
-  void IndexReader::deleteDoc(const int32_t docNum){ 
-    deleteDocument(docNum); 
+  void IndexReader::deleteDoc(const int32_t docNum){
+    deleteDocument(docNum);
   }
-  int32_t IndexReader::deleteTerm(Term* term){ 
-    return deleteDocuments(term); 
+  int32_t IndexReader::deleteTerm(Term* term){
+    return deleteDocuments(term);
   }
-  
+
   void IndexReader::deleteDocument(const int32_t docNum) {
-  //Func - Deletes the document numbered docNum.  Once a document is deleted it will not appear 
-  //       in TermDocs or TermPostitions enumerations. Attempts to read its field with the document 
-  //       method will result in an error.  The presence of this document may still be reflected in 
-  //       the docFreq statistic, though this will be corrected eventually as the index is further modified.  
+  //Func - Deletes the document numbered docNum.  Once a document is deleted it will not appear
+  //       in TermDocs or TermPostitions enumerations. Attempts to read its field with the document
+  //       method will result in an error.  The presence of this document may still be reflected in
+  //       the docFreq statistic, though this will be corrected eventually as the index is further modified.
   //Pre  - docNum >= 0
   //Post - If successful the document identified by docNum has been deleted. If no writelock
   //       could be obtained an exception has been thrown stating that the index was locked or has no write access
@@ -391,61 +342,48 @@ CL_NS_DEF(index)
 
      CND_PRECONDITION(docNum >= 0, "docNum is negative");
 
-      if (internal->directoryOwner)
-		  aquireWriteLock();
+    ensureOpen();
+    acquireWriteLock();
 
 	  //Have the document identified by docNum deleted
-      doDelete(docNum);
-      internal->hasChanges = true;
+    hasChanges = true;
+    doDelete(docNum);
   }
 
-  /**
-   * Commit changes resulting from delete, undeleteAll, or setNorm operations
-   * 
-   * @throws IOException
-   */
+  void IndexReader::flush() {
+    SCOPED_LOCK_MUTEX(THIS_LOCK)
+    ensureOpen();
+    commit();
+  }
+
    void IndexReader::commit(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-    if(internal->hasChanges){
-      if(internal->directoryOwner){
-        {
-	        SCOPED_LOCK_MUTEX(internal->directory->THIS_LOCK)      // in- & inter-process sync
-	
-	        LuceneLock* commitLock = internal->directory->makeLock("commit.lock");
-	        CommitLockWith cl(commitLock,this);
-	        cl.run();
-			_CLDELETE(commitLock);
-	
-	    }
-        if (internal->writeLock != NULL) {
-          internal->writeLock->release();  // release write lock
-          _CLDELETE(internal->writeLock);
-        }
-      }else
-        doCommit();
+    if(hasChanges){
+      doCommit();
     }
-    internal->hasChanges = false;
+    hasChanges = false;
   }
 
 
   void IndexReader::undeleteAll(){
      SCOPED_LOCK_MUTEX(THIS_LOCK)
-    if(internal->directoryOwner)
-      aquireWriteLock();
+    ensureOpen();
+    acquireWriteLock();
+    hasChanges = true;
     doUndeleteAll();
-    internal->hasChanges = true;
   }
 
   int32_t IndexReader::deleteDocuments(Term* term) {
-  //Func - Deletes all documents containing term. This is useful if one uses a 
-  //       document field to hold a unique ID string for the document.  Then to delete such  
-  //       a document, one merely constructs a term with the appropriate field and the unique 
-  //       ID string as its text and passes it to this method.  
+  //Func - Deletes all documents containing term. This is useful if one uses a
+  //       document field to hold a unique ID string for the document.  Then to delete such
+  //       a document, one merely constructs a term with the appropriate field and the unique
+  //       ID string as its text and passes it to this method.
   //Pre  - term != NULL
   //Post - All documents containing term have been deleted. The number of deleted documents
   //       has been returned
 
       CND_PRECONDITION(term != NULL, "term is NULL");
+      ensureOpen();
 
 	  //Search for the documents contain term
       TermDocs* docs = termDocs(term);
@@ -454,7 +392,7 @@ CL_NS_DEF(index)
 	  if ( docs == NULL ){
           return 0;
 	  }
-    
+
 	  //initialize
 	  int32_t Counter = 0;
       try {
@@ -475,105 +413,66 @@ CL_NS_DEF(index)
 	//Return the number of deleted documents
     return Counter;
   }
-  
-	TCHAR** IndexReader::getFieldNames(){
-		StringArrayWithDeletor array;
-		getFieldNames(IndexReader::ALL, array);
-		
-		array.setDoDelete(false);
-		TCHAR** ret = _CL_NEWARRAY(TCHAR*,array.size()+1);
-		int j=0;
-  		StringArrayWithDeletor::iterator itr = array.begin();
-  		while ( itr != array.end() ){
-  			ret[j]=*itr;
-			++j;++itr;
- 		}
-		ret[j]=NULL;
-		return ret;
-	}
-	TCHAR** IndexReader::getFieldNames(bool indexed){
-		StringArrayWithDeletor array;
-		getFieldNames(indexed?IndexReader::INDEXED:IndexReader::UNINDEXED, array);
-		
-		array.setDoDelete(false);
-		TCHAR** ret = _CL_NEWARRAY(TCHAR*,array.size()+1);
-		int j=0;
-  		StringArrayWithDeletor::iterator itr = array.begin();
-  		while ( itr != array.end() ){
-  			ret[j]=*itr;
-			++j;++itr;
- 		}
-		ret[j]=NULL;
-		return ret;
-	}
-  
+
 
   void IndexReader::close() {
   //Func - Closes files associated with this index and also saves any new deletions to disk.
   //       No other methods should be called after this has been called.
   //Pre  - true
-  //Post - All files associated with this index have been deleted and new deletions have been 
+  //Post - All files associated with this index have been deleted and new deletions have been
   //       saved to disk
     SCOPED_LOCK_MUTEX(THIS_LOCK)
 
-	Internal::CloseCallbackMap::iterator iter = internal->closeCallbacks.begin();
-	for ( ;iter!=internal->closeCallbacks.end();iter++){
-		CloseCallback callback = *iter->first;
-		callback(this,iter->second);
-	}
-	
-    commit();
-    doClose();
-
-	if(internal->closeDirectory){
-      internal->directory->close();
-	  _CLDECDELETE(internal->directory);
-	}
+    Internal::CloseCallbackMap::iterator iter = _internal->closeCallbacks.begin();
+    for ( ;iter!=_internal->closeCallbacks.end();iter++){
+      CloseCallback callback = *iter->first;
+      callback(this,iter->second);
+    }
+	  if (!closed) {
+      decRef();
+      closed = true;
+    }
   }
-   
+
   bool IndexReader::isLocked(Directory* directory) {
-  //Func - Static method 
+  //Func - Static method
   //       Checks if the index in the directory is currently locked.
   //Pre  - directory is a valid reference to a directory to check for a lock
   //Post - Returns true if the index in the named directory is locked otherwise false
 
 	  //Check the existence of the file write.lock and return true when it does and false
 	  //when it doesn't
-     LuceneLock* l1 = directory->makeLock("write.lock");
-     LuceneLock* l2 = directory->makeLock("commit.lock");
-
-	 bool ret = l1->isLocked() || l2->isLocked();
-
-     _CLDELETE(l1);
-     _CLDELETE(l2);
+     LuceneLock* l = directory->makeLock("write.lock");
+     bool ret = l->isLocked();
+     _CLDELETE(l);
      return ret;
   }
 
   bool IndexReader::isLocked(const char* directory) {
-  //Func - Static method 
+  //Func - Static method
   //       Checks if the index in the named directory is currently locked.
   //Pre  - directory != NULL and contains the directory to check for a lock
   //Post - Returns true if the index in the named directory is locked otherwise false
 
       CND_PRECONDITION(directory != NULL, "directory is NULL");
 
-      Directory* dir = FSDirectory::getDirectory(directory,false);
+      Directory* dir = FSDirectory::getDirectory(directory);
       bool ret = isLocked(dir);
-	  dir->close();
+      dir->close();
       _CLDECDELETE(dir);
 
 	  return ret;
   }
-  
-/** Returns true if there are norms stored for this field. */
+
 bool IndexReader::hasNorms(const TCHAR* field) {
 	// backward compatible implementation.
 	// SegmentReader has an efficient implementation.
+  ensureOpen();
 	return norms(field) != NULL;
 }
 
 void IndexReader::unlock(const char* path){
-	FSDirectory* dir = FSDirectory::getDirectory(path,false);
+	FSDirectory* dir = FSDirectory::getDirectory(path);
 	unlock(dir);
 	dir->close();
 	_CLDECDELETE(dir);
@@ -584,15 +483,9 @@ void IndexReader::unlock(const char* path){
   //       Caution: this should only be used by failure recovery code,
   //       when it is known that no other process nor thread is in fact
   //       currently accessing this index.
-  //Pre  - directory is a valid reference to a directory 
+  //Pre  - directory is a valid reference to a directory
   //Post - The directory has been forcibly unlocked
-      LuceneLock* lock;
-
-	  lock = directory->makeLock("write.lock");
-      lock->release();
-      _CLDELETE(lock);
-
-      lock = directory->makeLock("commit.lock");
+      LuceneLock* lock = directory->makeLock("write.lock");
       lock->release();
       _CLDELETE(lock);
   }
@@ -644,97 +537,18 @@ bool IndexReader::isLuceneFile(const char* filename){
 	else if ( strncmp(ext,".f",2)==0 ){
 		const char* n = ext+2;
 		if ( *n && _istdigit(*n) )
-			return true;	
+			return true;
 	}
 
 	return false;
 }
 
-CL_NS(store)::Directory* IndexReader::getDirectory() { 
-    return internal->directory; 
+CL_NS(store)::Directory* IndexReader::getDirectory() {
+    return directory();
 }
 
 	void IndexReader::addCloseCallback(CloseCallback callback, void* parameter){
-		internal->closeCallbacks.put(callback, parameter);	
-	}
-
-
-
-
-	//Constructor	
-    LockWith::LockWith(CL_NS(store)::LuceneLock* lock, CL_NS(store)::Directory* dir):
-		CL_NS(store)::LuceneLockWith<IndexReader*>(lock,IndexWriter::COMMIT_LOCK_TIMEOUT)
-	{
-		this->directory = dir;
-	}
-	LockWith::~LockWith(){
-	}
-	
-  IndexReader* LockWith::doBody() {
-  //Func - Reads the segmentinfo file and depending on the number of segments found
-  //       it returns a SegmentsReader or a SegmentReader
-  //Pre  - directory != NULL
-  //Post - Depending on the number of Segments present in directory this method
-  //       returns an empty SegmentsReader when there are no segments, a SegmentReader when
-  //       directory contains 1 segment and a nonempty SegmentsReader when directory
-  //       contains multiple segements
-
-	   CND_PRECONDITION(directory != NULL, "directory is NULL");
-
-	   //Instantiate SegmentInfos
-       SegmentInfos* infos = _CLNEW SegmentInfos;
-	   try{
-			//Have SegmentInfos read the segments file in directory
-			infos->read(directory);
-	   }catch(...){
-	        //make sure infos is cleaned up
-			_CLDELETE(infos);
-			throw;
-	   }
-
-       // If there is at least one segment (if infos.size() >= 1), the last
-       // SegmentReader object will close the directory when the SegmentReader
-       // object itself is closed (see SegmentReader::doClose).
-       // If there are no segments, there will be no "last SegmentReader object"
-       // to fulfill this responsibility, so we need to explicitly close the
-       // directory in the segmentsreader.close
-       
-	   //Count the number segments in the directory
-	   const uint32_t nSegs = infos->size();
-
-       if (nSegs == 1 ) {
-			// index is optimized 
-            return _CLNEW SegmentReader(infos, infos->info(0));
-	    }else{
-			//Instantiate an array of pointers to SegmentReaders of size nSegs (The number of segments in the index)
-			IndexReader** readers = NULL;
-
-			if (nSegs > 0){
-				uint32_t infosize=infos->size();
-				readers = _CL_NEWARRAY(IndexReader*,infosize+1);
-				for (uint32_t i = 0; i < infosize; ++i) {
-					//Instantiate a SegementReader responsible for reading the i-th segment and store it in
-					//the readers array
-					readers[i] = _CLNEW SegmentReader(infos->info(i));
-				}
-				readers[infosize] = NULL;
-			}
-
-			//return an instance of SegmentsReader which is a reader that manages all Segments
-			return _CLNEW MultiReader(directory, infos, readers);
-        }// end if
-    }
-
-	
-	//Constructor	
-	CommitLockWith::CommitLockWith( CL_NS(store)::LuceneLock* lock, IndexReader* r ):
-		CL_NS(store)::LuceneLockWith<void>(lock,IndexWriter::COMMIT_LOCK_TIMEOUT),
-		reader(r)
-	{
-	}
-	void CommitLockWith::doBody(){
-		reader->doCommit();
-		reader->internal->segmentInfos->write(reader->getDirectory());
+		_internal->closeCallbacks.put(callback, parameter);
 	}
 
 CL_NS_END

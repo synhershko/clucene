@@ -7,8 +7,7 @@
 #ifndef _lucene_index_SegmentMergeQueue_
 #define _lucene_index_SegmentMergeQueue_
 
-
-//#include "CLucene/util/PriorityQueue.h"
+#include "CLucene/util/PriorityQueue.h"
 //#include "SegmentMergeInfo.h"
 
 CL_NS_DEF(index)

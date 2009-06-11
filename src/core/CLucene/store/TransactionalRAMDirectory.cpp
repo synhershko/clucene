@@ -20,8 +20,15 @@ CL_NS_USE(util)
   }
   TransactionalRAMDirectory::~TransactionalRAMDirectory(){
   }
+    
+  const char* TransactionalRAMDirectory::getClassName(){
+	  return "TransactionalRAMDirectory";
+  }
+  const char* TransactionalRAMDirectory::getObjectName() const{
+	  return getClassName();
+  }
 
-  bool TransactionalRAMDirectory::archiveOrigFileIfNecessary(const char* name) {
+  bool TransactionalRAMDirectory::archiveOrigFileIfNecessary(char* name) {
     // If a file named $name was present when the transaction started and the
     // original RAMFile object has not been archived for restoration upon
     // transaction abort, then do so, and return true.
@@ -35,7 +42,7 @@ CL_NS_USE(util)
       // filesToRestoreOnAbort.
       const char* origName = files->getKey(name);
       RAMFile* origFile = files->get(name);
-      files->remove(name, true, true);
+      files->removeitr(files.find((char*)name), true, true);
       filesToRestoreOnAbort.put(origName, origFile);
 
       CND_CONDITION(!fileExists(name), "File should not exist immediately after archival.");
@@ -46,7 +53,7 @@ CL_NS_USE(util)
   }
 
   void TransactionalRAMDirectory::unarchiveOrigFile(const char* name) {
-    const char* origName = filesToRestoreOnAbort.getKey(name);
+    char* origName = filesToRestoreOnAbort.getKey(name);
     if (origName == NULL) {
       _CLTHROWA(CL_ERR_RAMTransaction,"File submitted for unarchival was not archived.");
     }

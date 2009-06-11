@@ -34,7 +34,7 @@ CL_NS_DEF(search)
 		~PrefixQuery();
 
 		//Returns the name "PrefixQuery"
-		const char* getQueryName() const;
+		const char* getObjectName() const;
 		static const char* getClassName();
 
 		/** Returns the prefix of this query. */
@@ -58,8 +58,9 @@ CL_NS_DEF(search)
     	CL_NS(index)::Term* prefix;
     protected:
     	PrefixFilter( const PrefixFilter& copy );
-    	
     public:
+      class PrefixGenerator;
+
     	PrefixFilter(CL_NS(index)::Term* prefix);
     	~PrefixFilter();
     

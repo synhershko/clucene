@@ -7,8 +7,6 @@
 #ifndef _lucene_index_FieldsReader_
 #define _lucene_index_FieldsReader_
 
-
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/util/_ThreadLocal.h"
 CL_CLASS_DEF(store,Directory)
 CL_CLASS_DEF(document,Document)
@@ -22,7 +20,7 @@ CL_NS_DEF(index)
 
 	/**
 	* Class responsible for access to stored document fields.
-	*
+  * <p/>
 	* It uses &lt;segment&gt;.fdt and &lt;segment&gt;.fdx; files.
 	*/
 	class FieldsReader :LUCENE_BASE{
@@ -47,8 +45,7 @@ CL_NS_DEF(index)
 
 		DEFINE_MUTEX(THIS_LOCK)
 		CL_NS(util)::ThreadLocal<CL_NS(store)::IndexInput*, CL_NS(util)::Deletor::Object<CL_NS(store)::IndexInput> > fieldsStreamTL;
-
-		class FieldsStreamHolder;
+    static void uncompress(const CL_NS(util)::ValueArray<uint8_t>& input, CL_NS(util)::ValueArray<uint8_t>& output);
 	public:
 		FieldsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fn,
 			int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE, int32_t docStoreOffset = -1, int32_t size = 0);
@@ -71,7 +68,7 @@ CL_NS_DEF(index)
 		int32_t size() const;
 		
 		/** Loads the fields from n'th document into doc. returns true on success. */
-		bool doc(int32_t n, CL_NS(document)::Document& doc, CL_NS(document)::FieldSelector* fieldSelector = NULL);
+		bool doc(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector = NULL);
 
 	protected:
 		/** Returns the length in bytes of each raw document in a
@@ -106,7 +103,7 @@ CL_NS_DEF(index)
 	
 	private:
 		/**
-		* A Lazy implementation of Fieldable that differs loading of fields until asked for, instead of when the Document is
+		* A Lazy implementation of Field that differs loading of fields until asked for, instead of when the Document is
 		* loaded.
 		*/
 		class LazyField : public CL_NS(document)::Field {
@@ -117,7 +114,7 @@ CL_NS_DEF(index)
 
 		public:
 			LazyField(FieldsReader* _parent, const TCHAR* _name, int config, const int32_t _toRead, const int64_t _pointer);
-
+      virtual ~LazyField();
 		private:
 			CL_NS(store)::IndexInput* getFieldStream();
 
@@ -125,22 +122,22 @@ CL_NS_DEF(index)
 			/** The value of the field in Binary, or null.  If null, the Reader value,
 			* String value, or TokenStream value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(util)::InputStream* streamValue();
+			virtual const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
 
 			/** The value of the field as a Reader, or null.  If null, the String value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(util)::Reader* readerValue() const;
+			virtual CL_NS(util)::Reader* readerValue();
 
 			/** The value of the field as a String, or null.  If null, the Reader value,
 			* binary value, or TokenStream value is used.  Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			const TCHAR* stringValue();
+			virtual const TCHAR* stringValue();
 
 			/** The value of the field as a TokesStream, or null.  If null, the Reader value,
 			* String value, or binary value is used. Exactly one of stringValue(), 
 			* readerValue(), binaryValue(), and tokenStreamValue() must be set. */
-			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
+			virtual CL_NS(analysis)::TokenStream* tokenStreamValue();
 
 			int64_t getPointer() const;
 			void setPointer(const int64_t _pointer);
@@ -149,6 +146,8 @@ CL_NS_DEF(index)
 			void setToRead(const int32_t _toRead);
 		};
 		friend class LazyField;
+    friend class SegmentMerger;
+    friend class FieldsWriter;
 
 		// Instances of this class hold field properties and data
 		// for merge
@@ -156,10 +155,14 @@ CL_NS_DEF(index)
 		public:
 			const TCHAR* stringValue() const;
 			CL_NS(util)::Reader* readerValue() const;
-			CL_NS(util)::InputStream* streamValue() const;
+			const CL_NS(util)::ValueArray<uint8_t>* binaryValue();
 			CL_NS(analysis)::TokenStream* tokenStreamValue() const;
 
 			FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize);
+      virtual ~FieldForMerge();
+
+      virtual const char* getObjectName() const;
+      static const char* getClassName();
 		};
 	};
 CL_NS_END

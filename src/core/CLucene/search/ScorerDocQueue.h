@@ -26,7 +26,7 @@ private:
 public:
 	
 	ScorerDocQueue( int32_t maxSize );
-	~ScorerDocQueue();
+	virtual ~ScorerDocQueue();
 	
 	void put( Scorer* scorer );
 	bool insert( Scorer* scorer );

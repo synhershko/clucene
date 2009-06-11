@@ -83,14 +83,13 @@ FieldInfos* FieldInfos::clone()
 }
 
 void FieldInfos::add(const Document* doc) {
-	DocumentFieldEnumeration* fields  = doc->getFields();
+  const Document::FieldsType& fields = *doc->getFields();
 	Field* field;
-	while (fields->hasMoreElements()) {
-			field = fields->nextElement();
+  for ( Document::FieldsType::const_iterator itr = fields.begin() ; itr != fields.end() ; itr++ ){
+			field = *itr;
 			add(field->name(), field->isIndexed(), field->isTermVectorStored(), field->isStorePositionWithTermVector(),
               field->isStoreOffsetWithTermVector(), field->getOmitNorms());
 	}
-	_CLLDELETE(fields);
 }
 
 void FieldInfos::addIndexed(const TCHAR** names, const bool storeTermVectors, const bool storePositionWithTermVector,

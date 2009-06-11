@@ -27,7 +27,7 @@ t_ifdefs=0
 t_exports=0
 FAIL=0
 
-if [ $# == 0 ]; then
+if [ $# -eq 0 ]; then
     usage
 else
     while [ "$1" != "" ]; do
@@ -56,7 +56,7 @@ else
     done
 fi
 
-if [ $t_all == 1 ]; then
+if [ $t_all -eq 1 ]; then
     t_env=1
     t_c_all=1
     t_c_h=1
@@ -81,16 +81,14 @@ function checkForIfdefs {
 }
 
 
-if [ $t_env == 1 ]; then
+if [ $t_env -eq 1 ]; then
     rm -fdr $TMP 2>/dev/null
     mkdir $TMP
     
     #create header file for testing of symbols in headers.
     echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-headers.cpp
-fi
 
-#iterate all headers
-if [ $t_env == 1 ]; then
+		#iterate all headers
     for H in `find ../src/shared/CLucene| grep "\.h$"` `find ../src/core/CLucene| grep "\.h$"`; do
         BH=`basename "$H"`
         DN=`dirname "$H"`
@@ -107,63 +105,60 @@ if [ $t_env == 1 ]; then
             fi
         fi
     done
-fi
-
-if [ $t_env == 1 ]; then
+    
     echo "int main(){return 0;}"  >>$TMP/pub-headers.cpp
 fi
 
-#find inline code:
-if [ $t_inline == 1 ]; then
-    if [ $t_env == 1 ]; then
-        cmake -DENABLE_CLDOCS:BOOLEAN=TRUE .
-        make doc
-        if [ $? != 0 ]; then 
-            exit 1
-        fi
-    fi
-fi
 
 ################################################
 #now the environment is finished being setup...
 ################################################
 echo "Starting tests..."
 
-if [ $t_c_h == 1 ] || [ $t_ifdefs == 1 ] || [ $t_exports == 1 ]; then
+if [ $t_c_h -eq 1 ] || [ $t_ifdefs -eq 1 ] || [ $t_exports -eq 1 ]; then
     for H in `find $TMP/src | grep "\.h$"`; do
         BH=`basename "$H"`
         DH=`dirname "${H:3}"`
         
-        if [ $t_ifdefs == 1 ]; then
+        if [ $t_ifdefs -eq 1 ]; then
             checkForIfdefs $H
         fi
     
         #check that all classes are exported
-        if [ $t_exports == 1 ]; then
-            XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
-            if [ "$XX" != "" ]; then
-                echo "$H has unexported class: $XX"
-                echo ""
-                FAIL=1
-            fi
+        if [ $t_exports -eq 1 ]; then
+      		if [ "${H:0:1}" == "_" ]; then
+      			#internal headers... none must be exported
+	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
+	          if [ "$XX" == "" ]; then
+	              echo "$H has exported class: $XX"
+	              echo ""
+	              FAIL=1
+	          fi
+          else
+          	#external headers... all must be exported
+	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
+	          if [ "$XX" != "" ]; then
+	              echo "$H has unexported class: $XX"
+	              echo ""
+	              FAIL=1
+	          fi
+          fi
         fi
         
         #test that each header compiles independently...
-        if [ $t_c_h == 1 ] && [ "${H:7}" != "disttest/src/core/CLucene/util/Reader.h" ]; then
+        if [ $t_c_h -eq 1 ] && [ "${H:7}" != "disttest/src/core/CLucene/util/Reader.h" ]; then
             echo "Test that $H compiles seperately..."
             echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-header.cpp
             echo "#include \"$H"\" >>$TMP/pub-header.cpp
-            echo "int main(){return 0;}"  >>$TMP/pub-header.cpp
+            echo "int main(){ return 0; }" >>"$TMP/pub-header.cpp"
             g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp
-            if [ $? != 0 ]; then 
-                FAIL=1; 
-            fi
+            if [ $? -ne 0 ]; then FAIL=1; fi
         fi
     done
 fi
 
 #iterate all our code...
-if [ $t_license == 1 ]; then
+if [ $t_license -eq 1 ]; then
     for H in `find ../src`; do
         BH=`basename "$H"`
         BH_len=${#BH}
@@ -182,11 +177,19 @@ fi
 
 
 #test if headers can compile together by themselves:
-if [ $t_c_all == 1 ]; then
+if [ $t_c_all -eq 1 ]; then
     g++ -I$TMP/src -I$TMP/src/shared -I$TMP/src/core $TMP/pub-headers.cpp -I./src/shared
 fi
 
-if [ $t_inline == 1 ]; then
+if [ $t_inline -eq 1 ]; then
+		if [ ! -f "./doc" ]; then
+			echo "Couldn't find docs, run:"
+		  echo "# cmake -DENABLE_CLDOCS:BOOLEAN=TRUE ."
+		  echo "# make doc"
+		  echo "and then try again"
+		  exit 1
+		fi
+	
     INLINES=0
     grep -c "\[inline" doc/html/*.html|grep -v ":0$"|grep -v "util"|grep -v "jstreams" | while read line; do
     
@@ -195,7 +198,7 @@ if [ $t_inline == 1 ]; then
             continue;
         fi
 
-        if [ $INLINES == 0 ]; then
+        if [ $INLINES -eq 0 ]; then
             echo "These files report inline code:"
             INLINES=1
             FAIL=1
@@ -204,16 +207,16 @@ if [ $t_inline == 1 ]; then
     done
 fi
 
-if [ $t_compile == 1 ]; then
+if [ $t_compile -eq 1 ]; then
     #compile serperately
     make cl_test
-    if [ $? != 0 ]; then 
+    if [ $? -ne 0 ]; then 
         FAIL=1; 
     fi
     
     #compile together
     make test-all
-    if [ $? != 0 ]; then 
+    if [ $? -ne 0 ]; then 
         FAIL=1; 
     fi
 fi

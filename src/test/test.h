@@ -34,7 +34,9 @@ CL_NS_USE2(analysis,standard)
 
 #include "CuTest.h"
 
+CuSuite *testatomicupdates(void);
 CuSuite *testindexwriter(void);
+CuSuite *testindexreader(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
 CuSuite *testanalyzers(void);
@@ -90,6 +92,7 @@ public:
     StringMap(bool delKey){
         this->delKey = delKey;
     }
+
     void remove(_K val){
         std::iterator<_K,_T,_Comparator> itr;
         itr = this->find(val);
@@ -101,7 +104,6 @@ public:
              _CLDELETE_CARRAY(v);
         }
     }
-    
     virtual ~StringMap(){
         while ( this->begin() != this->end() ){
             _K v = this->begin()->first;
@@ -111,11 +113,13 @@ public:
             }
         }
     }
-    
     void add(_K k, _T v){
         this->insert ( std::pair<_K,_T>(k,v) );
     }
 };
+
+void TestAssertIndexReaderEquals(CuTest *tc,  IndexReader* reader1, IndexReader* reader2);
+
 
 extern unittest tests[];
 

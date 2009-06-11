@@ -7,8 +7,6 @@
 #ifndef _lucene_search_BooleanClause_
 #define _lucene_search_BooleanClause_
 
-//#include "SearchHeader.h"
-
 CL_CLASS_DEF(util,StringBuffer)
 CL_CLASS_DEF(search,Query)
 

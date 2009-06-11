@@ -103,7 +103,7 @@ public:
 template <class T> 
 class CLUCENE_EXPORT BufferedStream{
 public:
-		~BufferedStream(){}
+		virtual ~BufferedStream(){}
     /**
      * @brief Repositions this stream to a given position.
      *
@@ -193,22 +193,23 @@ public:
 
 
 class CLUCENE_EXPORT StringReader: public BufferedReader{
-	TCHAR* value;
+protected:
+	const TCHAR* value;
 	bool ownValue;
 	int64_t pos;
-protected:
 	size_t m_size;
+  size_t buffer_size;
 public:
-    StringReader ( const TCHAR* value, const int32_t length = -1 );
-    StringReader ( TCHAR* value, const int32_t length, bool copyData = true );
-	 virtual ~StringReader();
-	
-    int32_t read(const TCHAR*& start, int32_t min, int32_t max);
-    int64_t position();
-    int64_t reset(int64_t);
-	 int64_t skip(int64_t ntoskip);
-	 void setMinBufSize(int32_t s);
-	 size_t size();
+  StringReader ( const TCHAR* value, const int32_t length = -1, bool copyData = true );
+  void init ( const TCHAR* value, const int32_t length, bool copyData = true );
+	virtual ~StringReader();
+
+  int32_t read(const TCHAR*& start, int32_t min, int32_t max);
+  int64_t position();
+  int64_t reset(int64_t);
+	int64_t skip(int64_t ntoskip);
+	void setMinBufSize(int32_t s);
+	size_t size();
 };
 class CLUCENE_EXPORT AStringReader: public BufferedInputStream{
 	signed char* value;

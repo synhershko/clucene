@@ -33,7 +33,7 @@ CL_NS_DEF(search)
      * @param prefixLength Length of required common prefix. Default value is 0.
      * @throws IOException
      */
-	 FuzzyTermEnum::FuzzyTermEnum(const IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
+	 FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
         distance(0),
         _endEnum(false),
 		prefix(STRDUP_TtoT(LUCENE_BLANK_STRING)),
@@ -85,6 +85,9 @@ CL_NS_DEF(search)
 	  //Close the enumeration
 	  close();
   }
+
+	const char* FuzzyTermEnum::getObjectName() const{ return getClassName(); }
+	const char* FuzzyTermEnum::getClassName(){ return "FuzzyTermEnum"; }
 
   bool FuzzyTermEnum::endEnum() {
   //Func - Returns the fact if the current term in the enumeration has reached the end
@@ -269,24 +272,24 @@ CL_NS_DEF(search)
     }
 
     TCHAR* FuzzyQuery::toString(const TCHAR* field) const{
-        StringBuffer buffer(100, false); // TODO: Have a better estimation for the initial buffer length
-		Term* term = getTerm(false); // no need to increase ref count
-        if ( field==NULL || _tcscmp(term->field(),field)!=0 ) {
-            buffer.append(term->field());
-            buffer.append( _T(":"));
-        }
-        buffer.append(term->text());
-        buffer.append( _T("~") );
-		buffer.appendFloat(minimumSimilarity,1);
-		// todo: use ToStringUtils.boost()
-        if (getBoost() != 1.0f) {
-            buffer.appendChar ( '^' );
-            buffer.appendFloat( getBoost(),1);
-        }
-        return buffer.getBuffer();
+      StringBuffer buffer(100, false); // TODO: Have a better estimation for the initial buffer length
+      Term* term = getTerm(false); // no need to increase ref count
+      if ( field==NULL || _tcscmp(term->field(),field)!=0 ) {
+        buffer.append(term->field());
+        buffer.append( _T(":"));
+      }
+      buffer.append(term->text());
+      buffer.append( _T("~") );
+      buffer.appendFloat(minimumSimilarity,1);
+      // todo: use ToStringUtils.boost()
+      if (getBoost() != 1.0f) {
+        buffer.appendChar ( '^' );
+        buffer.appendFloat( getBoost(),1);
+      }
+      return buffer.getBuffer();
     }
 
-  const char* FuzzyQuery::getQueryName() const{
+  const char* FuzzyQuery::getObjectName() const{
   //Func - Returns the name of the query
   //Pre  - true
   //post - The string FuzzyQuery has been returned

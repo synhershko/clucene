@@ -1,19 +1,20 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_analysis_AnalysisHeader_
 #define _lucene_analysis_AnalysisHeader_
 
 #include "CLucene/index/Payload.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
+#include "CLucene/util/VoidList.h"
+#include "CLucene/LuceneThreads.h"
 
 CL_CLASS_DEF(util,Reader)
 CL_NS_DEF(analysis)
 
-typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
+typedef CL_NS(util)::CLSetList<TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(util)::Deletor::tcArray> CLTCSetList;
 
 /** A Token is an occurence of a term from the text of a field.  It consists of
   a term's text, the start and end offset of the term in the text of the field,
@@ -27,16 +28,16 @@ typedef CL_NS(util)::CLSetList<const TCHAR*, CL_NS(util)::Compare::TChar, CL_NS(
   The type is an interned string, assigned by a lexical analyzer
   (a.k.a. tokenizer), naming the lexical or syntactic class that the token
   belongs to.  For example an end of sentence marker token might be implemented
-  with type "eos".  The default token type is "word".  
+  with type "eos".  The default token type is "word".
   <p>
   A Token can optionally have metadata (a.k.a. Payload) in the form of a variable
-  length byte array. Use {@link lucene::index::TermPositions#getPayloadLength()} and 
+  length byte array. Use {@link lucene::index::TermPositions#getPayloadLength()} and
   {@link lucene::index::TermPositions#getPayload(byte[], int)} to retrieve the payloads from the index.
-  
+
   <br><br>
   <p><font color="#FF0000">
-  WARNING: The status of the <b>Payloads</b> feature is experimental. 
-  The APIs introduced here might change in the future and will not be 
+  WARNING: The status of the <b>Payloads</b> feature is experimental.
+  The APIs introduced here might change in the future and will not be
   supported anymore in such a case.</font>
 
   <br><br>
@@ -64,26 +65,28 @@ private:
 	int32_t positionIncrement;
 	size_t bufferTextLen;
 
-public:
 	#ifndef LUCENE_TOKEN_WORD_LENGTH
-	TCHAR* _termText;				  ///< the text of the term
+	TCHAR* _buffer;				  ///< the text of the term
 	#else
-	TCHAR _termText[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
+	TCHAR _buffer[LUCENE_TOKEN_WORD_LENGTH+1];				  ///< the text of the term
 	#endif
 	int32_t _termTextLen;                                         ///< the length of termText. Internal use only
-	static const TCHAR* getDefaultType();
 
 	CL_NS(index)::Payload* payload;
 
+public:
+	static const TCHAR* getDefaultType();
+
 	Token();
 	~Token();
+
 	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
 	void set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
-	
+
 	size_t bufferLength();
 	void growBuffer(size_t size);
-	
+  TCHAR* resizeTermBuffer(size_t size);
 	/** Set the position increment.  This determines the position of this
 	* token relative to the previous Token in a TokenStream, used in
 	* phrase searching.
@@ -116,19 +119,19 @@ public:
 	*  altering the buffer be sure to call {@link
 	*  #setTermLength} to record the number of valid
 	*  characters that were placed into the termBuffer. */
-	const TCHAR* termBuffer() const;
+	TCHAR* termBuffer() const;
 	size_t termLength(); //< Length of the the termBuffer. See #termBuffer
 
 	_CL_DEPRECATED( termBuffer ) const TCHAR* termText() const; //< See #termBuffer()
 	_CL_DEPRECATED( termLength ) size_t termTextLength(); //< See #termLength
 
 	void resetTermTextLen(); //< Empties the termBuffer. See #termBuffer
-	void setText(const TCHAR* txt); //< Sets the termBuffer. See #termBuffer
+	void setText(const TCHAR* txt, int32_t len=-1); //< Sets the termBuffer. See #termBuffer
 
 	/**
 	* Returns this Token's starting offset, the position of the first character
 	* corresponding to this token in the source text.
-	* 
+	*
 	* Note that the difference between endOffset() and startOffset() may not be
 	* equal to termText.length(), as the term text may have been altered by a
 	* stemmer or some other filter.
@@ -138,6 +141,8 @@ public:
 	/** Set the starting offset.
 	@see #startOffset() */
 	void setStartOffset(const int32_t val);
+
+  void setTermLength(int32_t);
 
 	/**
 	* Returns this Token's ending offset, one greater than the position of the
@@ -149,16 +154,16 @@ public:
 	@see #endOffset() */
 	void setEndOffset(const int32_t val);
 
-	/// Returns this Token's lexical type.  Defaults to "word". 
+	/// Returns this Token's lexical type.  Defaults to "word".
 	const TCHAR* type() const; ///<returns reference
 	void setType(const TCHAR* val); ///<returns reference
 
 	/**
 	* Returns this Token's payload.
-	*/ 
+	*/
 	CL_NS(index)::Payload* getPayload();
 
-	/** 
+	/**
 	* Sets this Token's payload.
 	*/
 	void setPayload(CL_NS(index)::Payload* payload);
@@ -194,12 +199,12 @@ public:
 	*  Callers may re-use a single Token instance for successive
 	*  calls to this method.
 	*  <p>
-	*  This implicitly defines a "contract" between 
-	*  consumers (callers of this method) and 
-	*  producers (implementations of this method 
+	*  This implicitly defines a "contract" between
+	*  consumers (callers of this method) and
+	*  producers (implementations of this method
 	*  that are the source for tokens):
 	*  <ul>
-	*   <li>A consumer must fully consume the previously 
+	*   <li>A consumer must fully consume the previously
 	*       returned Token before calling this method again.</li>
 	*   <li>A producer must call {@link Token#clear()}
 	*       before setting the fields in it & returning it</li>
@@ -208,7 +213,7 @@ public:
 	*  @param result a Token that may or may not be used to return
 	*  @return next token in the stream or null if end-of-stream was hit
 	*/
-	virtual Token* next(Token*& token) = 0;
+	virtual Token* next(Token* token) = 0;
 
 	/** This is for backwards compatibility only. You should pass the token you want to fill
 	 * to next(), this will save a lot of object construction and destructions.
@@ -219,14 +224,14 @@ public:
     /** Releases resources associated with this stream. */
 	virtual void close() = 0;
 
-	/** Resets this stream to the beginning. This is an
-	*  optional operation, so subclasses may or may not
-	*  implement this method. Reset() is not needed for
-	*  the standard indexing process. However, if the Tokens 
-	*  of a TokenStream are intended to be consumed more than 
-	*  once, it is necessary to implement reset(). 
-	*/
-	//virtual void reset(CL_NS(util)::Reader* _input=NULL){}
+  /** Resets this stream to the beginning. This is an
+   *  optional operation, so subclasses may or may not
+   *  implement this method. Reset() is not needed for
+   *  the standard indexing process. However, if the Tokens
+   *  of a TokenStream are intended to be consumed more than
+   *  once, it is necessary to implement reset().
+   */
+  virtual void reset();
 
 	virtual ~TokenStream();
 };
@@ -247,8 +252,8 @@ public:
 	Analyzer();
 
 	/** Creates a TokenStream which tokenizes all the text in the provided
-	Reader.  Default implementation forwards to tokenStream(Reader) for 
-	compatibility with older version.  Override to allow Analyzer to choose 
+	Reader.  Default implementation forwards to tokenStream(Reader) for
+	compatibility with older version.  Override to allow Analyzer to choose
 	strategy based on document and/or field.  Must be able to handle null
 	field name for backward compatibility. */
 	virtual TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)=0;
@@ -303,7 +308,7 @@ This is an abstract class.
 NOTE: subclasses must override at least one of {@link
 #next()} or {@link #next(Token)}.
 <p>
-NOTE: subclasses overriding {@link #next(Token)} must  
+NOTE: subclasses overriding {@link #next(Token)} must
 call {@link Token#clear()}.
 */
 class CLUCENE_EXPORT Tokenizer:public TokenStream {
@@ -339,7 +344,7 @@ protected:
     /** If true then input will be deleted in the destructor */
 	bool deleteTokenStream;
 
-    /** Construct a token stream filtering the given input. 
+    /** Construct a token stream filtering the given input.
      *
      * @param in The TokenStream to filter from
      * @param deleteTS If true, input will be deleted in the destructor

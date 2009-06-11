@@ -91,7 +91,7 @@ public:
      *         hanppened in the InputStream
      *
      */
-	bool next(CL_NS(analysis)::Token* token);
+	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token* token);
 
 	bool getIgnoreSurrogates(){ return ignoreSurrogates; };
 	void setIgnoreSurrogates(bool ignoreSurrogates){ this->ignoreSurrogates = ignoreSurrogates; };

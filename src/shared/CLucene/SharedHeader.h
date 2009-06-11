@@ -116,8 +116,8 @@
 ////////////////////////////////////////////////////////
 #if defined(_WIN32) || defined(_WIN64)
 	#define CLUCENE_EXPORT_DECL __declspec(dllexport)
-    #define CLUCENE_IMPORT_DECL __declspec(dllimport)
-    #define CLUCENE_LOCAL_DECL
+  #define CLUCENE_IMPORT_DECL __declspec(dllimport)
+  #define CLUCENE_LOCAL_DECL
 #elif defined(_CL_HAVE_GCCVISIBILITYPATCH)
 	#define CLUCENE_EXPORT_DECL __attribute__ ((visibility("default")))
 	#define CLUCENE_LOCAL_DECL __attribute__ ((visibility("hidden")))

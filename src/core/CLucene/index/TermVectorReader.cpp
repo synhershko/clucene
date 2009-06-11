@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -70,7 +70,7 @@ TermVectorsReader::TermVectorsReader(const TermVectorsReader& copy)
     tvx = copy.tvx->clone();
     tvd = copy.tvd->clone();
     tvf = copy.tvf->clone();
-	
+
     tvdFormat = copy.tvdFormat;
     tvfFormat = copy.tvfFormat;
     _size = copy._size;
@@ -89,13 +89,13 @@ TermVectorsReader::~TermVectorsReader(){
 
 int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
 	int32_t format = in->readInt();
-	if (format > TermVectorsWriter::FORMAT_VERSION)
+	if (format > TermVectorsReader::FORMAT_VERSION)
 	{
 		CL_NS(util)::StringBuffer err;
 		err.append(_T("Incompatible format version: "));
 		err.appendInt(format);
 		err.append(_T(" expected "));
-		err.appendInt(TermVectorsWriter::FORMAT_VERSION);
+		err.appendInt(TermVectorsReader::FORMAT_VERSION);
 		err.append(_T(" or less"));
 		_CLTHROWT(CL_ERR_CorruptIndex,err.getBuffer());
 	}
@@ -175,10 +175,10 @@ void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVector
 			else
 				number += tvd->readVInt();
 
-          if (number == fieldNumber) 
+          if (number == fieldNumber)
 			  found = i;
         }
-  
+
 		// This field, although valid in the segment, was not found in this
 		// document
 		if (found != -1) {
@@ -186,11 +186,11 @@ void TermVectorsReader::get(const int32_t docNum, const TCHAR* field, TermVector
           position = 0;
           for (int32_t i = 0; i <= found; i++) // TODO: Was ++i, make sure its still good
             position += tvd->readVLong();
-          
+
 		  mapper->setDocumentNumber(docNum);
 		  readTermVector(field, position, mapper);
       } else {
-        // "Fieldable not found"
+        // "Field not found"
       }
     } else {
       // "No tvx file"
@@ -208,7 +208,7 @@ TermFreqVector* TermVectorsReader::get(const int32_t docNum, const TCHAR* field)
 }
 
 
-ObjectArray<TermFreqVector>* TermVectorsReader::get(const int32_t docNum){
+ArrayBase<TermFreqVector*>* TermVectorsReader::get(const int32_t docNum){
 	ObjectArray<TermFreqVector>* result = NULL;
     // Check if no term vectors are available for this segment at all
     if (tvx != NULL) {
@@ -223,7 +223,7 @@ ObjectArray<TermFreqVector>* TermVectorsReader::get(const int32_t docNum){
         if (fieldCount != 0) {
             int32_t number = 0;
             const TCHAR** fields = _CL_NEWARRAY(const TCHAR*,fieldCount+1);
-    		
+
 			{ //msvc6 scope fix
 				for (int32_t i = 0; i < fieldCount; ++i) {
 					if(tvdFormat == FORMAT_VERSION)
@@ -234,7 +234,7 @@ ObjectArray<TermFreqVector>* TermVectorsReader::get(const int32_t docNum){
 				}
 			}
 			fields[fieldCount]=NULL;
-		  
+
 		    // Compute position in the tvf file
 		    position = 0;
 		    int64_t* tvfPointers = _CL_NEWARRAY(int64_t,fieldCount);
@@ -331,7 +331,7 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 
     int32_t numTerms = tvf->readVInt();
     // If no terms - return a constant empty termvector. However, this should never occur!
-    if (numTerms == 0) 
+    if (numTerms == 0)
 		return;
 
 	bool storePositions;
@@ -349,27 +349,23 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 	}
 	mapper->setExpectations(field, numTerms, storeOffsets, storePositions);
 
-    int32_t start = 0;
-    int32_t deltaLength = 0;
-    int32_t totalLength = 0;
-	int32_t bufferLen=10; // init the buffer with a length of 10 character
-	TCHAR* buffer = (TCHAR*)malloc(bufferLen * sizeof(TCHAR));
-	
-    for (int32_t i = 0; i < numTerms; ++i) {
+  int32_t start = 0;
+  int32_t deltaLength = 0;
+  int32_t totalLength = 0;
+  ValueArray<TCHAR> buffer(10); // init the buffer with a length of 10 character
+
+  for (int32_t i = 0; i < numTerms; ++i) {
 		start = tvf->readVInt();
 		deltaLength = tvf->readVInt();
 		totalLength = start + deltaLength;
-		if (bufferLen < totalLength) // increase buffer
+    if (buffer.length < totalLength + 1) // increase buffer
 		{
-			buffer=(TCHAR*)realloc(buffer,totalLength * sizeof(TCHAR));
-			bufferLen = totalLength;
+      buffer.resize(totalLength+1);
 		}
 
 		//read the term
-		tvf->readChars(buffer, start, deltaLength);
-		TCHAR* term = _CL_NEWARRAY(TCHAR,totalLength+1);
-		_tcsncpy(term,buffer,totalLength);
-		term[totalLength] = '\0'; //null terminate term
+    tvf->readChars(buffer.values, start, deltaLength);
+    buffer.values[totalLength] = '\0'; //null terminate term
 
 		//read the frequency
 		int32_t freq = tvf->readVInt();
@@ -395,11 +391,11 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 			}
 		}
 
-		ObjectArray<TermVectorOffsetInfo>* offsets = NULL;
+		ArrayBase<TermVectorOffsetInfo*>* offsets = NULL;
 		if (storeOffsets) {
 			//does the mapper even care about offsets?
 			if (mapper->isIgnoringOffsets() == false) {
-				offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(freq); offsets->initArray();
+				offsets = _CLNEW ObjectArray<TermVectorOffsetInfo>(freq);
 				int32_t prevOffset = 0;
 				for (int32_t j = 0; j < freq; j++) {
 					int32_t startOffset = prevOffset + tvf->readVInt();
@@ -414,12 +410,11 @@ void TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPoin
 				}
 			}
 		}
-		mapper->map(term, totalLength, freq, offsets, positions);
+    mapper->map(buffer.values, totalLength, freq, offsets, positions);
 	}
-    free(buffer);
 }
 
-ObjectArray<TermVectorOffsetInfo> TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
+ObjectArray<TermVectorOffsetInfo>* TermVectorOffsetInfo_EMPTY_OFFSET_INFO = _CLNEW ObjectArray<TermVectorOffsetInfo>;
 
 TermVectorOffsetInfo::TermVectorOffsetInfo() {
 	startOffset = 0;
@@ -450,7 +445,7 @@ void TermVectorOffsetInfo::setStartOffset(const int32_t _startOffset) {
 }
 
 bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo) {
-	if (this == termVectorOffsetInfo) 
+	if (this == termVectorOffsetInfo)
 		return true;
 
 	if (endOffset != termVectorOffsetInfo->endOffset) return false;
@@ -467,6 +462,8 @@ size_t TermVectorOffsetInfo::hashCode() const{
 }
 
 TermVectorMapper::TermVectorMapper(){
+	this->ignoringPositions = false;
+	this->ignoringOffsets = false;
 }
 
 TermVectorMapper::TermVectorMapper(const bool _ignoringPositions, const bool _ignoringOffsets){
@@ -489,37 +486,40 @@ void TermVectorMapper::setDocumentNumber(const int32_t documentNumber)
 }
 
 ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():
-	  terms(NULL),termFreqs(NULL),positions(NULL),offsets(NULL),currentPosition(0),field(NULL)
+  terms(NULL),
+  termFreqs(NULL),
+  positions(NULL),
+  offsets(NULL),
+  currentPosition(0),
+  field(NULL)
 {
 }
 ParallelArrayTermVectorMapper::~ParallelArrayTermVectorMapper(){
-	//_CLDELETE_LCARRAY(field);
+	_CLDELETE_LCARRAY(field);
 }
 
 void ParallelArrayTermVectorMapper::setExpectations(const TCHAR* _field, const int32_t numTerms,
 													const bool storeOffsets, const bool storePositions) {
-	this->field = const_cast<TCHAR*>(_field);
+	_CLDELETE_LCARRAY(field);
+	this->field = STRDUP_TtoT(_field);
 
-	terms = _CL_NEWARRAY(TCHAR*,numTerms+1);
-	terms[numTerms]=NULL; //null terminate terms array
-
+  terms = _CLNEW CL_NS(util)::TCharArray(numTerms);
 	termFreqs = _CLNEW ValueArray<int32_t>(numTerms);
 
 	this->storingOffsets = storeOffsets;
 	this->storingPositions = storePositions;
 	if(storePositions){
-		positions = _CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
-		positions->initArray();
+		positions = (ArrayBase< ArrayBase<int32_t>* >*)_CLNEW ObjectArray< ValueArray<int32_t> >(numTerms);
 	}
 	if(storeOffsets){
-		offsets = _CLNEW ObjectArray< ObjectArray<TermVectorOffsetInfo> >(numTerms);
-		offsets->initArray();
+		offsets = _CLNEW ObjectArray< ArrayBase<TermVectorOffsetInfo*> >(numTerms);
 	}
 }
 
 void ParallelArrayTermVectorMapper::map(const TCHAR* term, int32_t termLen, const int32_t frequency,
-										ObjectArray<TermVectorOffsetInfo>* _offsets, ValueArray<int32_t>* _positions) {
-	terms[currentPosition] = const_cast<TCHAR*>(term);
+    ArrayBase<TermVectorOffsetInfo*>* _offsets,
+    ArrayBase<int32_t>* _positions) {
+	terms->values[currentPosition] = STRDUP_TtoT(term);
 
 	termFreqs->values[currentPosition] = frequency;
 

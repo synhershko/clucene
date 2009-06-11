@@ -8,6 +8,7 @@
 #include "Analyzers.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/Misc.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
@@ -28,7 +29,7 @@ TCHAR CharTokenizer::normalize(const TCHAR c) const
 { 
 	return c; 
 }
-Token* CharTokenizer::next(Token*& token){
+Token* CharTokenizer::next(Token* token){
 	int32_t length = 0;
 	int32_t start = offset;
 	while (true) {
@@ -36,6 +37,8 @@ Token* CharTokenizer::next(Token*& token){
 		offset++;
 		if (bufferIndex >= dataLen) {
 			dataLen = input->read(ioBuffer, 1, LUCENE_IO_BUFFER_SIZE );
+			if (dataLen == -1)
+				dataLen = 0;
 			bufferIndex = 0;
 		}
 		if (dataLen <= 0 ) {
@@ -47,23 +50,19 @@ Token* CharTokenizer::next(Token*& token){
 			c = ioBuffer[bufferIndex++];
 		if (isTokenChar(c)) {                       // if it's a token TCHAR
 
-			if (length == 0)			  // start of token
-				start = offset-1;
+      if (length == 0)			  // start of token
+        start = offset-1;
 
-			buffer[length++] = normalize(c);          // buffer it, normalized
+      buffer[length++] = normalize(c);          // buffer it, normalized
 
-			if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
-				break;
+      if (length == LUCENE_MAX_WORD_LEN)		  // buffer overflow!
+        break;
 
 		} else if (length > 0)			  // at non-Letter w/ chars
 			break;					  // return 'em
-
 	}
 	buffer[length]=0;
-	if (token != NULL)
-		token->set( buffer, start, start+length);
-	else
-		token = _CLNEW Token( buffer, start, start+length );
+	token->set( buffer, start, start+length);
 	return token;
 }
 void CharTokenizer::reset(CL_NS(util)::Reader* input)
@@ -148,10 +147,10 @@ LowerCaseFilter::LowerCaseFilter(TokenStream* in, bool deleteTokenStream):
 LowerCaseFilter::~LowerCaseFilter(){
 }
 
-Token* LowerCaseFilter::next(Token*& t){
+Token* LowerCaseFilter::next(Token* t){
 	if (input->next(t) == NULL)
 		return NULL;
- 	stringCaseFold( t->_termText );
+ 	stringCaseFold( t->termBuffer() );
 	return t;
 }
 
@@ -176,7 +175,7 @@ StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _s
 	ignoreCase(_ignoreCase)
 {
 	deleteStopTable = true;
-	stopWords = _CLNEW CLTCSetList(false);
+	stopWords = _CLNEW CLTCSetList(true);
 	fillStopTable( stopWords,_stopWords, _ignoreCase );
 }
 
@@ -196,22 +195,31 @@ void StopFilter::setEnablePositionIncrementsDefault(const bool defaultValue) {
 bool StopFilter::getEnablePositionIncrements() const { return enablePositionIncrements; }
 void StopFilter::setEnablePositionIncrements(const bool enable) { this->enablePositionIncrements = enable; }
 		
-void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords
-							   , const bool _ignoreCase)
+void StopFilter::fillStopTable(CLTCSetList* stopTable, const TCHAR** stopWords, const bool _ignoreCase)
 {
-	if ( _ignoreCase )
-		for (int32_t i = 0; stopWords[i]!=NULL; i++)
-			stopTable->insert( stringCaseFold(const_cast<TCHAR*>(stopWords[i])) );
-	else
-		for (int32_t i = 0; stopWords[i]!=NULL; i++)
-			stopTable->insert( stopWords[i] );
+  TCHAR* tmp;
+	if ( _ignoreCase ){
+		for (int32_t i = 0; stopWords[i]!=NULL; i++){
+      tmp = STRDUP_TtoT(stopWords[i]);
+      stringCaseFold(tmp);
+			stopTable->insert( tmp );
+    }
+	}else{
+		for (int32_t i = 0; stopWords[i]!=NULL; i++){
+      tmp = STRDUP_TtoT(stopWords[i]);
+			stopTable->insert( tmp );
+    }
+  }
 }
 
-Token* StopFilter::next(Token*& token) {
+Token* StopFilter::next(Token* token) {
 	// return the first non-stop word found
 	int32_t skippedPositions = 0;
 	while (input->next(token)){
-		TCHAR* termText = ignoreCase ? stringCaseFold(token->_termText) : token->_termText;
+		TCHAR* termText = token->termBuffer();
+    if ( ignoreCase ){
+      stringCaseFold(termText);
+    }
 		if (stopWords->find(termText)==stopWords->end()){
 			if (enablePositionIncrements) {
 				token->setPositionIncrement(token->getPositionIncrement() + skippedPositions);
@@ -226,7 +234,7 @@ Token* StopFilter::next(Token*& token) {
 }
 
 StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
-	stopTable(_CLNEW CLTCSetList)
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	if ( enc == NULL )
 		enc = "ASCII";
@@ -234,13 +242,13 @@ StopAnalyzer::StopAnalyzer(const char* stopwordsFile, const char* enc):
 }
 
 StopAnalyzer::StopAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
-	stopTable(_CLNEW CLTCSetList)
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	WordlistLoader::getWordSet(stopwordsReader, stopTable, _bDeleteReader);
 }
 
 StopAnalyzer::StopAnalyzer():
-	stopTable(_CLNEW CLTCSetList(false))
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	StopFilter::fillStopTable(stopTable,ENGLISH_STOP_WORDS);
 }
@@ -249,7 +257,7 @@ StopAnalyzer::~StopAnalyzer()
 _CLDELETE(stopTable);
 }
 StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):
-	stopTable(_CLNEW CLTCSetList(false))
+	stopTable(_CLNEW CLTCSetList(true))
 {
 	StopFilter::fillStopTable(stopTable,stopWords);
 }
@@ -282,7 +290,7 @@ void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* anal
 }
 
 TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader* reader) {
-    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get(fieldName));
+    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get((TCHAR*)fieldName));
     if (analyzer == NULL) {
       analyzer = defaultAnalyzer;
     }
@@ -313,8 +321,8 @@ ISOLatin1AccentFilter::ISOLatin1AccentFilter(TokenStream* input, bool deleteTs):
 }
 ISOLatin1AccentFilter::~ISOLatin1AccentFilter(){
 }
-Token* ISOLatin1AccentFilter::next(Token*& token){
-	if ( input->next(token) ){
+Token* ISOLatin1AccentFilter::next(Token* token){
+	if ( input->next(token) != NULL ){
 		int32_t l = token->termLength();
 		const TCHAR* chars = token->termBuffer();
 		bool doProcess = false;
@@ -492,37 +500,37 @@ TokenStream* KeywordAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(
 KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 	Tokenizer(input)
 {
-    this->done = false;
+  this->done = false;
 	if ( bufferSize < 0 )
-		this->bufferSize = DEFAULT_BUFFER_SIZE;
+	this->bufferSize = DEFAULT_BUFFER_SIZE;
 }
 KeywordTokenizer::~KeywordTokenizer(){
 }
 
-Token* KeywordTokenizer::next(Token*& token){
-    if (!done) {
-	  if (token==NULL)
-		  token = _CLNEW Token();
-      done = true;
-	  int32_t rd;
-	  const TCHAR* buffer=0;
-      while (true) {
-        rd = input->read(buffer, 1, bufferSize);
-        if (rd == -1) 
-			break;
-		token->growBuffer(token->_termTextLen +rd+1);
-
-		uint32_t cp = rd;
-		if ( token->_termTextLen + cp > token->bufferLength() )
-			cp = token->bufferLength() -  token->_termTextLen;
-		_tcsncpy(token->_termText+token->_termTextLen,buffer,cp);
-		token->_termTextLen+=rd;
+Token* KeywordTokenizer::next(Token* token){
+  if (!done) {
+    done = true;
+    int32_t upto = 0;
+    int32_t rd;
+    token->clear();
+    TCHAR* termBuffer=token->termBuffer();
+    const TCHAR* readBuffer=NULL;
+	assert(false);//test me
+    while (true) {
+      rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
+      if (rd == -1) 
+		    break;
+      if ( upto == token->bufferLength() ){
+        termBuffer = token->resizeTermBuffer(token->bufferLength() + 8);
       }
-	  token->_termText[token->_termTextLen]=0;
-	  token->set(token->_termText,0,token->_termTextLen);
-	  return token;
+	    _tcsncpy(termBuffer + upto, readBuffer, rd);
+      upto += rd;
     }
-    return NULL;
+    termBuffer[upto]=0;
+    token->setTermLength(upto);
+    return token;
+  }
+  return NULL;
 }
 void KeywordTokenizer::reset(CL_NS(util)::Reader* input)
 {
@@ -538,7 +546,7 @@ LengthFilter::LengthFilter(TokenStream* in, const size_t _min, const size_t _max
     this->_max = _max;
 }
 
-Token* LengthFilter::next(Token*& token)
+Token* LengthFilter::next(Token* token)
 {
     // return the first non-stop word found
     while ( input->next(token) )

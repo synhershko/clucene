@@ -91,7 +91,7 @@ CL_NS_USE(analysis)
 			return 0;
 		}
 		//found a query term - is it unique in this doc?
-		if(_uniqueTermsInFragment.find(termText)==_uniqueTermsInFragment.end())
+		if(_uniqueTermsInFragment.find((TCHAR*)termText)==_uniqueTermsInFragment.end())
 		{
 			_totalScore+=queryTerm->getWeight();
 			TCHAR* owned_term = stringDuplicate(termText);

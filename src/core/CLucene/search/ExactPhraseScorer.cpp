@@ -10,7 +10,6 @@
 #include "SearchHeader.h"
 #include "Scorer.h"
 #include "_ExactPhraseScorer.h"
-#include "_PhraseScorer.h"
 
 CL_NS_USE(index)
 CL_NS_DEF(search)
@@ -30,6 +29,8 @@ CL_NS_DEF(search)
 
 	}
 
+	ExactPhraseScorer::~ExactPhraseScorer(){}
+
 	float_t ExactPhraseScorer::phraseFreq(){
 	//Func - Returns the freqency of the phrase
 	//Pre  - first != NULL
@@ -43,9 +44,8 @@ CL_NS_DEF(search)
 		CND_PRECONDITION(pq    != NULL,"pq is NULL");
 		CND_PRECONDITION(pq->size()==0,"pq is not empty");
 
-		//build pq from list
+		// sort list with pq
 		pq->clear();
-
 
 		//Add the nodes of the list of PhrasePositions and store them
 		//into the PhraseQueue pq so it can used to build
@@ -65,11 +65,9 @@ CL_NS_DEF(search)
 		//rebuild list from pq
 		pqToList();
 
-		//Initialize freq at 0
-		int32_t freq = 0;
-
 		// for counting how many times the exact phrase is found in current document,
 		// just count how many times all PhrasePosition's have exactly the same position.   
+		int32_t freq = 0;
 		do {		//find position with all terms
 			while (first->position < last->position){	//scan forward in first
 				do{
@@ -85,5 +83,9 @@ CL_NS_DEF(search)
 		} while (last->nextPosition());
 
 		return (float_t)freq;
+	}
+
+	TCHAR* ExactPhraseScorer::toString(){
+		return stringDuplicate(_T("ExactPhraseScorer"));
 	}
 CL_NS_END

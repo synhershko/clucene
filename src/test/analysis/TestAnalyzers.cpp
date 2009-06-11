@@ -13,24 +13,23 @@
 	const TCHAR* pos = output;
 	TCHAR buffer[80];
 	const TCHAR* last = output;
-	CL_NS(analysis)::Token* t = NULL;
+	CL_NS(analysis)::Token t;
 	while( (pos = _tcsstr(pos+1, _T(";"))) != NULL ) {
 		int32_t len = (int32_t)(pos-last);
 		_tcsncpy(buffer,last,len);
 		buffer[len]=0;
 
-	  CLUCENE_ASSERT((t = ts->next(t)) != NULL);
-	  CLUCENE_ASSERT(_tcscmp( t->termBuffer(),buffer) == 0 );
-		
-    last = pos+1;
-  }
-  CLUCENE_ASSERT(ts->next(t)==NULL); //Test failed, more fields than expected.
-  
-  _CLDELETE(t);
+		CLUCENE_ASSERT(ts->next(&t)!=NULL);
+		CLUCENE_ASSERT( t.termLength() == _tcslen(buffer) );
+		CLUCENE_ASSERT(_tcscmp( t.termBuffer(), buffer) == 0 );
 
-	 ts->close();
-    _CLDELETE(reader);
-    _CLDELETE(ts);
+		last = pos+1;
+	}
+	CLUCENE_ASSERT(ts->next(&t)==NULL); //Test failed, more fields than expected.
+
+	ts->close();
+	_CLDELETE(reader);
+	_CLDELETE(ts);
   }
 
   void testSimpleAnalyzer(CuTest *tc){
@@ -65,20 +64,18 @@
 
         StringReader reader(text);
         TokenStream* tokenStream = analyzer.tokenStream( _T("field"), &reader);
-        CL_NS(analysis)::Token* token = NULL;
+        CL_NS(analysis)::Token token;
 
-        CLUCENE_ASSERT( tokenStream->next(token) != NULL );
+        CLUCENE_ASSERT( tokenStream->next(&token) != NULL );
         CuAssertStrEquals(tc,_T("token.termBuffer()"), _T("Qwerty"),
-                    token->termBuffer());
-		_CLDELETE(token);
+                    token.termBuffer());
         _CLDELETE(tokenStream);
 
         StringReader reader2(text);
         tokenStream = analyzer.tokenStream(_T("special"), &reader2);
-        CLUCENE_ASSERT( tokenStream->next(token) != NULL );
+        CLUCENE_ASSERT( tokenStream->next(&token) != NULL );
         CuAssertStrEquals(tc, _T("token.termBuffer()"), _T("qwerty"),
-                    token->termBuffer());
-		_CLDELETE(token);
+                    token.termBuffer());
         _CLDELETE(tokenStream);
    }
 
@@ -123,88 +120,86 @@
 	StringReader reader(str);
 	WhitespaceTokenizer ws(&reader);
 	ISOLatin1AccentFilter filter(&ws,false);
-	CL_NS(analysis)::Token* token = NULL;
+	CL_NS(analysis)::Token token;
 
 	
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Des"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("mot"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("cles"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("LA"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("CHAINE"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("AE"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("C"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("D"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("N"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("TH"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Y"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("ae"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("c"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("d"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("n"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("ss"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("th"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("y"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("y"), token->termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Des"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("mot"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("cles"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("LA"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("CHAINE"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("A"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("AE"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("C"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("E"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("I"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("D"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("N"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("O"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("TH"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("U"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Y"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("a"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("ae"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("c"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("e"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("i"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("d"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("n"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("o"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("ss"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("th"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("u"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("y"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("y"), token.termBuffer());
 	
 	#ifdef _UCS2
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("OE"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("oe"), token->termBuffer());
-	CLUCENE_ASSERT(filter.next(token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Y"), token->termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("OE"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("oe"), token.termBuffer());
+	CLUCENE_ASSERT(filter.next(&token) != NULL); CuAssertStrEquals(tc, _T("Token compare"), _T("Y"), token.termBuffer());
 	#endif
 	
 	
-	CLUCENE_ASSERT(filter.next(token)==NULL);
-
-	_CLDELETE(token);
+	CLUCENE_ASSERT(filter.next(&token)==NULL);
   }
 
   void testWordlistLoader(CuTest *tc){
@@ -217,7 +212,7 @@
     
 	  _CLDELETE(a);
 
-	  TCHAR* testString = new TCHAR[10];
+	  TCHAR testString[10];
 	  _tcscpy(testString, _T("test"));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("test"));
 	  _tcscpy(testString, _T("test "));
@@ -240,7 +235,6 @@
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("tes"));
 	  _tcscpy(testString, _T(" t est "));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("t"));
-	  delete[] testString;
   }
   
 CuSuite *testanalyzers(void)
@@ -252,7 +246,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testNullAnalyzer);
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
-	SUITE_ADD_TEST(suite, testWordlistLoader);
+    SUITE_ADD_TEST(suite, testWordlistLoader);
     return suite; 
 }
 // EOF

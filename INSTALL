@@ -155,8 +155,22 @@ For example:
 # DMALLOC_OPTIONS=medium,log=dmalloc.log.txt
 # export DMALLOC_OPTIONS
 
+UPDATE: when i upgrade my machine to Ubuntu 9.04, dmalloc stopped working (caused
+clucene to crash).
+
+Performance with callgrind
+--------------------------
+Really simple
+
+valgrind --tool=callgrind <command: e.g. bin/cl_test>
+this will create a file like callgrind.out.12345. you can open this with kcachegrind or some
+tool like that.
+
+
 Performance with gprof
 ----------------------
+Note: I recommend callgrind, it works much better.
+
 Compile with gprof turned on (ENABLE_GPROF in cmake gui or using ccmake).
 I've found (at least on windows cygwin) that gprof wasn't working over
 dll boundaries, running the cl_test-pedantic monolithic build worked better.
@@ -164,6 +178,32 @@ dll boundaries, running the cl_test-pedantic monolithic build worked better.
 This is typically what I use to produce some meaningful output after a -pg
 compiled application has exited:
 # gprof bin/cl_test-pedantic.exe gmon.out >gprof.txt
+
+Code coverage with gcov
+-----------------------
+To create a code coverage report of the test, you can use gcov. Here are the
+steps I followed to create a nice html report. You'll need the lcov package
+installed to generate html. Also, I recommend using an out-of-source build
+directory as there are lots of files that will be generated.
+
+NOTE: you must have lcov installed for this to work
+
+* It is normally recommended to compile with no optimisations, so change CMAKE_BUILD_TYPE
+to Debug.
+
+* I have created a cl_test-gcov target which contains the necessary gcc switches
+already. So all you need to do is
+# make test-gcov
+
+If everything goes well, there will be a directory called code-coverage containing the report.
+
+If you want to do this process manually, then:
+# lcov --directory ./src/test/CMakeFiles/cl_test-gcov.dir/__/core/CLucene -c -o clucene-coverage.info
+# lcov --remove clucene-coverage.info "/usr/*" > clucene-coverage.clean
+# genhtml -o clucene-coverage clucene-coverage.clean
+
+If both those commands pass, then there will be a clucene coverage report in the 
+clucene-coverage directory.
 
 Benchmarks
 ----------

@@ -27,8 +27,6 @@ CL_NS_DEF(store)
 		};
 
 
-		// TODO: Should move to ArrayList ?
-		//CL_NS(util)::CLVector<uint8_t*,CL_NS(util)::Deletor::Array<uint8_t> > buffers;
 		CL_NS(util)::CLVector<RAMFileBuffer*,CL_NS(util)::Deletor::Object<RAMFileBuffer> > buffers;
 
 
@@ -41,11 +39,11 @@ CL_NS_DEF(store)
 
 
 	public:
-        DEFINE_MUTEX(THIS_LOCK)
-				
-        #ifdef _DEBUG
+    DEFINE_MUTEX(THIS_LOCK)
+
+    #ifdef _DEBUG
 		const char* filename;
-        #endif
+    #endif
 		// File used as buffer, in no RAMDirectory
 		RAMFile( RAMDirectory* directory=NULL );
 		~RAMFile();
@@ -68,7 +66,7 @@ CL_NS_DEF(store)
 	};
 
 
-	class RAMIndexOutput: public IndexOutput {		
+	class RAMOutputStream: public IndexOutput {		
 	protected:
 		RAMFile* file;
 		bool deleteFile;
@@ -86,34 +84,35 @@ CL_NS_DEF(store)
 	public:
 		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=1024);
 		
-		RAMIndexOutput(RAMFile* f);
-		RAMIndexOutput();
+		RAMOutputStream(RAMFile* f);
+		RAMOutputStream();
   	    /** Construct an empty output buffer. */
-		virtual ~RAMIndexOutput();
+		virtual ~RAMOutputStream();
 
 		virtual void close();
 
 		int64_t length() const;
-        /** Resets this to an empty buffer. */
-        void reset();
-  	    /** Copy the current contents of this buffer to the named output. */
-        void writeTo(IndexOutput* output);
+    /** Resets this to an empty buffer. */
+    void reset();
+    /** Copy the current contents of this buffer to the named output. */
+    void writeTo(IndexOutput* output);
         
-    	inline void writeByte(const uint8_t b);
-    	void writeBytes(const uint8_t* b, const int32_t len);
+  	void writeByte(const uint8_t b);
+  	void writeBytes(const uint8_t* b, const int32_t len);
 
-    	void seek(const int64_t pos);
+  	void seek(const int64_t pos);
+  	
+  	void flush();
+  	
+  	int64_t getFilePointer() const;
     	
-    	void flush();
-    	
-    	int64_t getFilePointer() const;
-    	
-		const char* getObjectName(){ return RAMIndexOutput::getClassName(); }
-		static const char* getClassName(){ return "RAMIndexOutput"; }    	
-    	
+		const char* getObjectName();
+		static const char* getClassName();   	
+   	
 	};
+	typedef RAMOutputStream RAMIndexOutput; //deprecated
 
-	class RAMIndexInput:public IndexInput {				
+	class RAMInputStream:public IndexInput {				
 	private:
 		RAMFile* file;
 		int64_t _length;
@@ -129,18 +128,17 @@ CL_NS_DEF(store)
 		
 	protected:
 		/** IndexInput methods */
-		RAMIndexInput(const RAMIndexInput& clone);
+		RAMInputStream(const RAMInputStream& clone);
 		
 	public:
-		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMIndexOutput::BUFFER_SIZE);
+		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMOutputStream::BUFFER_SIZE);
 
-		RAMIndexInput(RAMFile* f);
-		~RAMIndexInput();
+		RAMInputStream(RAMFile* f);
+		~RAMInputStream();
 		IndexInput* clone() const;
 
 		void close();
 		int64_t length() const;
-		const char* getDirectoryType() const;
 		
 		inline uint8_t readByte();
 		void readBytes( uint8_t* dest, const int32_t len );
@@ -148,11 +146,11 @@ CL_NS_DEF(store)
 		inline int64_t getFilePointer() const;
 		
 		void seek(const int64_t pos);
-		
-		const char* getObjectName(){ return RAMIndexInput::getClassName(); }
-		static const char* getClassName(){ return "RAMIndexInput"; }
-		
+		const char* getDirectoryType() const;
+		const char* getObjectName() const;
+		static const char* getClassName();
 	};
+	typedef RAMInputStream RAMIndexInput; //deprecated
 
 CL_NS_END
 #endif

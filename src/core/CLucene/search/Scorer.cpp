@@ -10,32 +10,32 @@
 
 CL_NS_DEF(search)
 
-Scorer::Scorer(Similarity* similarity) {
- this->similarity = similarity;
+Scorer::Scorer(Similarity* _similarity) : similarity(_similarity){
 }
 
 Scorer::~Scorer(){
 }
 
-/** Returns the Similarity implementation used by this scorer. */
 Similarity* Scorer::getSimilarity()  const{
- return this->similarity;
+	return this->similarity;
 }
 
-/** Scores all documents and passes them to a collector. */
 void Scorer::score(HitCollector* hc) {
- while (next()) {
-    hc->collect(doc(), score());
- }
+	while (next()) {
+		hc->collect(doc(), score());
+	}
 }
 
 bool Scorer::score( HitCollector* results, const int32_t maxDoc ) {
-  while( doc() < maxDoc ) {
-	  results->collect( doc(), score() );
-	  if ( !next() )
-		  return false;
-  }
-  return true;
+	while( doc() < maxDoc ) {
+		results->collect( doc(), score() );
+		if ( !next() )
+			return false;
+	}
+	return true;
+}
+bool Scorer::sort(const Scorer* elem1, const Scorer* elem2){
+	return elem1->doc() < elem1->doc();
 }
 
 CL_NS_END

@@ -33,7 +33,7 @@ CL_NS_DEF(search)
     * To properly clean memory from bits(), pass the bitset to this function. The
     * Filter should be deleted if this function returns true.
     */
-	virtual bool shouldDeleteBitSet(const CL_NS(util)::BitSet* bs) const{ return true; }
+	virtual bool shouldDeleteBitSet(const CL_NS(util)::BitSet*) const{ return true; }
 
 	//Creates a user-readable version of this query and returns it as as string
 	virtual TCHAR* toString()=0;

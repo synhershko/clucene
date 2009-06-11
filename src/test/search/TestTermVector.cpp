@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -18,10 +18,10 @@ void testTermPositionVectors(CuTest *tc) {
     try {
       Hits* hits = tv_searcher->search(&query);
       CuAssert (tc,_T("hits.length != 100"), 100 == hits->length());
-      
+
       for (int32_t i = 0; i < hits->length(); i++)
       {
-		  ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+		  ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
 		  CLUCENE_ASSERT(vector != NULL);
 		  CLUCENE_ASSERT(vector->length== 1);
 		  vector->deleteValues();
@@ -32,7 +32,7 @@ void testTermPositionVectors(CuTest *tc) {
     } catch (CLuceneError& e) {
         if ( e.number() == CL_ERR_IO )
             CuAssert(tc, _T("IO Error"),false);
-      
+
         throw e;
     }
 }
@@ -46,10 +46,10 @@ void testTermVectors(CuTest *tc) {
     try {
       Hits* hits = tv_searcher->search(&query);
       CuAssertIntEquals(tc,_T("hits!=100"), 100, hits->length());
-      
+
       for (int32_t i = 0; i < hits->length(); i++)
       {
-        ObjectArray<TermFreqVector>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+        ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
         CLUCENE_ASSERT(vector != NULL);
         CLUCENE_ASSERT(vector->length == 1);
 		vector->deleteValues();
@@ -112,26 +112,34 @@ void setupDoc(Document& doc, const TCHAR* text)
 	doc.add(*new Field(_T("field"), text, Field::STORE_YES |
 		Field::INDEX_TOKENIZED | Field::TERMVECTOR_YES));
 }
+struct __TCharCompare
+{
+  bool operator()(const TCHAR* s1, const TCHAR* s2) const
+  {
+    return _tcscmp(s1, s2) < 0;
+  }
+};
+
 void testKnownSetOfDocuments(CuTest *tc) {
     const TCHAR* test1 = _T("eating chocolate in a computer lab"); //6 terms
     const TCHAR* test2 = _T("computer in a computer lab"); //5 terms
     const TCHAR* test3 = _T("a chocolate lab grows old"); //5 terms
     const TCHAR* test4 = _T("eating chocolate with a chocolate lab in an old chocolate colored computer lab"); //13 terms
-    
-    typedef StringMap<const TCHAR*, int32_t> test4MapType;
-    test4MapType test4Map(NULL);
-    test4Map.add(_T("chocolate"), 3);
-    test4Map.add(_T("lab"), 2);
-    test4Map.add(_T("eating"), 1);
-    test4Map.add(_T("computer"), 1);
-    test4Map.add(_T("with"), 1);
-    test4Map.add(_T("a"), 1);
-    test4Map.add(_T("colored"), 1);
-    test4Map.add(_T("in"), 1);
-    test4Map.add(_T("an"), 1);
-    test4Map.add(_T("computer"), 1);
-    test4Map.add(_T("old"), 1);
-    
+
+    typedef std::map<const TCHAR*, int32_t, __TCharCompare> test4MapType;
+    test4MapType test4Map;
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("chocolate"), 3) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("lab"), 2) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("eating"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("computer"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("with"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("a"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("colored"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("in"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("an"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("computer"), 1) );
+    test4Map.insert( std::pair<const TCHAR*,int32_t>(_T("old"), 1) );
+
     Document testDoc1;
     setupDoc(testDoc1, test1);
     Document testDoc2;
@@ -140,9 +148,9 @@ void testKnownSetOfDocuments(CuTest *tc) {
     setupDoc(testDoc3, test3);
     Document testDoc4;
     setupDoc(testDoc4, test4);
-        
+
     RAMDirectory dir;
-    
+
     try {
       SimpleAnalyzer a;
       IndexWriter writer(&dir, &a, true);
@@ -156,7 +164,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
       IndexSearcher knownSearcher(&dir);
       TermEnum* termEnum = knownSearcher.getReader()->terms();
       TermDocs* termDocs = knownSearcher.getReader()->termDocs();
-      
+
       Similarity* sim = knownSearcher.getSimilarity();
       while (termEnum->next() == true)
       {
@@ -173,32 +181,30 @@ void testKnownSetOfDocuments(CuTest *tc) {
           float_t tf = sim->tf(freq);
           float_t idf = sim->idf(term, &knownSearcher);
           //float_t qNorm = sim.queryNorm()
-			 idf += tf; //remove warning
-          
-          int termsCount=0;
-          const TCHAR** terms = vector->getTerms();
+          idf += tf; //remove warning
+
+          const ArrayBase<const TCHAR*>* terms = vector->getTerms();
           CLUCENE_ASSERT(vector != NULL);
-          while ( terms && terms[termsCount] != NULL )
-              termsCount++;
+          int termsCount=terms != NULL ? terms->length : 0;
 
           //This is fine since we don't have stop words
           float_t lNorm = sim->lengthNorm(_T("field"), termsCount);
-			 lNorm ++;//remove warning
+          lNorm ++;//remove warning
 
           //float_t coord = sim.coord()
           //System.out.println("TF: " + tf + " IDF: " + idf + " LenNorm: " + lNorm);
-          const TCHAR** vTerms = vector->getTerms();
-          const ValueArray<int32_t>* freqs = vector->getTermFrequencies();
-          int32_t i=0; 
-          while ( vTerms && vTerms[i] != NULL )
+          const ArrayBase<const TCHAR*>* vTerms = vector->getTerms();
+          const ArrayBase<int32_t>* freqs = vector->getTermFrequencies();
+          int32_t i=0;
+          while ( vTerms && i < vTerms->length )
           {
-            if ( _tcscmp(term->text(), vTerms[i]) == 0 )
+            if ( _tcscmp(term->text(), vTerms->values[i]) == 0 )
             {
               CLUCENE_ASSERT((*freqs)[i] == freq);
             }
             i++;
           }
-          
+
           _CLDELETE(vector);
         }
         _CLDECDELETE(term);
@@ -216,8 +222,8 @@ void testKnownSetOfDocuments(CuTest *tc) {
       //doc 3 should be the first hit b/c it is the shortest match
       CLUCENE_ASSERT(hits->length() == 3);
       float_t score = hits->score(0);
-		score++;
-      
+      score++;
+
       CLUCENE_ASSERT(2==hits->id(0) );
       CLUCENE_ASSERT(3==hits->id(1) );
       CLUCENE_ASSERT(0==hits->id(2) );
@@ -225,24 +231,22 @@ void testKnownSetOfDocuments(CuTest *tc) {
       TermFreqVector* vector = knownSearcher.getReader()->getTermFreqVector(hits->id(1), _T("field"));
       CLUCENE_ASSERT(vector != NULL);
       //_tprintf(_T("Vector: %s\n"),vector);
-      const TCHAR** terms = vector->getTerms();
-      const ValueArray<int32_t>* freqs = vector->getTermFrequencies();
+      const ArrayBase<const TCHAR*>* terms = vector->getTerms();
+      const ArrayBase<int32_t>* freqs = vector->getTermFrequencies();
       CLUCENE_ASSERT(terms != NULL);
-      
-      int termsLength = 0;
-      while ( terms[termsLength] != NULL )
-          termsLength++;
+
+      int termsLength = terms->length;
       CLUCENE_ASSERT(termsLength == 10);
 
       for (int32_t i = 0; i < termsLength; i++) {
-        const TCHAR* term = terms[i];
+        const TCHAR* term = terms->values[i];
         //_tprintf(_T("Term: %s, test4map.size()=%d\n"),term, test4Map.size());
         int32_t freq = (*freqs)[i];
         CLUCENE_ASSERT( _tcsstr(test4,term) != NULL );
-        test4MapType::iterator itr = test4Map.find(term);
+        test4MapType::const_iterator itr = test4Map.find(term);
         CLUCENE_ASSERT( itr != test4Map.end() );
         int32_t freqInt = itr->second;
-        CLUCENE_ASSERT(freqInt == freq);        
+        CLUCENE_ASSERT(freqInt == freq);
       }
       _CLDELETE(vector);
       _CLDELETE(hits);
@@ -263,6 +267,6 @@ CuSuite *testtermvector(void)
     SUITE_ADD_TEST(suite, testTermPositionVectors);
     SUITE_ADD_TEST(suite, testTVCleanup);
 
-    return suite; 
+    return suite;
 }
 // EOF

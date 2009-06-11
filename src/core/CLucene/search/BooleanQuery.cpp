@@ -49,7 +49,7 @@ CL_NS_DEF(search)
 		float_t sumOfSquaredWeights();
 		void normalize(float_t norm);
 		Scorer* scorer(CL_NS(index)::IndexReader* reader);
-		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+		Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
 	};// BooleanWeight
 
 	class BooleanWeight2: public BooleanWeight {
@@ -106,7 +106,7 @@ CL_NS_DEF(search)
 		return ret;
 	}
 
-    const char* BooleanQuery::getQueryName() const{
+    const char* BooleanQuery::getObjectName() const{
       return getClassName();
     }
 	const char* BooleanQuery::getClassName(){
@@ -390,69 +390,93 @@ CL_NS_DEF(search)
       return result;
     }
 
-	void BooleanWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
-      int32_t coord = 0;
-      int32_t maxCoord = 0;
-      float_t sum = 0.0f;
-      Explanation* sumExpl = _CLNEW Explanation;
-      for (uint32_t i = 0 ; i < weights.size(); i++) {
-        BooleanClause* c = (*clauses)[i];
-        Weight* w = weights[i];
-        Explanation* e = _CLNEW Explanation;
-        w->explain(reader, doc, e);
-        if (!c->prohibited) 
-           maxCoord++;
-        if (e->getValue() > 0) {
-          if (!c->prohibited) {
-            sumExpl->addDetail(e);
-            sum += e->getValue();
-            coord++;
-            e = NULL; //prevent e from being deleted
-          } else {
-            //we want to return something else...
-            _CLDELETE(sumExpl);
-            result->setValue(0.0f);
-            result->setDescription(_T("match prohibited"));
-			//todo: _CLDELETE(e); ?
-            return;
-          }
-        } else if (c->required) {
-            _CLDELETE(sumExpl);
-            result->setValue(0.0f);
-            result->setDescription(_T("match prohibited"));
-			//todo: _CLDELETE(e); ?
-            return;
-        }
-        
-        _CLDELETE(e); //todo: if above todo's are right, this is irrelevant here
-      }
-      sumExpl->setValue(sum);
+	Explanation* BooleanWeight::explain(IndexReader* reader, int32_t doc){
+		const int32_t minShouldMatch = parentQuery->getMinNrShouldMatch();
+		ComplexExplanation* sumExpl = _CLNEW ComplexExplanation();
+		sumExpl->setDescription(_T("sum of:"));
+		int32_t coord = 0;
+		int32_t maxCoord = 0;
+		float_t sum = 0.0f;
+		bool fail = false;
+		int32_t shouldMatchCount = 0;
+		for (size_t i = 0 ; i < weights.size(); i++) {
+			BooleanClause* c = (*clauses)[i];
+			Weight* w = weights[i];
+			Explanation* e = w->explain(reader, doc);
+			if (!c->isProhibited()) maxCoord++;
+			if (e->isMatch()){
+				if (!c->isProhibited()) {
+					sumExpl->addDetail(e);
+					sum += e->getValue();
+					coord++;
+					e = NULL; //prevent e from being deleted
+				} else {
+					StringBuffer buf(100);
+					buf.append(_T("match on prohibited clause ("));
+					TCHAR* tmp = c->getQuery()->toString();
+					buf.append(tmp);
+					_CLDELETE_LCARRAY(tmp);
+					buf.appendChar(_T(')'));
 
-      if (coord == 1){                               // only one clause matched
-		  Explanation* tmp = sumExpl;
-		  sumExpl = sumExpl->getDetail(0)->clone();          // eliminate wrapper
-		  _CLDELETE(tmp);
-      }
+					Explanation* r = _CLNEW Explanation(0.0f, buf.getBuffer());
+					r->addDetail(e);
+					sumExpl->addDetail(r);
+					fail = true;
+				}
+				if (c->getOccur() == BooleanClause::SHOULD)
+					shouldMatchCount++;
+			} else if (c->isRequired()) {
+				StringBuffer buf(100);
+				buf.append(_T("no match on required clause ("));
+				TCHAR* tmp = c->getQuery()->toString();
+				buf.append(tmp);
+				_CLDELETE_LCARRAY(tmp);
+				buf.appendChar(_T(')'));
 
-      sumExpl->setDescription(_T("sum of:"));
-	  float_t coordFactor = parentQuery->getSimilarity(searcher)->coord(coord, maxCoord);
-	  if (coordFactor == 1.0f){                      // coord is no-op
-        result->set(*sumExpl);                       // eliminate wrapper
-		_CLDELETE(sumExpl);
-	  } else {
-        result->setDescription( _T("product of:"));
-        result->addDetail(sumExpl);
+				Explanation* r = _CLNEW Explanation(0.0f, buf.getBuffer());
+				r->addDetail(e);
+				sumExpl->addDetail(r);
+				fail = true;
+			}
+		}
+		if (fail) {
+			sumExpl->setMatch(false);
+			sumExpl->setValue(0.0f);
+			sumExpl->setDescription(_T("Failure to meet condition(s) of required/prohibited clause(s)"));
+			return sumExpl;
+		} else if (shouldMatchCount < minShouldMatch) {
+			sumExpl->setMatch(false);
+			sumExpl->setValue(0.0f);
 
-        StringBuffer explbuf;
-        explbuf.append(_T("coord("));
-        explbuf.appendInt(coord);
-        explbuf.append(_T("/"));
-        explbuf.appendInt(maxCoord);
-        explbuf.append(_T(")"));
-        result->addDetail(_CLNEW Explanation(coordFactor, explbuf.getBuffer()));
-        result->setValue(sum*coordFactor);
-      }
-    }
+			StringBuffer buf(60);
+			buf.append(_T("Failure to match minimum number of optional clauses: "));
+			buf.appendInt(minShouldMatch);
+			sumExpl->setDescription(buf.getBuffer());
+			return sumExpl;
+		}
+
+		sumExpl->setMatch(0 < coord ? true : false);
+		sumExpl->setValue(sum);
+
+		float_t coordFactor = similarity->coord(coord, maxCoord);
+		if (coordFactor == 1.0f)                      // coord is no-op
+			return sumExpl;                             // eliminate wrapper
+		else {
+			ComplexExplanation* result = _CLNEW ComplexExplanation(sumExpl->isMatch(),
+				sum*coordFactor,
+				_T("product of:"));
+			result->addDetail(sumExpl);
+
+			StringBuffer buf(30);
+			buf.append(_T("coord("));
+			buf.appendInt(coord);
+			buf.appendChar(_T('/'));
+			buf.appendInt(maxCoord);
+			buf.appendChar(_T(')'));
+			result->addDetail(_CLNEW Explanation(coordFactor,buf.getBuffer()));
+			return result;
+		}
+	}
 
 	BooleanWeight2::BooleanWeight2( 
 		Searcher* searcher,

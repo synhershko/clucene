@@ -1,11 +1,11 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "MultiLevelSkipListReader.h"
+#include "_SkipListReader.h"
 
 CL_NS_USE(store)
 CL_NS_DEF(index)
@@ -13,25 +13,35 @@ CL_NS_DEF(index)
 MultiLevelSkipListReader::MultiLevelSkipListReader(IndexInput* _skipStream, const int32_t maxSkipLevels,
 												   const int32_t _skipInterval):
 		maxNumberOfSkipLevels(maxSkipLevels),numberOfLevelsToBuffer(1),
-		skipStream(_CL_NEWARRAY(IndexInput*,maxSkipLevels)),
+		skipStream(CL_NS(util)::ObjectArray<CL_NS(store)::IndexInput>(maxSkipLevels)),
 		skipPointer(_CL_NEWARRAY(int64_t,maxSkipLevels)),
 		skipInterval(_CL_NEWARRAY(int32_t,maxSkipLevels)),
 		numSkipped(_CL_NEWARRAY(int32_t,maxSkipLevels)),
 		skipDoc(_CL_NEWARRAY(int32_t,maxSkipLevels)),
 		childPointer(_CL_NEWARRAY(int64_t,maxSkipLevels))
 {
+	memset(this->skipPointer,0,sizeof(int64_t) * maxSkipLevels);
+	memset(this->skipInterval,0,sizeof(int32_t) * maxSkipLevels);
+	memset(this->numSkipped,0,sizeof(int32_t) * maxSkipLevels);
+	memset(this->skipDoc,0,sizeof(int32_t) * maxSkipLevels);
+	memset(this->childPointer,0,sizeof(int32_t) * maxSkipLevels);
+
+  this->numberOfLevelsToBuffer = 0;
+  this->numberOfSkipLevels = 0;
+  this->docCount = 0;
+  this->lastDoc = 0;
+  this->lastChildPointer = 0;
+  this->haveSkipped = false;
 	this->skipStream[0] = _skipStream;
-	this->inputIsBuffered = (strcmp(_skipStream->getObjectName(),"BufferedIndexInput") == 0);
+	this->inputIsBuffered = _skipStream->instanceOf(BufferedIndexInput::getClassName());
 	this->skipInterval[0] = _skipInterval;
 	for (int32_t i = 1; i < maxSkipLevels; i++) {
 		// cache skip intervals
 		this->skipInterval[i] = this->skipInterval[i - 1] * _skipInterval;
 	}
-	memset(skipDoc,0,maxSkipLevels*sizeof(int32_t)); // TODO: artificial init
 }
 MultiLevelSkipListReader::~MultiLevelSkipListReader(){
 	close();
-	_CLDELETE_LARRAY(skipStream);
 	_CLDELETE_LARRAY(skipPointer);
 	_CLDELETE_LARRAY(childPointer);
 	_CLDELETE_LARRAY(numSkipped);
@@ -55,7 +65,7 @@ int32_t MultiLevelSkipListReader::skipTo(const int32_t target) {
 	int32_t level = 0;
 	while (level < numberOfSkipLevels - 1 && target > skipDoc[level + 1]) {
 		level++;
-	}    
+	}
 
 	while (level >= 0) {
 		if (target > skipDoc[level]) {
@@ -66,7 +76,7 @@ int32_t MultiLevelSkipListReader::skipTo(const int32_t target) {
 			// no more skips on this level, go down one level
 			if (level > 0 && lastChildPointer > skipStream[level - 1]->getFilePointer()) {
 				seekChild(level - 1);
-			} 
+			}
 			level--;
 		}
 	}
@@ -76,7 +86,7 @@ int32_t MultiLevelSkipListReader::skipTo(const int32_t target) {
 
 bool MultiLevelSkipListReader::loadNextSkip(const int32_t level) {
 	// we have to skip, the target document is greater than the current
-	// skip list entry        
+	// skip list entry
 	setLastSkipData(level);
 
 	numSkipped[level] += skipInterval[level];
@@ -84,7 +94,7 @@ bool MultiLevelSkipListReader::loadNextSkip(const int32_t level) {
 	if (numSkipped[level] > docCount) {
 		// this skip list is exhausted
 		skipDoc[level] = LUCENE_INT32_MAX_SHOULDBE;
-		if (numberOfSkipLevels > level) numberOfSkipLevels = level; 
+		if (numberOfSkipLevels > level) numberOfSkipLevels = level;
 		return false;
 	}
 
@@ -119,16 +129,14 @@ void MultiLevelSkipListReader::close() {
 void MultiLevelSkipListReader::init(const int64_t _skipPointer, const int32_t df) {
 	this->skipPointer[0] = _skipPointer;
 	this->docCount = df;
-	for (int32_t j=0; j<numberOfSkipLevels; j++){
-		skipDoc[j] = 0;
-		numSkipped[j] = 0;
-		childPointer[j] = 0;
-	}
-
+	memset(skipDoc,0,sizeof(int32_t) * maxNumberOfSkipLevels);
+	memset(numSkipped,0,sizeof(int32_t) * maxNumberOfSkipLevels);
+	memset(childPointer,0,sizeof(int64_t) * maxNumberOfSkipLevels);
+  if ( numberOfSkipLevels > 1 ){
+    for (int i=0;i<maxNumberOfSkipLevels-1;i++)
+      _CLDELETE(skipStream.values[i]);
+  }
 	haveSkipped = false;
-	for (int32_t i = 1; i < numberOfSkipLevels; i++) {
-		_CLDELETE(skipStream[i]);
-	}
 }
 
 void MultiLevelSkipListReader::loadSkipLevels() {
@@ -149,11 +157,11 @@ void MultiLevelSkipListReader::loadSkipLevels() {
 		skipPointer[i] = skipStream[0]->getFilePointer();
 		if (toBuffer > 0) {
 			// buffer this level
-			skipStream[i] = static_cast<IndexInput*>(_CLNEW SkipBuffer(skipStream[0], (int32_t) length));
+			skipStream[i] = _CLNEW SkipBuffer(skipStream[0], (int32_t) length);
 			toBuffer--;
 		} else {
 			// clone this stream, it is already at the start of the current level
-			skipStream[i] = (IndexInput*) skipStream[0]->clone();
+			skipStream[i] = skipStream[0]->clone();
 			if (inputIsBuffered && length < BufferedIndexInput::BUFFER_SIZE) {
 				((BufferedIndexInput*) skipStream[i])->setBufferSize((int32_t) length);
 			}
@@ -210,9 +218,13 @@ void MultiLevelSkipListReader::SkipBuffer::seek(const int64_t _pos) {
 	this->pos = static_cast<int32_t>(_pos - pointer);
 }
 
-const char* MultiLevelSkipListReader::SkipBuffer::getObjectName(){ return "SkipBuffer"; }
+const char* MultiLevelSkipListReader::SkipBuffer::getObjectName() const{ return getClassName(); }
+const char* MultiLevelSkipListReader::SkipBuffer::getClassName(){ return "MultiLevelSkipListReader::SkipBuffer"; }
+
 const char* MultiLevelSkipListReader::SkipBuffer::getDirectoryType() const{ return "SKIP"; }
-MultiLevelSkipListReader::SkipBuffer::SkipBuffer(const SkipBuffer& other): IndexInput(other){
+MultiLevelSkipListReader::SkipBuffer::SkipBuffer(const SkipBuffer& other):
+    IndexInput(other)
+{
 	data = _CL_NEWARRAY(uint8_t,other._datalength);
 	memcpy(data,other.data,other._datalength * sizeof(uint8_t));
 	this->_datalength = other._datalength;
@@ -221,6 +233,92 @@ MultiLevelSkipListReader::SkipBuffer::SkipBuffer(const SkipBuffer& other): Index
 }
 IndexInput* MultiLevelSkipListReader::SkipBuffer::clone() const{
 	return _CLNEW SkipBuffer(*this);
+}
+
+
+
+
+
+
+
+DefaultSkipListReader::DefaultSkipListReader(CL_NS(store)::IndexInput* _skipStream, const int32_t maxSkipLevels, const int32_t _skipInterval)
+		: MultiLevelSkipListReader(_skipStream, maxSkipLevels, _skipInterval)
+{
+	freqPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
+	proxPointer = _CL_NEWARRAY(int64_t,maxSkipLevels);
+	payloadLength = _CL_NEWARRAY(int32_t,maxSkipLevels);
+  memset(freqPointer,0, sizeof(int64_t) * maxSkipLevels);
+  memset(proxPointer,0, sizeof(int64_t) * maxSkipLevels);
+  memset(payloadLength,0, sizeof(int32_t) * maxSkipLevels);
+  this->lastFreqPointer = 0;
+  this->lastProxPointer = 0;
+  this->lastPayloadLength = 0;
+  this->currentFieldStoresPayloads = false;
+}
+
+DefaultSkipListReader::~DefaultSkipListReader(){
+	_CLDELETE_LARRAY(freqPointer);
+	_CLDELETE_LARRAY(proxPointer);
+	_CLDELETE_LARRAY(payloadLength);
+}
+
+void DefaultSkipListReader::init(const int64_t _skipPointer, const int64_t freqBasePointer, const int64_t proxBasePointer, const int32_t df, const bool storesPayloads) {
+	MultiLevelSkipListReader::init(_skipPointer, df);
+	this->currentFieldStoresPayloads = storesPayloads;
+	lastFreqPointer = freqBasePointer;
+	lastProxPointer = proxBasePointer;
+
+	for (int32_t j=0; j<maxNumberOfSkipLevels; j++){
+		freqPointer[j] = freqBasePointer;
+		proxPointer[j] = proxBasePointer;
+		payloadLength[j] = 0;
+	}
+}
+
+int64_t DefaultSkipListReader::getFreqPointer() const {
+	return lastFreqPointer;
+}
+int64_t DefaultSkipListReader::getProxPointer() const {
+	return lastProxPointer;
+}
+int32_t DefaultSkipListReader::getPayloadLength() const {
+	return lastPayloadLength;
+}
+
+void DefaultSkipListReader::seekChild(const int32_t level) {
+	MultiLevelSkipListReader::seekChild(level);
+	freqPointer[level] = lastFreqPointer;
+	proxPointer[level] = lastProxPointer;
+	payloadLength[level] = lastPayloadLength;
+}
+
+void DefaultSkipListReader::setLastSkipData(const int32_t level) {
+	MultiLevelSkipListReader::setLastSkipData(level);
+	lastFreqPointer = freqPointer[level];
+	lastProxPointer = proxPointer[level];
+	lastPayloadLength = payloadLength[level];
+}
+
+int32_t DefaultSkipListReader::readSkipData(const int32_t level, CL_NS(store)::IndexInput* _skipStream) {
+	int32_t delta;
+	if (currentFieldStoresPayloads) {
+		// the current field stores payloads.
+		// if the doc delta is odd then we have
+		// to read the current payload length
+		// because it differs from the length of the
+		// previous payload
+		delta = _skipStream->readVInt();
+		if ((delta & 1) != 0) {
+			payloadLength[level] = _skipStream->readVInt();
+		}
+		delta = (int32_t)(((uint32_t)delta) >> (uint32_t)1);
+	} else {
+		delta = _skipStream->readVInt();
+	}
+	freqPointer[level] += _skipStream->readVInt();
+	proxPointer[level] += _skipStream->readVInt();
+
+	return delta;
 }
 
 CL_NS_END

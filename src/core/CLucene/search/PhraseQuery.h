@@ -7,22 +7,10 @@
 #ifndef _lucene_search_PhraseQuery_
 #define _lucene_search_PhraseQuery_
 
-
-//#include "SearchHeader.h"
-//#include "Scorer.h"
-//#include "BooleanQuery.h"
-//#include "TermQuery.h"
 #include "Query.h"
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(search,Scorer)
-//#include "CLucene/index/Terms.h"
-//#include "CLucene/index/IndexReader.h"
-CL_CLASS_DEF(util,StringBuffer)
-//#include "CLucene/util/VoidList.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/util/Array.h"
-//#include "ExactPhraseScorer.h"
-//#include "SloppyPhraseScorer.h"
 
 CL_NS_DEF(search)
 	/** A Query that matches documents containing a particular sequence of terms.
@@ -44,14 +32,8 @@ CL_NS_DEF(search)
 	public: 
 		/** Constructs an empty phrase query. */
         PhraseQuery();
+		virtual ~PhraseQuery();
 
-		//Destructor
-		~PhraseQuery();
-
-        //Returns the string "PhraseQuery"
-        const char* getQueryName() const;
-        static const char* getClassName();
-       
 		/** Sets the number of other words permitted between words in query phrase.
 		If zero, then this is an exact phrase search.  For larger values this works
 		like a <code>WITHIN</code> or <code>NEAR</code> operator.
@@ -66,10 +48,10 @@ CL_NS_DEF(search)
 		results are sorted by exactness.
 
 		<p>The slop is zero by default, requiring exact matches.*/
-        void setSlop(const int32_t s) { slop = s; }
+        void setSlop(const int32_t s);
         
 		/** Returns the slop.  See setSlop(). */
-        int32_t getSlop() const { return slop; }
+        int32_t getSlop() const;
         
 		/**
 		* Adds a term to the end of the query phrase.
@@ -88,6 +70,14 @@ CL_NS_DEF(search)
 		*/
 		void add(CL_NS(index)::Term* term, int32_t position);
 
+		/** Returns the set of terms in this phrase. */
+        CL_NS(index)::Term** getTerms() const;
+
+		/**
+		* Returns the relative positions of terms in this phrase.
+		*/
+		void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
+
 		//Returns the sum of squared weights 
         float_t sumOfSquaredWeights(Searcher* searcher);
         
@@ -96,22 +86,18 @@ CL_NS_DEF(search)
         
         Scorer* scorer(CL_NS(index)::IndexReader* reader);
         
-		/** Returns the set of terms in this phrase. */
-        CL_NS(index)::Term** getTerms() const;
-
-		/**
-		* Returns the relative positions of terms in this phrase.
-		*/
-		void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
         const TCHAR* getFieldName() const{ return field; }
  
 		/** Prints a user-readable version of this query. */
         TCHAR* toString(const TCHAR* f) const;
 
 		Query* clone() const;
-		bool equals(CL_NS(search)::Query *) const;
+		bool equals(Query *) const;
 		
 		size_t hashCode() const;
+
+		const char* getObjectName() const;
+		static const char* getClassName();
 	};
 CL_NS_END
 #endif

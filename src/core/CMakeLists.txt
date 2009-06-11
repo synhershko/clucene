@@ -1,9 +1,13 @@
 PROJECT(clucene-core)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${clucene-shared_SOURCE_DIR}/cmake")
 
 #define command line options
 INCLUDE (DefineOptions)
 DEFINE_OPTIONS(EXTRA_OPTIONS EXTRA_LIBS)
 ADD_DEFINITIONS(${EXTRA_OPTIONS} -DMAKE_CLUCENE_CORE_LIB)
+
+#see if we can hide all symbols by default...
+MACRO_CHECK_GCC_VISIBILITY(_CL_HAVE_GCCVISIBILITYPATCH)
 
 #add the files to our groups and core
 SOURCE_GROUP("analysis" ./CLucene/analysis/*)
@@ -32,7 +36,7 @@ SET(clucene_core_Files
 	./CLucene/queryParser/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/QueryParser.cpp
 	./CLucene/queryParser/QueryParserTokenManager.cpp
-	./CLucene/queryParser/Token.cpp
+	./CLucene/queryParser/QueryToken.cpp
 	./CLucene/queryParser/legacy/Lexer.cpp
 	./CLucene/queryParser/legacy/MultiFieldQueryParser.cpp
 	./CLucene/queryParser/legacy/QueryParser.cpp
@@ -45,7 +49,7 @@ SET(clucene_core_Files
 	./CLucene/analysis/Analyzers.cpp
 	./CLucene/analysis/AnalysisHeader.cpp
 	./CLucene/store/MMapInput.cpp
-	./CLucene/store/TransactionalRAMDirectory.cpp
+	#./CLucene/store/TransactionalRAMDirectory.cpp
 	./CLucene/store/IndexInput.cpp
 	./CLucene/store/Lock.cpp
 	./CLucene/store/LockFactory.cpp
@@ -60,27 +64,35 @@ SET(clucene_core_Files
 	./CLucene/document/FieldSelector.cpp
 	./CLucene/document/NumberTools.cpp
 	./CLucene/index/IndexFileNames.cpp
+	./CLucene/index/IndexFileNameFilter.cpp
+	./CLucene/index/IndexDeletionPolicy.cpp
 	./CLucene/index/SegmentMergeInfo.cpp
 	./CLucene/index/SegmentInfos.cpp
+	./CLucene/index/MergeScheduler.cpp
 	./CLucene/index/SegmentTermDocs.cpp
 	./CLucene/index/FieldsWriter.cpp
 	./CLucene/index/TermInfosWriter.cpp
 	./CLucene/index/Term.cpp
 	./CLucene/index/Terms.cpp
-	./CLucene/index/DocumentWriter.cpp
+	./CLucene/index/MergePolicy.cpp
+	./CLucene/index/DocumentsWriter.cpp
+	./CLucene/index/DocumentsWriterThreadState.cpp
 	./CLucene/index/SegmentTermVector.cpp
 	./CLucene/index/TermVectorReader.cpp
 	./CLucene/index/FieldInfos.cpp
 	./CLucene/index/CompoundFile.cpp
-	./CLucene/index/DefaultSkipListReader.cpp
+	./CLucene/index/SkipListReader.cpp
+	./CLucene/index/SkipListWriter.cpp
+	./CLucene/index/IndexFileDeleter.cpp
 	./CLucene/index/SegmentReader.cpp
+  ./CLucene/index/DirectoryIndexReader.cpp
 	./CLucene/index/TermVectorWriter.cpp
 	./CLucene/index/IndexReader.cpp
 	./CLucene/index/SegmentTermPositions.cpp
 	./CLucene/index/SegmentMerger.cpp
 	./CLucene/index/IndexWriter.cpp
-	./CLucene/index/MultiLevelSkipListReader.cpp
-	./CLucene/index/MultiReader.cpp
+  ./CLucene/index/MultiReader.cpp
+  ./CLucene/index/MultiSegmentReader.cpp
 	./CLucene/index/Payload.cpp
 	./CLucene/index/SegmentTermEnum.cpp
 	./CLucene/index/TermInfo.cpp
@@ -88,6 +100,7 @@ SET(clucene_core_Files
 	./CLucene/index/SegmentMergeQueue.cpp
 	./CLucene/index/FieldsReader.cpp
 	./CLucene/index/TermInfosReader.cpp
+	./CLucene/index/MultipleTermPositions.cpp
 	./CLucene/search/Compare.cpp
 	./CLucene/search/Scorer.cpp
 	./CLucene/search/ScorerDocQueue.cpp
@@ -127,6 +140,8 @@ SET(clucene_core_Files
 	./CLucene/search/BooleanQuery.cpp
 	./CLucene/search/FieldCache.cpp
 	./CLucene/search/DateFilter.cpp
+	./CLucene/search/MatchAllDocsQuery.cpp
+	./CLucene/search/MultiPhraseQuery.cpp
 )
 
 #if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)
@@ -171,7 +186,7 @@ IF ( BUILD_STATIC_LIBRARIES )
 	
 	#and install library
 	install(TARGETS clucene-core-static 
-	        DESTINATION lib 
+	        DESTINATION ${LIB_DESTINATION} 
 	        COMPONENT runtime )
 ENDIF ( BUILD_STATIC_LIBRARIES )
 
@@ -206,6 +221,16 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake" "
     set(CLUCENE_VERSION ${CLUCENE_VERSION})
     set(CLUCENE_SOVERSION ${CLUCENE_SOVERSION})
 ")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/CLuceneConfig.cmake"
+        DESTINATION ${LIB_DESTINATION}/CLuceneConfig.cmake)
+
+# install pkg-config file
+IF(NOT WIN32)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libclucene.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libclucene.pc)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libclucene.pc
+          DESTINATION ${LIB_DESTINATION}/pkgconfig )
+ENDIF(NOT WIN32)
+
 
 #install non system-independent
 IF ( LUCENE_SYS_INCLUDES )
@@ -227,5 +252,5 @@ ENDIF ( LUCENE_SYS_INCLUDES )
 
 #and install library
 install(TARGETS clucene-core 
-        DESTINATION lib  
+        DESTINATION ${LIB_DESTINATION}  
         COMPONENT runtime )

@@ -40,7 +40,7 @@ Query* Query::mergeBooleanQueries(Query** queries) {
 			allClauses.push_back(clauses[j]);
 			j++;
 		}
-		_CLDELETE_ARRAY(clauses);
+		_CLDELETE_LARRAY(clauses);
 		i++;
 		queriesLength++;
     }
@@ -56,7 +56,6 @@ Query* Query::mergeBooleanQueries(Query** queries) {
 }
 
 Query::Query(const Query& clone):boost(clone.boost){
-		//constructor
 }
 Weight* Query::_createWeight(Searcher* searcher){
 	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: Query::_createWeight");
@@ -65,7 +64,6 @@ Weight* Query::_createWeight(Searcher* searcher){
 Query::Query():
    boost(1.0f)
 {
-	//constructor
 }
 Query::~Query(){
 }
@@ -80,13 +78,6 @@ Query* Query::combine(Query** queries){
 }
 Similarity* Query::getSimilarity(Searcher* searcher) {
    return searcher->getSimilarity();
-}
-bool Query::instanceOf(const char* other) const{
-   const char* t = getQueryName();
-	if ( t==other || strcmp( t, other )==0 )
-		return true;
-	else
-		return false;
 }
 TCHAR* Query::toString() const{
    return toString(LUCENE_BLANK_STRING);
@@ -110,20 +101,20 @@ TopFieldDocs::TopFieldDocs (int32_t totalHits, FieldDoc** fieldDocs, int32_t sco
 {
 	this->fields = fields;
 	this->fieldDocs = fieldDocs;
-	this->scoreDocs = _CL_NEWARRAY(ScoreDoc,scoreDocsLen);
+	this->scoreDocs = new ScoreDoc[scoreDocsLen];
 	for (int32_t i=0;i<scoreDocsLen;i++ )
 		this->scoreDocs[i] = this->fieldDocs[i]->scoreDoc;
 }
 TopFieldDocs::~TopFieldDocs(){
 	if ( fieldDocs ){
 		for (int32_t i=0;i<scoreDocsLength;i++)
-			_CLDELETE(fieldDocs[i]);
-		_CLDELETE_ARRAY(fieldDocs);
+			_CLLDELETE(fieldDocs[i]);
+		_CLDELETE_LARRAY(fieldDocs);
 	}
 	if ( fields != NULL ){
-       for ( int i=0;fields[i]!=NULL;i++ )
-           _CLDELETE(fields[i]);
-       _CLDELETE_ARRAY(fields);
+       for ( int32_t i=0;fields[i]!=NULL;i++ )
+           _CLLDELETE(fields[i]);
+       _CLDELETE_LARRAY(fields);
     }
 }
 
@@ -144,7 +135,7 @@ TopDocs::~TopDocs(){
 //Pre  - true
 //Post - The instance has been destroyed
 
-	_CLDELETE_ARRAY(scoreDocs);
+	delete[] scoreDocs;
 }
 
 
@@ -153,7 +144,6 @@ Searcher::Searcher(){
 	similarity = Similarity::getDefault();
 }
 Searcher::~Searcher(){
-
 }
 
 Hits* Searcher::search(Query* query) {
@@ -188,7 +178,7 @@ const char* Searcher::getClassName(){
 	return "Searcher";
 }
 
-const char* Searcher::getObjectName(){
+const char* Searcher::getObjectName() const{
 	return Searcher::getClassName();
 }
 

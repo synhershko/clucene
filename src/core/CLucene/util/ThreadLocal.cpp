@@ -75,7 +75,7 @@ typedef CL_NS ( util ) ::CLMultiMap<const _LUCENE_THREADID_TYPE, ThreadLocals*,
 	CL_NS ( util ) ::Deletor::Object<ThreadLocals> > ThreadDataType;
 static ThreadDataType*  threadData; 
 
-#ifdef _LUCENE_THREADMUTEX
+#ifndef _CL_DISABLE_MULTITHREADING
 	//the lock for locking ThreadData
 	//we don't use STATIC_DEFINE_MUTEX, because then the initialisation order will be undefined.
 	static _LUCENE_THREADMUTEX *threadData_LOCK = NULL;
@@ -161,13 +161,13 @@ void _ThreadLocal::set ( void* t )
 
 	//drop a reference to this ThreadLocal in ThreadData
 	{
-#ifdef _LUCENE_THREADMUTEX
+#ifndef _CL_DISABLE_MULTITHREADING
 		//slightly un-usual way of initialising mutex, 
 		//because otherwise our initialisation order would be undefined
 		if ( threadData_LOCK == NULL )
 			threadData_LOCK = _CLNEW _LUCENE_THREADMUTEX;
-#endif
 		SCOPED_LOCK_MUTEX ( *threadData_LOCK );
+#endif
 
 		if ( threadData == NULL )
 			threadData = _CLNEW ThreadDataType ( false, true );
@@ -175,7 +175,7 @@ void _ThreadLocal::set ( void* t )
 		ThreadLocals* threadLocals = threadData->get(id);
 		if ( threadLocals == NULL ){
 			threadLocals = _CLNEW ThreadLocals;
-			threadData->put(id,threadLocals);
+      threadData->insert( std::pair<const _LUCENE_THREADID_TYPE, ThreadLocals*>(id,threadLocals));
 		}
 		threadLocals->add(this);
 	}
@@ -213,7 +213,9 @@ void _ThreadLocal::UnregisterCurrentThread()
 
 void _ThreadLocal::_shutdown()
 {
+#ifndef _CL_DISABLE_MULTITHREADING
 	_CLDELETE(threadData_LOCK);
+#endif
 	_CLDELETE(threadData);
 }
 

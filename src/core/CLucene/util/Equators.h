@@ -60,13 +60,18 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Comparors
 ////////////////////////////////////////////////////////////////////////////////
-/** @internal */
-class CLUCENE_INLINE_EXPORT Comparable:LUCENE_BASE{
+class CLUCENE_EXPORT NamedObject{
+public:
+  virtual ~NamedObject();
+	virtual const char* getObjectName() const = 0;
+  virtual bool instanceOf(const char* otherobject) const;
+};
+class CLUCENE_INLINE_EXPORT Comparable:public NamedObject{
 public:
    virtual ~Comparable(){
    }
    
-	virtual int32_t compareTo(void* o) = 0;
+	virtual int32_t compareTo(NamedObject* o) = 0;
 };
 
 /** @internal */
@@ -92,9 +97,11 @@ public:
 		int32_t getValue() const;
 		Int32(int32_t val);
 		Int32();
-		int32_t compareTo(void* o);
+		int32_t compareTo(NamedObject* o);
 		bool operator()( int32_t t1, int32_t t2 ) const;
 		size_t operator()( int32_t t ) const;
+		static const char* getClassName();
+		const char* getObjectName() const;
 	};
 
 	
@@ -103,7 +110,9 @@ public:
 	public:
 		float_t getValue() const;
 		Float(float_t val);
-		int32_t compareTo(void* o);
+		int32_t compareTo(NamedObject* o);
+		static const char* getClassName();
+		const char* getObjectName() const;
 	};
 
 
@@ -114,10 +123,12 @@ public:
     	const char* getValue() const;
     	Char();
     	Char(const char* str);
-    	int32_t compareTo(void* o);
+    	int32_t compareTo(NamedObject* o);
 
 		bool operator()( const char* val1, const char* val2 ) const;
 		size_t operator()( const char* val1) const;
+		static const char* getClassName();
+		const char* getObjectName() const;
 	};
 
 #ifdef _UCS2
@@ -128,10 +139,12 @@ public:
     	const wchar_t* getValue() const;
     	WChar();
     	WChar(const wchar_t* str);
-    	int32_t compareTo(void* o);
+    	int32_t compareTo(NamedObject* o);
 
 		bool operator()( const wchar_t* val1, const wchar_t* val2 ) const;
 		size_t operator()( const wchar_t* val1) const;
+		static const char* getClassName();
+		const char* getObjectName() const;
 	};
 	typedef WChar TChar;
 #else
@@ -157,6 +170,11 @@ public:
 	};
 };
 
+
+
+
+int32_t compare(Comparable* o1, Comparable* o2);
+
 ////////////////////////////////////////////////////////////////////////////////
 // allocators
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,9 +189,9 @@ public:
     class CLUCENE_INLINE_EXPORT tcArray: public AbstractDeletor{
     public:
     	void Delete(void* _arr){
-    		doDelete((const TCHAR*)_arr);
+    		doDelete((TCHAR*)_arr);
     	}
-    	static void doDelete(const TCHAR* arr){
+    	static void doDelete(TCHAR* arr){
     		_CLDELETE_CARRAY(arr);
     	}
     };
@@ -191,9 +209,9 @@ public:
 	class CLUCENE_INLINE_EXPORT acArray: public AbstractDeletor{
 	public:
 		void Delete(void* arr){
-			doDelete((const char*)arr);
+			doDelete((char*)arr);
 		}
-		static void doDelete(const char* arr){
+		static void doDelete(char* arr){
 			_CLDELETE_CaARRAY(arr);
 		}
 	};
@@ -220,29 +238,29 @@ public:
 	};
 	class CLUCENE_INLINE_EXPORT Dummy: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const void* nothing){
+		void Delete(void*){}
+		static void doDelete(const void*){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
 	};
 	class CLUCENE_INLINE_EXPORT DummyInt32: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const int32_t nothing){
+		void Delete(void*){}
+		static void doDelete(const int32_t){
 		}
 	};
 	class CLUCENE_INLINE_EXPORT DummyFloat: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const float_t nothing){
+		void Delete(void*){}
+		static void doDelete(const float_t){
 		}
 	};
 	template <typename _type>
 	class CLUCENE_INLINE_EXPORT ConstNullVal: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(const _type nothing){
+		void Delete(void*){}
+		static void doDelete(const _type){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}
@@ -251,8 +269,8 @@ public:
 	template <typename _type>
 	class CLUCENE_INLINE_EXPORT NullVal: public AbstractDeletor{
 	public:
-		void Delete(void* nothing){}
-		static void doDelete(_type nothing){
+		void Delete(void*){}
+		static void doDelete(_type){
 			//todo: remove all occurances where it hits this point
 			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
 		}

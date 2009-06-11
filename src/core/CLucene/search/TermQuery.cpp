@@ -25,25 +25,28 @@ CL_NS_DEF(search)
 	
 	class TermWeight: public Weight {
 	private:
-		Searcher* searcher;
+		Similarity* similarity; // ISH: was Searcher*, for no apparent reason
 		float_t value;
 		float_t idf;
 		float_t queryNorm;
 		float_t queryWeight;
-		TermQuery* _this;
+
+		TermQuery* parentQuery;	// CLucene specific
 		CL_NS(index)::Term* _term;
 
 	public:
-		TermWeight(Searcher* searcher, TermQuery* _this, CL_NS(index)::Term* _term);
-		~TermWeight();
+		TermWeight(Searcher* searcher, TermQuery* parentQuery, CL_NS(index)::Term* _term);
+		virtual ~TermWeight();
+		
+		// return a *new* string describing this object
 		TCHAR* toString();
-		Query* getQuery() { return (Query*)_this; }
+		Query* getQuery() { return (Query*)parentQuery; }
 		float_t getValue() { return value; }
 
 		float_t sumOfSquaredWeights();
 		void normalize(float_t queryNorm);
 		Scorer* scorer(CL_NS(index)::IndexReader* reader);
-		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
+		Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
 	};
 
 
@@ -57,7 +60,7 @@ CL_NS_DEF(search)
 		this->term=_CL_POINTER(clone.term);
 	}
 	TermQuery::~TermQuery(){
-	    _CLDECDELETE(term);
+	    _CLLDECDELETE(term);
 	}
 
 	Query* TermQuery::clone() const{
@@ -67,14 +70,13 @@ CL_NS_DEF(search)
 	const char* TermQuery::getClassName(){
 		return "TermQuery";
 	}
-	const char* TermQuery::getQueryName() const{
+	const char* TermQuery::getObjectName() const{
 		return getClassName();
 	}
 	size_t TermQuery::hashCode() const {
 		return Similarity::floatToByte(getBoost()) ^ term->hashCode();
 	}
-    
-      
+
 	//added by search highlighter
 	Term* TermQuery::getTerm(bool pointer) const
 	{
@@ -83,9 +85,7 @@ CL_NS_DEF(search)
 		else
 			return term;
 	}
-    
-    
-	/** Prints a user-readable version of this query. */
+
 	TCHAR* TermQuery::toString(const TCHAR* field) const{
 		CL_NS(util)::StringBuffer buffer;
 		if ( field==NULL || _tcscmp(term->field(),field)!= 0 ) {
@@ -100,45 +100,40 @@ CL_NS_DEF(search)
 		return buffer.toString();
 	}
 
-   /** Returns true iff <code>o</code> is equal to this. */
-   bool TermQuery::equals(Query* other) const {
-	   if (!(other->instanceOf(TermQuery::getClassName())))
-            return false;
+	bool TermQuery::equals(Query* other) const {
+		if (!(other->instanceOf(TermQuery::getClassName())))
+			return false;
 
-	   TermQuery* tq = (TermQuery*)other;
-      return (this->getBoost() == tq->getBoost())
-         && this->term->equals(tq->term);
-   }
-
-
-   TermWeight::TermWeight(Searcher* searcher, TermQuery* _this, Term* _term) {
-		this->_this = _this;
-		this->_term = _term;
-		this->searcher = searcher;
-		value=0;
-		idf=0;
-		queryNorm=0;
-		queryWeight=0;
+		TermQuery* tq = (TermQuery*)other;
+		return (this->getBoost() == tq->getBoost())
+			&& this->term->equals(tq->term);
 	}
+
+   TermWeight::TermWeight(Searcher* _searcher, TermQuery* _parentQuery, Term* term):similarity(_searcher->getSimilarity()),
+	   value(0), queryNorm(0),queryWeight(0), parentQuery(_parentQuery),_term(term)
+   {
+		   idf = similarity->idf(term, _searcher); // compute idf
+   }
+   
    TermWeight::~TermWeight(){
    }
 
-    //return a *new* string describing this object
-	TCHAR* TermWeight::toString() { 
-		int32_t size=strlen(_this->getQueryName()) + 10;
-		TCHAR* tmp = _CL_NEWARRAY(TCHAR, size);//_tcslen(weight())
-		_sntprintf(tmp,size,_T("weight(%S)"),_this->getQueryName());
-		return tmp;
-	}
+   //
+   TCHAR* TermWeight::toString() { 
+	   int32_t size=strlen(parentQuery->getObjectName()) + 10;
+	   TCHAR* tmp = _CL_NEWARRAY(TCHAR, size);
+	   _sntprintf(tmp,size,_T("weight(%S)"),parentQuery->getObjectName());
+	   return tmp;
+   }
 
 	float_t TermWeight::sumOfSquaredWeights() {
-		idf = _this->getSimilarity(searcher)->idf(_term, searcher); // compute idf
-		queryWeight = idf * _this->getBoost();             // compute query weight
+		// legacy // idf = parentQuery->getSimilarity(searcher)->idf(_term, searcher); // compute idf
+		queryWeight = idf * parentQuery->getBoost();             // compute query weight
 		return queryWeight * queryWeight;           // square it
 	}
 
-	void TermWeight::normalize(float_t queryNorm) {
-		this->queryNorm = queryNorm;
+	void TermWeight::normalize(float_t _queryNorm) {
+		this->queryNorm = _queryNorm;
 		queryWeight *= queryNorm;                   // normalize query weight
 		value = queryWeight * idf;                  // idf for document 
 	}
@@ -149,22 +144,24 @@ CL_NS_DEF(search)
 		if (termDocs == NULL)
 			return NULL;
 		    
-		return _CLNEW TermScorer(this, termDocs, _this->getSimilarity(searcher),
+		return _CLNEW TermScorer(this, termDocs, similarity,
 								reader->norms(_term->field()));
 	}
 
-	void TermWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
+	Explanation* TermWeight::explain(IndexReader* reader, int32_t doc){
+		ComplexExplanation* result = _CLNEW ComplexExplanation();
+
 		TCHAR buf[LUCENE_SEARCH_EXPLANATION_DESC_LEN];
         TCHAR* tmp;
 
         tmp = getQuery()->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("weight(%s in %d), product of:"),tmp,doc);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		result->setDescription(buf);
 
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
-			_T("idf(docFreq=%d)"), searcher->docFreq(_term) );
+			_T("idf(docFreq=%d, numDocs=%d)"), reader->docFreq(_term), reader->numDocs() );
 		Explanation* idfExpl = _CLNEW Explanation(idf, buf);
 
 		// explain query weight
@@ -172,11 +169,11 @@ CL_NS_DEF(search)
         tmp = getQuery()->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("queryWeight(%s), product of:"), tmp);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		queryExpl->setDescription(buf);
 
-		Explanation* boostExpl = _CLNEW Explanation(_this->getBoost(), _T("boost"));
-		if (_this->getBoost() != 1.0f)
+		Explanation* boostExpl = _CLNEW Explanation(parentQuery->getBoost(), _T("boost"));
+		if (parentQuery->getBoost() != 1.0f)
 			queryExpl->addDetail(boostExpl);
         else
             _CLDELETE(boostExpl);
@@ -186,24 +183,24 @@ CL_NS_DEF(search)
 		Explanation* queryNormExpl = _CLNEW Explanation(queryNorm,_T("queryNorm"));
 		queryExpl->addDetail(queryNormExpl);
 		    
-		queryExpl->setValue(_this->getBoost()* // always 1.0
+		queryExpl->setValue(parentQuery->getBoost()* // always 1.0 | TODO: original Java code is boostExpl.getValue()
 							idfExpl->getValue() *
 							queryNormExpl->getValue());
+		result->addDetail(queryExpl);
 		    
 		// explain field weight
 		const TCHAR* field = _term->field();
-		Explanation* fieldExpl = _CLNEW Explanation();
+		ComplexExplanation* fieldExpl = _CLNEW ComplexExplanation();
 
         tmp = _term->toString();
 		_sntprintf(buf,LUCENE_SEARCH_EXPLANATION_DESC_LEN,
 			_T("fieldWeight(%s in %d), product of:"),tmp,doc);
-        _CLDELETE_CARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
 		fieldExpl->setDescription(buf);
 
         Scorer* sc = scorer(reader);
-		Explanation* tfExpl = _CLNEW Explanation;
-		sc->explain(doc, tfExpl);
-        _CLDELETE(sc);
+		Explanation* tfExpl = sc->explain(doc);
+        _CLLDELETE(sc);
 		fieldExpl->addDetail(tfExpl);
 		fieldExpl->addDetail(idfExpl);
 
@@ -217,25 +214,28 @@ CL_NS_DEF(search)
 			_T("fieldNorm(field=%s, doc=%d)"),field,doc);
 		fieldNormExpl->setDescription(buf);
 		fieldExpl->addDetail(fieldNormExpl);
-
+		
+		fieldExpl->setMatch(tfExpl->isMatch());
 		fieldExpl->setValue(tfExpl->getValue() *
 							idfExpl->getValue() *
 							fieldNormExpl->getValue());
 
-        /*if (queryExpl->getValue() == 1.0f){
-			_CLDELETE(result);
+        if (queryExpl->getValue() == 1.0f){
+			_CLLDELETE(result);
             return fieldExpl;
-        }else{*/
-		    result->addDetail(queryExpl);
-		    result->addDetail(fieldExpl);
+        }
 
-		    // combine them
-		    result->setValue(queryExpl->getValue() * fieldExpl->getValue());
-        //}
+		// combine them
+		result->setValue(queryExpl->getValue() * fieldExpl->getValue());
+
+		result->addDetail(fieldExpl);
+		result->setMatch(fieldExpl->getMatch());
+
+		return result;
 	}
 	
-	Weight* TermQuery::_createWeight(Searcher* searcher) {
-        return _CLNEW TermWeight(searcher,this,term);
+	Weight* TermQuery::_createWeight(Searcher* _searcher) {
+        return _CLNEW TermWeight(_searcher,this,term);
     }
 CL_NS_END
 

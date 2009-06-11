@@ -21,14 +21,14 @@ using namespace lucene::search;
 void getStats(const char* directory){
 
 	IndexReader* r = IndexReader::open(directory);
-	_tprintf(_T("Statistics for %s\n"), directory);
+	printf("Statistics for %s\n", directory);
 	printf("==================================\n");
 
 	printf("Max Docs: %d\n", r->maxDoc() );
 	printf("Num Docs: %d\n", r->numDocs() );
 	
 	int64_t ver = r->getCurrentVersion(directory);
-    _tprintf(_T("Current Version: %f\n"), (float_t)ver );
+  _tprintf(_T("Current Version: %f\n"), (float_t)ver );
 	
 	TermEnum* te = r->terms();
 	int32_t nterms;

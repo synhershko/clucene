@@ -1,13 +1,14 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "AnalysisHeader.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_ThreadLocal.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(analysis)
@@ -55,19 +56,19 @@ Token::Token():
 	positionIncrement (1),
 	payload(NULL)
 {
-    _termTextLen = 0;
+  _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-    _termText = NULL;
+  _buffer = NULL;
 	bufferTextLen = 0;
 #else
-    _termText[0] = 0; //make sure null terminated
+  _buffer[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
 }
 
 Token::~Token(){
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-  free(_termText);
+  free(_buffer);
 #endif
 	_CLLDELETE(payload);
 }
@@ -79,45 +80,45 @@ Token::Token(const TCHAR* text, const int32_t start, const int32_t end, const TC
 	positionIncrement (1),
 	payload(NULL)
 {
-    _termTextLen = 0;
+  _termTextLen = 0;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-    _termText = NULL;
+  _buffer = NULL;
 	bufferTextLen = 0;
 #else
-    _termText[0] = 0; //make sure null terminated
+  _buffer[0] = 0; //make sure null terminated
 	bufferTextLen = LUCENE_TOKEN_WORD_LENGTH+1;
 #endif
-	setText(text);
+	setText(text, -1);
 }
 
-size_t Token::bufferLength(){ 
+size_t Token::bufferLength(){
     return bufferTextLen;
 }
 
 
-int32_t Token::startOffset() const { 
-    return _startOffset; 
+int32_t Token::startOffset() const {
+    return _startOffset;
 }
 
-void Token::setStartOffset(const int32_t val){ 
-    _startOffset = val; 
+void Token::setStartOffset(const int32_t val){
+    _startOffset = val;
 }
-int32_t Token::endOffset() const { 
-    return _endOffset; 
+int32_t Token::endOffset() const {
+    return _endOffset;
 }
 const TCHAR* Token::getDefaultType(){
     return _T("word");
 }
 
-void Token::setEndOffset(const int32_t val){ 
-    _endOffset = val; 
+void Token::setEndOffset(const int32_t val){
+    _endOffset = val;
 }
 const TCHAR* Token::type() const { return _type; }
 
-void Token::setType(const TCHAR* val) { 
-    _type = val; 
+void Token::setType(const TCHAR* val) {
+    _type = val;
 }
-	
+
 void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ){
 	_startOffset = start;
 	_endOffset   = end;
@@ -126,34 +127,44 @@ void Token::set(const TCHAR* text, const int32_t start, const int32_t end, const
 	setText(text);
 }
 
-void Token::setText(const TCHAR* text){
-	_termTextLen = _tcslen(text);
-	
+void Token::setText(const TCHAR* text, int32_t l){
+	if ( l < 0 ) l = _tcslen(text);
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-	growBuffer(_termTextLen+1);
-	_tcsncpy(_termText,text,_termTextLen+1);
+	if(bufferTextLen < l+1)
+	  growBuffer(l+1);
 #else
 	if ( _termTextLen > LUCENE_TOKEN_WORD_LENGTH ){
     	//in the case where this occurs, we will leave the endOffset as it is
     	//since the actual word still occupies that space.
-		_termTextLen=LUCENE_TOKEN_WORD_LENGTH;
+		l=LUCENE_TOKEN_WORD_LENGTH;
 	}
-	_tcsncpy(_termText,text,_termTextLen+1);
 #endif
-	_termText[_termTextLen] = 0; //make sure null terminated
+	_tcsncpy(_buffer,text,l);
+  _termTextLen = l;
+	_buffer[_termTextLen] = 0; //make sure null terminated
 }
 
+void Token::setTermLength(int32_t len){
+  if(bufferTextLen<len)
+    this->growBuffer(len);
+  this->_termTextLen = len;
+}
+TCHAR* Token::resizeTermBuffer(size_t size){
+	if(bufferTextLen<size)
+		growBuffer(size);
+  return this->_buffer;
+}
 void Token::growBuffer(size_t size){
 	if(bufferTextLen>=size)
 		return;
 #ifndef LUCENE_TOKEN_WORD_LENGTH
-	if ( _termText == NULL ){
-		_termText = (TCHAR*)malloc( size * sizeof(TCHAR) );
-		_termText[0] = NULL;
+	if ( _buffer == NULL ){
+		_buffer = (TCHAR*)malloc( size * sizeof(TCHAR) );
+		*_buffer = 0;
 	}else{
-		//use realloc. growBuffer is public, therefore could be called 
+		//use realloc. growBuffer is public, therefore could be called
 		//without a subsequent call to overwriting the memory
-		_termText = (TCHAR*)realloc( _termText, size * sizeof(TCHAR) );
+		_buffer = (TCHAR*)realloc( _buffer, size * sizeof(TCHAR) );
 	}
 	bufferTextLen = size;
 #else
@@ -170,21 +181,20 @@ void Token::setPositionIncrement(int32_t posIncr) {
 
 int32_t Token::getPositionIncrement() const { return positionIncrement; }
 
-// Returns the Token's term text. 
 const TCHAR* Token::termText() const{
-	return (const TCHAR*) _termText; 
+	return (const TCHAR*) _buffer;
 }
-const TCHAR* Token::termBuffer() const{
-	return (const TCHAR*) _termText; 
+TCHAR* Token::termBuffer() const{
+	return  _buffer;
 }
-size_t Token::termTextLength() { 
+size_t Token::termTextLength() {
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
-		_termTextLen = _tcslen(_termText);
-	return _termTextLen; 
+		_termTextLen = _tcslen(_buffer);
+	return _termTextLen;
 }
-size_t Token::termLength() { 
+size_t Token::termLength() {
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
-		_termTextLen = _tcslen(_termText);
+		_termTextLen = _tcslen(_buffer);
 	return _termTextLen; 
 }
 void Token::resetTermTextLen(){
@@ -193,15 +203,15 @@ void Token::resetTermTextLen(){
 TCHAR* Token::toString() const{
 	StringBuffer sb;
     sb.append(_T("("));
-	if (_termText)
-		sb.append( _termText );
+	if (_buffer)
+		sb.append( _buffer );
 	else
 		sb.append( _T("null") );
     sb.append(_T(","));
     sb.appendInt( _startOffset );
     sb.append(_T(","));
     sb.appendInt( _endOffset );
-    
+
     if (!_tcscmp( _type, _T("word")) == 0 ){
       sb.append(_T(",type="));
       sb.append(_type);
@@ -222,13 +232,15 @@ void Token::setPayload(CL_NS(index)::Payload* payload) {
 }
 void Token::clear() {
 	_CLDELETE(payload);
-	// Leave _termText to allow re-use
+	// Leave _buffer to allow re-use
 	_termTextLen = 0;
 	positionIncrement = 1;
 	// startOffset = endOffset = 0;
 	// type = DEFAULT_TYPE;
 }
 
+void TokenStream::reset(){
+}
 
 Token* TokenStream::next(){
 	Token* t = _CLNEW Token; //deprecated
@@ -236,7 +248,6 @@ Token* TokenStream::next(){
 		_CLDELETE(t);
 	return t;
 }
-
 TokenStream::~TokenStream(){
 }
 
@@ -282,7 +293,7 @@ void Tokenizer::reset(CL_NS(util)::Reader* _input) {
 	this->input = _input;
 }
 
-Tokenizer::~Tokenizer(){ 
+Tokenizer::~Tokenizer(){
     close();
 }
 

@@ -7,13 +7,10 @@
 #ifndef _lucene_analysis_Analyzers_
 #define _lucene_analysis_Analyzers_
 
-#if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
-#endif
-
+#include "CLucene/util/VoidList.h"
+#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/CLStreams.h"
 #include "AnalysisHeader.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(analysis)
 
@@ -38,7 +35,7 @@ protected:
 
 public:
 	CharTokenizer(CL_NS(util)::Reader* in);
-	Token* next(Token*& token);
+	Token* next(Token* token);
 	void reset(CL_NS(util)::Reader* input);
 
 	virtual ~CharTokenizer();
@@ -126,7 +123,7 @@ class CLUCENE_EXPORT LowerCaseFilter: public TokenFilter {
 public:
 	LowerCaseFilter(TokenStream* in, bool deleteTokenStream);
 	virtual ~LowerCaseFilter();
-	Token* next(Token*& token);
+	Token* next(Token* token);
 };
 
 
@@ -169,7 +166,7 @@ public:
 	/**
 	* Returns the next input Token whose termText() is not a stop word.
 	*/ 
-	Token* next(Token*& token);
+	Token* next(Token* token);
 
 
 	/**
@@ -293,7 +290,7 @@ class CLUCENE_EXPORT PerFieldAnalyzerWrapper : public Analyzer {
 private:
     Analyzer* defaultAnalyzer;
     
-    typedef CL_NS(util)::CLHashMap<const TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
+    typedef CL_NS(util)::CLHashMap<TCHAR*, Analyzer*, CL_NS(util)::Compare::TChar,
     	CL_NS(util)::Equals::TChar, CL_NS(util)::Deletor::tcArray,CL_NS(util)::Deletor::Void<Analyzer> > AnalyzerMapType;
     AnalyzerMapType* analyzerMap;
 public:
@@ -336,8 +333,7 @@ public:
 	/**
 	 * To replace accented characters in a String by unaccented equivalents.
 	 */
-	Token* next(Token*& token);
-	
+	Token* next(Token* token);
 	virtual ~ISOLatin1AccentFilter();
 };
 
@@ -347,12 +343,12 @@ public:
  */
 class CLUCENE_EXPORT KeywordTokenizer: public Tokenizer {
 private:
-    LUCENE_STATIC_CONSTANT(int, DEFAULT_BUFFER_SIZE = 256);
-    bool done;
-    int bufferSize;
+  LUCENE_STATIC_CONSTANT(int, DEFAULT_BUFFER_SIZE = 256);
+  bool done;
+  int bufferSize;
 public:
     KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize=-1);
-    Token* next(Token*& token);
+    Token* next(Token* token);
 	void reset(CL_NS(util)::Reader* input);
 
 	virtual ~KeywordTokenizer();
@@ -389,7 +385,7 @@ public:
     /**
     * Returns the next input Token whose termText() is the right len
     */
-    Token* next(Token*& token);
+    Token* next(Token* token);
 };
 
 

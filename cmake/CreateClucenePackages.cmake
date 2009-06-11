@@ -1,7 +1,5 @@
 #Creates all the relevant packages
 
-MACRO( CREATE_CLUCENE_PACKAGES )
-
 #Rules for version:
 #MAJOR and MINOR versions are purely political
 #REVISION version MUST be revised if the headers or compatibility change
@@ -15,15 +13,23 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${CLUCENE_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION ${CLUCENE_VERSION})
 SET(CPACK_PACKAGE_SOVERSION ${CLUCENE_SOVERSION})
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CLucene")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "library for full-featured text search engine (runtime)")
 SET(CPACK_PACKAGE_VENDOR "Ben van Klinken")
+SET(CPACK_PACKAGE_CONTACT "clucene-developers@lists.sourceforge.net")
+SET(CPACK_PACKAGE_NAME "libclucene1")
 
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CLucene - a C++ search engine, ported from the popular Apache Lucene")
 
 SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/README.PACKAGE")
 
+#so, what are we going to install?
+SET(CPACK_INSTALL_CMAKE_PROJECTS
+  "${CMAKE_BINARY_DIR};clucene-core;ALL;/"
+  "${CMAKE_BINARY_DIR};clucene-shared;ALL;/")
+SET(CPACK_COMPONENTS_ALL development runtime)
 SET(CPACK_GENERATOR "TGZ")
 SET(CPACK_PACKAGE_FILE_NAME "clucene-core-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
 
@@ -34,9 +40,22 @@ ELSE(WIN32 AND NOT UNIX)
 ENDIF(WIN32 AND NOT UNIX)
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "clucene-core-${CPACK_PACKAGE_VERSION}-Source")
 
+#specific packaging requirements:
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), libgcc1 (>= 1:4.1.1-21), libstdc++6 (>= 4.1.1-21)")
+
+
 #don't include the current binary dir.
 get_filename_component(clucene_BINARY_DIR_name ${clucene_BINARY_DIR} NAME)
-SET(CPACK_SOURCE_IGNORE_FILES "/\\\\.svn/;\\\\.swp$;\\\\.#;/#;.*~;.*\\\\.tmp;/${clucene_BINARY_DIR_name}/")
+SET(CPACK_SOURCE_IGNORE_FILES
+  "/\\\\.svn/"
+  "/\\\\.git/"
+  "\\\\.swp$"
+  "\\\\.#;/#"
+  ".*~"
+  ".*\\\\.tmp"
+  ".*\\\\.save"
+  "/${clucene_BINARY_DIR_name}/"
+)
 
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
@@ -55,8 +74,6 @@ ELSE(WIN32 AND NOT UNIX)
 ENDIF(WIN32 AND NOT UNIX)
 #SET(CPACK_PACKAGE_EXECUTABLES "MyExecutable" "My Executable")
 
-INCLUDE(CPack)
-
 
 ADD_CUSTOM_TARGET(dist-package
     COMMAND rsync -avP -e ssh ${CPACK_PACKAGE_FILE_NAME}.* ustramooner@frs.sourceforge.net:uploads/
@@ -66,4 +83,6 @@ ADD_CUSTOM_TARGET(dist-package_source
     COMMAND rsync -avP -e ssh ${CPACK_SOURCE_PACKAGE_FILE_NAME}.* ustramooner@frs.sourceforge.net:uploads/
 #    DEPENDS package_source
 )
-ENDMACRO( CREATE_CLUCENE_PACKAGES )
+
+#this must be last
+INCLUDE(CPack)

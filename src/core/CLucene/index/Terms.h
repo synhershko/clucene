@@ -88,7 +88,7 @@ public:
   <p>Term enumerations are always ordered by Term.compareTo().  Each term in
   the enumeration is greater than all that precede it.
 */
-class CLUCENE_EXPORT TermEnum: LUCENE_BASE {
+class CLUCENE_EXPORT TermEnum: LUCENE_BASE, public CL_NS(util)::NamedObject {
 public:
 	/** Increments the enumeration to the next element.  True if one exists.*/ 
 	virtual bool next()=0;
@@ -122,11 +122,6 @@ public:
 	* Some implementations are considerably more efficient than that.
 	*/
 	virtual bool skipTo(Term* target);
-
-	/**
-	* Because we need to know how to cast the object, we need the objects name.
-	*/
-	virtual const char* getObjectName() = 0;
 };
 
 
@@ -171,11 +166,9 @@ public:
      * @param data the array into which the data of this payload is to be
      *             stored, if it is big enough; otherwise, a new byte[] array
      *             is allocated for this purpose. 
-     * @param offset the offset in the array into which the data of this payload
-     *               is to be stored.
      * @return a byte[] array containing the data of this payload
      */
-    virtual uint8_t* getPayload(uint8_t* data, const int32_t offset) = 0;
+    virtual uint8_t* getPayload(uint8_t* data) = 0;
 
 	/**
 	* Checks if a payload can be loaded at this position.

@@ -6,76 +6,102 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "Payload.h"
+#include <assert.h>
 
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-Payload::Payload() : data(NULL), dataLen(0), offset(0), length(0) {
-  // nothing to do
-}
-Payload::~Payload() { 
-    _CLDELETE_LARRAY(data); 
-}
-
-Payload::Payload(uint8_t* _data, const int32_t _dataLen, const int32_t _offset, int32_t _length)
+Payload::Payload() : 
+  data( * _CLNEW CL_NS(util)::ValueArray<uint8_t>(0))
 {
-	if (_length < 1) _length=_dataLen;
+  // nothing to do
+  this->deleteData = true;
+  this->deleteArray = true;
+}
+Payload::Payload(CL_NS(util)::ValueArray<uint8_t>& _data, const int32_t offset, const int32_t length, bool deleteData):
+  data(_data)
+{
+  this->deleteData = false;
+  this->deleteArray = false;
+  this->setData(data,offset,length,deleteData);
+}
+Payload::Payload(uint8_t* data, const int32_t length, bool deleteData):
+  data(*_CLNEW CL_NS(util)::ValueArray<uint8_t>)
+{
+  this->deleteData = false;
+  this->deleteArray = false;
+  this->setData(data,length,deleteData);
+}
 
-	if (_offset < 0 || _offset + _length > _dataLen) {
+Payload::~Payload() {
+  if ( deleteData ) this->data.deleteValues();
+  if ( deleteArray ) _CLLDELETE(&this->data);
+}
+
+void Payload::setData(uint8_t* data, const int32_t length, bool deleteData) {
+  if ( this->deleteData ) this->data.deleteValues();
+  if ( this->deleteArray ) {
+    _CLLDELETE(&this->data);
+    this->data = *_CLNEW CL_NS(util)::ValueArray<uint8_t>;
+  }
+	if (length < 0 ) {
+		_CLTHROWA(CL_ERR_IllegalArgument,"length < 0");
+	}
+	this->data.length = offset+length;
+  this->data.values = data;
+  this->deleteData = deleteData;
+  this->deleteArray = true;
+  this->_length = length;
+	this->offset = 0;
+  assert(false);
+}
+
+void Payload::setData(CL_NS(util)::ValueArray<uint8_t>& data, const int32_t offset, const int32_t length, bool deleteData) {
+  if ( this->deleteData ) this->data.deleteValues();
+  if ( this->deleteArray ) {
+    _CLLDELETE(&this->data);
+  }
+
+	if (offset < 0 || offset + length > data.length) {
 		_CLTHROWA(CL_ERR_IllegalArgument,"offset < 0 || offset + length > data.length");
 	}
-	_CLDELETE_ARRAY(this->data);
-	this->data = _data;
-	this->dataLen = _dataLen;
-	this->offset = _offset;
-	this->length = _length;
+  this->data = data;
+  this->_length = ( length < 0 ? data.length-offset : length );
+	this->offset = offset;
+  this->deleteData = this->deleteArray = deleteData;
+  assert(false);
 }
 
-void Payload::setData(uint8_t* _data, const int32_t _dataLen) {
-	setData(_data, _dataLen, 0, _dataLen);
-}
-void Payload::setData(uint8_t* _data, const int32_t _dataLen, const int32_t _offset, const int32_t _length) {
-	_CLDELETE_ARRAY(this->data);
-	this->data = _data;
-	this->dataLen = _dataLen;
-	this->offset = _offset;
-	this->length = _length;
-}
-
-uint8_t* Payload::getData(int32_t &_dataLen) {
-	_dataLen = dataLen;
+const CL_NS(util)::ValueArray<uint8_t>& Payload::getData() const{
 	return data;
 }
 
 int32_t Payload::getOffset() const { return offset; }
 
-int32_t Payload::getLength() const { return length; }
+int32_t Payload::length() const { return _length; }
 
 uint8_t Payload::byteAt(int index) const {
-	if (0 <= index && index < this->length) {
+	if (0 <= index && index < this->_length) {
 		return this->data[this->offset + index];    
 	}
 	_CLTHROWA(CL_ERR_IndexOutOfBounds,"Array index out of bounds at Payload::byteAt");
 }
 
-uint8_t* Payload::toByteArray(int32_t &_dataLen) {
-	uint8_t* retArray = _CL_NEWARRAY(uint8_t,this->length);
-	memcpy((void*)retArray, (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
-	_dataLen = this->length;
-
-	return retArray;
+CL_NS(util)::ValueArray<uint8_t>* Payload::toByteArray() const{
+  CL_NS(util)::ValueArray<uint8_t>* ret = _CLNEW CL_NS(util)::ValueArray<uint8_t>(this->_length);
+	memcpy(ret->values, this->data.values + this->offset, this->_length * sizeof(uint8_t));
+	return ret;
 }
 
-void Payload::copyTo(uint8_t* target, const int32_t targetLen, const int32_t targetOffset) {
-	if (this->length > targetLen + targetOffset) {
+void Payload::copyTo(uint8_t* target, const int32_t targetLen) const {
+	if (this->_length > targetLen) {
 		_CLTHROWA(CL_ERR_IndexOutOfBounds,"Array index out of bounds at Payload::byteAt");
 	}
-	memcpy((void*)(target + targetOffset), (void*)(this->data + this->offset), this->length * sizeof(uint8_t));
+	memcpy(target, this->data.values + this->offset, this->_length * sizeof(uint8_t));
 }
 
-Payload* Payload::clone() {
-	int32_t i;
-	Payload* clone = _CLNEW Payload(this->toByteArray(i), this->length, 0, this->length);
+Payload* Payload::clone()  const{
+	Payload* clone = _CLNEW Payload(*this->toByteArray(), 0, -1, true);
 	return clone;
 }
 

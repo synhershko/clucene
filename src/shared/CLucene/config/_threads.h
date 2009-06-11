@@ -32,6 +32,7 @@
           __declspec(dllimport) void __stdcall LeaveCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
 		  __declspec(dllimport) void __stdcall ExitThread(_cl_dword_t);
+
     	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
     	  
     	  typedef struct  _SECURITY_ATTRIBUTES
@@ -41,9 +42,11 @@
             bool bInheritHandle;
           }	SECURITY_ATTRIBUTES;
            __declspec(dllimport) _cl_dword_t __stdcall WaitForSingleObject( void* hHandle, _cl_dword_t dwMilliseconds );
-    	  void* _beginthread( void( __stdcall *start_address )( void * ), unsigned stack_size, void *arglist );
-
-
+    	  __declspec(dllimport) void* __stdcall CreateEventA(  SECURITY_ATTRIBUTES* lpEventAttributes,
+			  bool bManualReset, bool bInitialState, char* lpName );
+		  __declspec(dllimport) bool __stdcall SetEvent(void* hEvent);
+		  __declspec(dllimport) bool __stdcall CloseHandle(void* hObject);
+		  void* _beginthread( void( __stdcall *start_address )( void * ), unsigned stack_size, void *arglist );
       }
       #endif //_WINBASE_
 	#elif defined(_CL_HAVE_PTHREAD)

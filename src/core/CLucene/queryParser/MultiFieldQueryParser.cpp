@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -37,12 +37,12 @@ Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, const TCHAR* que
 				//If the user passes a map of boosts
 				if (boosts != NULL) {
 					//Get the boost from the map and apply them
-                    BoostMap::const_iterator itr = boosts->find(fields[i]);					
-                    if (itr != boosts->end()) {
+            BoostMap::const_iterator itr = boosts->find((TCHAR*)fields[i]);
+            if (itr != boosts->end()) {
 						q->setBoost(itr->second);
 					}
 				}
-				if (q->getQueryName() == PhraseQuery::getClassName()) {
+				if (q->getObjectName() == PhraseQuery::getClassName()) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
 				// TODO:
@@ -137,13 +137,15 @@ Query* MultiFieldQueryParser::parse(const TCHAR** _queries, const TCHAR** _field
 Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** _fields, const uint8_t* flags, Analyzer* analyzer) {
 	BooleanQuery* bQuery = _CLNEW BooleanQuery();
 	for (size_t i = 0; _fields[i]!=NULL; i++) {
-		if (flags[i] == NULL) {
+	  //TODO: this is really confusing... why not refactor _fields and flags to use a array object.
+	  //flags can be NULL since NULL == 0...
+		/*if (flags[i] == NULL) {
 			_CLLDELETE(bQuery);
 			_CLTHROWA(CL_ERR_IllegalArgument, "_fields.length != flags.length");
-		}
+		}*/
 		QueryParser* qp = _CLNEW QueryParser(_fields[i], analyzer);
 		Query* q = qp->parse(query);
-		if (q!=NULL && // q never null, just being defensive 
+		if (q!=NULL && // q never null, just being defensive
 			(!(q->instanceOf(BooleanQuery::getClassName())) || ((BooleanQuery*)q)->getClauseCount()>0)) {
 				bQuery->add(q, true, (BooleanClause::Occur)flags[i]);
 		} else
@@ -158,7 +160,9 @@ Query* MultiFieldQueryParser::parse(const TCHAR** _queries, const TCHAR** _field
 	BooleanQuery* bQuery = _CLNEW BooleanQuery();
 	for (size_t i = 0; _fields[i]!=NULL; i++)
 	{
-		if (_queries[i] == NULL || flags[i] == NULL) {
+	  //TODO: this is really confusing... why not refactor _fields and flags to use a array object.
+	  //flags can be NULL since NULL == 0...
+		if (_queries[i] == NULL ) { //|| flags[i] == NULL
 			_CLLDELETE(bQuery);
 			_CLTHROWA(CL_ERR_IllegalArgument, "_queries, _fields, and flags array have have different length");
 		}

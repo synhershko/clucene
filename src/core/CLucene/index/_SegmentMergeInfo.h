@@ -13,6 +13,8 @@
 #include "Terms.h"
 
 CL_NS_DEF(index)
+class IndexReader;
+
 class SegmentMergeInfo:LUCENE_BASE {
 private:
 	int32_t* docMap;				  // maps around deleted docs

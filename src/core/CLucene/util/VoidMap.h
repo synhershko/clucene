@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_util_VoidMap_
@@ -30,12 +30,12 @@ CL_NS_DEF(util)
 * A template to encapsulate various map type classes
 * @internal
 */
-template<typename _kt, typename _vt, 
+template<typename _kt, typename _vt,
 	typename _base,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLUCENE_INLINE_EXPORT __CLMap:public _base,LUCENE_BASE {
-private:
+protected:
 	bool dk;
 	bool dv;
 	typedef _base base;
@@ -79,49 +79,36 @@ public:
 		return ret;
 	}
 
-	///put the specified pair into the map. remove any old items first
-	///\param k the key
-	///\param v the value
-	void put(_kt k,_vt v){
-		//todo: check if this is always right!
-		//must should look through code, for
-		//cases where map is not unique!!!
-		if ( dk || dv )
-			remove(k);
-			
-		//todo: replacing the old item might be quicker...
-		
-		base::insert(_pair(k,v));
-	}
-
-	
 	///using a non-const key, get a non-const value
 	_vt get( _kt k) const {
 		const_iterator itr = base::find(k);
-		if ( itr==base::end() ) 
+		if ( itr==base::end() )
 			return (_vt)NULL;
-		else 
+		else
 			return itr->second;
 	}
+	/*
 	///using a non-const key, get the actual key
 	_kt getKey( _kt k) const {
 		const_iterator itr = base::find(k);
-		if ( itr==base::end() ) 
+		if ( itr==base::end() )
 			return NULL;
-		else 
+		else
 			return itr->first;
-	}
+	}*/
 
 	void removeitr (iterator itr, const bool dontDeleteKey = false, const bool dontDeleteValue = false){
+	  if ( itr == base::end() ) return;
+
 		//delete key&val first. This prevents potential loops (deleting object removes itself)
 		_kt key = itr->first;
 		_vt val = itr->second;
 		base::erase(itr);
-		
+
 		//keys & vals need to be deleted after erase, because the hashvalue is still needed
-		if ( dk && !dontDeleteKey ) 
+		if ( dk && !dontDeleteKey )
 			_KeyDeletor::doDelete(key);
-		if ( dv && !dontDeleteValue ) 
+		if ( dv && !dontDeleteValue )
 			_ValueDeletor::doDelete(val);
 	}
 	///delete and optionally delete the specified key and associated value
@@ -141,12 +128,12 @@ public:
 				itr = base::begin();
 
 				#else
-				if ( dk ) 
+				if ( dk )
 					_KeyDeletor::doDelete(itr->first);
-				if ( dv ) 
+				if ( dv )
 					_ValueDeletor::doDelete(itr->second);
 				++itr;
-				
+
 				#endif
 			}
 		}
@@ -161,7 +148,7 @@ public:
 #if defined(LUCENE_DISABLE_HASHING)
 
  //a CLSet with CLHashMap traits
-template<typename _kt, typename _vt, 
+template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _EqualDummy,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
@@ -179,6 +166,20 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 #elif defined(_CL_HAVE_EXT_HASH_MAP)
  //ext/hash_map syntax
@@ -200,6 +201,19 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 
 #elif defined(_CL_HAVE_HASH_MAP)
@@ -222,12 +236,25 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 #endif
 
 //A collection that contains no duplicates
 //does not guarantee that the order will remain constant over time
-template<typename _kt, typename _vt, 
+template<typename _kt, typename _vt,
 	typename _Compare,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
@@ -244,6 +271,19 @@ public:
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
 	}
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	virtual void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
+
+		(*this)[k] = v;;
+	}
+
 };
 
 
@@ -264,6 +304,18 @@ public:
 	{
 		_this::setDeleteKey(deleteKey);
 		_this::setDeleteValue(deleteValue);
+	}
+
+	///put the specified pair into the map. remove any old items first
+	///\param k the key
+	///\param v the value
+	void put(_kt k,_vt v){
+		//todo: check if this is always right!
+		//must should look through code, for
+		//cases where map is not unique!!!
+		if ( _this::dk || _this::dv )
+			_this::remove(k);
+
 	}
 };
 

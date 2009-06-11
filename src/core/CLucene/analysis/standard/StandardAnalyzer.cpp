@@ -20,19 +20,19 @@ CL_NS_USE(analysis)
 CL_NS_DEF2(analysis,standard)
 
 	StandardAnalyzer::StandardAnalyzer():
-		stopSet(_CLNEW CLTCSetList(false))
+		stopSet(_CLNEW CLTCSetList(true))
 	{
       StopFilter::fillStopTable( stopSet,CL_NS(analysis)::StopAnalyzer::ENGLISH_STOP_WORDS);
 	}
 
 	StandardAnalyzer::StandardAnalyzer( const TCHAR** stopWords):
-		stopSet(_CLNEW CLTCSetList)
+		stopSet(_CLNEW CLTCSetList(true))
 	{
 		StopFilter::fillStopTable( stopSet,stopWords );
 	}
 	
 	StandardAnalyzer::StandardAnalyzer(const char* stopwordsFile, const char* enc):
-		stopSet(_CLNEW CLTCSetList)
+		stopSet(_CLNEW CLTCSetList(true))
 	{
 		if ( enc == NULL )
 			enc = "ASCII";
@@ -40,7 +40,7 @@ CL_NS_DEF2(analysis,standard)
 	}
 	
 	StandardAnalyzer::StandardAnalyzer(CL_NS(util)::Reader* stopwordsReader, const bool _bDeleteReader):
-		stopSet(_CLNEW CLTCSetList)
+		stopSet(_CLNEW CLTCSetList(true))
 	{
 		WordlistLoader::getWordSet(stopwordsReader, stopSet, _bDeleteReader);
 	}

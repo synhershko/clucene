@@ -42,7 +42,7 @@ CL_NS_DEF(search)
   //Post - The instance has been destroyed
 
       _CLDELETE(bucketTable);
-	  _CLDELETE_ARRAY(coordFactors);
+	  	_CLDELETE_ARRAY(coordFactors);
       _CLDELETE(scorers);
   }
 
@@ -95,7 +95,7 @@ CL_NS_DEF(search)
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::skipTo");
 	}
 
-	void BooleanScorer::explain(int32_t doc, Explanation* ret) {
+	Explanation* BooleanScorer::explain(int32_t doc) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::explain");
 	}
 
@@ -103,10 +103,12 @@ CL_NS_DEF(search)
 		CL_NS(util)::StringBuffer buffer;
 		buffer.append(_T("boolean("));
 		for (SubScorer* sub = scorers; sub != NULL; sub = sub->next) {
-			buffer.append(sub->scorer->toString());
-			buffer.append(_T(" "));
+			TCHAR* tmp = sub->scorer->toString();
+			buffer.append(tmp);
+			_CLDELETE_LCARRAY(tmp);
+			buffer.appendChar(_T(' '));
 		}
-		buffer.appendChar(')');
+		buffer.appendChar(_T(')'));
 		return buffer.toString();
 	}
 
@@ -247,11 +249,11 @@ CL_NS_DEF(search)
     scorer(scr),
     first(NULL)
   {
-	buckets = _CL_NEWARRAY(Bucket,BucketTable_SIZE);
+		buckets = new Bucket[BucketTable_SIZE];
   }
   BooleanScorer::BucketTable::~BucketTable(){
-	clear();
-	_CLDELETE_ARRAY(buckets);
+		clear();
+		delete [] buckets;
   }
 
   void BooleanScorer::BucketTable::clear(){

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -244,7 +244,7 @@ CL_NS_DEF2(queryParser,legacy)
 
 		Query* q = NULL;
 		const TCHAR* sfield = field;
-		bool delField = false;
+		TCHAR* tmp;
 
 		QueryToken *DelToken = NULL;
 
@@ -256,9 +256,8 @@ CL_NS_DEF2(queryParser,legacy)
 			CND_CONDITION(DelToken != NULL,"DelToken is NULL");
 			_CLDELETE(DelToken);
 
-			TCHAR* tmp = STRDUP_TtoT(term->Value);
+			tmp = STRDUP_TtoT(term->Value);
 			discardEscapeChar(tmp);
-			delField = true;
 			sfield = tmp;
 			_CLDELETE(term);
 		}else{
@@ -293,8 +292,7 @@ CL_NS_DEF2(queryParser,legacy)
 			q = MatchTerm(sfield);
 		}
 
-	  if ( delField )
-		  _CLDELETE_CARRAY(sfield);
+	  _CLDELETE_CARRAY(tmp);
 	  return q;
 	}
 
@@ -432,8 +430,7 @@ CL_NS_DEF2(queryParser,legacy)
 				int32_t islop = phraseSlop;
 				if(slop != NULL ){
 				   try {
-                       TCHAR* end; //todo: should parse using float...
-					   islop = (int32_t)_tcstoi64(slop->Value+1, &end, 10);
+             islop = _ttoi(slop->Value+1);
 				   }catch(...){
 					   //ignored
 				   }
@@ -450,8 +447,7 @@ CL_NS_DEF2(queryParser,legacy)
 		if( q!=NULL && boost != NULL ){
 			float_t f = 1.0F;
 			try {
-				TCHAR* tmp;
-				f = _tcstod(boost->Value, &tmp);
+				f = _tcstod(boost->Value, NULL);
 			}catch(...){
 				//ignored
 			}

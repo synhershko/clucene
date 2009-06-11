@@ -24,13 +24,11 @@ CL_NS_DEF(search)
  * Expert: Compares two ScoreDoc objects for sorting.
  *
  */
- class CLUCENE_EXPORT ScoreDocComparator:LUCENE_BASE {
+ class CLUCENE_EXPORT ScoreDocComparator {
  protected:
 	 ScoreDocComparator(){}
  public:
 	 virtual ~ScoreDocComparator();
-//    CL_NS(util)::Comparable** cachedValues;
-//    ScoreDocComparator(CL_NS(util)::Comparable** cachedValues);
 
 	 /**
 	 * Compares two ScoreDoc objects and returns a result indicating their
@@ -42,7 +40,7 @@ CL_NS_DEF(search)
 	 *         <code>0</code> if they are equal
 	 * @see java.util.Comparator
 	 */
-    virtual int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j) = 0;
+   virtual int32_t compare (struct ScoreDoc* i, struct ScoreDoc* j) = 0;
 
 	/**
 	* Returns the value used to sort the given document.  The
@@ -53,7 +51,7 @@ CL_NS_DEF(search)
 	* @param i Document
 	* @return Serializable object
 	*/
-    virtual CL_NS(util)::Comparable* sortValue (struct ScoreDoc* i) = 0;
+  virtual CL_NS(util)::Comparable* sortValue (struct ScoreDoc* i) = 0;
 
 	
 	/**
@@ -67,7 +65,7 @@ CL_NS_DEF(search)
 	* @return One of the constants in SortField.
 	* @see SortField
 	*/
-    virtual int32_t sortType() = 0;
+  virtual int32_t sortType() = 0;
 
 	/** Special comparator for sorting hits according to computed relevance (document score). */
 	static ScoreDocComparator* RELEVANCE();
@@ -99,7 +97,7 @@ public:
   /**
    * Creates a comparator for the field in the given index.
    * @param reader Index to create comparator for.
-   * @param fieldname  Field to create comparator for.
+   * @param fieldname  Name of the field to create comparator for.
    * @return Comparator of ScoreDoc objects.
    * @throws IOException If an error occurs reading the index.
    */
@@ -192,6 +190,15 @@ public:
   /** Sort using term values as encoded Floats.  Sort values are Float and
    * lower values are at the front. */
    LUCENE_STATIC_CONSTANT(int32_t, FLOAT=5);
+
+    /** Sort using term values as encoded Longs.  Sort values are Long and
+    * lower values are at the front. */
+   LUCENE_STATIC_CONSTANT(int32_t, LONG=6);
+
+    /** Sort using term values as encoded Doubles.  Sort values are Double and
+    * lower values are at the front. */
+   LUCENE_STATIC_CONSTANT(int32_t, DOUBLE=7);
+
 
   /** Sort using a custom Comparator.  Sort values are any Comparable and
    * sorting is done according to natural order. */

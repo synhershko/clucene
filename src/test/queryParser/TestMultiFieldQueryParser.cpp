@@ -24,9 +24,8 @@ public:
 	{
 	}
 
-	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token*& token) {
+	CL_NS(analysis)::Token* next(CL_NS(analysis)::Token* token) {
 		if (inPhrase) {
-			if (token == NULL) token=_CLNEW CL_NS(analysis)::Token();
 			inPhrase = false;
 			token->set( _T("phrase2"), savedStart, savedEnd);
 			return token;
@@ -43,7 +42,6 @@ public:
 				}
 			}
 		}
-		_CLDELETE(token);
 		return NULL;
 	}
 };
@@ -63,7 +61,7 @@ void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
 	if ( q == NULL )
 		return;
 
-	const TCHAR* s = q->toString();
+	TCHAR* s = q->toString();
 	int ret = _tcscmp(s,result);
 	_CLDELETE(q);
 	if ( ret != 0 ) {
@@ -71,6 +69,7 @@ void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
 		_sntprintf(buf, HUGE_STRING_LEN, _T("FAILED Query yielded /%s/, expecting /%s/\n"), s, result);
 		_CLDELETE_LCARRAY(s);
 		CuFail(tc, buf);
+    return;
 	}
 	_CLDELETE_LCARRAY(s);
 }

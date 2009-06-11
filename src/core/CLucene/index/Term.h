@@ -30,8 +30,8 @@ converting duplicated strings to shared ones.
 
 */
 class CLUCENE_EXPORT Term:LUCENE_REFBASE {
-  private:
-    size_t cachedHashCode;
+private:
+  size_t cachedHashCode;
 	const TCHAR* _field;
 	//CLStringIntern::iterator fielditr;
 #ifdef LUCENE_TERM_TEXT_LENGTH
@@ -43,15 +43,22 @@ class CLUCENE_EXPORT Term:LUCENE_REFBASE {
 #endif
 	size_t textLen; //a cache of text len, this allows for a preliminary comparison of text lengths
 	bool    internF; //Indicates if Term Field is interned(and therefore must be uninternd). 
-  public:
+public:
 	
 	//uses the specified fieldTerm's field. this saves on intern'ing time.
+  /** Constructs a Term with the given field and text.
+   * <p>Note that a null field or null text value results in undefined
+   * behavior for most Lucene APIs that accept a Term parameter.
+  */
 	Term(const Term* fieldTerm, const TCHAR* txt);
 		
-	///Constructs a blank term
+	/** Constructs a blank term */
 	Term();
 	
-	//todo: these need to be private, but a few other things need to be changed first...
+  /** Constructs a Term with the given field and text.
+   * <p>Note that a null field or null text value results in undefined
+   * behavior for most Lucene APIs that accept a Term parameter.
+  */
 	Term(const TCHAR* fld, const TCHAR* txt, bool internField);
 
 	/**

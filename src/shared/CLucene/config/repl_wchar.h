@@ -25,6 +25,7 @@ CLUCENE_SHARED_EXPORT size_t lucene_utf8towc  (wchar_t& ret, const char *s);
 CLUCENE_SHARED_EXPORT size_t lucene_utf8towcs(wchar_t *, const char *,  size_t maxslen);
 CLUCENE_SHARED_EXPORT size_t lucene_wctoutf8  (char * ret, const wchar_t  str);
 CLUCENE_SHARED_EXPORT size_t lucene_wcstoutf8 (char *,  const wchar_t *, size_t maxslen);
+CLUCENE_SHARED_EXPORT std::string lucene_wcstoutf8string(const wchar_t* str, size_t strlen);
 CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const unsigned char p); //< the number of characters that this first utf8 character will expect
 
 //string function replacements
@@ -44,6 +45,9 @@ CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const unsigned char p); //< the 
     CLUCENE_SHARED_EXPORT TCHAR* lucene_i64tot( int64_t value, TCHAR* str, int radix);
     #undef _i64tot
     #define _i64tot lucene_i64tot
+#endif
+#if !defined(_CL_HAVE_FUNCTION_WCSDUP)
+    CLUCENE_SHARED_EXPORT wchar_t* lucene_wcsdup( const wchar_t* str);
 #endif
 #if (defined(_UCS2) && !defined(_CL_HAVE_FUNCTION_WCSTOLL)) || (defined(_ASCII) && !defined(_CL_HAVE_FUNCTION_STRTOLL))
 	CLUCENE_SHARED_EXPORT int64_t lucene_tcstoi64(const TCHAR* str, TCHAR**end, int radix);

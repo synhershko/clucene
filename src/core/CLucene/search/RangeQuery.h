@@ -19,51 +19,64 @@ CL_CLASS_DEF(util,StringBuffer)
 
 
 CL_NS_DEF(search)
-    /** Constructs a query selecting all terms greater than
-     * <code>lowerTerm</code> but less than <code>upperTerm</code>.
-     * There must be at least one term and either term may be null,
-     * in which case there is no bound on that side, but if there are
-     * two terms, both terms <b>must</b> be for the same field.
-     */
-	class CLUCENE_EXPORT RangeQuery: public Query
-    {
-    private: 
-        CL_NS(index)::Term* lowerTerm;
-        CL_NS(index)::Term* upperTerm;
-        bool inclusive;
-	protected:
-		RangeQuery(const RangeQuery& clone);
-		
-	public:
-        // Constructs a query selecting all terms greater than 
-        // <code>lowerTerm</code> but less than <code>upperTerm</code>.
-        // There must be at least one term and either term may be NULL--
-        // in which case there is no bound on that side, but if there are 
-        // two term, both terms <b>must</b> be for the same field.
-		RangeQuery(CL_NS(index)::Term* LowerTerm, CL_NS(index)::Term* UpperTerm, const bool Inclusive);
-		~RangeQuery();
 
-		const char* getQueryName() const;
-		static const char* getClassName();
+/**
+ * A Query that matches documents within an exclusive range. A RangeQuery
+ * is built by QueryParser for input like <code>[010 TO 120]</code> but only if the QueryParser has
+ * the useOldRangeQuery property set to true. The QueryParser default behaviour is to use
+ * the newer ConstantScoreRangeQuery class. This is generally preferable because:
+ * <ul>
+ *  <li>It is faster than RangeQuery</li>
+ *  <li>Unlike RangeQuery, it does not cause a BooleanQuery.TooManyClauses exception if the range of values is large</li>
+ *  <li>Unlike RangeQuery it does not influence scoring based on the scarcity of individual terms that may match</li>
+ * </ul>
+ *
+ *
+ * @see ConstantScoreRangeQuery
+ *
+ *
+ * @version $Id: RangeQuery.java 520891 2007-03-21 13:58:47Z yonik $
+ */
+class CLUCENE_EXPORT RangeQuery: public Query
+{
+private:
+  CL_NS(index)::Term* lowerTerm;
+  CL_NS(index)::Term* upperTerm;
+  bool inclusive;
+protected:
+  RangeQuery(const RangeQuery& clone);
 
-		Query* rewrite(CL_NS(index)::IndexReader* reader);
+public:
+  /** Constructs a query selecting all terms greater than
+    * <code>lowerTerm</code> but less than <code>upperTerm</code>.
+    * There must be at least one term and either term may be null,
+    * in which case there is no bound on that side, but if there are
+    * two terms, both terms <b>must</b> be for the same field.
+    */
+  RangeQuery(CL_NS(index)::Term* LowerTerm, CL_NS(index)::Term* UpperTerm, const bool Inclusive);
+  ~RangeQuery();
 
-		Query* combine(Query** queries);
-        
-        // Prints a user-readable version of this query. 
-        TCHAR* toString(const TCHAR* field) const;
-        
-		Query* clone() const;
+  const char* getObjectName() const;
+  static const char* getClassName();
 
-		bool equals(Query * other) const;
+  Query* rewrite(CL_NS(index)::IndexReader* reader);
 
-		CL_NS(index)::Term* getLowerTerm(bool pointer=true) const;
-		CL_NS(index)::Term* getUpperTerm(bool pointer=true) const;
-		bool isInclusive() const;
-        const TCHAR* getField() const;
+  Query* combine(Query** queries);
 
-		size_t hashCode() const;
-    };
+  // Prints a user-readable version of this query.
+  TCHAR* toString(const TCHAR* field) const;
+
+  Query* clone() const;
+
+  bool equals(Query * other) const;
+
+  CL_NS(index)::Term* getLowerTerm(bool pointer=true) const;
+  CL_NS(index)::Term* getUpperTerm(bool pointer=true) const;
+  bool isInclusive() const;
+  const TCHAR* getField() const;
+
+  size_t hashCode() const;
+};
 
 CL_NS_END
 #endif

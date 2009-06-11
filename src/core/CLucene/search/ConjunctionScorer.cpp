@@ -8,51 +8,32 @@
 #include "_ConjunctionScorer.h"
 #include "Similarity.h"
 #include "CLucene/util/_Arrays.h"
+#include <assert.h>
+#include <algorithm>
 
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
   Scorer* ConjunctionScorer::first()  const{ 
-	 if ( scorers->end() == scorers->begin() )
-		return NULL;
+    if ( scorers->end() == scorers->begin() )
+      return NULL;
 
-	 return *scorers->begin(); 
+    return *scorers->begin(); 
   } //get First
+
   Scorer* ConjunctionScorer::last() {
-	 if ( scorers->end() == scorers->begin() )
-		return NULL;
+    if ( scorers->end() == scorers->begin() )
+      return NULL;
 
-	 CL_NS_STD(list)<Scorer*>::iterator i = scorers->end();
-	 --i;
-	 return *i; 
+    ScorersType::iterator i = scorers->end();
+    --i;
+    return *i; 
   } //get Last
-
-  class _ScorerSorter:public CL_NS(util)::Arrays::_Arrays<Scorer*>{
-  public:
-	bool equals(Scorer* o1,Scorer* o2) const{
-		return o1->doc() == o2->doc();
-	}
-	int32_t compare(Scorer* o1,Scorer* o2) const{
-		return o1->doc() - o2->doc();
-	}
-  };
-  _ScorerSorter __ScorerSorter;
 
   void ConjunctionScorer::sortScorers() {
     // move scorers to an array
-    int32_t size = scorers->size();
-    Scorer** array = _CL_NEWARRAY(Scorer*,size+1);
-	scorers->toArray(array);
-    scorers->clear();                              // empty the list
-
-    // note that this comparator is not consistent with equals!
-	__ScorerSorter.sort(array,size,0,size);
-
-    for (int32_t i = 0; i<size; i++) {
-      scorers->push_back(array[i]);                  // re-build list, now sorted
-    }
-	_CLDELETE_ARRAY(array);
+    std::sort(scorers->begin(),scorers->end(), Scorer::sort);
   }
 
   bool ConjunctionScorer::doNext() {
@@ -73,7 +54,7 @@ CL_NS_DEF(search)
     coord = getSimilarity()->coord(scorers->size(), scorers->size());
 
     // move each scorer to its first entry
-	CL_NS_STD(list)<Scorer*>::iterator i = scorers->begin();
+	  ScorersType::iterator i = scorers->begin();
     while (more && i!=scorers->end()) {
       more = ((Scorer*)*i)->next();
 	  ++i;
@@ -87,7 +68,7 @@ CL_NS_DEF(search)
 
 	ConjunctionScorer::ConjunctionScorer(Similarity* similarity):
 		Scorer(similarity),
-		scorers(_CLNEW CL_NS(util)::CLLinkedList<Scorer*,CL_NS(util)::Deletor::Object<Scorer> >(false)),
+		scorers(_CLNEW ScorersType(false)),
 		firstTime(true),
 		more(true),
 		coord(0.0)
@@ -98,14 +79,13 @@ CL_NS_DEF(search)
 		_CLDELETE(scorers);
 	}
 
-	TCHAR *CL_NS(search)::Scorer::toString(void){
-		return STRDUP_TtoT(_T("ConjunctionScorer"));
+	TCHAR* ConjunctionScorer::toString(){
+		return stringDuplicate(_T("ConjunctionScorer"));
 	}
 	
-
-  void ConjunctionScorer::add(Scorer* scorer){
-    scorers->push_back(scorer);
-  }
+	void ConjunctionScorer::add(Scorer* scorer){
+		scorers->push_back(scorer);
+	}
 
 
   int32_t ConjunctionScorer::doc()  const{ return first()->doc(); }
@@ -120,7 +100,7 @@ CL_NS_DEF(search)
   }
   
   bool ConjunctionScorer::skipTo(int32_t target) {
-    CL_NS_STD(list)<Scorer*>::iterator i = scorers->begin();
+    ScorersType::iterator i = scorers->begin();
     while (more && i!=scorers->end()) {
       more = ((Scorer*)*i)->skipTo(target);
 	  ++i;
@@ -132,15 +112,17 @@ CL_NS_DEF(search)
 
   float_t ConjunctionScorer::score(){
     float_t score = 0.0f;                           // sum scores
-    CL_NS_STD(list)<Scorer*>::const_iterator i = scorers->begin();
-	while (i!=scorers->end()){
+    ScorersType::const_iterator i = scorers->begin();
+	  while (i!=scorers->end()){
       score += (*i)->score();
-	  ++i;
-	}
+	    ++i;
+	  }
     score *= coord;
     return score;
   }
-
+  Explanation* ConjunctionScorer::explain(int32_t doc) {
+	  _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: ConjunctionScorer::explain");
+  }
 
 
 CL_NS_END

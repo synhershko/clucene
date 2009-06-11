@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_compoundfile_h
@@ -9,9 +9,9 @@
 
 
 CL_CLASS_DEF(store,Lock)
-#include "CLucene/util/VoidMapSetDefinitions.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
+#include "_SegmentMerger.h"
 
 CL_NS_DEF(index)
 
@@ -34,7 +34,7 @@ private:
 
 	CL_NS(store)::IndexInput* stream;
 
-    typedef CL_NS(util)::CLHashMap<const char*,ReaderFileEntry*,
+    typedef CL_NS(util)::CLHashMap<char*,ReaderFileEntry*,
 		CL_NS(util)::Compare::Char,
 		CL_NS(util)::Equals::Char,
 		CL_NS(util)::Deletor::acArray,
@@ -45,7 +45,7 @@ protected:
 	bool doDeleteFile(const char* name);
 
 public:
-	CompoundFileReader(CL_NS(store)::Directory* dir, char* name, int32_t _readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
+	CompoundFileReader(CL_NS(store)::Directory* dir, const char* name, int32_t _readBufferSize=CL_NS(store)::BufferedIndexInput::BUFFER_SIZE);
 	~CompoundFileReader();
 	CL_NS(store)::Directory* getDirectory();
 	const char* getName() const;
@@ -54,7 +54,7 @@ public:
 	bool openInput(const char * name, CL_NS(store)::IndexInput *& ret, CLuceneError& error, int32_t bufferSize=0);
 
 	/** Returns an array of strings, one for each file in the directory-> */
-	void list(std::vector<std::string>* names) const;
+	bool list(std::vector<std::string>* names) const;
 	/** Returns true iff a file with the given name exists. */
 	bool fileExists(const char* name) const;
 	/** Returns the time the named file was last modified. */
@@ -75,10 +75,10 @@ public:
      * @throws UnsupportedOperationException */
 	CL_NS(store)::LuceneLock* makeLock(const char* name);
 
-	TCHAR* toString() const;
-	
-	static const char* DirectoryType(){ return "CFS"; }
-	const char* getDirectoryType() const{ return DirectoryType(); }
+	std::string toString() const;
+
+	static const char* getClassName();
+	const char* getObjectName() const;
 };
 
 
@@ -104,14 +104,8 @@ public:
  *
  */
 class CompoundFileWriter:LUCENE_BASE {
-	CL_NS(store)::Directory* directory;
-	char* fileName;
-	CL_NS(util)::CLHashSet<const char*,
-		CL_NS(util)::Compare::Char,CL_NS(util)::Deletor::acArray> ids;
-	typedef CL_NS(util)::CLLinkedList<WriterFileEntry*,
-		CL_NS(util)::Deletor::Object<WriterFileEntry> > EntriesType;	
-	EntriesType* entries;
-	bool merged;
+  class Internal;
+  Internal* _internal;
 
 	/** Copy the contents of the file with specified extension into the
 	*  provided output stream. Use the provided buffer for moving data
@@ -122,14 +116,14 @@ public:
 	/** Create the compound stream in the specified file. The file name is the
 	*  entire name (no extensions are added).
 	*/
-	CompoundFileWriter(CL_NS(store)::Directory* dir, const char* name);
+	CompoundFileWriter(CL_NS(store)::Directory* dir, const char* name, SegmentMerger::CheckAbort* checkAbort = NULL);
 	~CompoundFileWriter();
 	/** Returns the directory of the compound file. */
 	CL_NS(store)::Directory* getDirectory();
 	const char* getName() const ;
-	/** Add a source stream. <code>file</code> is the string by which the 
+	/** Add a source stream. <code>file</code> is the string by which the
 	*  sub-stream will be known in the compound stream.
-	* 
+	*
 	*  @throws IllegalStateException if this writer is closed
 	*  @throws NullPointerException if <code>file</code> is null
 	*  @throws IllegalArgumentException if a file with the same name

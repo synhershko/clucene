@@ -9,46 +9,38 @@
 #include "Scorer.h"
 #include "ScorerDocQueue.h"
 #include "SearchHeader.h"
+#include "Explanation.h"
+
+#include "CLucene/util/StringBuffer.h"
 
 #include "_DisjunctionSumScorer.h"
 
 
 CL_NS_DEF(search)
 
-DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers ) : Scorer(  NULL )
+DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* _subScorers
+										   , const int32_t _minimumNrMatchers ) : Scorer( NULL ), nrScorers(0),
+										   minimumNrMatchers(_minimumNrMatchers),scorerDocQueue(NULL),queueSize(-1),
+										   currentDoc(-1),_nrMatchers(-1),currentScore(-1.0f)
 {
-	init( subScorers, 1 );
-}
-
-DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* subScorers, int32_t minimumNrMatchers ) : Scorer( NULL )
-{	
-	init( subScorers, minimumNrMatchers );
-}
-
-void DisjunctionSumScorer::init( DisjunctionSumScorer::ScorersType* SubScorers, int32_t MinimumNrMatchers )
-{
-	
-	if ( MinimumNrMatchers <= 0 ) {
-		// throw exception
-	}
-	
-	if ( SubScorers->size() <= 1 ) {
-		// throw exception
+	if ( minimumNrMatchers <= 0 ) {
+		_CLTHROWA(CL_ERR_IllegalArgument,"Minimum nr of matchers must be positive");
 	}
 
-	minimumNrMatchers = MinimumNrMatchers;
-	nrScorers = SubScorers->size();
-	scorerDocQueue = NULL;
+	nrScorers = _subScorers->size();
 	
-	for ( DisjunctionSumScorer::ScorersType::iterator itr = SubScorers->begin(); itr != SubScorers->end(); itr++ ) {
+	if ( nrScorers <= 1 ) {
+		_CLTHROWA(CL_ERR_IllegalArgument,"There must be at least 2 subScorers");
+	}
+	
+	for ( DisjunctionSumScorer::ScorersType::iterator itr = _subScorers->begin(); itr != _subScorers->end(); itr++ ) {
 		subScorers.push_back( *itr );
 	}
-	
 }
 
 DisjunctionSumScorer::~DisjunctionSumScorer()
 {
-	_CLDELETE( scorerDocQueue );
+	_CLLDELETE( scorerDocQueue );
 }
 
 void DisjunctionSumScorer::score( HitCollector* hc )
@@ -75,7 +67,7 @@ int32_t DisjunctionSumScorer::doc() const
 	return currentDoc;
 }
 
-int32_t DisjunctionSumScorer::nrMatchers()
+int32_t DisjunctionSumScorer::nrMatchers() const
 {
 	return _nrMatchers;
 }
@@ -104,12 +96,46 @@ bool DisjunctionSumScorer::skipTo( int32_t target )
 
 TCHAR* DisjunctionSumScorer::toString()
 {
-	return NULL;
+	return stringDuplicate(_T("DisjunctionSumScorer"));
 }
 
-void DisjunctionSumScorer::explain( int32_t doc, Explanation* ret )
-{
-	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: DisjunctionSumScorer::explain");								
+Explanation* DisjunctionSumScorer::explain( int32_t doc ){
+	Explanation* res = _CLNEW Explanation();
+	float_t sumScore = 0.0f;
+	int32_t nrMatches = 0;
+	ScorersType::iterator ssi = subScorers.begin();
+	while (ssi != subScorers.end()) {
+		Explanation* es = reinterpret_cast<Scorer*>(*ssi)->explain(doc);
+		if (es->getValue() > 0.0f) { // indicates match
+			sumScore += es->getValue();
+			nrMatches++;
+		}
+		res->addDetail(es);
+		++ssi;
+	}
+
+	CL_NS(util)::StringBuffer buf(50);
+	if (_nrMatchers >= minimumNrMatchers) {
+		buf.append(_T("sum over at least "));
+		buf.appendInt(minimumNrMatchers);
+		buf.append(_T(" of "));
+		buf.appendInt(subScorers.size());
+		buf.appendChar(_T(':'));
+
+		res->setValue(sumScore);
+		res->setDescription(buf.getBuffer());
+	} else {
+		buf.appendInt(nrMatches);
+		buf.append(_T(" match(es) but at least "));
+		buf.appendInt(minimumNrMatchers);
+		buf.append(_T(" of "));
+		buf.appendInt(subScorers.size());
+		buf.append(_T(" needed"));
+
+		res->setValue(0.0f);
+		res->setDescription(buf.getBuffer());
+	}
+	return res;
 }
 
 bool DisjunctionSumScorer::score( HitCollector* hc, const int32_t max )
@@ -125,25 +151,22 @@ bool DisjunctionSumScorer::score( HitCollector* hc, const int32_t max )
 
 bool DisjunctionSumScorer::advanceAfterCurrent()
 {
-	do {
-		
+	do { // repeat until minimum nr of matchers
 		currentDoc = scorerDocQueue->topDoc();
 		currentScore = scorerDocQueue->topScore();
-		_nrMatchers = 1;
 		
-		do { 
-			
+		_nrMatchers = 1;
+		do { // Until all subscorers are after currentDoc 
 			if ( !scorerDocQueue->topNextAndAdjustElsePop() ) {
 				if ( --queueSize == 0 ) {
-					break;
+					break; // nothing more to advance, check for last match.
 				}
 			}
 			if ( scorerDocQueue->topDoc() != currentDoc ) {
-				break;
+				break; // All remaining subscorers are after currentDoc.
 			}
 			currentScore += scorerDocQueue->topScore();
-			_nrMatchers++;
-			
+			_nrMatchers++;	
 		} while( true );
 		
 		if ( _nrMatchers >= minimumNrMatchers ) {
@@ -151,24 +174,23 @@ bool DisjunctionSumScorer::advanceAfterCurrent()
 		} else if ( queueSize < minimumNrMatchers ) {
 			return false;
 		}
-		
 	} while( true );
 }
 
 void DisjunctionSumScorer::initScorerDocQueue()
 {
+	// No need to _CLLDELETE here since this function since this function is only called if scorerDocQueue==NULL
 	scorerDocQueue = _CLNEW ScorerDocQueue( nrScorers );
 	queueSize = 0;
 	
 	for ( ScorersType::iterator it = subScorers.begin(); it != subScorers.end(); ++it ) {
 		Scorer* scorer = (Scorer*)(*it);
-		if ( scorer->next() ) {
+		if ( scorer->next() ) { // doc() method will be used in scorerDocQueue.
 			if ( scorerDocQueue->insert( scorer )) {
 				queueSize++;
 			}
 		}
 	}
-	
 }
 
 CL_NS_END

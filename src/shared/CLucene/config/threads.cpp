@@ -55,12 +55,39 @@ CL_NS_DEF(util)
 		LeaveCriticalSection(&_internal->mtx); 
 	}
 
-    _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
-        return GetCurrentThreadId();
-    }
-    void mutex_thread::_exitThread(int val){
-    	ExitThread(val);
-    }
+  _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
+      return GetCurrentThreadId();
+  }
+  void mutex_thread::_exitThread(int val){
+  	ExitThread(val);
+  }
+  
+  
+  
+	class shared_condition::Internal{
+	public:
+	    void* _event;
+	    Internal(){
+	    	_event = CreateEventA( NULL, false, false, NULL );
+	    }
+	    ~Internal(){
+	    	CloseHandle( _event );
+	    }
+	};
+	shared_condition::shared_condition(){
+		_internal = new Internal;
+	}
+	shared_condition::~shared_condition(){
+		delete _internal;
+	}
+	void shared_condition::Wait(mutex_thread* shared_lock){
+    shared_lock->unlock();
+		assert ( 0x0 == WaitForSingleObject( _internal->_event, 0xFFFFFFFF ) );
+    shared_lock->lock();
+	}
+	void shared_condition::NotifyAll(){
+		assert ( 0 != SetEvent(_internal->_event) );
+	}
     
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
 	    return (_LUCENE_THREADID_TYPE) ::_beginthread (func, 0, arg);
@@ -87,17 +114,16 @@ CL_NS_DEF(util)
 	#endif
 	
 	struct mutex_thread::Internal{
-    	pthread_mutex_t mtx;
-    	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
-    	pthread_t lockOwner;
-    	unsigned int lockCount;
-    	#endif
-    };
+  	pthread_mutex_t mtx;
+  	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
+  	pthread_t lockOwner;
+  	unsigned int lockCount;
+  	#endif
+  };
 
 	mutex_thread::mutex_thread(const mutex_thread& clone):
 		_internal(new Internal)
 	{
-		
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 			_CLPTHREAD_CHECK(pthread_mutex_init(&_internal->mtx, &mutex_thread_attr), "mutex_thread(clone) constructor failed")
 		#else
@@ -113,7 +139,6 @@ CL_NS_DEF(util)
 	mutex_thread::mutex_thread():
 		_internal(new Internal)
 	{ 
-
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 	  	if ( mutex_pthread_attr_initd == false ){
 	  		pthread_mutexattr_init(&mutex_thread_attr);
@@ -180,6 +205,34 @@ CL_NS_DEF(util)
 		_CLPTHREAD_CHECK(pthread_mutex_unlock(&_internal->mtx), "mutex_thread::unlock")
 		#endif
 	}
+	
+	
+	struct shared_condition::Internal{
+	    pthread_cond_t condition;
+	    Internal(){
+	    	  pthread_cond_init (&condition, NULL);
+	    }
+	    ~Internal(){
+			  pthread_cond_destroy(&condition);
+	    }
+	};
+	shared_condition::shared_condition(){
+		_internal = new Internal;
+	}
+	shared_condition::~shared_condition(){
+		delete _internal;
+	}
+	void shared_condition::Wait(mutex_thread* shared_lock){
+   	int res = 0;
+   	res = pthread_cond_wait(&_internal->condition, &shared_lock->_internal->mtx);
+   	assert(res == 0);
+	}
+	void shared_condition::NotifyAll(){
+   	int res = 0;
+   	res = pthread_cond_broadcast(&_internal->condition);
+   	assert(res == 0);
+	}
+
 
 #endif //thread impl choice
 

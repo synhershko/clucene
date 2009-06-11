@@ -9,8 +9,6 @@
 #define _lucene_search_BooleanScorer2_
 
 #include "Scorer.h"
-//#include "ConjunctionScorer.h"
-//#include "DisjunctionSumScorer.h"
 
 CL_NS_DEF(search)
 	
@@ -18,7 +16,7 @@ CL_NS_DEF(search)
 	private:
 	    class Internal;
 		friend class Internal;
-	    Internal* internal;
+	    Internal* _internal;
 	    
 	    class Coordinator;
 	    class SingleMatchScorer;
@@ -32,7 +30,7 @@ CL_NS_DEF(search)
 	public:
 
 		BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch, bool allowDocsOutOfOrder );
-		~BooleanScorer2();
+		virtual ~BooleanScorer2();
 		
 		void add( Scorer* scorer, bool required, bool prohibited );
 		void score( HitCollector* hc );
@@ -40,8 +38,8 @@ CL_NS_DEF(search)
 		bool next();
 		float_t score();
 		bool skipTo( int32_t target );
-		void explain( int32_t doc, Explanation* ret );
-		TCHAR* toString();
+		Explanation* explain( int32_t doc );
+		virtual TCHAR* toString();
 	};
 
 CL_NS_END

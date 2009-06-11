@@ -50,9 +50,9 @@ CL_NS_DEF(search)
 
      TCHAR* toString(const TCHAR* field) const;
 
-	 //Returns the name "FuzzyQuery"
-	 static const char* getClassName();
-     const char* getQueryName() const;
+	  //Returns the name "FuzzyQuery"
+	  static const char* getClassName();
+    const char* getObjectName() const;
 
 	  Query* clone() const;
 	  bool equals(Query * other) const;
@@ -139,7 +139,7 @@ class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
 		* @throws IOException
 		* @see #FuzzyTermEnum(IndexReader, Term, float_t, int32_t)
 		*/
-		FuzzyTermEnum(const CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
+		FuzzyTermEnum(CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
 		/** Destructor */
 		~FuzzyTermEnum();
 		/** Close the enumeration */
@@ -151,8 +151,8 @@ class CLUCENE_EXPORT FuzzyTermEnum: public FilteredTermEnum {
 		float_t difference();
 
 		
-		const char* getObjectName(){ return FuzzyTermEnum::getClassName(); }
-		static const char* getClassName(){ return "FuzzyTermEnum"; }
+		const char* getObjectName() const;
+		static const char* getClassName();
   };
 CL_NS_END
 #endif

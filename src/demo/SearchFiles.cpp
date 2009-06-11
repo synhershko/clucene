@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "stdafx.h"
@@ -26,18 +26,26 @@ void SearchFiles(const char* index){
 	standard::StandardAnalyzer analyzer;
 	char line[80];
 	TCHAR tline[80];
-	const TCHAR* buf;
+	TCHAR* buf;
 
-	IndexSearcher s(index);
-    while (true) {
+  IndexReader* reader = IndexReader::open(index);
+  while (true) {
 		printf("Enter query string: ");
-		char* tmp = fgets(line,80,stdin);
-		if ( tmp == NULL ) continue;
-		line[strlen(line)-1]=0;
+		//char* tmp = fgets(line,80,stdin);
+		//if ( tmp == NULL ) continue;
+		//line[strlen(line)-1]=0;
+    strcpy(line,"test");
+
+    IndexReader* newreader = reader->reopen();
+    if ( newreader != reader ){
+      _CLDELETE(reader);
+      reader = newreader;
+    }
+    IndexSearcher s(reader);
 
 		if ( strlen(line) == 0 )
 			break;
-	    STRCPY_AtoT(tline,line,80);
+	  STRCPY_AtoT(tline,line,80);
 		Query* q = QueryParser::parse(tline,_T("contents"),&analyzer);
 
 		buf = q->toString(_T("contents"));
@@ -61,9 +69,11 @@ void SearchFiles(const char* index){
 
 		_CLDELETE(h);
 		_CLDELETE(q);
-		
+
+	  s.close();
+break;
 	}
-	s.close();
+  _CLDELETE(reader);
 	//delete line;
-}	
+}
 

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -37,10 +37,10 @@ QueryParserBase::QueryParserBase(Analyzer* analyzer){
 //Func - Constructor
 //Pre  - true
 //Post - instance has been created with PhraseSlop = 0
-	this->analyzer = analyzer;
-	this->defaultOperator = OR_OPERATOR;
-	this->phraseSlop = 0;
-	this->lowercaseExpandedTerms = true;
+  this->analyzer = analyzer;
+  this->defaultOperator = OR_OPERATOR;
+  this->phraseSlop = 0;
+  this->lowercaseExpandedTerms = true;
 }
 
 QueryParserBase::~QueryParserBase(){
@@ -51,13 +51,13 @@ QueryParserBase::~QueryParserBase(){
 
 
 void QueryParserBase::discardEscapeChar(TCHAR* source) const{
-	int len = _tcslen(source);
-	for (int i = 0; i < len; i++) {
-		if (source[i] == '\\' && source[i+1] != '\0' ) {
-			_tcscpy(source+i,source+i+1);
-			len--;
-		}
-	}
+  int len = _tcslen(source);
+  for (int i = 0; i < len; i++) {
+    if (source[i] == '\\' && source[i+1] != '\0' ) {
+      _tcscpy(source+i,source+i+1);
+      len--;
+    }
+  }
 }
 
 void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
@@ -73,7 +73,7 @@ void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t co
   if (nPreviousClauses > 0 && conj == CONJ_AND) {
       BooleanClause* c = clauses[nPreviousClauses-1];
       if (!c->prohibited)
-		c->required = true;
+    c->required = true;
   }
 
   if (nPreviousClauses > 0 && defaultOperator == AND_OPERATOR && conj == CONJ_OR) {
@@ -82,16 +82,16 @@ void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t co
       // notice if the input is a OR b, first term is parsed as required; without
       // this modification a OR b would parse as +a OR b
       BooleanClause* c = clauses[nPreviousClauses-1];
-	  if (!c->prohibited){
-		c->required = false;
-		c->prohibited = false;
-	  }
+    if (!c->prohibited){
+    c->required = false;
+    c->prohibited = false;
+    }
   }
 
   // We might have been passed a NULL query; the term might have been
   // filtered away by the analyzer.
   if (q == NULL)
-	return;
+  return;
 
   if (defaultOperator == OR_OPERATOR) {
       // We set REQUIRED if we're introduced by AND or +; PROHIBITED if
@@ -99,7 +99,7 @@ void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t co
       prohibited = (mods == MOD_NOT);
       required = (mods == MOD_REQ);
       if (conj == CONJ_AND && !prohibited) {
-		required = true;
+    required = true;
       }
   } else {
       // We set PROHIBITED if we're introduced by NOT or -; We set REQUIRED
@@ -109,26 +109,26 @@ void QueryParserBase::AddClause(std::vector<BooleanClause*>& clauses, int32_t co
   }
 
   if ( required && prohibited )
-	  throwParserException( _T("Clause cannot be both required and prohibited"), ' ',0,0);
+    throwParserException( _T("Clause cannot be both required and prohibited"), ' ',0,0);
   clauses.push_back(_CLNEW BooleanClause(q,true, required, prohibited));
 }
 
 void QueryParserBase::throwParserException(const TCHAR* message, TCHAR ch, int32_t col, int32_t line )
 {
-	TCHAR msg[1024];
-	_sntprintf(msg,1024,message,ch,col,line);
-	_CLTHROWT (CL_ERR_Parse, msg );
+  TCHAR msg[1024];
+  _sntprintf(msg,1024,message,ch,col,line);
+  _CLTHROWT (CL_ERR_Parse, msg );
 }
 
 
 Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText, int32_t slop){
-	Query* ret = GetFieldQuery(field,queryText);
-	if ( ret && ret->getQueryName() == PhraseQuery::getClassName() )
-		((PhraseQuery*)ret)->setSlop(slop);
+  Query* ret = GetFieldQuery(field,queryText);
+  if ( ret && ret->instanceOf(PhraseQuery::getClassName()) )
+    ((PhraseQuery*)ret)->setSlop(slop);
 
-	return ret;
-}	
-	
+  return ret;
+}
+
 Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 //Func - Returns a query for the specified field.
 //       Use the analyzer to get all the tokens, and then build a TermQuery,
@@ -138,101 +138,101 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 //       queryText != NULL and contains the query
 //Post - A query instance has been returned for the specified field
 
-	CND_PRECONDITION(field != NULL, "field is NULL");
-	CND_PRECONDITION(queryText != NULL, "queryText is NULL");
+  CND_PRECONDITION(field != NULL, "field is NULL");
+  CND_PRECONDITION(queryText != NULL, "queryText is NULL");
 
-	//Instantiate a stringReader for queryText
-	StringReader reader(queryText);
-	TokenStream* source = analyzer->tokenStream(field, &reader);
-	CND_CONDITION(source != NULL,"source is NULL");
+  //Instantiate a stringReader for queryText
+  StringReader reader(queryText);
+  TokenStream* source = analyzer->tokenStream(field, &reader);
+  CND_CONDITION(source != NULL,"source is NULL");
 
-	StringArrayConstWithDeletor v;
+  StringArrayWithDeletor v;
 
-	Token* t = NULL;
-	int positionCount = 0;
-	bool severalTokensAtSamePosition = false;
+  Token* t = NULL;
+  int positionCount = 0;
+  bool severalTokensAtSamePosition = false;
 
-	//Get the tokens from the source
-	try{
-		while (source->next(t)){
-			v.push_back(STRDUP_TtoT(t->termBuffer()));
+  //Get the tokens from the source
+  try{
+    while (source->next(t)){
+      v.push_back(STRDUP_TtoT(t->termBuffer()));
 
-			if (t->getPositionIncrement() != 0)
-				positionCount += t->getPositionIncrement();
-			else
-				severalTokensAtSamePosition = true;
-		}
-	}catch(CLuceneError& err){
-		if ( err.number() != CL_ERR_IO ) {
-			_CLDELETE(t);
-			_CLLDELETE(source);
-			throw err;
-		}
-	}
-	_CLDELETE(source);
-	_CLDELETE(t);
+      if (t->getPositionIncrement() != 0)
+        positionCount += t->getPositionIncrement();
+      else
+        severalTokensAtSamePosition = true;
+    }
+  }catch(CLuceneError& err){
+    if ( err.number() != CL_ERR_IO ) {
+      _CLDELETE(t);
+      _CLLDELETE(source);
+      throw err;
+    }
+  }
+  _CLDELETE(source);
+  _CLDELETE(t);
 
-	//Check if there are any tokens retrieved
-	if (v.size() == 0){
-		return NULL;
-	}else{
-		if (v.size() == 1){
-			Term* t = _CLNEW Term(field, v[0]);
-			Query* ret = _CLNEW TermQuery( t );
-			_CLDECDELETE(t);
-			return ret;
-		}else{
-			if (severalTokensAtSamePosition) {
-				if (positionCount == 1) {
-					// no phrase query:
-					BooleanQuery* q = _CLNEW BooleanQuery( true ); //todo: disableCoord=true here, but not implemented in BooleanQuery
-					StringArrayConst::iterator itr = v.begin();
-					while ( itr != v.end() ){
-						Term* t = _CLNEW Term(field, *itr);
-						q->add(_CLNEW TermQuery(t),true, false,false);//should occur...
-						_CLDECDELETE(t);
-						++itr;
-					}
-					return q;
-				}else {
-					_CLTHROWA(CL_ERR_UnsupportedOperation, "MultiPhraseQuery NOT Implemented");
-				}
-			}else{
-				PhraseQuery* q = _CLNEW PhraseQuery;
-				q->setSlop(phraseSlop);
+  //Check if there are any tokens retrieved
+  if (v.size() == 0){
+    return NULL;
+  }else{
+    if (v.size() == 1){
+      Term* t = _CLNEW Term(field, v[0]);
+      Query* ret = _CLNEW TermQuery( t );
+      _CLDECDELETE(t);
+      return ret;
+    }else{
+      if (severalTokensAtSamePosition) {
+        if (positionCount == 1) {
+          // no phrase query:
+          BooleanQuery* q = _CLNEW BooleanQuery( true ); //todo: disableCoord=true here, but not implemented in BooleanQuery
+          StringArray::iterator itr = v.begin();
+          while ( itr != v.end() ){
+            Term* t = _CLNEW Term(field, *itr);
+            q->add(_CLNEW TermQuery(t),true, false,false);//should occur...
+            _CLDECDELETE(t);
+            ++itr;
+          }
+          return q;
+        }else {
+          _CLTHROWA(CL_ERR_UnsupportedOperation, "MultiPhraseQuery NOT Implemented");
+        }
+      }else{
+        PhraseQuery* q = _CLNEW PhraseQuery;
+        q->setSlop(phraseSlop);
 
-				StringArrayConst::iterator itr = v.begin();
-				while ( itr != v.end() ){
-					const TCHAR* data = *itr;
-					Term* t = _CLNEW Term(field, data);
-					q->add(t);
-					_CLDECDELETE(t);
-					++itr;
-				}
-				return q;
-			}
-		}
-	}
+        StringArrayWithDeletor::iterator itr = v.begin();
+        while ( itr != v.end() ){
+          const TCHAR* data = *itr;
+          Term* t = _CLNEW Term(field, data);
+          q->add(t);
+          _CLDECDELETE(t);
+          ++itr;
+        }
+        return q;
+      }
+    }
+  }
 }
 
-void QueryParserBase::setLowercaseExpandedTerms(bool lowercaseExpandedTerms){ 
-	this->lowercaseExpandedTerms = lowercaseExpandedTerms;
+void QueryParserBase::setLowercaseExpandedTerms(bool lowercaseExpandedTerms){
+  this->lowercaseExpandedTerms = lowercaseExpandedTerms;
 }
-bool QueryParserBase::getLowercaseExpandedTerms() const { 
-	return lowercaseExpandedTerms; 
+bool QueryParserBase::getLowercaseExpandedTerms() const {
+  return lowercaseExpandedTerms;
 }
 void QueryParserBase::setDefaultOperator(int oper){
-	this->defaultOperator=oper;
+  this->defaultOperator=oper;
 }
 int QueryParserBase::getDefaultOperator() const{
-	return defaultOperator;
+  return defaultOperator;
 }
 
 
 Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bool inclusive)
 {
-	//todo: this must be fixed, [-1--5] (-1 to -5) should yield a result, but won't parse properly
-	//because it uses an analyser, should split it up differently...
+  //todo: this must be fixed, [-1--5] (-1 to -5) should yield a result, but won't parse properly
+  //because it uses an analyser, should split it up differently...
 
   // Use the analyzer to get all the tokens.  There should be 1 or 2.
   StringReader reader(queryText);
@@ -241,37 +241,37 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   TCHAR* terms[2];
   terms[0]=NULL;terms[1]=NULL;
   Token* t = NULL;
-  bool tret=true;
+  bool tret=false;
   bool from=true;
   while(tret)
   {
-		try{
-		  tret = (source->next(t) != NULL);
-		}catch (CLuceneError& err){
-			if ( err.number() == CL_ERR_IO )
-				tret=false;
-			else
-				throw err;
-		}
-		if (tret)
-		{
-			if ( !from && _tcscmp(t->termBuffer(),_T("TO"))==0 )
-				continue;
-	
-			
-			TCHAR* tmp = STRDUP_TtoT(t->termBuffer());
-			discardEscapeChar(tmp);
-			terms[from? 0 : 1] = tmp;
-	
-			if (from)
-				from = false;
-			else
-				break;
-		}
+    try{
+      tret = (source->next(t) != NULL);
+    }catch (CLuceneError& err){
+      if ( err.number() == CL_ERR_IO )
+        tret=false;
+      else
+        throw err;
+    }
+    if (tret)
+    {
+      if ( !from && _tcscmp(t->termBuffer(),_T("TO"))==0 )
+        continue;
+
+
+      TCHAR* tmp = STRDUP_TtoT(t->termBuffer());
+      discardEscapeChar(tmp);
+      terms[from? 0 : 1] = tmp;
+
+      if (from)
+        from = false;
+      else
+        break;
+    }
   }
   if ((terms[0] == NULL) || (terms[1] == NULL)) {
-		_CLTHROWA(CL_ERR_Parse, "No range given.");
-	}
+    _CLTHROWA(CL_ERR_Parse, "No range given.");
+  }
   Query* ret = GetRangeQuery(field, terms[0], terms[1],inclusive);
   _CLDELETE_CARRAY(terms[0]);
   _CLDELETE_CARRAY(terms[1]);
@@ -287,20 +287,20 @@ Query* QueryParserBase::GetPrefixQuery(const TCHAR* field, TCHAR* termStr){
 //       (WITH or WITHOUT a trailing '*' character!)
 //Post - A PrefixQuery instance has been returned
 
-	CND_PRECONDITION(field != NULL,"field is NULL");
-	CND_PRECONDITION(termStr != NULL,"termStr is NULL");
+  CND_PRECONDITION(field != NULL,"field is NULL");
+  CND_PRECONDITION(termStr != NULL,"termStr is NULL");
 
-	if ( lowercaseExpandedTerms )
-		_tcslwr(termStr);
+  if ( lowercaseExpandedTerms )
+    _tcslwr(termStr);
 
-	Term* t = _CLNEW Term(field, termStr);
-	CND_CONDITION(t != NULL,"Could not allocate memory for term t");
+  Term* t = _CLNEW Term(field, termStr);
+  CND_CONDITION(t != NULL,"Could not allocate memory for term t");
 
-	Query *q = _CLNEW PrefixQuery(t);
-	CND_CONDITION(q != NULL,"Could not allocate memory for PrefixQuery q");
+  Query *q = _CLNEW PrefixQuery(t);
+  CND_CONDITION(q != NULL,"Could not allocate memory for PrefixQuery q");
 
-	_CLDECDELETE(t);
-	return q;
+  _CLDECDELETE(t);
+  return q;
 }
 
 Query* QueryParserBase::GetFuzzyQuery(const TCHAR* field, TCHAR* termStr){
@@ -311,58 +311,58 @@ Query* QueryParserBase::GetFuzzyQuery(const TCHAR* field, TCHAR* termStr){
 //       (WITH or WITHOUT a trailing '*' character!)
 //Post - A FuzzyQuery instance has been returned
 
-	CND_PRECONDITION(field != NULL,"field is NULL");
-	CND_PRECONDITION(termStr != NULL,"termStr is NULL");
+  CND_PRECONDITION(field != NULL,"field is NULL");
+  CND_PRECONDITION(termStr != NULL,"termStr is NULL");
 
-	if ( lowercaseExpandedTerms )
-		_tcslwr(termStr);
+  if ( lowercaseExpandedTerms )
+    _tcslwr(termStr);
 
-	Term* t = _CLNEW Term(field, termStr);
-	CND_CONDITION(t != NULL,"Could not allocate memory for term t");
+  Term* t = _CLNEW Term(field, termStr);
+  CND_CONDITION(t != NULL,"Could not allocate memory for term t");
 
-	Query *q = _CLNEW FuzzyQuery(t);
-	CND_CONDITION(q != NULL,"Could not allocate memory for FuzzyQuery q");
+  Query *q = _CLNEW FuzzyQuery(t);
+  CND_CONDITION(q != NULL,"Could not allocate memory for FuzzyQuery q");
 
-	_CLDECDELETE(t);
-	return q;
+  _CLDECDELETE(t);
+  return q;
 }
 
 
 Query* QueryParserBase::GetWildcardQuery(const TCHAR* field, TCHAR* termStr){
-	CND_PRECONDITION(field != NULL,"field is NULL");
-	CND_PRECONDITION(termStr != NULL,"termStr is NULL");
+  CND_PRECONDITION(field != NULL,"field is NULL");
+  CND_PRECONDITION(termStr != NULL,"termStr is NULL");
 
-	if ( lowercaseExpandedTerms )
-		_tcslwr(termStr);
-	
-	Term* t = _CLNEW Term(field, termStr);
-	CND_CONDITION(t != NULL,"Could not allocate memory for term t");
-	Query* q = _CLNEW WildcardQuery(t);
-	_CLDECDELETE(t);
+  if ( lowercaseExpandedTerms )
+    _tcslwr(termStr);
 
-	return q;
+  Term* t = _CLNEW Term(field, termStr);
+  CND_CONDITION(t != NULL,"Could not allocate memory for term t");
+  Query* q = _CLNEW WildcardQuery(t);
+  _CLDECDELETE(t);
+
+  return q;
 }
 
 Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses ) {
-	return GetBooleanQuery( clauses, false );
+  return GetBooleanQuery( clauses, false );
 }
 
 Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord){
-	if ( clauses.size() == 0 )
-		return NULL;
+  if ( clauses.size() == 0 )
+    return NULL;
 
-	BooleanQuery* query = _CLNEW BooleanQuery( disableCoord );
-	//Condition check to see if query has been allocated properly
-	CND_CONDITION(query != NULL, "No memory could be allocated for query");
+  BooleanQuery* query = _CLNEW BooleanQuery( disableCoord );
+  //Condition check to see if query has been allocated properly
+  CND_CONDITION(query != NULL, "No memory could be allocated for query");
 
-	//iterate through all the clauses
-	for( uint32_t i=0;i<clauses.size();i++ ){
-		//Condition check to see if clauses[i] is valid
-		CND_CONDITION(clauses[i] != NULL, "clauses[i] is NULL");
-		//Add it to query
-		query->add(clauses[i]);
-	}
-	return query;
+  //iterate through all the clauses
+  for( uint32_t i=0;i<clauses.size();i++ ){
+    //Condition check to see if clauses[i] is valid
+    CND_CONDITION(clauses[i] != NULL, "clauses[i] is NULL");
+    //Add it to query
+    query->add(clauses[i]);
+  }
+  return query;
 }
 
 
@@ -371,8 +371,8 @@ CL_NS(search)::Query* QueryParserBase::GetRangeQuery(const TCHAR* field, TCHAR* 
   //a certain type of analyser, the terms may be filtered out, which
   //is not necessarily what we want.
   if (lowercaseExpandedTerms) {
-	  _tcslwr(part1);
-	  _tcslwr(part2);
+    _tcslwr(part1);
+    _tcslwr(part2);
   }
   //todo: should see if we can parse the strings as dates... currently we leave that up to the end-developer...
   Term* t1 = _CLNEW Term(field,part1);

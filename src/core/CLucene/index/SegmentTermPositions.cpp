@@ -144,26 +144,23 @@ void SegmentTermPositions::lazySkip() {
 
 int32_t SegmentTermPositions::getPayloadLength() const { return payloadLength; }
 
-uint8_t* SegmentTermPositions::getPayload(uint8_t* data, const int32_t offset) {
+uint8_t* SegmentTermPositions::getPayload(uint8_t* data) {
 	if (!needToLoadPayload) {
 		_CLTHROWA(CL_ERR_IO, "Payload cannot be loaded more than once for the same term position.");
 	}
 
 	// read payloads lazily
 	uint8_t* retArray;
-	int32_t retOffset;
 	// TODO: Complete length logic ( possibly using ValueArray ? )
 	if (data == NULL /*|| data.length - offset < payloadLength*/) {
 		// the array is too small to store the payload data,
 		// so we allocate a new one
 		_CLDELETE_ARRAY(data);
 		retArray = _CL_NEWARRAY(uint8_t, payloadLength);
-		retOffset = 0;
 	} else {
 		retArray = data;
-		retOffset = offset;
 	}
-	proxStream->readBytes(retArray + retOffset, payloadLength);
+	proxStream->readBytes(retArray, payloadLength);
 	needToLoadPayload = false;
 	return retArray;
 }

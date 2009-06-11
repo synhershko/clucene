@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -23,7 +23,7 @@
 #endif
 #include <fcntl.h>
 
-  
+
 CL_NS_USE(util)
 CL_NS_DEF(store)
 
@@ -35,10 +35,10 @@ CL_NS_DEF(store)
       if ( lockWaitTimeout < 0 && lockWaitTimeout != LOCK_OBTAIN_WAIT_FOREVER ) {
     	  _CLTHROWA(CL_ERR_IllegalArgument,"lockWaitTimeout should be LOCK_OBTAIN_WAIT_FOREVER or a non-negative number");
       }
-      
+
       int64_t maxSleepCount = lockWaitTimeout / LOCK_POLL_INTERVAL;
       int64_t sleepCount = 0;
-      
+
       while (!locked) {
          if ( lockWaitTimeout != LOCK_OBTAIN_WAIT_FOREVER && sleepCount++ == maxSleepCount ) {
             _CLTHROWA(CL_ERR_IO,"Lock obtain timed out");
@@ -46,33 +46,49 @@ CL_NS_DEF(store)
          _LUCENE_SLEEP(LOCK_POLL_INTERVAL);
          locked = obtain();
       }
-      
+
       return locked;
    }
-
-   TCHAR* NoLock::toString()
+   std::string NoLock::toString()
    {
-	 return STRDUP_TtoT(_T("NoLock"));
+        return "NoLock";
    }
    bool NoLock::obtain() { return true; }
    void NoLock::release() {}
    bool NoLock::isLocked() { return false; }
-   
+
+  const char* NoLock::getClassName(){
+    return "NoLock";
+  }
+  const char* NoLock::getObjectName() const{
+    return getClassName();
+  }
+
 
 
    SingleInstanceLock::SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName )
    {
 	   this->locks = locks;
+#ifndef _CL_DISABLE_MULTITHREADING
 	   this->locks_LOCK = locks_LOCK;
+#endif
 	   this->lockName = lockName;
    }
-   
+   SingleInstanceLock::~SingleInstanceLock(){
+   }
+  const char* SingleInstanceLock::getClassName(){
+    return "SingleInstanceLock";
+  }
+  const char* SingleInstanceLock::getObjectName() const{
+    return getClassName();
+  }
+
    bool SingleInstanceLock::obtain()
    {
 	   SCOPED_LOCK_MUTEX(*locks_LOCK);
 	   return locks->insert( lockName ).second;
    }
-   
+
    void SingleInstanceLock::release()
    {
 	   SCOPED_LOCK_MUTEX(*locks_LOCK);
@@ -81,23 +97,19 @@ CL_NS_DEF(store)
 		   locks->remove(itr, true);
 	   }
    }
-   
+
    bool SingleInstanceLock::isLocked()
    {
 	   SCOPED_LOCK_MUTEX(*locks_LOCK);
 	   return locks->find( lockName ) == locks->end();
    }
-   
-   TCHAR* SingleInstanceLock::toString()
+
+   string SingleInstanceLock::toString()
    {
-	   TCHAR* ret = _CL_NEWARRAY(TCHAR,strlen(lockName)+20); // 20 = strlen("SingleInstanceLock:");
-	   _tcscpy(ret,_T("SingleInstanceLock:"));
-	   STRCPY_AtoT(ret+19,lockName,strlen(lockName)+1);
-	   
-	   return ret;
+    return string("SingleInstanceLock:") + lockName;
    }
-        
-   
+
+
    FSLock::FSLock( const char* _lockDir, const char* name )
    {
 	  this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
@@ -106,12 +118,19 @@ CL_NS_DEF(store)
    	  strcat(lockFile,PATH_DELIMITERA);
    	  strcat(lockFile,name);
    }
-   
+
    FSLock::~FSLock()
    {
 	   _CLDELETE_ARRAY( lockFile );
 	   _CLDELETE_LCaARRAY( lockDir );
    }
+
+  const char* FSLock::getClassName(){
+    return "FSLock";
+  }
+  const char* FSLock::getObjectName() const{
+    return getClassName();
+  }
 
    bool FSLock::obtain()
    {
@@ -123,7 +142,7 @@ CL_NS_DEF(store)
 	   		  _CLTHROWA_DEL(CL_ERR_IO, err );
 	         }
 	       }
-	       int32_t r = _cl_open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL, 
+	       int32_t r = _cl_open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL,
 	       	_S_IREAD | _S_IWRITE); //must do this or file will be created Read only
 	   	if ( r < 0 ) {
 	   	  return false;
@@ -132,24 +151,20 @@ CL_NS_DEF(store)
 	   	  return true;
 	   	}
    }
-   
+
    void FSLock::release()
    {
 	   _unlink( lockFile );
    }
-   
+
    bool FSLock::isLocked()
    {
-	   return Misc::dir_Exists(lockFile);	   
+	   return Misc::dir_Exists(lockFile);
    }
-   
-   TCHAR* FSLock::toString()
+
+   string FSLock::toString()
    {
-	   TCHAR* ret = _CL_NEWARRAY(TCHAR,strlen(lockFile)+14); // 14 = strlen("SimpleFSLock@")
-	   _tcscpy(ret,_T("SimpleFSLock@"));
-	   STRCPY_AtoT(ret+13,lockFile,strlen(lockFile)+1);
-	   
-	   return ret;
+    return string("SimpleFSLock@") + lockFile;
    }
-   
+
 CL_NS_END

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_SegmentHeader_
@@ -22,7 +22,8 @@
 //#include "IndexReader.h"
 #include "_TermInfosReader.h"
 #include "_CompoundFile.h"
-#include "DefaultSkipListReader.h"
+#include "DirectoryIndexReader.h"
+#include "_SkipListReader.h"
 #include "CLucene/util/_ThreadLocal.h"
 
 CL_NS_DEF(index)
@@ -37,12 +38,12 @@ protected:
 	CL_NS(util)::BitSet* deletedDocs;
 	int32_t _doc;
 	int32_t _freq;
-	
+
 private:
 	int32_t skipInterval;
 	int32_t maxSkipLevels;
 	DefaultSkipListReader* skipListReader;
-	
+
 	int64_t freqBasePointer;
 	int64_t proxBasePointer;
 
@@ -72,7 +73,7 @@ public:
 
 	/** Optimized implementation. */
 	virtual bool skipTo(const int32_t target);
-	
+
 	virtual TermPositions* __asTermPositions();
 
 protected:
@@ -92,7 +93,7 @@ private:
 	// indicates whether the payload of the currend position has
 	// been read from the proxStream yet
 	bool needToLoadPayload;
-	
+
 	// these variables are being used to remember information
 	// for a lazy skip
 	int64_t lazySkipPointer;
@@ -142,11 +143,11 @@ private:
 public:
 	int32_t getPayloadLength() const;
 
-	uint8_t* getPayload(uint8_t* data, const int32_t offset);
+	uint8_t* getPayload(uint8_t* data);
 
 	bool isPayloadAvailable() const;
 
-private:	
+private:
 	virtual TermDocs* __asTermDocs();
 	virtual TermPositions* __asTermPositions();
 
@@ -164,7 +165,7 @@ private:
 /**
 * An IndexReader responsible for reading 1 segment of an index
 */
-class SegmentReader: public IndexReader{
+class SegmentReader: public DirectoryIndexReader {
 	/**
 	* The class Norm represents the normalizations for a field.
 	* These normalizations are read from an IndexInput in into an array of bytes called bytes
@@ -172,91 +173,166 @@ class SegmentReader: public IndexReader{
 	class Norm :LUCENE_BASE{
 		int32_t number;
 		int64_t normSeek;
-		SegmentReader* reader;
+		SegmentReader* _this;
 		const char* segment; ///< pointer to segment name
+    volatile int32_t refCount;
+    bool useSingleNormStream;
+    bool rollbackDirty;
+
+
+    /** Closes the underlying IndexInput for this norm.
+     * It is still valid to access all other norm properties after close is called.
+     * @throws IOException
+     */
+    void close();
 	public:
+    DEFINE_MUTEX(THIS_LOCK)
+
 		CL_NS(store)::IndexInput* in;
 		uint8_t* bytes;
 		bool dirty;
 		//Constructor
-		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, SegmentReader* reader, const char* segment);
-		Norm(CL_NS(store)::IndexInput* instrm, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
+		Norm(CL_NS(store)::IndexInput* instrm, bool useSingleNormStream, int32_t number, int64_t normSeek, SegmentReader* reader, const char* segment);
 		//Destructor
 		~Norm();
 
-		void reWrite();
+		void reWrite(SegmentInfo* si);
+
+    void incRef();
+    void decRef();
+	  friend class SegmentReader;
+
+    static void doDelete(Norm* norm);
 	};
 	friend class SegmentReader::Norm;
 
 	//Holds the name of the segment that is being read
-	const char* segment;
-	
+  std::string segment;
+  SegmentInfo* si;
+  int32_t readBufferSize;
+
 	//Indicates if there are documents marked as deleted
 	bool deletedDocsDirty;
 	bool normsDirty;
 	bool undeleteAll;
 
+  bool rollbackDeletedDocsDirty;
+  bool rollbackNormsDirty;
+  bool rollbackUndeleteAll;
+
+
 	//Holds all norms for all fields in the segment
-	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar> NormsType;
-    NormsType _norms; 
-	DEFINE_MUTEX(_norms_LOCK)
-    
+	typedef CL_NS(util)::CLHashtable<const TCHAR*,Norm*,
+    CL_NS(util)::Compare::TChar, CL_NS(util)::Equals::TChar,
+    CL_NS(util)::Deletor::Dummy,
+    Norm > NormsType;
+    NormsType _norms;
+
 	uint8_t* ones;
 	uint8_t* fakeNorms();
 
-	uint8_t hasSingleNorm;
+  // optionally used for the .nrm file shared by multiple norms
 	CL_NS(store)::IndexInput* singleNormStream;
-	
+
 	// Compound File Reader when based on a compound file segment
 	CompoundFileReader* cfsReader;
+  CompoundFileReader* storeCFSReader;
+
+  // indicates the SegmentReader with which the resources are being shared,
+  // in case this is a re-opened reader
+  SegmentReader* referencedSegmentReader;
+
 	///Reads the Field Info file
 	FieldsReader* fieldsReader;
 	TermVectorsReader* termVectorsReaderOrig;
 	CL_NS(util)::ThreadLocal<TermVectorsReader*,
 		CL_NS(util)::Deletor::Object<TermVectorsReader> >termVectorsLocal;
 
-	void initialize(SegmentInfo* si);
+	void initialize(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores, bool doingReopen);
 
 	/**
 	* Create a clone from the initial TermVectorsReader and store it in the ThreadLocal.
 	* @return TermVectorsReader
 	*/
 	TermVectorsReader* getTermVectorsReader();
-	
+
+  FieldsReader* getFieldsReader();
+  FieldInfos* getFieldInfos();
+
 protected:
 	///Marks document docNum as deleted
 	void doDelete(const int32_t docNum);
 	void doUndeleteAll();
-	void doCommit();
+	void commitChanges();
 	void doSetNorm(int32_t doc, const TCHAR* field, uint8_t value);
 
 	// can return null if norms aren't stored
 	uint8_t* getNorms(const TCHAR* field);
-  
-public:
-	/**
-	Func - Constructor.
-	Opens all files of a segment
-	.fnm     -> Field Info File
-				Field names are stored in the field info file, with suffix .fnm.
-	.frq     -> Frequency File
-				The .frq file contains the lists of documents which contain 
-				each term, along with the frequency of the term in that document.
-	.prx     -> Prox File
-				The prox file contains the lists of positions that each term occurs
-				at within documents.
-	.tis     -> Term Info File
-				This file is sorted by Term. Terms are ordered first lexicographically 
-				by the term's field name, and within that lexicographically by the term's text.
-	.del     -> Deletion File
-				The .del file is optional, and only exists when a segment contains deletions
-	.f[0-9]* -> Norm File
-				Contains s, for each document, a byte that encodes a value that is 
-				multiplied into the score for hits on that field:
-	*/
-	SegmentReader(SegmentInfo* si);
 
-	SegmentReader(SegmentInfos* sis, SegmentInfo* si);
+  /**
+   * Increments the RC of this reader, as well as
+   * of all norms this reader is using
+   */
+  void incRef();
+  void decRef();
+
+
+  DirectoryIndexReader* doReopen(SegmentInfos* infos);
+
+public:
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(SegmentInfo* si);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(SegmentInfo* si, bool doOpenStores);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(SegmentInfo* si, int32_t readBufferSize);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(SegmentInfos* sis, SegmentInfo* si,
+                                  bool closeDir);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(CL_NS(store)::Directory* dir, SegmentInfo* si,
+                                  SegmentInfos* sis,
+                                  bool closeDir, bool ownDir,
+                                  int32_t readBufferSize);
+
+  /**
+   * @throws CorruptIndexException if the index is corrupt
+   * @throws IOException if there is a low-level IO error
+   */
+  static SegmentReader* get(CL_NS(store)::Directory* dir, SegmentInfo* si,
+                                  SegmentInfos* sis,
+                                  bool closeDir, bool ownDir,
+                                  int32_t readBufferSize,
+                                  bool doOpenStores);
+
+
+
+	SegmentReader();
 	///Destructor.
 	virtual ~SegmentReader();
 
@@ -266,28 +342,28 @@ public:
 	///Checks if a segment managed by SegmentInfo si has deletions
 	static bool hasDeletions(const SegmentInfo* si);
     bool hasDeletions() const;
-	bool hasNorms(const TCHAR* field) const;
+	bool hasNorms(const TCHAR* field);
 
 	///Returns all file names managed by this SegmentReader
-	void files(AStringArrayWithDeletor& retarray);
+  void files(std::vector<std::string>& retarray);
 	///Returns an enumeration of all the Terms and TermInfos in the set.
-	TermEnum* terms() const;
+	TermEnum* terms();
 	///Returns an enumeration of terms starting at or after the named term t
-	TermEnum* terms(const Term* t) const;
+	TermEnum* terms(const Term* t);
 
 	///Gets the document identified by n
-	bool document(int32_t n, CL_NS(document)::Document& doc);
+	bool document(int32_t n, CL_NS(document)::Document& doc, const CL_NS(document)::FieldSelector* fieldSelector);
 
 	///Checks if the n-th document has been marked deleted
 	bool isDeleted(const int32_t n);
 
 	///Returns an unpositioned TermDocs enumerator.
-	TermDocs* termDocs() const;
+	TermDocs* termDocs();
 	///Returns an unpositioned TermPositions enumerator.
-	TermPositions* termPositions() const;
+	TermPositions* termPositions();
 
 	///Returns the number of documents which contain the term t
-	int32_t docFreq(const Term* t) const;
+	int32_t docFreq(const Term* t);
 
 	///Returns the actual number of documents in the segment
 	int32_t numDocs();
@@ -295,24 +371,29 @@ public:
 	///been marked deleted
 	int32_t maxDoc() const;
 
+
+  void setTermInfosIndexDivisor(int32_t indexDivisor);
+
+  int32_t getTermInfosIndexDivisor();
+
     ///Returns the bytes array that holds the norms of a named field.
 	///Returns fake norms if norms aren't available
     uint8_t* norms(const TCHAR* field);
-	
+
     ///Reads the Norms for field from disk
 	void norms(const TCHAR* field, uint8_t* bytes);
-	
+
 	///concatenating segment with ext and x
-	char* SegmentName(const char* ext, const int32_t x=-1);
-    ///Creates a filename in buffer by concatenating segment with ext and x
+  std::string SegmentName(const char* ext, const int32_t x=-1);
+  ///Creates a filename in buffer by concatenating segment with ext and x
 	void SegmentName(char* buffer,int32_t bufferLen,const char* ext, const int32_t x=-1 );
 
 	/**
 	* @see IndexReader#getFieldNames(IndexReader.FieldOption fldOption)
 	*/
 	void getFieldNames(FieldOption fldOption, StringArrayWithDeletor& retarray);
-    
-    static bool usesCompoundFile(SegmentInfo* si);
+
+  static bool usesCompoundFile(SegmentInfo* si);
 
 	/** Return a term frequency vector for the specified document and field. The
 	*  vector returned contains term numbers and frequencies for all terms in
@@ -320,44 +401,85 @@ public:
 	*  flag set.  If the flag was not set, the method returns null.
 	* @throws IOException
 	*/
-    TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field=NULL);
+  TermFreqVector* getTermFreqVector(int32_t docNumber, const TCHAR* field=NULL);
 
-	/** Return an array of term frequency vectors for the specified document.
-	*  The array contains a vector for each vectorized field in the document.
-	*  Each vector vector contains term numbers and frequencies for all terms
-	*  in a given vectorized field.
-	*  If no such fields existed, the method returns null.
-	* @throws IOException
-	*/
-	//bool getTermFreqVectors(int32_t docNumber, CL_NS(util)::ObjectArray<TermFreqVector>& result);
-	CL_NS(util)::ObjectArray<TermFreqVector>* getTermFreqVectors(int32_t docNumber);
+  void getTermFreqVector(int32_t docNumber, const TCHAR* field, TermVectorMapper* mapper);
+  void getTermFreqVector(int32_t docNumber, TermVectorMapper* mapper);
+
+  /** Return an array of term frequency vectors for the specified document.
+  *  The array contains a vector for each vectorized field in the document.
+  *  Each vector vector contains term numbers and frequencies for all terms
+  *  in a given vectorized field.
+  *  If no such fields existed, the method returns null.
+  * @throws IOException
+  */
+  CL_NS(util)::ArrayBase<TermFreqVector*>* getTermFreqVectors(int32_t docNumber);
+
+  static const char* getClassName();
+  const char* getObjectName() const;
+
+  // for testing only
+  bool normsClosed();
+
 private:
 	//Open all norms files for all fields
-	void openNorms(CL_NS(store)::Directory* cfsDir);
-	//Closes all norms files
-	void closeNorms();
-	
+	void openNorms(CL_NS(store)::Directory* cfsDir, int32_t readBufferSize);
+
 	///a bitVector that manages which documents have been deleted
 	CL_NS(util)::BitSet* deletedDocs;
 	///an IndexInput to the frequency file
 	CL_NS(store)::IndexInput* freqStream;
 	///For reading the fieldInfos file
-	FieldInfos* fieldInfos;
+	FieldInfos* _fieldInfos;
     ///For reading the Term Dictionary .tis file
 	TermInfosReader* tis;
 	///an IndexInput to the prox file
-	CL_NS(store)::IndexInput* proxStream;\
+	CL_NS(store)::IndexInput* proxStream;
 
     static bool hasSeparateNorms(SegmentInfo* si);
 	static uint8_t* createFakeNorms(int32_t size);
 
-    //allow various classes to access the internals of this. this allows us to have
-    //a more tight idea of the package
-    friend class IndexReader;
-    friend class IndexWriter;
-    friend class SegmentTermDocs;
-    friend class SegmentTermPositions;
-    friend class MultiReader;
+
+
+
+  /**
+   * only increments the RC of this reader, not tof
+   * he norms. This is important whenever a reopen()
+   * creates a new SegmentReader that doesn't share
+   * the norms with this one
+   */
+  void incRefReaderNotNorms();
+  void decRefReaderNotNorms();
+  void loadDeletedDocs();
+  SegmentReader* reopenSegment(SegmentInfo* si);
+
+
+
+  /** Returns the field infos of this segment */
+  FieldInfos* fieldInfos();
+
+  /**
+   * Return the name of the segment this reader is reading.
+   */
+  const char* getSegmentName();
+
+  /**
+   * Return the SegmentInfo of the segment this reader is reading.
+   */
+  SegmentInfo* getSegmentInfo();
+  void setSegmentInfo(SegmentInfo* info);
+  void startCommit();
+  void rollbackCommit();
+
+  //allow various classes to access the internals of this. this allows us to have
+  //a more tight idea of the package
+  friend class IndexReader;
+  friend class IndexWriter;
+  friend class SegmentTermDocs;
+  friend class SegmentTermPositions;
+  friend class MultiReader;
+  friend class MultiSegmentReader;
+  friend class SegmentMerger;
 };
 
 CL_NS_END

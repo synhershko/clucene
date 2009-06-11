@@ -18,7 +18,7 @@
 //
 //define this if you want condition debugging to be enabled
 #if defined(_DEBUG) && !defined(_CL__CND_DEBUG)
- //#define _CL__CND_DEBUG
+ #define _CL__CND_DEBUG
 #endif
 //
 //define this to print out lots of information about merges, etc
@@ -40,12 +40,6 @@
 //   These options can be set depending on the particular needs of
 //   Your application
 ////////////////////////////////////////////////////////////////////
-//
-//define this to force the build into ascii mode
-//#define _ASCII
-//
-//define this to force the build into ucs2 mode
-//#define _UCS2
 //
 //define this to enable mmap support in the fsdirectory IndexInput
 //EXPERIMENTAL
@@ -112,37 +106,11 @@
 //   application
 ////////////////////////////////////////////////////////////////////
 //
-//define this to your own setting if you would like to implement your own
-//threading locking code. it should have the same sort of functions as
-//mutex_default. If not defined, clucene will try and use posix,win32 critical
-//sections, or a timer based mutex hack.
-//#define _LUCENE_THREADMUTEX CL_NS(util)::mutex_default
-//
 //define this if you want to implement the _Cnd_OutDebug routine yourself
 //you can then easily customise in your own application how to handle debug messages
 //#define _CND_DEBUG_DONTIMPLEMENT_OUTDEBUG
 //
-//define this if you want to implement your own namespace macros
-//#define _LUCENE_DONTIMPLEMENT_NS_MACROS
-//
-//define this if you do not want clucene to include any standard libraries.
-//this could be useful if you want to use alternate libraries
-//#define LUCENE_DISABLE_INCLUDES
-//
 ////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////
-//   These options will be changed depending on your compiler/platform
-//   but can also be changed here if required
-////////////////////////////////////////////////////////////////////
-//
-//if you want to define your own default file encoding. specify it
-//here - normally defined in the platform specific headers
-//#define PLATFORM_DEFAULT_READER_ENCODING CL_NS(util)::FileReader::ENCODING_ASCII
-//
-////////////////////////////////////////////////////////////////////
-
 
 
 ////////////////////////////////////////////////////////////////////
@@ -190,13 +158,6 @@
 #define LUCENE_DEFAULT_TOKEN_BUFFER_SIZE 32
 //todo: should implement a similar strategy in analysis/token
 //
-//Expert: The fraction of {@link TermDocs} entries stored in skip tables,
-//used to accellerate {@link TermDocs#skipTo(int)}.  Larger values result in
-//smaller indices, greater acceleration, but fewer accelerable cases, while
-//smaller values result in bigger indices, less acceleration and more
-//accelerable cases. More detailed experiments would be useful here. */
-#define LUCENE_DEFAULT_TERMDOCS_SKIP_INTERVAL 16
-//
 //Size of TermScore cache. Required.
 #define LUCENE_SCORE_CACHE_SIZE 32
 //
@@ -238,9 +199,6 @@
 //
 //Size of the CharTokenizer buffersize. Required.
 #define LUCENE_IO_BUFFER_SIZE 1024
-//
-//the minimum amount the segment term enum should grow by. Must be at least 1
-#define LUCENE_SEGMENTTERMENUM_GROWSIZE 8
 //
 ////////////////////////////////////////////////////////////////////
 

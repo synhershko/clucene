@@ -122,55 +122,51 @@ CL_NS_DEF2(analysis,standard)
     rdPos--;
   }
 
-  inline bool StandardTokenizer::setToken(Token* t, StringBuffer* sb, TokenTypes tokenCode) {
+  inline Token* StandardTokenizer::setToken(Token* t, StringBuffer* sb, TokenTypes tokenCode) {
     t->setStartOffset(tokenStart);
-	t->setEndOffset(tokenStart+sb->length());
-	t->setType(tokenImage[tokenCode]);
-	sb->getBuffer(); //null terminates the buffer
-	t->resetTermTextLen();
-	return true;
+	  t->setEndOffset(tokenStart+sb->length());
+	  t->setType(tokenImage[tokenCode]);
+	  sb->getBuffer(); //null terminates the buffer
+	  t->resetTermTextLen();
+	  return t;
   }
 
-  Token* StandardTokenizer::next(Token*& t) {
+  Token* StandardTokenizer::next(Token* t) {
     int ch=0;
-	
-	bool bOwnsToken = (t==NULL);
-	if (bOwnsToken)
-		t = _CLNEW Token();
 
-	while (!EOS) {
+    while (!EOS) {
       ch = readChar();
 
-	  if ( ch == 0 || ch == -1 ){
-		continue;
-	  } else if (SPACE) {
+      if ( ch == 0 || ch == -1 ){
+        continue;
+      } else if (SPACE) {
         continue;
       } else if (ALPHA || UNDERSCORE) {
         tokenStart = rdPos;
-        if(ReadAlphaNum(ch,t))return t;
+        t = ReadAlphaNum(ch,t);
+        if ( t != NULL) return t;
       } else if (DIGIT || NEGATIVE_SIGN_ || DECIMAL) {
         tokenStart = rdPos;
         /* ReadNumber returns NULL if it fails to extract a valid number; in
         ** that case, we just continue. */
         if (ReadNumber(NULL, ch,t))
-          return t;
-	  } else if ( _CJK ){
-      	if ( ReadCJK(ch,t) )
-      		return t;
+        return t;
+      } else if ( _CJK ){
+        t = ReadCJK(ch,t);
+        if ( t != NULL ) return t;
       }
     }
-	if (bOwnsToken) _CLDELETE(t);
     return NULL;
   }
 
-  bool StandardTokenizer::ReadNumber(const TCHAR* previousNumber, const TCHAR prev,Token* t) {
+  Token* StandardTokenizer::ReadNumber(const TCHAR* previousNumber, const TCHAR prev,Token* t) {
     /* previousNumber is only non-NULL if this function already read a complete
     ** number in a previous recursion, yet has been asked to read additional
     ** numeric segments.  For example, in the HOST "192.168.1.3", "192.168" is
     ** a complete number, but this function will recurse to read the "1.3",
     ** generating a single HOST token "192.168.1.3". */
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
     TokenTypes tokenType;
     bool decExhausted;
     if (previousNumber != NULL) {
@@ -209,7 +205,7 @@ CL_NS_DEF2(analysis,standard)
         /* Unread the character that stopped CONSUME_DIGITS: */
         unReadChar();
       }
-      return false;
+      return NULL;
     }
 
     /* We just read a group of digits.  Is it followed by a decimal symbol,
@@ -249,52 +245,52 @@ CL_NS_DEF2(analysis,standard)
       return false;
     }
 
-	return setToken(t,&str,tokenType);
+	  return setToken(t,&str,tokenType);
   }
 
-  bool StandardTokenizer::ReadAlphaNum(const TCHAR prev, Token* t) {
+  Token* StandardTokenizer::ReadAlphaNum(const TCHAR prev, Token* t) {
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
-	if (  str.len < LUCENE_MAX_WORD_LEN ){
-		str.appendChar(prev);
-		int ch = prev;
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
+	  if (  str.len < LUCENE_MAX_WORD_LEN ){
+		  str.appendChar(prev);
+		  int ch = prev;
 
-		CONSUME_WORD;
-		if (!EOS && str.len < LUCENE_MAX_WORD_LEN-1 ) { //still have space for 1 more character?
-			switch(ch) { /* What follows the first alphanum segment? */
-				case '.':
-					str.appendChar('.');
-					return ReadDotted(&str, CL_NS2(analysis,standard)::UNKNOWN,t);
-				case '\'':
-					str.appendChar('\'');
-					return ReadApostrophe(&str,t);
-				case '@':
-					str.appendChar('@');
-					return ReadAt(&str,t);
-				case '&':
-					str.appendChar('&');
-					return ReadCompany(&str,t);
-				/* default: fall through to end of this function. */
-			}
-		}
-	}
-	return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
+		  CONSUME_WORD;
+		  if (!EOS && str.len < LUCENE_MAX_WORD_LEN-1 ) { //still have space for 1 more character?
+			  switch(ch) { /* What follows the first alphanum segment? */
+				  case '.':
+					  str.appendChar('.');
+					  return ReadDotted(&str, CL_NS2(analysis,standard)::UNKNOWN,t);
+				  case '\'':
+					  str.appendChar('\'');
+					  return ReadApostrophe(&str,t);
+				  case '@':
+					  str.appendChar('@');
+					  return ReadAt(&str,t);
+				  case '&':
+					  str.appendChar('&');
+					  return ReadCompany(&str,t);
+				  /* default: fall through to end of this function. */
+			  }
+		  }
+	  }
+	  return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
   }
   
-  bool StandardTokenizer::ReadCJK(const TCHAR prev, Token* t) {
+  Token* StandardTokenizer::ReadCJK(const TCHAR prev, Token* t) {
     t->growBuffer(LUCENE_MAX_WORD_LEN+1);//make sure token can hold the next word
-    StringBuffer str(t->_termText,t->bufferLength(),true); //use stringbuffer to read data onto the termText
-	if ( str.len < LUCENE_MAX_WORD_LEN ){
-		str.appendChar(prev);
-		int ch = prev;
+    StringBuffer str(t->termBuffer(),t->bufferLength(),true); //use stringbuffer to read data onto the termText
+	  if ( str.len < LUCENE_MAX_WORD_LEN ){
+		  str.appendChar(prev);
+		  int ch = prev;
 
-		CONSUME_CJK;
-	}
-	return setToken(t,&str,CL_NS2(analysis,standard)::CJK);
+		  CONSUME_CJK;
+	  }
+	  return setToken(t,&str,CL_NS2(analysis,standard)::CJK);
   }
   
 
-  bool StandardTokenizer::ReadDotted(StringBuffer* _str, TokenTypes forcedType, Token* t) {
+  Token* StandardTokenizer::ReadDotted(StringBuffer* _str, TokenTypes forcedType, Token* t) {
     const int32_t specialCharPos = rdPos;
 	StringBuffer& str=*_str;
 	
@@ -405,7 +401,7 @@ CL_NS_DEF2(analysis,standard)
 			? forcedType : CL_NS2(analysis,standard)::HOST);
   }
 
-  bool StandardTokenizer::ReadApostrophe(StringBuffer* _str, Token* t) {
+  Token* StandardTokenizer::ReadApostrophe(StringBuffer* _str, Token* t) {
     StringBuffer& str=*_str;
 
     TokenTypes tokenType = CL_NS2(analysis,standard)::APOSTROPHE;
@@ -426,16 +422,16 @@ CL_NS_DEF2(analysis,standard)
 	return setToken(t,&str,tokenType);
   }
 
-  bool StandardTokenizer::ReadAt(StringBuffer* str, Token* t) {
+  Token* StandardTokenizer::ReadAt(StringBuffer* str, Token* t) {
     ReadDotted(str, CL_NS2(analysis,standard)::EMAIL,t);
     /* JLucene grammar indicates dots/digits not allowed in company name: */
     if (!CONTAINS_ANY((*str), ".0123456789")) {
-		setToken(t,str,CL_NS2(analysis,standard)::COMPANY);
+		  setToken(t,str,CL_NS2(analysis,standard)::COMPANY);
     }
-    return true;
+    return t;
   }
 
-  bool StandardTokenizer::ReadCompany(StringBuffer* _str, Token* t) {
+  Token* StandardTokenizer::ReadCompany(StringBuffer* _str, Token* t) {
     StringBuffer& str = *_str;
     const int32_t specialCharPos = rdPos;
     int ch=0;
@@ -448,7 +444,7 @@ CL_NS_DEF2(analysis,standard)
       SHAVE_RIGHTMOST(str);
 
 
-	  return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
+	    return setToken(t,&str,CL_NS2(analysis,standard)::ALPHANUM);
     }
     if (!EOS) {
       unReadChar();

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_store_intlLock_
@@ -13,12 +13,12 @@
 CL_NS_DEF(store)
 
 
-class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char, CL_NS(util)::Deletor::acArray>
+class LocksType: public CL_NS(util)::CLHashSet<const char*, CL_NS(util)::Compare::Char>
 {
 public:
-	LocksType(bool del)
+	LocksType()
 	{
-		setDoDelete(del);
+		setDoDelete(false);
 	}
 	virtual ~LocksType(){
 	}
@@ -29,40 +29,50 @@ public:
 	  const char* lockName;
 	  LocksType* locks;
 	  DEFINE_MUTEX(*locks_LOCK)
-	  
+
   public:
 	  SingleInstanceLock( LocksType* locks, _LUCENE_THREADMUTEX* locks_LOCK, const char* lockName );
-
+    virtual ~SingleInstanceLock();
 	  bool obtain();
 	  void release();
 	  bool isLocked();
-	  TCHAR* toString();
+	  std::string toString();
+
+    static const char* getClassName();
+    const char* getObjectName() const;
   };
 
 
 
   class NoLock: public LuceneLock {
+  public:
 	  bool obtain();
 	  void release();
 	  bool isLocked();
-	  TCHAR* toString();
+	  std::string toString();
+
+    static const char* getClassName();
+    const char* getObjectName() const;
   };
-  
+
   class FSLock: public LuceneLock {
   private:
 	  char* lockFile;
   	  char* lockDir;
-	  
+
   public:
 	  FSLock( const char* _lockDir, const char* name );
 	  ~FSLock();
-	  
+
 	  bool obtain();
 	  void release();
 	  bool isLocked();
-	  TCHAR* toString();	  	  	  
+	  std::string toString();
+
+    static const char* getClassName();
+    const char* getObjectName() const;
   };
-  
+
   // Utility class for executing code with exclusive access.
   template<typename T>
   class LuceneLockWith {
@@ -75,7 +85,7 @@ public:
     virtual T doBody() = 0;
 
   // Constructs an executor that will grab the named lock.
-  public:   
+  public:
     /** Constructs an executor that will grab the named lock.
      *  Defaults lockWaitTimeout to LUCENE_COMMIT_LOCK_TIMEOUT.
      *  @deprecated Kept only to avoid breaking existing code.
@@ -85,7 +95,7 @@ public:
       this->lockWaitTimeout = lockWaitTimeout;
     }
     virtual ~LuceneLockWith(){
-	} 
+	}
 
     /** Calls {@link #doBody} while <i>lock</i> is obtained.  Blocks if lock
      * cannot be obtained immediately.  Retries to obtain lock once per second
@@ -98,7 +108,7 @@ public:
             locked = lock->obtain(lockWaitTimeout);
             ret = doBody();
         }_CLFINALLY(
-            if (locked) 
+            if (locked)
                 lock->release();
         );
 		return ret;
@@ -114,7 +124,7 @@ public:
             locked = lock->obtain(lockWaitTimeout);
             doBody();
         }_CLFINALLY(
-            if (locked) 
+            if (locked)
                 lock->release();
         );
     }

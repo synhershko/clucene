@@ -17,10 +17,19 @@ CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)
 
+/**
+ * A Filter that restricts search results to a range of values in a given
+ * field.
+ *
+ * <p>
+ * This code borrows heavily from {@link RangeQuery}, but is implemented as a Filter
+ *
+ * </p>
+ */
 class CLUCENE_EXPORT RangeFilter: public Filter 
 {
 private:
-	const TCHAR* field;
+	TCHAR* field;
 	TCHAR* lowerValue;
 	TCHAR* upperValue;
 	bool   includeLower;

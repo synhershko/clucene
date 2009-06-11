@@ -108,7 +108,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
 	CLSetList<Token*,TokenOrderCompare>* unsortedTokens = NULL;
     for (int32_t t = 0; t < freq->length; t++)
     {
-        ObjectArray<TermVectorOffsetInfo>* offsets=tpv->getOffsets(t);
+        ArrayBase<TermVectorOffsetInfo*>* offsets=tpv->getOffsets(t);
         if(offsets==NULL)
             return NULL;
         
@@ -211,16 +211,16 @@ TokenSources::StoredTokenStream::StoredTokenStream(CL_NS(analysis)::Token** toke
     this->tokens=tokens;
 	this->length = len;
 }
-bool TokenSources::StoredTokenStream::next(CL_NS(analysis)::Token* token)
+CL_NS(analysis)::Token* TokenSources::StoredTokenStream::next(CL_NS(analysis)::Token* token)
 {
     if(currentToken>=length)
     {
-        return false;
+        return NULL;
     }
 	Token* t = tokens[currentToken++];
 
 	token->set(t->termBuffer(),t->startOffset(),t->endOffset(),t->type());;
-    return true;
+    return token;
 }
 void TokenSources::StoredTokenStream::close(){
 	

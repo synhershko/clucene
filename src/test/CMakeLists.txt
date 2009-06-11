@@ -37,6 +37,8 @@ SET(test_files ./tests.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
 ./index/TestIndexWriter.cpp
+./index/TestIndexReader.cpp
+./index/TestThreading.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
@@ -61,6 +63,13 @@ ENDIF ( NOT USE_SHARED_OBJECT_FILES )
 ############################
 
 IF ( ENABLE_COMPILE_TESTS )
+
+#define zlib library requirements...
+find_package(ZLIB)
+IF ( ZLIB_FOUND )
+  SET ( EXTRA_LIBS ${EXTRA_LIBS} ${ZLIB_LIBRARY} )
+  INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ENDIF ( ZLIB_FOUND )
    
 SET(test_monolithic_Files ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp ./CLMonolithic_Test.cpp)
 
@@ -70,20 +79,22 @@ IF ( CMAKE_COMPILER_IS_GNUCC )
 ENDIF ( CMAKE_COMPILER_IS_GNUCC )
 
 
-SET (TESTS_CXX_FLAGS )
+SET (TESTS_CXX_FLAGS "-DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB")
 SET (TESTS_EXE_LINKER_FLAGS "${CMAKE_THREAD_LIBS_INIT}")
 IF ( GccFlagG )
     SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -g")
 ENDIF ( GccFlagG )
 IF ( GccFlagWall )
-    SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -Wall")
-    SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
+    #SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -Wall")
+    #SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
 ENDIF ( GccFlagWall )
 
+
 ADD_EXECUTABLE(cl_test-ascii EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-ascii "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-ascii PROPERTIES 
     COMPILE_DEFINITIONS "_ASCII"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-ascii
     COMMENT "Running cl_test-ascii"
@@ -91,9 +102,10 @@ ADD_CUSTOM_TARGET(test-ascii
     DEPENDS cl_test-ascii)
 
 ADD_EXECUTABLE(cl_test-namespace EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-namespace "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-namespace PROPERTIES 
     COMPILE_DEFINITIONS "DISABLE_NAMESPACE"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-namespace
     COMMENT "Running cl_test-namespace"
@@ -101,9 +113,10 @@ ADD_CUSTOM_TARGET(test-namespace
     DEPENDS cl_test-namespace)
 
 ADD_EXECUTABLE(cl_test-mmap EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-mmap "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-mmap PROPERTIES 
     COMPILE_DEFINITIONS "LUCENE_FS_MMAP"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-mmap
     COMMENT "Running cl_test-mmap"
@@ -111,9 +124,10 @@ ADD_CUSTOM_TARGET(test-mmap
     DEPENDS cl_test-mmap)
 
 ADD_EXECUTABLE(cl_test-singlethreading EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-singlethreading "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-singlethreading PROPERTIES 
     COMPILE_DEFINITIONS "_CL_DISABLE_MULTITHREADING"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-singlethreading
     COMMENT "Running cl_test-singlethreading"
@@ -121,9 +135,10 @@ ADD_CUSTOM_TARGET(test-singlethreading
     DEPENDS cl_test-singlethreading)
 
 ADD_EXECUTABLE(cl_test-refcnt EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-refcnt "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-refcnt PROPERTIES 
     COMPILE_DEFINITIONS "LUCENE_ENABLE_REFCOUNT"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-refcnt
     COMMENT "Running cl_test-refcnt"
@@ -131,9 +146,10 @@ ADD_CUSTOM_TARGET(test-refcnt
     DEPENDS cl_test-refcnt)
     
 ADD_EXECUTABLE(cl_test-platform-charfuncs EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+TARGET_LINK_LIBRARIES(cl_test-platform-charfuncs "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-platform-charfuncs PROPERTIES 
     COMPILE_DEFINITIONS "LUCENE_USE_INTERNAL_CHAR_FUNCTIONS=0"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS}"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 #this one just tests that the compile works... tests will (mostly) fail, since the
 #internal functions do not produce the exact results expected.
@@ -143,19 +159,34 @@ ADD_CUSTOM_TARGET(test-platform-charfuncs
     DEPENDS cl_test-platform-charfuncs)
 
 #this one last so we only have pedantic for test-pedantic
-IF ( GccFlagPedantic )
-    SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -pedantic")
-    SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -pedantic")
-ENDIF ( GccFlagPedantic )
 ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
+TARGET_LINK_LIBRARIES(cl_test-pedantic "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES
-    COMPILE_DEFINITIONS ""
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB"
+    COMPILE_DEFINITIONS "-pedantic"
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -pedantic"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
 ADD_CUSTOM_TARGET(test-pedantic
     COMMENT "Running cl_test-pedantic"
     COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-pedantic
     DEPENDS cl_test-pedantic)
+
+
+CHECK_CXX_ACCEPTS_FLAG("-fprofile-arcs -ftest-coverage" GccFlagGcov)
+IF ( GccFlagGcov )
+	ADD_EXECUTABLE(cl_test-gcov EXCLUDE_FROM_ALL ${test_monolithic_Files} )
+  TARGET_LINK_LIBRARIES(cl_test-gcov "${EXTRA_LIBS}")
+	SET_TARGET_PROPERTIES(cl_test-gcov PROPERTIES
+	    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -fprofile-arcs -ftest-coverage"
+	    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+	ADD_CUSTOM_TARGET(test-gcov
+	    COMMENT "Running cl_test-gcov"
+	    COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-gcov
+      COMMAND lcov --directory CMakeFiles/cl_test-gcov.dir/__/core/CLucene -c -o clucene-coverage.info
+      COMMAND lcov --remove clucene-coverage.info "\"/usr/*\"" -o clucene-coverage.clean
+      COMMAND genhtml -o ${CMAKE_BINARY_DIR}/clucene-coverage clucene-coverage.clean
+	    DEPENDS cl_test-gcov)
+ENDIF ( GccFlagGcov )
+
 
 
 #target for running all tests

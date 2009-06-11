@@ -8,7 +8,6 @@
 #define _lucene_search_Similarity_
 
 CL_CLASS_DEF(index,Term)
-#include "CLucene/util/VoidMapSetDefinitions.h"
 
 CL_NS_DEF(search)
 

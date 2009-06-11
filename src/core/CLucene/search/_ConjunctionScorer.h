@@ -8,15 +8,14 @@
 #define _lucene_search_ConjunctionScorer_
 
 #include "Scorer.h"
-#include "CLucene/util/VoidMapSetDefinitions.h"
-//#include "Similarity.h"
-
 CL_NS_DEF(search)
 
 /** Scorer for conjunctions, sets of queries, all of which are required. */
 class ConjunctionScorer: public Scorer {
 private:
-  CL_NS(util)::CLLinkedList<Scorer*,CL_NS(util)::Deletor::Object<Scorer> >* scorers;
+  typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
+  //typedef CL_NS(util)::CLLinkedList<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
+  ScorersType* scorers;
   bool firstTime;
   bool more;
   float_t coord;
@@ -29,19 +28,13 @@ private:
 public:
   ConjunctionScorer(Similarity* similarity);
   virtual ~ConjunctionScorer();
-  TCHAR* toString(void){
-	return stringDuplicate(_T("ConjunctionScorer"));
-  }
+  virtual TCHAR* toString();
   void add(Scorer* scorer);
   int32_t doc() const;
   bool next();
   bool skipTo(int32_t target);
   virtual float_t score();
-  virtual void explain(int32_t doc, Explanation* ret) {
-    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: ConjunctionScorer::explain");
-  }
-
-
+  virtual Explanation* explain(int32_t doc);
 };
 
 CL_NS_END

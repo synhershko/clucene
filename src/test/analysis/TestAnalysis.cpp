@@ -13,18 +13,18 @@
 	 uint64_t start = Misc::currentTimeMillis();
 
     int32_t count = 0;
-	CL_NS(analysis)::Token* t = NULL;
-	while (stream->next(t)) {
+    CL_NS(analysis)::Token* t = _CLNEW Token;
+    while ( t=stream->next(t)) {
       if (verbose) {
 				CuMessage(tc, _T("Text=%s start=%d end=%d\n"), t->termBuffer(), t->startOffset(), t->endOffset() );
       }
       count++;
     }
-	_CLDELETE(t);
+    _CLDELETE(t);
 
     uint64_t end = Misc::currentTimeMillis();
     int64_t time = end - start;
-	CuMessageA (tc,"%d milliseconds to extract ", (int32_t)time);
+    CuMessageA (tc,"%d milliseconds to extract ", (int32_t)time);
     CuMessageA (tc,"%d tokens\n", count);
     CuMessageA (tc,"%f microseconds/token\n",(time*1000.0)/count );
     CuMessageA (tc,"%f megabytes/hour\n", (bytes * 1000.0 * 60.0 * 60.0)/(time * 1000000.0) );
