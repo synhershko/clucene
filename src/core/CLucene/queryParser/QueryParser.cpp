@@ -370,7 +370,7 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
 				  multiTerms.clear();
 			  }
 			  position += t->getPositionIncrement();
-			  multiTerms.push_back(_CLNEW Term(field, t->termText()));
+			  multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
 		  }
 		  if (enablePositionIncrements) {
 			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
