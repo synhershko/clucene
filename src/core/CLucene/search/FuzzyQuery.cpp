@@ -61,7 +61,7 @@ CL_NS_DEF(search)
 		dWidth = LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX; // default length of the d array
 		dHeight = textLen + 1;
 
-		Term* trm = _CLNEW Term(searchTerm->field(), prefix, true); // _CLNEW Term(term, prefix); -- not intern'd?
+		Term* trm = _CLNEW Term(searchTerm->field(), prefix); // _CLNEW Term(term, prefix); -- not intern'd?
 		setEnum(reader->terms(trm));
 		_CLDECDELETE(trm);
 

@@ -284,7 +284,7 @@ CL_NS_DEF(index)
 	  if ( term != NULL ){
 		//Seek enumerator to term; delete the new TermInfo that's returned.
 		TermInfo* ti = get(term);
-		_CLDELETE(ti);
+		_CLLDELETE(ti);
 		enumerator = getEnum();
 	  }else
 	    enumerator = origEnum;

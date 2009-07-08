@@ -20,7 +20,7 @@ CL_NS_DEF(search)
 class CLUCENE_EXPORT FuzzyQuery: public MultiTermQuery {
 private:
 	class ScoreTerm;
-	class ScoreTermQueue;
+	class ScoreTermQueue; 
 
 	float_t minimumSimilarity;
 	size_t prefixLength;
