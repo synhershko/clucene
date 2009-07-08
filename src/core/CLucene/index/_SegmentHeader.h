@@ -238,10 +238,6 @@ class SegmentReader: public DirectoryIndexReader {
 	CompoundFileReader* cfsReader;
   CompoundFileReader* storeCFSReader;
 
-  // indicates the SegmentReader with which the resources are being shared,
-  // in case this is a re-opened reader
-  SegmentReader* referencedSegmentReader;
-
 	///Reads the Field Info file
 	FieldsReader* fieldsReader;
 	TermVectorsReader* termVectorsReaderOrig;

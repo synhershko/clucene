@@ -767,6 +767,7 @@ void SegmentMerger::mergeNorms() {
 			    //Get an IndexInput to the norm file for this field in this segment
           if ( normBuffer.length < maxDoc ){
             normBuffer.resize(maxDoc);
+            memset(normBuffer.values,0,sizeof(uint8_t) * maxDoc);
 			    }
 
           if (!reader->hasDeletions()) {

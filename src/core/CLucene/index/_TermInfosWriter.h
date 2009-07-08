@@ -33,8 +33,7 @@ class TermInfo;
     int32_t lastTermTextLength;
     int32_t lastFieldNumber;
 
-    TCHAR* termTextBuffer;
-    size_t termTextBufferLen; //current length of termTextBuffer buffer
+    CL_NS(util)::ValueArray<TCHAR> termTextBuffer;
 
 		TermInfosWriter* other;
 

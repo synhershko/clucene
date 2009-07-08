@@ -131,7 +131,6 @@ CL_NS_DEF(index)
     this->fieldsReader = NULL;
     this->cfsReader = NULL;
     this->storeCFSReader = NULL;
-    this->referencedSegmentReader = NULL;
 
     this->segment = si->name;
     this->si = si;
@@ -345,13 +344,6 @@ CL_NS_DEF(index)
   //       tis != NULL
   //Post - All streams to files have been closed
 
-      bool hasReferencedReader = (referencedSegmentReader != NULL);
-
-      if (hasReferencedReader) {
-        referencedSegmentReader->decRefReaderNotNorms();
-        _CLDELETE(referencedSegmentReader);
-      }
-
       _CLDELETE(deletedDocs);
 
       // close the single norms stream
@@ -369,42 +361,39 @@ CL_NS_DEF(index)
         _CLDELETE(fieldsReader);
       }
 
-      if (!hasReferencedReader) {
-        // close everything, nothing is shared anymore with other readers
-        if (tis != NULL) {
-          tis->close();
-          _CLDELETE(tis);
-        }
-
-        //Close the frequency stream
-        if (freqStream != NULL){
-          freqStream->close();
-          _CLDELETE(freqStream);
-        }
-        //Close the prox stream
-        if (proxStream != NULL){
-            proxStream->close();
-            _CLDELETE(proxStream);
-        }
-
-        if (termVectorsReaderOrig != NULL){
-            termVectorsReaderOrig->close();
-            _CLDELETE(termVectorsReaderOrig);
-        }
-
-        if (cfsReader != NULL){
-          cfsReader->close();
-          _CLDECDELETE(cfsReader);
-        }
-
-        if (storeCFSReader != NULL){
-          storeCFSReader->close();
-          _CLDELETE(storeCFSReader);
-        }
-
-        // maybe close directory
-        DirectoryIndexReader::doClose();
+      if (tis != NULL) {
+        tis->close();
+        _CLDELETE(tis);
       }
+
+      //Close the frequency stream
+      if (freqStream != NULL){
+        freqStream->close();
+        _CLDELETE(freqStream);
+      }
+      //Close the prox stream
+      if (proxStream != NULL){
+          proxStream->close();
+          _CLDELETE(proxStream);
+      }
+
+      if (termVectorsReaderOrig != NULL){
+          termVectorsReaderOrig->close();
+          _CLDELETE(termVectorsReaderOrig);
+      }
+
+      if (cfsReader != NULL){
+        cfsReader->close();
+        _CLDECDELETE(cfsReader);
+      }
+
+      if (storeCFSReader != NULL){
+        storeCFSReader->close();
+        _CLDELETE(storeCFSReader);
+      }
+
+      // maybe close directory
+      DirectoryIndexReader::doClose();
   }
 
   bool SegmentReader::hasDeletions()  const{
@@ -771,9 +760,9 @@ bool SegmentReader::hasNorms(const TCHAR* field){
         newReader = SegmentReader::get(infos, infos->info(0), false);
       }
     } else {
-      ArrayBase<IndexReader*>* readers = _CLNEW ObjectArray<IndexReader>(1);
-      readers->values[0] = this;
-      return _CLNEW MultiSegmentReader(_directory, infos, closeDirectory, readers, NULL, NULL);
+      ValueArray<IndexReader*> readers(1);
+      readers.values[0] = this;
+      return _CLNEW MultiSegmentReader(_directory, infos, closeDirectory, &readers, NULL, NULL);
     }
 
     return newReader;
@@ -1005,7 +994,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
       clone = _CLNEW SegmentReader();
       clone->init(_directory, NULL, false);
       clone->initialize(si, readBufferSize, false, true);
-      clone->_directory = _directory;
       clone->cfsReader = cfsReader;
       clone->storeCFSReader = storeCFSReader;
       clone->_fieldInfos = _fieldInfos;
@@ -1092,26 +1080,30 @@ bool SegmentReader::hasNorms(const TCHAR* field){
 
       success = true;
     } _CLFINALLY (
-      if (this->referencedSegmentReader != NULL) {
-        // this reader shares resources with another SegmentReader,
-        // so we increment the other readers refCount. We don't
-        // increment the refCount of the norms because we did
-        // that already for the shared norms
-        clone->referencedSegmentReader = this->referencedSegmentReader;
-        referencedSegmentReader->incRefReaderNotNorms();
-      } else {
-        // this reader wasn't reopened, so we increment this
-        // readers refCount
-        clone->referencedSegmentReader = this;
-        incRefReaderNotNorms();
-      }
-
       if (!success) {
         // An exception occured during reopen, we have to decRef the norms
         // that we incRef'ed already and close singleNormsStream and FieldsReader
         clone->decRef();
       }
     )
+
+    //disown this memory
+    this->freqStream = NULL;
+    this->_fieldInfos = NULL;
+    this->fieldsReader = NULL;
+    this->tis = NULL;
+    this->deletedDocs = NULL;
+    this->ones = NULL;
+    this->termVectorsReaderOrig = NULL;
+    this->cfsReader = NULL;
+    this->singleNormStream = NULL;
+    this->fieldsReader = NULL;
+    this->tis = NULL;
+    this->freqStream = NULL;
+    this->proxStream = NULL;
+    this->termVectorsReaderOrig = NULL;
+    this->cfsReader = NULL;
+    this->storeCFSReader = NULL;
 
     return clone;
   }

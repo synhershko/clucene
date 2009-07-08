@@ -61,7 +61,7 @@ public:
   MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory);
 
   /** This contructor is only used for {@link #reopen()} */
-  MultiSegmentReader(
+  CLUCENE_LOCAL_DECL MultiSegmentReader(
       CL_NS(store)::Directory* directory,
       SegmentInfos* sis,
       bool closeDirectory,
