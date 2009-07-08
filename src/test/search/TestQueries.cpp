@@ -48,7 +48,7 @@ private:
 
 	void addDoc(const TCHAR* text, IndexWriter* writer) {
 		Document* doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES, Field::INDEX_TOKENIZED));
+		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLLDELETE(doc);
 	}
@@ -101,7 +101,7 @@ public:
 		CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("aaaaa"),FuzzyQuery::defaultMinSimilarity,3) == 3);
 		CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("aaaaa"),FuzzyQuery::defaultMinSimilarity,4) == 2);
 		CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("aaaaa"),FuzzyQuery::defaultMinSimilarity,5) == 1);
-		CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("aaaaa"),FuzzyQuery::defaultMinSimilarity,6) == 1);
+		CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("aaaaa"),FuzzyQuery::defaultMinSimilarity,6) == 0);
 
 		// not similar enough:
 		CuAssertTrue(tc, getHitsLength(&searcher, _T("field"), _T("xxxxx")) == 0);
@@ -154,7 +154,7 @@ public:
 
 		hits = searchQuery(&searcher, _T("field"), _T("aaaac"), FuzzyQuery::defaultMinSimilarity, 5);
 		CLUCENE_ASSERT( hits->length() == 0);
-		CuAssertStrEquals(tc, NULL, _T("aaaaa"), hits->doc(0).get(_T("field")));
+		//CuAssertStrEquals(tc, NULL, _T("aaaaa"), hits->doc(0).get(_T("field")));
 		_CLLDELETE(hits);
 
 
