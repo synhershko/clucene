@@ -367,6 +367,67 @@ void testSrchManyHits(CuTest *tc) {
 	searcher.close();
 }
 
+void testSrchMulti(CuTest *tc) {
+    SimpleAnalyzer analyzer;
+	RAMDirectory ram0;
+	IndexWriter writer0( &ram0, &analyzer, true);
+
+	const TCHAR* docs0[] = {
+		_T("a")
+	};
+
+	Document* d = _CLNEW Document();
+	//no need to delete fields... document takes ownership
+	d->add(*_CLNEW Field(_T("contents"),docs0[0],Field::STORE_YES | Field::INDEX_TOKENIZED));
+
+	writer0.addDocument(d);
+	_CLDELETE(d);
+	writer0.close();
+
+	RAMDirectory ram1;
+	IndexWriter writer1( &ram1, &analyzer, true);
+
+	const TCHAR* docs1[] = {
+		_T("e")
+	};
+
+	d = _CLNEW Document();
+	//no need to delete fields... document takes ownership
+	d->add(*_CLNEW Field(_T("contents"),docs1[0],Field::STORE_YES | Field::INDEX_TOKENIZED));
+
+	writer1.addDocument(d);
+	_CLDELETE(d);
+	writer1.close();
+
+	IndexSearcher searcher0(&ram0);
+	IndexSearcher searcher1(&ram1);
+
+	Searchable* searchers[3];
+
+	searchers[0] = &searcher0;
+	searchers[1] = &searcher1;
+	searchers[2] = NULL;
+
+	MultiSearcher searcher(searchers);
+
+	RangeQuery query(
+		_CLNEW Term(_T("contents"), _T("a")),
+		_CLNEW Term(_T("contents"), _T("c")),
+		true
+	);
+	Query* rewritten = searcher.rewrite(&query);
+	Hits* hits = searcher.search(rewritten);
+	for ( int32_t x=0;x<hits->length();x++ ){
+	      hits->doc(x);
+	}
+  CLUCENE_ASSERT(hits->length() == 1);
+	if (&query != rewritten) {
+		_CLDELETE(rewritten);
+	}
+	_CLDELETE(hits);
+	searcher.close();
+}
+
 void ramSearchTest(CuTest *tc) { SearchTest(tc, true); }
 void fsSearchTest(CuTest *tc) { SearchTest(tc, false); }
 
@@ -378,6 +439,7 @@ CuSuite *testsearch(void)
 
 	SUITE_ADD_TEST(suite, testNormEncoding);
 	SUITE_ADD_TEST(suite, testSrchManyHits);
+	SUITE_ADD_TEST(suite, testSrchMulti);
 	SUITE_ADD_TEST(suite, testSrchOpenIndex);
 	SUITE_ADD_TEST(suite, testSrchPunctuation);
 	SUITE_ADD_TEST(suite, testSrchSlop);
