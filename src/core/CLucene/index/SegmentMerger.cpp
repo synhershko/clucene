@@ -769,6 +769,7 @@ void SegmentMerger::mergeNorms() {
             normBuffer.resize(maxDoc);
             memset(normBuffer.values,0,sizeof(uint8_t) * maxDoc);
 			    }
+          reader->norms(fi->name, normBuffer.values);
 
           if (!reader->hasDeletions()) {
             //optimized case for segments without deleted docs

@@ -270,6 +270,8 @@ public:
 	/** Reads the byte-encoded normalization factor for the named field of every
 	*  document.  This is used by the search code to score documents.
 	*
+	* The size of bytes must be the size of the IndexReader->maxDoc()
+	*
 	* @see Field#setBoost(float_t)
 	*/
 	virtual void norms(const TCHAR* field, uint8_t* bytes) = 0;
