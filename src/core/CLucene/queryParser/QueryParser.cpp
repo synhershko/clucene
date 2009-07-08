@@ -1064,6 +1064,10 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
         catch (...) { /* ignore exceptions */ }
       }
       // TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
+	  
+	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
+	  const size_t st = _tcslen(term->image);
+	  term->image[st-1]=NULL;
       TCHAR* tmp = discardEscapeChar(term->image+1);
       q = getFieldQuery(_field, tmp, s);
       _CLDELETE_LCARRAY(tmp);

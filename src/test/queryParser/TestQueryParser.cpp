@@ -164,8 +164,9 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,tmp1, &a, tmp1);
 #endif
 
-	//assertQueryEquals(tc, _T("\"\""), &b, _T(""));
-    //assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
+	// TODO: Those 2 fail, related probably to the escape function
+	assertQueryEquals(tc, _T("\"\""), &b, _T(""));
+    assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
