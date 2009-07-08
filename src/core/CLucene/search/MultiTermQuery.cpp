@@ -80,9 +80,9 @@ CL_NS_DEF(search)
 		return query;
 	}
 	
-	Query* MultiTermQuery::combine(Query** queries) {
+	Query* MultiTermQuery::combine(CL_NS(util)::ArrayBase<Query*>* queries) {
 		return Query::mergeBooleanQueries(queries);
-    }
+  }
 
     /** Prints a user-readable version of this query. */
     TCHAR* MultiTermQuery::toString(const TCHAR* field) const{

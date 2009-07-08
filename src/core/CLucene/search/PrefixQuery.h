@@ -40,7 +40,7 @@ CL_NS_DEF(search)
 		/** Returns the prefix of this query. */
 		CL_NS(index)::Term* getPrefix(bool pointer=true);
 
-		Query* combine(Query** queries);
+    Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
 		Query* rewrite(CL_NS(index)::IndexReader* reader);
 		Query* clone() const;
 		bool equals(Query * other) const;
