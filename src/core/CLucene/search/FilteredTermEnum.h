@@ -12,47 +12,48 @@ CL_CLASS_DEF(index,Term)
 #include "CLucene/index/Terms.h"
 
 CL_NS_DEF(search)
-  //FilteredTermEnum is an abstract class for enumerating a subset of all terms. 
-  //
-  //Term enumerations are always ordered by term->compareTo().  Each term in
-  //the enumeration is greater than all that precede it. 
-  
-  class CLUCENE_EXPORT FilteredTermEnum: public CL_NS(index)::TermEnum {
-  public:
-      //Constructor
-      FilteredTermEnum();
-	  //Destructor
-      virtual ~FilteredTermEnum();
-        
-      //Equality measure on the term
-      virtual float_t difference() = 0;
+/** Abstract class for enumerating a subset of all terms. 
 
-      //Returns the docFreq of the current Term in the enumeration.
-      int32_t docFreq() const ;
-        
-      //Increments the enumeration to the next element
-      bool next() ;
-        
-      //Returns a pointer to the current Term in the enumeration.
-      CL_NS(index)::Term* term();
-      CL_NS(index)::Term* term(bool pointer);
-        
-      //Closes the enumeration to further activity, freeing resources.
-      void close();
+<p>Term enumerations are always ordered by Term.compareTo().  Each term in
+the enumeration is greater than all that precede it.  */
+class CLUCENE_EXPORT FilteredTermEnum: public CL_NS(index)::TermEnum {
+public:
+	FilteredTermEnum();
+	virtual ~FilteredTermEnum();
 
-    protected:
-      //Equality compare on the term */
-      virtual bool termCompare(CL_NS(index)::Term* term) = 0;
-        
-      //Indiciates the end of the enumeration has been reached
-      virtual bool endEnum() = 0;
-        
-      void setEnum(CL_NS(index)::TermEnum* actualEnum) ;
-    
-    private:
-        CL_NS(index)::Term* currentTerm;
-        CL_NS(index)::TermEnum* actualEnum;
-        
-    };
+	/** Equality measure on the term */
+	virtual float_t difference() = 0;
+
+	/** 
+	* Returns the docFreq of the current Term in the enumeration.
+	* Returns -1 if no Term matches or all terms have been enumerated.
+	*/
+	int32_t docFreq() const;
+
+	/** Increments the enumeration to the next element.  True if one exists. */
+	bool next() ;
+
+	/** Returns the current Term in the enumeration.
+	* Returns null if no Term matches or all terms have been enumerated. */
+	CL_NS(index)::Term* term(bool pointer);
+	CL_NS(index)::Term* term();
+
+	/** Closes the enumeration to further activity, freeing resources.  */
+	void close();
+
+protected:
+	/** Equality compare on the term */
+	virtual bool termCompare(CL_NS(index)::Term* term) = 0;
+
+	/** Indicates the end of the enumeration has been reached */
+	virtual bool endEnum() = 0;
+
+	void setEnum(CL_NS(index)::TermEnum* actualEnum) ;
+
+private:
+	CL_NS(index)::Term* currentTerm;
+	CL_NS(index)::TermEnum* actualEnum;
+
+};
 CL_NS_END
 #endif

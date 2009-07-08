@@ -39,7 +39,7 @@ DONE ISH	index\MultipleTermPositions.java			- IntQueue::sort is not implemented 
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
-DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, MultiPhraseQuery, and some tests. _tcstod.
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, and some tests. _tcstod.
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
 DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
@@ -64,12 +64,12 @@ DONE ISH	search\ExactPhraseScorer.java
 ?	search\FieldDoc.java
 ?	search\FieldDocSortedHitQueue.java
 ?	search\FieldSortedHitQueue.java
-DONE ISH	search\Filter.java						- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
+DONE ISH	search\Filter.java				- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
 ?	search\FilteredQuery.java
-?	search\FilteredTermEnum.java
+DONE ISH	search\FilteredTermEnum.java		- Can we mend term(void) and term(bool) ?
 ?	search\FilterManager.java
-?	search\FuzzyQuery.java
-?	search\FuzzyTermEnum.java
+DONE ISH	search\FuzzyQuery.java			- See TODOs.
+DONE ISH	search\FuzzyTermEnum.java			- See TODOs. Also, Old similarity code is commented out and marked as "legacy". It looks like some optimizations were made there, but since Fuzzy queries weren't working as they should we had to revert to Java's implementation. Perhaps after tests are complete we could try and get the optimized version to work again.
 ?	search\Hit.java
 ?	search\HitCollector.java
 ?	search\HitIterator.java
@@ -107,6 +107,7 @@ for example: _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 get rid of Misc.h, repl_*
 check up on sub-folders bug (analysis/standard)
 MapViewOfFile issues (cmake not picking up functions in kernel32)
+Use safe CRT where possible. For example, make _tcsdup / stringDuplicate require n and call the _s version if cmake realizes it exists
 
 Misc TODOs:
 Update jstreams from latest code of Strigi

@@ -12,14 +12,8 @@ CL_NS_USE(index)
 CL_NS_DEF(search)
 
 
-    FilteredTermEnum::FilteredTermEnum(){
-	//Func - Constructor
-	//Pre  - true
-	//Post - Instance has been created
-		
-        currentTerm = NULL;
-        actualEnum = NULL;
-    }
+FilteredTermEnum::FilteredTermEnum():currentTerm(NULL),actualEnum(NULL){
+}
 
     FilteredTermEnum::~FilteredTermEnum() {
     //Func - Destructor
@@ -48,7 +42,7 @@ CL_NS_DEF(search)
 		//The actual enumerator is not initialized!
 		if (actualEnum == NULL){
 			return false; 
-		    }
+		}
 
 		//Finalize the currentTerm and reset it to NULL
        _CLDECDELETE( currentTerm );
@@ -101,11 +95,10 @@ CL_NS_DEF(search)
 		//Check if actualEnum is valid
 		if (actualEnum){
 			//Close the enumeration
-            actualEnum->close();
-		    }
-
-        //Destroy the enumeration
-        _CLDELETE(actualEnum);
+			actualEnum->close();
+			//Destroy the enumeration
+			_CLDELETE(actualEnum);
+		}
 
 		//Destroy currentTerm
         _CLDECDELETE(currentTerm);
@@ -118,8 +111,7 @@ CL_NS_DEF(search)
 
 		CND_PRECONDITION(actualEnum != NULL,"actualEnum is NULL");
 
-		_CLDELETE(this->actualEnum);
-
+		_CLLDELETE(this->actualEnum);
         this->actualEnum = actualEnum;
 
         // Find the first term that matches
