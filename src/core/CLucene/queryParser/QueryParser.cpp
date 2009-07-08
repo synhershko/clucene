@@ -633,7 +633,7 @@ TCHAR* QueryParser::escape(const TCHAR* s) {
   // and declare we are the owners of the buffer (to save on a copy)
   // TODO: 1. Test to see what is the optimal initial length
   //     2. Allow re-using the provided string buffer (argument s) instead of creating another one?
-  StringBuffer sb(len+5,false);
+  StringBuffer sb(len+5);
   for (size_t i = 0; i < len; i++) {
     const TCHAR c = s[i];
     // These characters are part of the query syntax and must be escaped
@@ -644,7 +644,7 @@ TCHAR* QueryParser::escape(const TCHAR* s) {
     }
     sb.appendChar(c);
   }
-  return sb.getBuffer();
+  return sb.giveBuffer();
 }
 
 int32_t QueryParser::Conjunction() {
@@ -1072,7 +1072,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
           s = _ttoi(fuzzySlop->image + 1);
         }
         catch (...) { /* ignore exceptions */ }
-      }	  
+      }
 	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
 	  const size_t st = _tcslen(term->image);
 	  term->image[st-1]=NULL;
@@ -1378,7 +1378,7 @@ void QueryParser::jj_save(const int32_t index, int32_t xla) {
 
 TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
   const size_t len = _tcslen(str);
-  StringBuffer retval(len * 2, false);
+  StringBuffer retval(len * 2);
   TCHAR ch;
   for (size_t i = 0; i < len; i++) {
     switch (str[i])
@@ -1421,7 +1421,7 @@ TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
       continue;
     }
   }
-  return retval.getBuffer();
+  return retval.giveBuffer();
 }
 
 TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
@@ -1449,7 +1449,7 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
     expected.append(_T("    "));
   }
 
-  StringBuffer retval(CL_MAX_PATH, false);
+  StringBuffer retval(CL_MAX_PATH);
   retval.append(_T("Encountered \""));
   QueryToken* tok = currentToken->next;
   for (size_t i = 0; i < maxSize; i++) {
@@ -1482,7 +1482,7 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
   }
   retval.append(expected.getBuffer());
 
-  return retval.getBuffer();
+  return retval.giveBuffer();
 }
 
 CL_NS_END

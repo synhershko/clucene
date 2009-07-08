@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -58,15 +58,15 @@ MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enc
 }
 
 TCHAR* MatchAllDocsQuery::MatchAllDocsWeight::toString() {
-	CL_NS(util)::StringBuffer buf(50, false);
+	CL_NS(util)::StringBuffer buf(50);
 	buf.append(_T("weight("));
-	
+
 	TCHAR* t = parentQuery->toString();
 	buf.append(t);
 	_CLDELETE_LCARRAY(t);
 
 	buf.appendChar(_T(')'));
-	return buf.getBuffer();
+	return buf.giveBuffer();
 }
 
 Query* MatchAllDocsQuery::MatchAllDocsWeight::getQuery() {
@@ -116,10 +116,10 @@ const char* MatchAllDocsQuery::getObjectName() const{
 }
 
 TCHAR* MatchAllDocsQuery::toString(const TCHAR* field) const{
-	CL_NS(util)::StringBuffer buffer(25, false);
+	CL_NS(util)::StringBuffer buffer(25);
     buffer.append(_T("MatchAllDocsQuery"));
     buffer.appendBoost(getBoost());
-    return buffer.getBuffer();
+    return buffer.giveBuffer();
 }
 
 MatchAllDocsQuery::MatchAllDocsQuery(const MatchAllDocsQuery& clone){

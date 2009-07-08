@@ -15,12 +15,6 @@
 CL_NS_USE(util)
 CL_NS_DEF(search)
 
-  BooleanScorer::BooleanScorer(Similarity* similarity):
-	  Scorer(similarity)
-  {
-	BooleanScorer( similarity, 1 );	
-  }
-
    BooleanScorer::BooleanScorer(Similarity* similarity, int32_t minNrShouldMatch ):
     Scorer(similarity),
     scorers(NULL),

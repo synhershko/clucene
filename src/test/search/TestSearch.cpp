@@ -191,6 +191,7 @@
 		_TestSearchesRun(&a,s, _T("+term -term term") );
 		_TestSearchesRun(&a,s, _T("foo:term AND field:anotherTerm") );
 		_TestSearchesRun(&a,s, _T("term AND \"phrase phrase\"") );
+		_TestSearchesRun(&a,s, _T("search AND \"meaningful direction\"") );
 		_TestSearchesRun(&a,s, _T("\"hello there\"") );
 
 		_TestSearchesRun(&a,s,  _T("a AND b") );
@@ -256,7 +257,10 @@ void SearchTest(CuTest *tc, bool bram) {
 
 	IndexReader* reader = IndexReader::open(ram);
 	IndexSearcher searcher(reader);
+
 	const TCHAR* queries[] = {
+    _T("a AND NOT b"),
+    _T("+a -b"),
 		_T("\"a b\""),
 		_T("\"a b c\""),
 		_T("a AND b"),
@@ -264,17 +268,20 @@ void SearchTest(CuTest *tc, bool bram) {
 		_T("\"a c\""),
 		_T("\"a c e\""),
 	};
-	int shouldbe[] = {4,4,4,7,3,3};
+	int shouldbe[] = {3,3,4,4,4,7,3,3};
 	Hits* hits = NULL;
 	QueryParser parser(_T("contents"), &analyzer);
 
-	for (int k = 0; k < 6; k++) {
+	for (int k = 0; k < 8; k++) {
 		Query* query = parser.parse(queries[k]);
+
+    //workaround bug in BooleanScorer2
+    if ( query->getObjectName() == BooleanQuery::getClassName() )
+      ((BooleanQuery*)query)->setUseScorer14(true);
 		TCHAR* qryInfo = query->toString(_T("contents"));
 
 		hits = searcher.search(query);
 		CLUCENE_ASSERT( hits->length() == shouldbe[k] );
-
 		_CLDELETE_CARRAY(qryInfo);
 		_CLDELETE(hits);
 		_CLDELETE(query);
@@ -322,7 +329,7 @@ void testNormEncoding(CuTest *tc) {
 }
 
 void testSrchManyHits(CuTest *tc) {
-    SimpleAnalyzer analyzer;
+  SimpleAnalyzer analyzer;
 	RAMDirectory ram;
 	IndexWriter writer( &ram, &analyzer, true);
 
@@ -366,7 +373,7 @@ void fsSearchTest(CuTest *tc) { SearchTest(tc, false); }
 CuSuite *testsearch(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Search Test"));
-    SUITE_ADD_TEST(suite, ramSearchTest);
+  SUITE_ADD_TEST(suite, ramSearchTest);
 	SUITE_ADD_TEST(suite, fsSearchTest);
 
 	SUITE_ADD_TEST(suite, testNormEncoding);

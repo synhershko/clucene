@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -15,48 +15,48 @@ CL_NS_DEF(util)
 		buffer = buf;
 		bufferLength = maxlen;
 		bufferOwner = !consumeBuffer;
-	    len          = 0;
+	  len          = 0;
 	}
   StringBuffer::StringBuffer(){
   //Func - Constructor. Allocates a buffer with the default length.
   //Pre  - true
   //Post - buffer of length bufferLength has been allocated
- 
-      //Initialize 
-      bufferLength = LUCENE_DEFAULT_TOKEN_BUFFER_SIZE;
-	  len          = 0;
-	  //Allocate a buffer of length bufferLength
-      buffer       = _CL_NEWARRAY(TCHAR,bufferLength);
-	  bufferOwner  = true;
+
+    //Initialize
+    bufferLength = LUCENE_DEFAULT_TOKEN_BUFFER_SIZE;
+    len          = 0;
+    //Allocate a buffer of length bufferLength
+    buffer       = _CL_NEWARRAY(TCHAR,bufferLength);
+    bufferOwner  = true;
   }
 
-  StringBuffer::StringBuffer(const size_t initSize, const bool consumeBuffer){
+  StringBuffer::StringBuffer(const size_t initSize){
   //Func - Constructor. Allocates a buffer of length initSize + 1
   //Pre  - initSize > 0
   //Post - A buffer has been allocated of length initSize + 1
 
 	  //Initialize the bufferLength to initSize + 1 The +1 is for the terminator '\0'
-      bufferLength = initSize + 1;
-      len = 0;
-      //Allocate a buffer of length bufferLength
-      buffer = _CL_NEWARRAY(TCHAR,bufferLength);
-	  bufferOwner = consumeBuffer;
+    bufferLength = initSize + 1;
+    len = 0;
+    //Allocate a buffer of length bufferLength
+    buffer = _CL_NEWARRAY(TCHAR,bufferLength);
+    bufferOwner = true;
   }
 
   StringBuffer::StringBuffer(const TCHAR* value){
-  //Func - Constructor. 
+  //Func - Constructor.
   //       Creates an instance of Stringbuffer containing a copy of the string value
   //Pre  - value != NULL
   //Post - An instance of StringBuffer has been created containing the copy of the string value
-  
+
       //Initialize the length of the string to be stored in buffer
 	  len = (size_t) _tcslen(value);
 
 	  //Calculate the space occupied in buffer by a copy of value
       const size_t occupiedLength = len + 1;
-      
+
 	  // Minimum allocated buffer length is LUCENE_DEFAULT_TOKEN_BUFFER_SIZE.
-      bufferLength = (occupiedLength >= LUCENE_DEFAULT_TOKEN_BUFFER_SIZE 
+      bufferLength = (occupiedLength >= LUCENE_DEFAULT_TOKEN_BUFFER_SIZE
 	 	? occupiedLength : LUCENE_DEFAULT_TOKEN_BUFFER_SIZE);
 
 	  //Allocate a buffer of length bufferLength
@@ -73,11 +73,12 @@ CL_NS_DEF(util)
   // Pre  - true
   // Post - Instanc has been destroyed
 
-	if( bufferOwner ){
-		_CLDELETE_CARRAY(buffer);
-	}else
-		buffer = NULL;
+	  if( bufferOwner ){
+		  _CLDELETE_CARRAY(buffer);
+	  }else
+		  buffer = NULL;
   }
+
   void StringBuffer::clear(){
   //Func - Clears the Stringbuffer and resets it to it default empty state
   //Pre  - true
@@ -87,9 +88,9 @@ CL_NS_DEF(util)
 	  //		We should really look into at least providing both options
 
       //Destroy the current buffer if present
-	  _CLDELETE_LCARRAY(buffer);
+	    _CLDELETE_LCARRAY(buffer);
 
-	  //Initialize 
+	    //Initialize
       len = 0;
       bufferLength = LUCENE_DEFAULT_TOKEN_BUFFER_SIZE;
       //Allocate a buffer of length bufferLength
@@ -97,13 +98,13 @@ CL_NS_DEF(util)
   }
 
   void StringBuffer::appendChar(const TCHAR character) {
-  //Func - Appends a single character 
+  //Func - Appends a single character
   //Pre  - true
   //Post - The character has been appended to the string in the buffer
 
 	  //Check if the current buffer length is sufficient to have the string value appended
       if (len + 1 > bufferLength){
-		   //Have the size of the current string buffer increased because it is too small	
+		   //Have the size of the current string buffer increased because it is too small
           growBuffer(len + 1);
       }
 	  //Put character at position len which is the end of the string in the buffer
@@ -118,24 +119,24 @@ CL_NS_DEF(util)
   //Func - Appends a copy of the string value
   //Pre  - value != NULL
   //Post - value has been copied and appended to the string in buffer
-  
+
       append(value, _tcslen(value));
   }
   void StringBuffer::append(const TCHAR* value, size_t appendedLength) {
   //Func - Appends a copy of the string value
   //Pre  - value != NULL
   //       appendedLength contains the length of the string value which is to be appended
-  //Post - value has been copied and appended to the string in buffer 
-  
+  //Post - value has been copied and appended to the string in buffer
+
       //Check if the current buffer length is sufficient to have the string value appended
       if (len + appendedLength + 1 > bufferLength){
-          //Have the size of the current string buffer increased because it is too small	
+          //Have the size of the current string buffer increased because it is too small
           growBuffer(len + appendedLength + 1);
       }
 
       //Copy the string value into the buffer at postion len
       _tcsncpy(buffer + len, value, appendedLength);
-    
+
       //Add the length of the copied string to len to reflect the new length of the string in
       //the buffer (Note: len is not the bufferlength!)
       len += appendedLength;
@@ -143,9 +144,9 @@ CL_NS_DEF(util)
 
   void StringBuffer::appendInt(const int64_t value, const int32_t _Radix) {
   //Func - Appends an integer (after conversion to a character string)
-  //Pre  - true 
+  //Pre  - true
   //Post - The converted integer value has been appended to the string in buffer
-  
+
       //instantiate a buffer of 30 charactes for the conversion of the integer
       TCHAR buf[30];
       //Convert the integer value to a string buf using _Radix
@@ -217,10 +218,10 @@ CL_NS_DEF(util)
    //todo: something is wrong with this code, i'm sure... it only grows (and therefore moves if the buffer is to small)
 	  //Check if the current buffer length is sufficient to have the string value prepended
 	  if (prependedLength + len + 1 > bufferLength){
-		  //Have the size of the current string buffer increased because it is too small	
+		  //Have the size of the current string buffer increased because it is too small
 		  //Because prependedLength is passed as the second argument to growBuffer,
           //growBuffer will have left the first prependedLength characters empty
-          //when it recopied buffer during reallocation.  
+          //when it recopied buffer during reallocation.
           growBuffer(prependedLength + len + 1, prependedLength);
 	  }
 
@@ -239,7 +240,7 @@ CL_NS_DEF(util)
       return len;
   }
   TCHAR* StringBuffer::toString(){
-  //Func - Returns a copy of the current string in the StringBuffer sized equal to the length of the string 
+  //Func - Returns a copy of the current string in the StringBuffer sized equal to the length of the string
   //       in the StringBuffer.
   //Pre  - true
   //Post - The copied string has been returned
@@ -252,14 +253,14 @@ CL_NS_DEF(util)
 		  //terminate the string
           ret[len] = '\0';
 	  }
-      //return the the copy  
+      //return the the copy
       return ret;
   }
   TCHAR* StringBuffer::getBuffer() {
   //Func - '\0' terminates the buffer and returns its pointer
   //Pre  - true
   //Post - buffer has been '\0' terminated and returned
-    
+
       // Check if the current buffer is '\0' terminated
 	  if (len == bufferLength){
           //Make space for terminator, if necessary.
@@ -271,6 +272,15 @@ CL_NS_DEF(util)
      return buffer;
   }
   
+  TCHAR* StringBuffer::giveBuffer() {
+    TCHAR* ret = getBuffer();
+    buffer = NULL;
+    len = 0;
+    bufferLength = 0;
+    bufferOwner = false;
+    return ret;
+  }
+
   void StringBuffer::reserve(const size_t size){
   	if ( bufferLength >= size )
   		return;
@@ -280,7 +290,7 @@ CL_NS_DEF(util)
     TCHAR* tmp = _CL_NEWARRAY(TCHAR,bufferLength);
     _tcsncpy(tmp, buffer, len);
     tmp[len] = '\0';
-	
+
 	//destroy the old buffer
 	if (buffer){
 		_CLDELETE_CARRAY(buffer);
@@ -316,7 +326,7 @@ CL_NS_DEF(util)
 		assert(bufferLength>=minLength);
 		return;
 	}
-	
+
 	bufferLength *= 2;
 	//Check that bufferLength is bigger than minLength
 	if (bufferLength < minLength){
@@ -331,7 +341,7 @@ CL_NS_DEF(util)
     //end of the old buffer), then apply the terminator to the new buffer.
     _tcsncpy(tmp + skippingNInitialChars, buffer, len);
     tmp[skippingNInitialChars + len] = '\0';
-	
+
 	//destroy the old buffer
 	if (buffer){
 		_CLDELETE_CARRAY(buffer);
