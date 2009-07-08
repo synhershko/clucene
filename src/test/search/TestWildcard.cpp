@@ -29,62 +29,7 @@ void _testWildcard(CuTest* tc, IndexSearcher* searcher, const TCHAR* qt, int exp
 	_CLDECDELETE(term);
 }
 
-	void testFuzzyQuery(CuTest *tc){
-		RAMDirectory ram;
-		
-		//---
-		WhitespaceAnalyzer an;
-		IndexWriter* writer = _CLNEW IndexWriter(&ram, &an, true);
 
-		//---  
-		Document *doc = 0;
-		//****
-		doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("body"),_T("test"),Field::STORE_NO | Field::INDEX_TOKENIZED));
-		writer->addDocument(doc);
-		_CLDELETE(doc);
-		//****
-		doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("body"),_T("home"),Field::STORE_NO | Field::INDEX_TOKENIZED));
-		writer->addDocument(doc);
-		_CLDELETE(doc);
-		//****
-		doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("body"), _T("pc linux"),Field::STORE_NO | Field::INDEX_TOKENIZED));
-		writer->addDocument(doc);
-		_CLDELETE(doc);
-		//****
-		doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("body"), _T("tested"),Field::STORE_NO | Field::INDEX_TOKENIZED));
-		writer->addDocument(doc);
-		_CLDELETE(doc);
-		//****
-		doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("body"), _T("source"),Field::STORE_NO | Field::INDEX_TOKENIZED));
-		writer->addDocument(doc);
-		_CLDELETE(doc);
-
-		//---
-		writer->close();
-		_CLDELETE(writer);
-
-		//---
-		IndexSearcher searcher (&ram);
-
-		//---
-		Term* term = _CLNEW Term(_T("body"), _T("test~"));
-		Query* query = _CLNEW FuzzyQuery(term);
-		Hits* result = searcher.search(query);
-		
-    	CLUCENE_ASSERT(result && result->length() > 0);
-
-		//---
-		_CLDELETE(result);
-		_CLDELETE(query);
-		_CLDECDELETE(term);
-		searcher.close();
-		ram.close();
-	}
 
 
 	void testAsterisk(CuTest *tc){
@@ -168,9 +113,6 @@ void _testWildcard(CuTest* tc, IndexSearcher* searcher, const TCHAR* qt, int exp
 	void _NO_WILDCARD_QUERY(CuTest *tc){
 		CuNotImpl(tc,_T("Wildcard"));
 	}
-	void _NO_FUZZY_QUERY(CuTest *tc){
-		CuNotImpl(tc,_T("Fuzzy"));
-	}
 #endif
 
 
@@ -178,11 +120,6 @@ CuSuite *testwildcard(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Wildcard Test"));
 
-	#ifndef NO_FUZZY_QUERY
-		SUITE_ADD_TEST(suite, testFuzzyQuery);
-	#else
-		SUITE_ADD_TEST(suite, _NO_FUZZY_QUERY);
-	#endif
 	#ifndef NO_WILDCARD_QUERY
 		SUITE_ADD_TEST(suite, testQuestionmark);
 		SUITE_ADD_TEST(suite, testAsterisk);
