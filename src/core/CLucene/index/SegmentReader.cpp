@@ -1043,7 +1043,8 @@ bool SegmentReader::hasNorms(const TCHAR* field){
             const TCHAR* curField = _fieldInfos->fieldInfo(i)->name;
             Norm* norm = this->_norms.get(curField);
             norm->incRef();
-            clone->_norms.put(curField, norm);
+            norm->_this = clone; //give the norm to the clone
+          clone->_norms.put(curField, norm);
           }
         }
 
@@ -1054,6 +1055,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
           const TCHAR* field = it->first;
           Norm* norm = _norms[field];
           norm->incRef();
+          norm->_this = clone; //give the norm to the clone
           clone->_norms.put(field, norm);
           it++;
         }
@@ -1096,7 +1098,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     this->ones = NULL;
     this->termVectorsReaderOrig = NULL;
     this->cfsReader = NULL;
-    this->singleNormStream = NULL;
     this->fieldsReader = NULL;
     this->tis = NULL;
     this->freqStream = NULL;
@@ -1104,6 +1105,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     this->termVectorsReaderOrig = NULL;
     this->cfsReader = NULL;
     this->storeCFSReader = NULL;
+    this->singleNormStream = NULL;
 
     return clone;
   }
