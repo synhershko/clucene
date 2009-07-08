@@ -7,6 +7,8 @@
 #include "test.h"
 #include <stdio.h>
 
+#include "CLucene/queryParser/legacy/QueryParser.h"
+
 	SimpleAnalyzer a;
 	StandardAnalyzer aStd;
 	WhitespaceAnalyzer aWS;
@@ -16,7 +18,7 @@
 		Query* q = NULL;
 		Hits* h = NULL;
 		try{
-			q = QueryParser::parse(qry , _T("contents"), analyzer);
+			q = lucene::queryParser::legacy::QueryParser::parse(qry , _T("contents"), analyzer);
 			if ( q != NULL ){
 			    h = search->search( q );
 

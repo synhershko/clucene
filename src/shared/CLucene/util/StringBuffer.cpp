@@ -90,7 +90,7 @@ CL_NS_DEF(util)
       //Destroy the current buffer if present
 	    _CLDELETE_LCARRAY(buffer);
 
-	    //Initialize
+	  //Initialize
       len = 0;
       bufferLength = LUCENE_DEFAULT_TOKEN_BUFFER_SIZE;
       //Allocate a buffer of length bufferLength
@@ -271,7 +271,7 @@ CL_NS_DEF(util)
 
      return buffer;
   }
-  
+ 
   TCHAR* StringBuffer::giveBuffer() {
     TCHAR* ret = getBuffer();
     buffer = NULL;

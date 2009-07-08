@@ -56,7 +56,6 @@ CL_NS_DEF(util)
    */
    TCHAR* giveBuffer();
 
-
    ///reserve a minimum amount of data for the buffer.
    ///no change made if the buffer is already longer than length
    void reserve(const size_t length);

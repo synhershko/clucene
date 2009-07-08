@@ -28,7 +28,7 @@ CL_NS_DEF(search)
 
 
 	FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t _prefixLength):
-		FilteredTermEnum(),d(NULL),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
+		FilteredTermEnum(),d(NULL),dLen(0),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
 		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(_prefixLength),
 		minimumSimilarity(minSimilarity)
 	{
