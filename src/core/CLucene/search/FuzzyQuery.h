@@ -90,8 +90,7 @@ private:
 	* everytime similarity is called.
 	*/
 	int32_t* d;
-	size_t dWidth;
-	size_t dHeight;
+	size_t dLen;
 
 	//float_t distance;
 	float_t _similarity;
@@ -107,24 +106,6 @@ private:
 	float_t minimumSimilarity;
 	double scale_factor;
 	int32_t maxDistances[LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX];
-
-
-
-	/* LEGACY:
-	int32_t* e;
-	int32_t eWidth;
-	int32_t eHeight;
-	**
-	Levenshtein distance also known as edit distance is a measure of similiarity
-	between two strings where the distance is measured as the number of character 
-	deletions, insertions or substitutions required to transform one string to 
-	the other string. 
-	<p>This method takes in four parameters; two strings and their respective 
-	lengths to compute the Levenshtein distance between the two strings.
-	The result is returned as an integer.
-	*
-	int32_t editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m);
-	*/
 
 	/******************************
 	* Compute Levenshtein distance
@@ -168,17 +149,6 @@ private:
 	* threshold and 1.0 indicates that the text and target are identical
 	*/
 	float_t similarity(const TCHAR* target, const size_t targetLen);
-
-	/**
-	* Grow the second dimension of the array, so that we can calculate the
-	* Levenshtein difference.
-	*/
-	/*
-	void growDistanceArray(int32_t m) {
-		for (int i = 0; i < d.length; i++) {
-			d[i] = new int[m+1];
-		}
-	}*/
 
 	/**
 	* The max Distance is the maximum Levenshtein distance for the text
