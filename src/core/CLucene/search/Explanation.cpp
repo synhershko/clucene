@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -42,8 +42,8 @@ void Explanation::set(const Explanation& copy){
 		}
 	}
 }
-Explanation* Explanation::clone() const{ 
-   return _CLNEW Explanation(*this); 
+Explanation* Explanation::clone() const{
+   return _CLNEW Explanation(*this);
 }
 
 Explanation::~Explanation(){
@@ -54,22 +54,22 @@ bool Explanation::isMatch() const {
 	return (0.0f < getValue());
 }
 
-float_t Explanation::getValue() const{ 
-   return value; 
+float_t Explanation::getValue() const{
+   return value;
 }
-void Explanation::setValue(const float_t value) { 
-   this->value = value; 
+void Explanation::setValue(const float_t value) {
+   this->value = value;
 }
 
-const TCHAR* Explanation::getDescription() const { 
-   return description; 
+const TCHAR* Explanation::getDescription() const {
+   return description;
 }
 void Explanation::setDescription(const TCHAR* description) {
    _tcsncpy(this->description,description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
 }
 
 TCHAR* Explanation::getSummary() {
-	StringBuffer buf(210, false);
+	StringBuffer buf(210);
 	buf.appendFloat(getValue(), 2);
 	buf.append(_T(" = "));
 	buf.append(getDescription());
@@ -156,7 +156,7 @@ void ComplexExplanation::setMatch(const bool _match) { this->match = _match; }
 bool ComplexExplanation::isMatch() const {return getMatch();}
 
 TCHAR* ComplexExplanation::getSummary() {
-	StringBuffer buf(220, false);
+	StringBuffer buf(220);
 	buf.appendFloat(getValue(),2);
 	buf.append(_T(" = "));
 	buf.append(isMatch() ? _T("(MATCH) ") : _T("(NON-MATCH) "));
@@ -164,7 +164,7 @@ TCHAR* ComplexExplanation::getSummary() {
 	return buf.getBuffer();
 }
 
-Explanation* ComplexExplanation::clone() const{ 
+Explanation* ComplexExplanation::clone() const{
    ComplexExplanation* ret = static_cast<ComplexExplanation*>(_CLNEW Explanation(*this));
    ret->match = this->match;
    return ret;

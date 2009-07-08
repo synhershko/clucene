@@ -7,6 +7,7 @@
 #include "test.h"
 
 unittest tests[] = {
+    {"search", testsearch},
     {"threads", testatomicupdates},
     {"indexreader", testindexreader},
     {"reuters", testreuters},
@@ -20,7 +21,6 @@ unittest tests[] = {
     {"priorityqueue", testpriorityqueue},
     {"queryparser", testQueryParser},
     {"mfqueryparser", testMultiFieldQueryParser},
-    {"search", testsearch},
     {"queries", testqueries},
     {"termvector",testtermvector},
     {"sort",testsort},

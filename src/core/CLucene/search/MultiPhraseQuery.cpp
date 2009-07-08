@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -69,7 +69,7 @@ public:
     void normalize(float_t _queryNorm) {
       this->queryNorm = _queryNorm;
       queryWeight *= _queryNorm;                   // normalize query weight
-      value = queryWeight * idf;                  // idf for document 
+      value = queryWeight * idf;                  // idf for document
     }
 
 	Scorer* scorer(IndexReader* reader) {
@@ -289,7 +289,7 @@ Weight* MultiPhraseQuery::_createWeight(Searcher* searcher) {
 }
 
 TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
-	StringBuffer buffer(100, false);
+	StringBuffer buffer(100);
 	if (_tcscmp(f, field)!=0) {
 		buffer.append(field);
 		buffer.appendChar(_T(':'));

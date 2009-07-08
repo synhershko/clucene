@@ -1237,7 +1237,7 @@ TCHAR* QueryParserTokenManager::getLexicalError(bool EOFSeen, int32_t lexState, 
 												int32_t errorColumn, TCHAR* errorAfter, TCHAR curChar)
 {
 	TCHAR* tmp = NULL;
-	CL_NS(util)::StringBuffer sb(100, false);
+	CL_NS(util)::StringBuffer sb(100);
 	sb.append(_T("Lexical error at line "));
 	sb.appendInt(errorLine);
 	sb.append(_T(", column "));

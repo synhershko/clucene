@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -120,7 +120,7 @@ CL_NS_DEF(search)
   //Func - Destructor
   //Pre  - true
   //Post 0 The instance has been destroyed
-      
+
 	  //Iterate through all the terms
 	  for (size_t i = 0; i < terms->size(); i++){
         _CLLDECDELETE((*terms)[i]);
@@ -132,7 +132,7 @@ CL_NS_DEF(search)
   size_t PhraseQuery::hashCode() const {
 		//todo: do cachedHashCode, and invalidate on add/remove clause
 		size_t ret = Similarity::floatToByte(getBoost()) ^ Similarity::floatToByte(slop);
-		
+
 		{ //msvc6 scope fix
 			for ( size_t i=0;terms->size();i++ )
 				ret = 31 * ret + (*terms)[i]->hashCode();
@@ -193,7 +193,7 @@ CL_NS_DEF(search)
 			result.values[i] = (*positions)[i];
 		}
 	}
-  
+
 	Weight* PhraseQuery::_createWeight(Searcher* searcher) {
 		if (terms->size() == 1) {			  // optimize one-term case
 			Term* term = (*terms)[0];
@@ -213,7 +213,7 @@ CL_NS_DEF(search)
 	  //Let size contain the number of terms
       int32_t size = terms->size();
       Term** ret = _CL_NEWARRAY(Term*,size+1);
-       
+
 	  CND_CONDITION(ret != NULL,"Could not allocated memory for ret");
 
 	  //Iterate through terms and copy each pointer to ret
@@ -225,14 +225,14 @@ CL_NS_DEF(search)
   }
 
   TCHAR* PhraseQuery::toString(const TCHAR* f) const{
-	  //Func - Prints a user-readable version of this query. 
+	  //Func - Prints a user-readable version of this query.
 	  //Pre  - f != NULL
 	  //Post - The query string has been returned
 
 	  if ( terms->size()== 0 )
 		  return NULL;
 
-	  StringBuffer buffer(30,false);
+	  StringBuffer buffer(32);
 	  if ( f==NULL || _tcscmp(field,f)!=0) {
 		  buffer.append(field);
 		  buffer.appendChar(_T(':'));
@@ -265,7 +265,7 @@ CL_NS_DEF(search)
 	  return buffer.getBuffer();
   }
 
-  
+
  PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _parentQuery) {
    this->parentQuery=_parentQuery;
    this->value = 0;
@@ -275,13 +275,13 @@ CL_NS_DEF(search)
    this->searcher = searcher;
  }
 
- TCHAR* PhraseWeight::toString() { 
+ TCHAR* PhraseWeight::toString() {
 	return STRDUP_TtoT(_T("weight(PhraseQuery)"));
  }
  PhraseWeight::~PhraseWeight(){
  }
 
- 
+
  Query* PhraseWeight::getQuery() { return parentQuery; }
  float_t PhraseWeight::getValue() { return value; }
 
@@ -294,7 +294,7 @@ CL_NS_DEF(search)
  void PhraseWeight::normalize(float_t queryNorm) {
    this->queryNorm = queryNorm;
    queryWeight *= queryNorm;                   // normalize query weight
-   value = queryWeight * idf;                  // idf for document 
+   value = queryWeight * idf;                  // idf for document
  }
 
   Scorer* PhraseWeight::scorer(IndexReader* reader)  {
@@ -306,9 +306,9 @@ CL_NS_DEF(search)
       const size_t tpsLength = parentQuery->terms->size();
 
 	  //optimize zero-term case
-      if (tpsLength == 0)			  
+      if (tpsLength == 0)
           return NULL;
-    
+
     TermPositions** tps = _CL_NEWARRAY(TermPositions*,tpsLength+1);
 
 	//Check if tps has been allocated properly
@@ -320,14 +320,14 @@ CL_NS_DEF(search)
     for (size_t i = 0; i < tpsLength; i++) {
         //Get the termPostitions for the i-th term
         p = reader->termPositions((*parentQuery->terms)[i]);
-      
+
 		//Check if p is valid
 		if (p == NULL) {
 			//Delete previous retrieved termPositions
 			while (--i >= 0){
 				_CLVDELETE(tps[i]);  //todo: not a clucene object... should be
 			}
-            _CLDELETE_ARRAY(tps); 
+            _CLDELETE_ARRAY(tps);
             return NULL;
         }
 
@@ -343,12 +343,12 @@ CL_NS_DEF(search)
 	int32_t slop = parentQuery->getSlop();
 	if ( slop != 0)
 		 // optimize exact case
-		 //todo: need to pass these: this, tps, 
+		 //todo: need to pass these: this, tps,
          ret = _CLNEW SloppyPhraseScorer(this,tps,positions.values,
-								parentQuery->getSimilarity(searcher), 
+								parentQuery->getSimilarity(searcher),
 								slop, reader->norms(parentQuery->field));
 	else
-	    ret = _CLNEW ExactPhraseScorer(this, tps, positions.values, 
+	    ret = _CLNEW ExactPhraseScorer(this, tps, positions.values,
 									parentQuery->getSimilarity(searcher),
                                     reader->norms(parentQuery->field));
 	positions.deleteArray();

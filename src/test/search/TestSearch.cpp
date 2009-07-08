@@ -7,6 +7,8 @@
 #include "test.h"
 #include <stdio.h>
 
+#include "CLucene/queryParser/legacy/QueryParser.h"
+
 	SimpleAnalyzer a;
 	StandardAnalyzer aStd;
 	WhitespaceAnalyzer aWS;
@@ -16,7 +18,7 @@
 		Query* q = NULL;
 		Hits* h = NULL;
 		try{
-			q = QueryParser::parse(qry , _T("contents"), analyzer);
+			q = lucene::queryParser::legacy::QueryParser::parse(qry , _T("contents"), analyzer);
 			if ( q != NULL ){
 			    h = search->search( q );
 
@@ -190,7 +192,7 @@
 
 		_TestSearchesRun(&a,s, _T("+term -term term") );
 		_TestSearchesRun(&a,s, _T("foo:term AND field:anotherTerm") );
-		_TestSearchesRun(&a,s, _T("term AND \"phrase phrase\"") );
+		_TestSearchesRun(&a,s, _T("search AND \"meaningful direction\"") );
 		_TestSearchesRun(&a,s, _T("\"hello there\"") );
 
 		_TestSearchesRun(&a,s,  _T("a AND b") );
@@ -274,7 +276,7 @@ void SearchTest(CuTest *tc, bool bram) {
 
 		hits = searcher.search(query);
 		CLUCENE_ASSERT( hits->length() == shouldbe[k] );
-
+_tprintf(L"xxx=%s\n", qryInfo);
 		_CLDELETE_CARRAY(qryInfo);
 		_CLDELETE(hits);
 		_CLDELETE(query);
@@ -322,7 +324,7 @@ void testNormEncoding(CuTest *tc) {
 }
 
 void testSrchManyHits(CuTest *tc) {
-    SimpleAnalyzer analyzer;
+  SimpleAnalyzer analyzer;
 	RAMDirectory ram;
 	IndexWriter writer( &ram, &analyzer, true);
 
@@ -360,13 +362,17 @@ void testSrchManyHits(CuTest *tc) {
 	searcher.close();
 }
 
-void ramSearchTest(CuTest *tc) { SearchTest(tc, true); }
-void fsSearchTest(CuTest *tc) { SearchTest(tc, false); }
+void ramSearchTest(CuTest *tc) {
+  SearchTest(tc, true);
+}
+void fsSearchTest(CuTest *tc) {
+  SearchTest(tc, false);
+}
 
 CuSuite *testsearch(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Search Test"));
-    SUITE_ADD_TEST(suite, ramSearchTest);
+  SUITE_ADD_TEST(suite, ramSearchTest);
 	SUITE_ADD_TEST(suite, fsSearchTest);
 
 	SUITE_ADD_TEST(suite, testNormEncoding);
