@@ -320,7 +320,7 @@ protected:
   /**
   * @exception ParseException throw in overridden method to disallow
   */
-  virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText);
+  virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, TCHAR* queryText);
 
   /**
   * Base implementation delegates to {@link #getFieldQuery(String,String)}.
@@ -329,7 +329,7 @@ protected:
   *
   * @exception ParseException throw in overridden method to disallow
   */
-  virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, const TCHAR* queryText, const int32_t slop);
+  virtual CL_NS(search)::Query* getFieldQuery(const TCHAR* _field, TCHAR* queryText, const int32_t slop);
 
   /**
   * @exception ParseException throw in overridden method to disallow
