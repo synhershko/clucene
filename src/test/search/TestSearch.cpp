@@ -14,11 +14,11 @@
 	WhitespaceAnalyzer aWS;
 	IndexSearcher* s=NULL;
 
-	void _TestSearchesRun( Analyzer* analyzer, Searcher* search, const TCHAR* qry){
+	void _TestSearchesRun(CuTest *tc, Analyzer* analyzer, Searcher* search, const TCHAR* qry){
 		Query* q = NULL;
 		Hits* h = NULL;
 		try{
-			q = lucene::queryParser::legacy::QueryParser::parse(qry , _T("contents"), analyzer);
+			q = QueryParser::parse(qry , _T("contents"), analyzer);
 			if ( q != NULL ){
 			    h = search->search( q );
 
@@ -36,10 +36,13 @@
 					}
 				}
 			}
-		}_CLFINALLY(
+    }catch(CLuceneError& err){
+      CuFail(tc,_T("Error: %s\n"), err.twhat());
+    }catch(...){
+      CuFail(tc,_T("Error: unknown\n"));
+    }
 		_CLDELETE(h);
 		_CLDELETE(q);
-		);
 	}
 
 	void testSrchOpenIndex(CuTest *tc ){
@@ -61,9 +64,9 @@
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 
 		//test punctuation
-		_TestSearchesRun(&a,s, _T("a&b") );
-		_TestSearchesRun(&a,s, _T("a&&b") );
-		_TestSearchesRun(&a,s, _T(".NET") );
+		_TestSearchesRun(tc, &a,s, _T("a&b") );
+		_TestSearchesRun(tc, &a,s, _T("a&&b") );
+		_TestSearchesRun(tc, &a,s, _T(".NET") );
 	}
 
 	void testSrchSlop(CuTest *tc ){
@@ -72,11 +75,11 @@
 #else
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 		//test slop
-		_TestSearchesRun(&a,s, _T("\"term germ\"~2") );
-		_TestSearchesRun(&a,s, _T("\"term germ\"~2 flork") );
-		_TestSearchesRun(&a,s, _T("\"term\"~2") );
-		_TestSearchesRun(&a,s, _T("\" \"~2 germ") );
-		_TestSearchesRun(&a,s, _T("\"term germ\"~2^2") );
+		_TestSearchesRun(tc, &a,s, _T("\"term germ\"~2") );
+		_TestSearchesRun(tc, &a,s, _T("\"term germ\"~2 flork") );
+		_TestSearchesRun(tc, &a,s, _T("\"term\"~2") );
+		_TestSearchesRun(tc, &a,s, _T("\" \"~2 germ") );
+		_TestSearchesRun(tc, &a,s, _T("\"term germ\"~2^2") );
 #endif
 	}
 
@@ -84,13 +87,13 @@
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 
 		// The numbers go away because SimpleAnalzyer ignores them
-		_TestSearchesRun(&a,s, _T("3") );
-		_TestSearchesRun(&a,s, _T("term 1.0 1 2") );
-		_TestSearchesRun(&a,s, _T("term term1 term2") );
+		_TestSearchesRun(tc, &a,s, _T("3") );
+		_TestSearchesRun(tc, &a,s, _T("term 1.0 1 2") );
+		_TestSearchesRun(tc, &a,s, _T("term term1 term2") );
 
-		_TestSearchesRun(&aStd,s, _T("3") );
-		_TestSearchesRun(&aStd,s, _T("term 1.0 1 2") );
-		_TestSearchesRun(&aStd,s, _T("term term1 term2") );
+		_TestSearchesRun(tc, &aStd,s, _T("3") );
+		_TestSearchesRun(tc, &aStd,s, _T("term 1.0 1 2") );
+		_TestSearchesRun(tc, &aStd,s, _T("term term1 term2") );
 	}
 
 	void testSrchWildcard(CuTest *tc ){
@@ -99,13 +102,13 @@
 #else
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 		//testWildcard
-		_TestSearchesRun(&a,s, _T("term*") );
-		_TestSearchesRun(&a,s, _T("term*^2") );
-		_TestSearchesRun(&a,s, _T("term~") );
-		_TestSearchesRun(&a,s, _T("term^2~") );
-		_TestSearchesRun(&a,s, _T("term~^2") );
-		_TestSearchesRun(&a,s, _T("term*germ") );
-		_TestSearchesRun(&a,s, _T("term*germ^3") );
+		_TestSearchesRun(tc, &a,s, _T("term*") );
+		_TestSearchesRun(tc, &a,s, _T("term*^2") );
+		_TestSearchesRun(tc, &a,s, _T("term~") );
+		_TestSearchesRun(tc, &a,s, _T("term^2~") );
+		_TestSearchesRun(tc, &a,s, _T("term~^2") );
+		_TestSearchesRun(tc, &a,s, _T("term*germ") );
+		_TestSearchesRun(tc, &a,s, _T("term*germ^3") );
 
 		//test problem reported by Gary Mangum
 		BooleanQuery* bq = _CLNEW BooleanQuery();
@@ -134,11 +137,11 @@
 	void testSrchEscapes(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 		//testEscaped
-		_TestSearchesRun(&aWS,s, _T("\\[brackets") );
-		_TestSearchesRun(&a,s, _T("\\[brackets") );
-		_TestSearchesRun(&aWS,s, _T("\\\\") );
-		_TestSearchesRun(&aWS,s, _T("\\+blah") );
-		_TestSearchesRun(&aWS,s, _T("\\(blah") );
+		_TestSearchesRun(tc, &aWS,s, _T("\\[brackets") );
+		_TestSearchesRun(tc, &a,s, _T("\\[brackets") );
+		_TestSearchesRun(tc, &aWS,s, _T("\\\\") );
+		_TestSearchesRun(tc, &aWS,s, _T("\\+blah") );
+		_TestSearchesRun(tc, &aWS,s, _T("\\(blah") );
 	}
 
 	void testSrchRange(CuTest *tc ){
@@ -147,77 +150,77 @@
 #else
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
 		//testRange
-		_TestSearchesRun(&a,s, _T("[ j m]") );
-		_TestSearchesRun(&a,s, _T("[ j m ]") );
-		_TestSearchesRun(&a,s, _T("{ j m}") );
-		_TestSearchesRun(&a,s, _T("{ j m }") );
-		_TestSearchesRun(&a,s, _T("{a TO b}") );
-		_TestSearchesRun(&a,s, _T("{ j m }^2.0") );
-		_TestSearchesRun(&a,s, _T("[ j m] OR bar") );
-		_TestSearchesRun(&a,s, _T("[ j m] AND bar") );
-		_TestSearchesRun(&a,s, _T("( bar blar { j m}) ") );
-		_TestSearchesRun(&a,s, _T("gack ( bar blar { j m}) ") );
+		_TestSearchesRun(tc, &a,s, _T("[ j m]") );
+		_TestSearchesRun(tc, &a,s, _T("[ j m ]") );
+		_TestSearchesRun(tc, &a,s, _T("{ j m}") );
+		_TestSearchesRun(tc, &a,s, _T("{ j m }") );
+		_TestSearchesRun(tc, &a,s, _T("{a TO b}") );
+		_TestSearchesRun(tc, &a,s, _T("{ j m }^2.0") );
+		_TestSearchesRun(tc, &a,s, _T("[ j m] OR bar") );
+		_TestSearchesRun(tc, &a,s, _T("[ j m] AND bar") );
+		_TestSearchesRun(tc, &a,s, _T("( bar blar { j m}) ") );
+		_TestSearchesRun(tc, &a,s, _T("gack ( bar blar { j m}) ") );
 #endif
 	}
 
 	void testSrchSimple(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
     	//simple tests
-		_TestSearchesRun(&a,s, _T("a AND b") );
+		_TestSearchesRun(tc, &a,s, _T("a AND b") );
 
-		_TestSearchesRun(&a,s, _T("term term term") );
+		_TestSearchesRun(tc, &a,s, _T("term term term") );
 
 #ifdef _UCS2
 		TCHAR tmp1[100];
 		lucene_utf8towcs(tmp1,"t\xc3\xbcrm term term",100);
-		_TestSearchesRun(&a,s, tmp1 );
+		_TestSearchesRun(tc, &a,s, tmp1 );
 
 		lucene_utf8towcs(tmp1,"\xc3\xbcmlaut",100);
-		_TestSearchesRun(&a,s, tmp1 );
+		_TestSearchesRun(tc, &a,s, tmp1 );
 #endif
 
-		_TestSearchesRun(&a,s, _T("(a AND b)") );
-		_TestSearchesRun(&a,s, _T("c OR (a AND b)") );
-		_TestSearchesRun(&a,s, _T("a AND NOT b") );
-		_TestSearchesRun(&a,s, _T("a AND -b") );
-		_TestSearchesRun(&a,s, _T("a AND !b") );
-		_TestSearchesRun(&a,s, _T("a && b") );
-		_TestSearchesRun(&a,s, _T("a && ! b") );
+		_TestSearchesRun(tc, &a,s, _T("(a AND b)") );
+		_TestSearchesRun(tc, &a,s, _T("c OR (a AND b)") );
+		_TestSearchesRun(tc, &a,s, _T("a AND NOT b") );
+		_TestSearchesRun(tc, &a,s, _T("a AND -b") );
+		_TestSearchesRun(tc, &a,s, _T("a AND !b") );
+		_TestSearchesRun(tc, &a,s, _T("a && b") );
+		_TestSearchesRun(tc, &a,s, _T("a && ! b") );
 
-		_TestSearchesRun(&a,s, _T("a OR b") );
-		_TestSearchesRun(&a,s, _T("a || b") );
-		_TestSearchesRun(&a,s, _T("a OR !b") );
-		_TestSearchesRun(&a,s, _T("a OR ! b") );
-		_TestSearchesRun(&a,s, _T("a OR -b") );
+		_TestSearchesRun(tc, &a,s, _T("a OR b") );
+		_TestSearchesRun(tc, &a,s, _T("a || b") );
+		_TestSearchesRun(tc, &a,s, _T("a OR !b") );
+		_TestSearchesRun(tc, &a,s, _T("a OR ! b") );
+		_TestSearchesRun(tc, &a,s, _T("a OR -b") );
 
-		_TestSearchesRun(&a,s, _T("+term -term term") );
-		_TestSearchesRun(&a,s, _T("foo:term AND field:anotherTerm") );
-		_TestSearchesRun(&a,s, _T("term AND \"phrase phrase\"") );
-		_TestSearchesRun(&a,s, _T("search AND \"meaningful direction\"") );
-		_TestSearchesRun(&a,s, _T("\"hello there\"") );
+		_TestSearchesRun(tc, &a,s, _T("+term -term term") );
+		_TestSearchesRun(tc, &a,s, _T("foo:term AND field:anotherTerm") );
+		_TestSearchesRun(tc, &a,s, _T("term AND \"phrase phrase\"") );
+		_TestSearchesRun(tc, &a,s, _T("search AND \"meaningful direction\"") );
+		_TestSearchesRun(tc, &a,s, _T("\"hello there\"") );
 
-		_TestSearchesRun(&a,s,  _T("a AND b") );
-		_TestSearchesRun(&a,s,  _T("hello") );
-		_TestSearchesRun(&a,s,  _T("\"hello there\"") );
+		_TestSearchesRun(tc, &a,s,  _T("a AND b") );
+		_TestSearchesRun(tc, &a,s,  _T("hello") );
+		_TestSearchesRun(tc, &a,s,  _T("\"hello there\"") );
 
-		_TestSearchesRun(&a,s, _T("germ term^2.0") );
-		_TestSearchesRun(&a,s, _T("term^2.0") );
-		_TestSearchesRun(&a,s, _T("term^2") );
-		_TestSearchesRun(&a,s, _T("term^2.3") );
-		_TestSearchesRun(&a,s, _T("\"germ term\"^2.0") );
-		_TestSearchesRun(&a,s, _T("\"term germ\"^2") );
+		_TestSearchesRun(tc, &a,s, _T("germ term^2.0") );
+		_TestSearchesRun(tc, &a,s, _T("term^2.0") );
+		_TestSearchesRun(tc, &a,s, _T("term^2") );
+		_TestSearchesRun(tc, &a,s, _T("term^2.3") );
+		_TestSearchesRun(tc, &a,s, _T("\"germ term\"^2.0") );
+		_TestSearchesRun(tc, &a,s, _T("\"term germ\"^2") );
 
-		_TestSearchesRun(&a,s, _T("(foo OR bar) AND (baz OR boo)") );
-		_TestSearchesRun(&a,s, _T("((a OR b) AND NOT c) OR d") );
-		_TestSearchesRun(&a,s, _T("+(apple \"steve jobs\") -(foo bar baz)") );
+		_TestSearchesRun(tc, &a,s, _T("(foo OR bar) AND (baz OR boo)") );
+		_TestSearchesRun(tc, &a,s, _T("((a OR b) AND NOT c) OR d") );
+		_TestSearchesRun(tc, &a,s, _T("+(apple \"steve jobs\") -(foo bar baz)") );
 
-		_TestSearchesRun(&a,s, _T("+title:(dog OR cat) -author:\"bob dole\"") );
+		_TestSearchesRun(tc, &a,s, _T("+title:(dog OR cat) -author:\"bob dole\"") );
 
 
-		_TestSearchesRun(&a,s, _T(".*") );
-		_TestSearchesRun(&a,s, _T("<*") );
-		_TestSearchesRun(&a,s, _T("/*") );
-		_TestSearchesRun(&a,s, _T(";*") );
+		_TestSearchesRun(tc, &a,s, _T(".*") );
+		_TestSearchesRun(tc, &a,s, _T("<*") );
+		_TestSearchesRun(tc, &a,s, _T("/*") );
+		_TestSearchesRun(tc, &a,s, _T(";*") );
 	}
 
 void SearchTest(CuTest *tc, bool bram) {

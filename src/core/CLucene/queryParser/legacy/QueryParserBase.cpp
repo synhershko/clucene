@@ -241,7 +241,7 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   Token t;
   bool tret=false;
   bool from=true;
-  while(tret)
+  do
   {
     try{
       tret = (source->next(&t) != NULL);
@@ -266,7 +266,7 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
       else
         break;
     }
-  }
+  }while(tret);
   if ((terms[0] == NULL) || (terms[1] == NULL)) {
     _CLTHROWA(CL_ERR_Parse, "No range given.");
   }
