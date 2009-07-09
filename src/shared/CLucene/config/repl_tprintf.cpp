@@ -120,14 +120,14 @@ void lucene_vfnwprintf(StringBuffer* buffer, size_t count, const wchar_t * forma
 //print a list of arguments to a string
 int lucene_snwprintf(wchar_t* strbuf, size_t count, const wchar_t * format, ...){
 	va_list ap;
-    va_start(ap, format);
+  va_start(ap, format);
 	StringBuffer buffer;
-    lucene_vfnwprintf(&buffer,count,format,ap);
-    va_end(ap);
+  lucene_vfnwprintf(&buffer,count,format,ap);
+  va_end(ap);
 
 	size_t ret = cl_min(count,(size_t)(buffer.length()+1));
 	wcsncpy(strbuf,buffer.getBuffer(),ret);
-    return ret;
+  return ret;
 }
 
 //print a list of arguments to the stdout

@@ -621,7 +621,7 @@ int32_t QueryParser::hexToInt(TCHAR c) {
     return c - _T('A') + 10;
   } else {
     TCHAR err[48];
-    cl_stprintf(err,48,_T("None-hex character in unicode escape sequence: %c"));
+    cl_stprintf(err,48,_T("Non-hex character in unicode escape sequence: %c"));
     _CLTHROWT(CL_ERR_Parse,err);
   }
 }
@@ -1459,9 +1459,9 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
       break;
     }
     if (tok->image){
-      const TCHAR* buf = addEscapes(tok->image);
+      TCHAR* buf = addEscapes(tok->image);
       retval.append(buf);
-      _CLLDELETE(buf);
+      _CLDELETE_CARRAY(buf);
     }
     tok = tok->next;
   }

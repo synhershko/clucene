@@ -266,10 +266,10 @@ CL_NS_DEF(util)
           //Make space for terminator, if necessary.
           growBuffer(len + 1);
 	  }
-      //'\0' buffer so it can be returned properly
-      buffer[len] = '\0';
+    //'\0' buffer so it can be returned properly
+    buffer[len] = '\0';
 
-     return buffer;
+    return buffer;
   }
  
   TCHAR* StringBuffer::giveBuffer() {
@@ -299,13 +299,6 @@ CL_NS_DEF(util)
     buffer = tmp;
   }
 
-  void StringBuffer::growBuffer(const size_t minLength) {
-  //Func - Has the buffer grown to a minimum length of minLength or bigger
-  //Pre  - minLength >= len + 1
-  //Post - The buffer has been grown to a minimum length of minLength or bigger
-
-      growBuffer(minLength, 0);
-  }
   void StringBuffer::growBuffer(const size_t minLength, const size_t skippingNInitialChars) {
   //Func - Has the buffer grown to a minimum length of minLength or bigger and shifts the
   //       current string in buffer by skippingNInitialChars forward
@@ -322,29 +315,31 @@ CL_NS_DEF(util)
     CND_PRECONDITION (minLength >= skippingNInitialChars + len + 1,"skippingNInitialChars is not large enough");
 
     //More aggressive growth strategy to offset smaller default buffer size:
-	if ( !bufferOwner ){
-		assert(bufferLength>=minLength);
-		return;
-	}
-
-	bufferLength *= 2;
-	//Check that bufferLength is bigger than minLength
-	if (bufferLength < minLength){
-	    //Have bufferLength become minLength because it still was too small
-        bufferLength = minLength;
-	}
-
-	//Allocate a new buffer of length bufferLength
+    if ( !bufferOwner ){
+      assert(bufferLength>=minLength);
+      return;
+    }
+  
+    bufferLength *= 2;
+    //Check that bufferLength is bigger than minLength
+    if (bufferLength < minLength){
+      //Have bufferLength become minLength because it still was too small
+      bufferLength = minLength;
+    }
+  
+    //Allocate a new buffer of length bufferLength
     TCHAR* tmp = _CL_NEWARRAY(TCHAR,bufferLength);
+    memset(tmp, 0, sizeof(TCHAR) * skippingNInitialChars);
+
     //The old buffer might not have been null-terminated, so we _tcsncpy
     //only len bytes, not len+1 bytes (the latter might read one char off the
     //end of the old buffer), then apply the terminator to the new buffer.
     _tcsncpy(tmp + skippingNInitialChars, buffer, len);
     tmp[skippingNInitialChars + len] = '\0';
 
-	//destroy the old buffer
-	if (buffer){
-		_CLDELETE_CARRAY(buffer);
+    //destroy the old buffer
+    if (buffer){
+      _CLDELETE_CARRAY(buffer);
 	}
 	//Assign the new buffer tmp to buffer
     buffer = tmp;
