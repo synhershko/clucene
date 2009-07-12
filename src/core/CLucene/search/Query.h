@@ -65,7 +65,12 @@ CL_NS_DEF(search)
     /** Expert: Constructs an initializes a Weight for a top-level query. */
     Weight* weight(Searcher* searcher);
 
-    /** Expert: called to re-write queries into primitive queries. */
+    /** Expert: called to re-write queries into primitive queries.
+     *
+     * @memory:
+     * The caller has to clean up. When rewrite() returns a pointer which
+     * differs from the pointer to the initial query, the pointer points
+     * to a newly allocated object and has also to be cleaned up. */
     virtual Query* rewrite(CL_NS(index)::IndexReader* reader);
       
     /** Expert: called when re-writing queries under MultiSearcher.
