@@ -163,7 +163,7 @@ public:
 
 class CLUCENE_EXPORT FilteredBufferedReader: public BufferedReader{
 	class Internal;
-	Internal* internal;
+	Internal* _internal;
 public:
 	FilteredBufferedReader(Reader* reader, bool deleteReader);
 	virtual ~FilteredBufferedReader();
@@ -178,7 +178,7 @@ public:
 
 class CLUCENE_EXPORT FilteredBufferedInputStream: public BufferedInputStream{
 	class Internal;
-	Internal* internal;
+	Internal* _internal;
 public:
 	FilteredBufferedInputStream(InputStream* input, bool deleteInput);
 	virtual ~FilteredBufferedInputStream();
@@ -237,7 +237,7 @@ public:
 */
 class CLUCENE_EXPORT FileInputStream: public BufferedInputStream {
 	class Internal;
-	Internal* internal;
+	Internal* _internal;
 protected:
 	void init(InputStream *i, int encoding);
 public:
@@ -255,7 +255,7 @@ public:
 
 class CLUCENE_EXPORT SimpleInputStreamReader: public BufferedReader{
 	class Internal;
-	Internal* internal;
+	Internal* _internal;
 protected:
 	void init(InputStream *i, int encoding);
 public:	

@@ -98,7 +98,7 @@ CL_NS_USE(util)
     };
 
 	MMapIndexInput::MMapIndexInput(const char* path):
-	    internal(_CLNEW Internal)
+	    _internal(_CLNEW Internal)
 	{
 	//Func - Constructor.
 	//       Opens the file named path
@@ -108,11 +108,11 @@ CL_NS_USE(util)
 	  CND_PRECONDITION(path != NULL, "path is NULL");
 
 #if defined(_CL_HAVE_FUNCTION_MAPVIEWOFFILE)
-	  internal->mmaphandle = NULL;
-	  internal->fhandle = CreateFileA(path,GENERIC_READ,FILE_SHARE_READ, 0,OPEN_EXISTING,0,0);
+	  _internal->mmaphandle = NULL;
+	  _internal->fhandle = CreateFileA(path,GENERIC_READ,FILE_SHARE_READ, 0,OPEN_EXISTING,0,0);
 	  
 	  //Check if a valid fhandle was retrieved
-	  if (internal->fhandle < 0){
+	  if (_internal->fhandle < 0){
 		_cl_dword_t err = GetLastError();
         if ( err == ERROR_FILE_NOT_FOUND )
 		    _CLTHROWA(CL_ERR_IO, "File does not exist");
@@ -125,14 +125,14 @@ CL_NS_USE(util)
 	  }
 
 	  _cl_dword_t dummy=0;
-	  internal->_length = GetFileSize(internal->fhandle, &dummy);
+	  _internal->_length = GetFileSize(_internal->fhandle, &dummy);
 
-	  if ( internal->_length > 0 ){
-			internal->mmaphandle = CreateFileMappingA(internal->fhandle,NULL,PAGE_READONLY,0,0,NULL);
-			if ( internal->mmaphandle != NULL ){
-				void* address = MapViewOfFile(internal->mmaphandle,FILE_MAP_READ,0,0,0);
+	  if ( _internal->_length > 0 ){
+			_internal->mmaphandle = CreateFileMappingA(_internal->fhandle,NULL,PAGE_READONLY,0,0,NULL);
+			if ( _internal->mmaphandle != NULL ){
+				void* address = MapViewOfFile(_internal->mmaphandle,FILE_MAP_READ,0,0,0);
 				if ( address != NULL ){
-					internal->data = (uint8_t*)address;
+					_internal->data = (uint8_t*)address;
 					return; //SUCCESS!
 				}
 			}
@@ -140,7 +140,7 @@ CL_NS_USE(util)
 			//failure:
 			int errnum = GetLastError(); 
 			
-			CloseHandle(internal->mmaphandle);
+			CloseHandle(_internal->mmaphandle);
 	
 			char* lpMsgBuf=strerror(errnum);
 			size_t len = strlen(lpMsgBuf)+80;
@@ -151,24 +151,24 @@ CL_NS_USE(util)
 	  }
 
 #else //_CL_HAVE_FUNCTION_MAPVIEWOFFILE
-	 internal->fhandle = ::open (path, O_RDONLY);
-  	 if (internal->fhandle < 0){
+	 _internal->fhandle = ::open (path, O_RDONLY);
+  	 if (_internal->fhandle < 0){
 		_CLTHROWA(CL_ERR_IO,strerror(errno));	
   	 }else{
 		// stat it
 		struct stat sb;
-		if (::fstat (internal->fhandle, &sb)){
+		if (::fstat (_internal->fhandle, &sb)){
 			_CLTHROWA(CL_ERR_IO,strerror(errno));
 		}else{
 			// get length from stat
-			internal->_length = sb.st_size;
+			_internal->_length = sb.st_size;
 			
 			// mmap the file
-			void* address = ::mmap(0, internal->_length, PROT_READ, MAP_SHARED, internal->fhandle, 0);
+			void* address = ::mmap(0, _internal->_length, PROT_READ, MAP_SHARED, _internal->fhandle, 0);
 			if (address == MAP_FAILED){
 				_CLTHROWA(CL_ERR_IO,strerror(errno));
 			}else{
-				internal->data = (uint8_t*)address;
+				_internal->data = (uint8_t*)address;
 			}
 		}
   	 }
@@ -180,46 +180,46 @@ CL_NS_USE(util)
   //       Uses clone for its initialization
   //Pre  - clone is a valide instance of FSIndexInput
   //Post - The instance has been created and initialized by clone
-        internal = _CLNEW Internal;
+        _internal = _CLNEW Internal;
         
 #if defined(_CL_HAVE_FUNCTION_MAPVIEWOFFILE)
-	  internal->mmaphandle = NULL;
-	  internal->fhandle = NULL;
+	  _internal->mmaphandle = NULL;
+	  _internal->fhandle = NULL;
 #endif
 
-	  internal->data = clone.internal->data;
-	  internal->pos = clone.internal->pos;
+	  _internal->data = clone._internal->data;
+	  _internal->pos = clone._internal->pos;
 
 	  //clone the file length
-	  internal->_length  = clone.internal->_length;
+	  _internal->_length  = clone._internal->_length;
 	  //Keep in mind that this instance is a clone
-	  internal->isClone = true;
+	  _internal->isClone = true;
   }
 
   uint8_t MMapIndexInput::readByte(){
-	  return *(internal->data+(internal->pos++));
+	  return *(_internal->data+(_internal->pos++));
   }
 
   void MMapIndexInput::readBytes(uint8_t* b, const int32_t len){
-	memcpy(b, internal->data+internal->pos, len);
-	internal->pos+=len;
+	memcpy(b, _internal->data+_internal->pos, len);
+	_internal->pos+=len;
   }
   int32_t MMapIndexInput::readVInt(){
-	  uint8_t b = *(internal->data+(internal->pos++));
+	  uint8_t b = *(_internal->data+(_internal->pos++));
 	  int32_t i = b & 0x7F;
 	  for (int shift = 7; (b & 0x80) != 0; shift += 7) {
-	    b = *(internal->data+(internal->pos++));
+	    b = *(_internal->data+(_internal->pos++));
 	    i |= (b & 0x7F) << shift;
 	  }
 	  return i;
   }
   int64_t MMapIndexInput::getFilePointer() const{
-	return internal->pos;
+	return _internal->pos;
   }
   void MMapIndexInput::seek(const int64_t pos){
-	  this->internal->pos=pos;
+	  this->_internal->pos=pos;
   }
-  int64_t MMapIndexInput::length() const{ return internal->_length; }
+  int64_t MMapIndexInput::length() const{ return _internal->_length; }
 
   MMapIndexInput::~MMapIndexInput(){
   //Func - Destructor
@@ -235,36 +235,36 @@ CL_NS_USE(util)
     return _CLNEW MMapIndexInput(*this);
   }
   void MMapIndexInput::close()  {
-	if ( !internal->isClone ){
+	if ( !_internal->isClone ){
 #if defined(_CL_HAVE_FUNCTION_MAPVIEWOFFILE)
-		if ( internal->data != NULL ){
-			if ( ! UnmapViewOfFile(internal->data) ){
+		if ( _internal->data != NULL ){
+			if ( ! UnmapViewOfFile(_internal->data) ){
 				CND_PRECONDITION( false, "UnmapViewOfFile(data) failed"); //todo: change to rich error
 			}
 		}
 
-		if ( internal->mmaphandle != NULL ){
-			if ( ! CloseHandle(internal->mmaphandle) ){
+		if ( _internal->mmaphandle != NULL ){
+			if ( ! CloseHandle(_internal->mmaphandle) ){
 				CND_PRECONDITION( false, "CloseHandle(mmaphandle) failed");
 			}
 		}
-		if ( internal->fhandle != NULL ){
-			if ( !CloseHandle(internal->fhandle) ){
+		if ( _internal->fhandle != NULL ){
+			if ( !CloseHandle(_internal->fhandle) ){
 				CND_PRECONDITION( false, "CloseHandle(fhandle) failed");
 			}
 		}
-		internal->mmaphandle = NULL;
-		internal->fhandle = NULL;
+		_internal->mmaphandle = NULL;
+		_internal->fhandle = NULL;
 #else
-		if ( internal->data != NULL )
-	  		::munmap(internal->data, internal->_length);
-	  	if ( internal->fhandle > 0 )
-	  		::close(internal->fhandle);
-	  	internal->fhandle = 0;
+		if ( _internal->data != NULL )
+	  		::munmap(_internal->data, _internal->_length);
+	  	if ( _internal->fhandle > 0 )
+	  		::close(_internal->fhandle);
+	  	_internal->fhandle = 0;
 #endif
 	}
-	internal->data = NULL;
-	internal->pos = 0;
+	_internal->data = NULL;
+	_internal->pos = 0;
   }
 
 
