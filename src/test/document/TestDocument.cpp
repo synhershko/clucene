@@ -233,7 +233,7 @@ public:
     strm = f->binaryValue();
 
     CuAssertIntEquals(tc, _T("Check binary length is correct"), readerStringLen, b.length);
-    for ( int i=0;i<readerStringLen;i++){
+    for ( size_t i=0;i<readerStringLen;i++){
         CuAssertIntEquals(tc, _T("Check binary values are the same"), (*strm)[i], areaderString[i]);
     }
     doc.clear();

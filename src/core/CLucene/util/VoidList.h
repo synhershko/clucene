@@ -38,14 +38,15 @@ public:
 	void setDoDelete(bool val){ dv=val; }
 
 	//sets array to the contents of this array.
-	//array must be size+1, otherwise memory may be overwritten
-	void toArray(_kt* into) const{
+	//array must be size (+1 if nullTerminate is true)
+	void toArray(_kt* into, bool nullTerminate) const{
 		int i=0;
 		for ( const_iterator itr=base::begin();itr!=base::end();itr++ ){
 			into[i] = *itr;
 			i++;
 		}
-		into[i] = NULL;
+    if ( nullTerminate )
+		  into[i] = NULL;
 	}
 
 	void set(size_t i, _kt val) {

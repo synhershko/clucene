@@ -7,7 +7,7 @@
 #include "test.h"
 #include <stdio.h>
 
-#include "CLucene/queryParser/legacy/QueryParser.h"
+#include "CLucene/search/MultiPhraseQuery.h"
 
 	SimpleAnalyzer a;
 	StandardAnalyzer aStd;
@@ -52,13 +52,13 @@
 
 		CuAssert(tc,_T("Index does not exist"), Misc::dir_Exists(loc));
 		s=_CLNEW IndexSearcher(loc);
-    }
+  }
 	void testSrchCloseIndex(CuTest *tc ){
 		if ( s!=NULL ){
 			s->close();
 			_CLDELETE(s);
 		}
-    }
+  }
 
 	void testSrchPunctuation(CuTest *tc ){
 		CuAssert(tc,_T("Searcher was not open"),s!=NULL);
@@ -234,13 +234,14 @@ void SearchTest(CuTest *tc, bool bram) {
 
 	IndexWriter writer( ram, &analyzer, true);
 	writer.setUseCompoundFile(false);
+  writer.setMaxBufferedDocs(3);
 
-	const TCHAR* docs[] = { _T("a b c d e"),
-		_T("a b c d e a b c d e"),
+	const TCHAR* docs[] = { _T("a b c d e asdf"),
+		_T("a b c d e a b c d e asdg"),
 		_T("a b c d e f g h i j"),
 		_T("a c e"),
 		_T("e c a"),
-		_T("a c e a c e"),
+		_T("a c e a c e asef"),
 		_T("a c e a b c")
 	};
 
@@ -271,7 +272,7 @@ void SearchTest(CuTest *tc, bool bram) {
 		_T("a AND b"),
 		_T("a c"),
 		_T("\"a c\""),
-		_T("\"a c e\""),
+		_T("\"a c e\"")
 	};
 	int shouldbe[] = {3,3,4,4,4,7,3,3};
 	Hits* hits = NULL;
@@ -280,17 +281,34 @@ void SearchTest(CuTest *tc, bool bram) {
 	for (int k = 0; k < 8; k++) {
 		Query* query = parser.parse(queries[k]);
 
-    //workaround bug in BooleanScorer2
-    if ( query->getObjectName() == BooleanQuery::getClassName() )
-      ((BooleanQuery*)query)->setUseScorer14(true);
 		TCHAR* qryInfo = query->toString(_T("contents"));
-
 		hits = searcher.search(query);
 		CLUCENE_ASSERT( hits->length() == shouldbe[k] );
 		_CLDELETE_CARRAY(qryInfo);
 		_CLDELETE(hits);
 		_CLDELETE(query);
 	}
+
+  //test MultiPositionQuery...
+  {
+    MultiPhraseQuery* query = _CLNEW MultiPhraseQuery();
+    ValueArray<Term*> terms(3);
+    Term* termE = _CLNEW Term(_T("contents"), _T("e"));
+    terms[0] = _CLNEW Term(_T("contents"), _T("asdf"));
+    terms[1] = _CLNEW Term(_T("contents"), _T("asdg"));
+    terms[2] = _CLNEW Term(_T("contents"), _T("asef"));
+
+    query->add(termE);
+    query->add(&terms);
+
+		TCHAR* qryInfo = query->toString(_T("contents"));
+		hits = searcher.search(query);
+		CLUCENE_ASSERT( hits->length() == 3 );
+		_CLDELETE_CARRAY(qryInfo);
+		_CLDELETE(hits);
+		_CLDELETE(query);
+  }
+  
 	searcher.close();
     reader->close();
 	_CLDELETE( reader );
@@ -365,7 +383,7 @@ void testSrchManyHits(CuTest *tc) {
 	query.add(_CLNEW TermQuery(t),true,false, false);
 	_CLDECDELETE(t);
 	Hits* hits = searcher.search(&query);
-	for ( int32_t x=0;x<hits->length();x++ ){
+	for ( size_t x=0;x<hits->length();x++ ){
 	      hits->doc(x);
 	}
 	_CLDELETE(hits);
@@ -422,8 +440,8 @@ void testSrchMulti(CuTest *tc) {
 	);
 	Query* rewritten = searcher.rewrite(&query);
 	Hits* hits = searcher.search(rewritten);
-	for ( int32_t x=0;x<hits->length();x++ ){
-	      hits->doc(x);
+	for ( size_t x=0;x<hits->length();x++ ){
+	  hits->doc(x);
 	}
   CLUCENE_ASSERT(hits->length() == 1);
 	if (&query != rewritten) {

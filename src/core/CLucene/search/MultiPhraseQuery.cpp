@@ -48,11 +48,9 @@ public:
 
 		// compute idf
 		for (size_t i = 0; i < parentQuery->termArrays->size(); i++){
-			Term** terms = parentQuery->termArrays->at(i);
-			size_t j = 0;
-			while ( terms[j] != NULL ) {
-				idf += parentQuery->getSimilarity(searcher)->idf(terms[j], searcher);
-				++j;
+			ArrayBase<Term*>* terms = parentQuery->termArrays->at(i);
+      for ( size_t j=0;j<terms->length;j++ ){
+        idf += parentQuery->getSimilarity(searcher)->idf(terms->values[j], searcher);
 			}
 		}
 	}
@@ -79,13 +77,13 @@ public:
 
 		TermPositions** tps = _CL_NEWARRAY(TermPositions*,termArraysSize+1);
 		for (size_t i=0; i<termArraysSize; i++) {
-			Term** terms = parentQuery->termArrays->at(i);
+			ArrayBase<Term*>* terms = parentQuery->termArrays->at(i);
 
 			TermPositions* p;
-			if (terms[1] != NULL) // terms.length > 1
-				p = _CLNEW MultipleTermPositions(reader, terms);
+			if (terms->length > 1 )
+        p = _CLNEW MultipleTermPositions(reader, terms);
 			else
-				p = reader->termPositions(terms[0]);
+				p = reader->termPositions((*terms)[0]);
 
 			if (p == NULL)
 				return NULL;
@@ -206,39 +204,41 @@ public:
 
 		return result;
 	}
-  };
+};
 
-  Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
-	  if (termArrays->size() == 1) {                 // optimize one-term case
-		  Term** terms = termArrays->at(0);
-		  BooleanQuery* boq = _CLNEW BooleanQuery(true);
-		  size_t i = 0;
-		  while (terms[i] != NULL) {
-			  // TODO: _CL_POINTER(terms[i]) ??
-			  boq->add(_CLNEW TermQuery(terms[i]), BooleanClause::SHOULD);
-			  ++i;
-		  }
-		  boq->setBoost(getBoost());
-		  return boq;
-	  } else {
-		  return this;
+Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
+  if (termArrays->size() == 1) {                 // optimize one-term case
+	  ArrayBase<Term*>* terms = termArrays->at(0);
+	  BooleanQuery* boq = _CLNEW BooleanQuery(true);
+    for ( size_t i=0;i<terms->length;i++ ){
+		  boq->add(_CLNEW TermQuery((*terms)[i]), BooleanClause::SHOULD);
 	  }
+	  boq->setBoost(getBoost());
+	  return boq;
+  } else {
+	  return this;
   }
+}
 
-  MultiPhraseQuery::MultiPhraseQuery():field(NULL),termArrays(NULL),positions(NULL),slop(0){
-  }
+MultiPhraseQuery::MultiPhraseQuery():
+  field(NULL),
+  termArrays(_CLNEW CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>),
+  positions(_CLNEW CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>),
+  slop(0)
+{
+}
 
 MultiPhraseQuery::~MultiPhraseQuery(){
 	for (size_t i = 0; i < termArrays->size(); i++){
-		size_t j = 0;
-		while ( termArrays[i][j] != NULL ) {
-			_CLLDECDELETE(termArrays->at(i)[j]);
+		for ( size_t j=0;j<termArrays->at(i)->length;j++ ) {
+      _CLLDECDELETE(termArrays->at(i)->values[j]);
 			++j;
 		}
-		_CLDELETE_LARRAY(termArrays->at(i));
+		_CLDELETE(termArrays->at(i));
 	}
 	_CLLDELETE(termArrays);
 	_CLLDELETE(positions);
+	_CLDELETE_CARRAY(field);
 }
 
 void MultiPhraseQuery::setSlop(const int32_t s) { slop = s; }
@@ -246,32 +246,31 @@ void MultiPhraseQuery::setSlop(const int32_t s) { slop = s; }
 int32_t MultiPhraseQuery::getSlop() const { return slop; }
 
 void MultiPhraseQuery::add(CL_NS(index)::Term* term) {
-	CL_NS(index)::Term** _terms = _CL_NEWARRAY(CL_NS(index)::Term*, 2);
-	_terms[0] = term; // TODO: should we ref-count this here, or request the caller to do so (since the other overrides do not do this)?
-	_terms[1] = NULL; // indicate array's end
-	add(_terms);
+	ValueArray<CL_NS(index)::Term*> _terms(1);
+  _terms[0] = term;
+	add(&_terms);
 }
 
-void MultiPhraseQuery::add(CL_NS(index)::Term** terms) {
+void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* terms) {
 	int32_t position = 0;
 	if (positions->size() > 0)
-		position = ((int32_t)(*positions->end())) + 1;
+		position = (*positions)[positions->size()-1] + 1;
 
 	add(terms, position);
 }
 
-void MultiPhraseQuery::add(CL_NS(index)::Term** terms, const int32_t position) {
+void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _terms, const int32_t position) {
 	if (termArrays->size() == 0)
-		field = const_cast<TCHAR*>(terms[0]->field());
+		field = STRDUP_TtoT((*_terms)[0]->field());
 
-	size_t i = 0;
-	while ( terms[i] != NULL ) {
-		if (terms[i]->field() != field) {	//can use != because fields are interned
+  CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* terms = _CLNEW CL_NS(util)::ValueArray<CL_NS(index)::Term*>(_terms->length);
+  for ( size_t i=0;i<_terms->length;i++ ){
+		if ( _tcscmp(_terms->values[i]->field(), field) != 0) {
 			TCHAR buf[250];
 			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, terms[i]);
 			_CLTHROWT(CL_ERR_IllegalArgument,buf);
 		}
-		++i;
+    terms->values[i] = _CL_POINTER(_terms->values[i]);
 	}
 	termArrays->push_back(terms);
 	positions->push_back(position);
@@ -296,26 +295,27 @@ TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 	}
 
 	buffer.appendChar(_T('"'));
-	/*
-	TODO:
-	Iterator i = termArrays.iterator();
-	while (i.hasNext()) {
-		Term[] terms = (Term[])i.next();
+	
+  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator i;
+  i = termArrays->begin();
+  while (i != termArrays->end()){
+		CL_NS(util)::ArrayBase<CL_NS(index)::Term*>& terms = *(*i);
 		if (terms.length > 1) {
 			buffer.appendChar(_T('('));
-			for (int j = 0; j < terms.length; j++) {
-				buffer.append(terms[j].text());
+			for (size_t j = 0; j < terms.length; j++) {
+				buffer.append(terms[j]->text());
 				if (j < terms.length-1)
 					buffer.appendChar(_T(' '));
 			}
 			buffer.appendChar(_T(')'));
 		} else {
-			buffer.append(terms[0].text());
+			buffer.append(terms[0]->text());
 		}
-		if (i.hasNext())
+		if (i+1 != termArrays->end() )
 			buffer.appendChar(_T(' '));
+
+    i++;
 	}
-	*/
 	buffer.appendChar(_T('"'));
 
 	if (slop != 0) {
@@ -331,12 +331,11 @@ TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 class TermArray_Equals:public CL_NS_STD(binary_function)<const Term**,const Term**,bool>
 {
 public:
-	bool operator()( Term** val1, Term** val2 ) const{
-		size_t i = 0;
-		while ( val1[i] != NULL ){
-			if (val2[i] == NULL) return false;
-			if (!val1[i]->equals(val2[i])) return false;
-			++i;
+	bool operator()( CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* val1, CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* val2 ) const{
+    if ( val1->length != val2->length )
+      return false;
+    for ( size_t i=0;i<val1->length;i++ ){
+      if (!val1->values[i]->equals(val2->values[i])) return false;
 		}
 		return true;
 	}
@@ -360,8 +359,8 @@ bool MultiPhraseQuery::equals(Query* o) const {
 
 		for (size_t i=0; i<this->termArrays->size();i++){
 			CLListEquals<Term*,TermArray_Equals,
-				const CL_NS(util)::CLVector<Term**>,
-				const CL_NS(util)::CLVector<Term**> > comp;
+				const CL_NS(util)::CLVector<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>,
+				const CL_NS(util)::CLVector<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*> > comp;
 			ret = comp.equals(this->termArrays,other->termArrays);
 		}
 	}
@@ -376,7 +375,7 @@ size_t MultiPhraseQuery::hashCode() const {
 		for ( size_t i=0;termArrays->size();i++ ) {
 			size_t j = 0;
 			while ( termArrays->at(j) != NULL ) {
-				ret = 31 * ret + termArrays->at(j)[i]->hashCode();
+        ret = 31 * ret + termArrays->at(j)->values[i]->hashCode();
 				++j;
 			}
 		}

@@ -19,13 +19,13 @@ void testTermPositionVectors(CuTest *tc) {
       Hits* hits = tv_searcher->search(&query);
       CuAssert (tc,_T("hits.length != 100"), 100 == hits->length());
 
-      for (int32_t i = 0; i < hits->length(); i++)
+      for (size_t i = 0; i < hits->length(); i++)
       {
-		  ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
-		  CLUCENE_ASSERT(vector != NULL);
-		  CLUCENE_ASSERT(vector->length== 1);
-		  vector->deleteValues();
-		  _CLLDELETE(vector);
+		    ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
+		    CLUCENE_ASSERT(vector != NULL);
+		    CLUCENE_ASSERT(vector->length== 1);
+		    vector->deleteValues();
+		    _CLLDELETE(vector);
       }
 
       _CLDELETE(hits);
@@ -47,13 +47,13 @@ void testTermVectors(CuTest *tc) {
       Hits* hits = tv_searcher->search(&query);
       CuAssertIntEquals(tc,_T("hits!=100"), 100, hits->length());
 
-      for (int32_t i = 0; i < hits->length(); i++)
+      for (size_t i = 0; i < hits->length(); i++)
       {
         ArrayBase<TermFreqVector*>* vector = tv_searcher->getReader()->getTermFreqVectors(hits->id(i));
         CLUCENE_ASSERT(vector != NULL);
         CLUCENE_ASSERT(vector->length == 1);
-		vector->deleteValues();
-		_CLLDELETE(vector);
+		    vector->deleteValues();
+		    _CLLDELETE(vector);
       }
 
 	  //test mem leaks with vectors
@@ -195,7 +195,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
           //System.out.println("TF: " + tf + " IDF: " + idf + " LenNorm: " + lNorm);
           const ArrayBase<const TCHAR*>* vTerms = vector->getTerms();
           const ArrayBase<int32_t>* freqs = vector->getTermFrequencies();
-          int32_t i=0;
+          size_t i=0;
           while ( vTerms && i < vTerms->length )
           {
             if ( _tcscmp(term->text(), vTerms->values[i]) == 0 )

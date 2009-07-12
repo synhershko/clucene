@@ -335,7 +335,7 @@ CL_NS_DEF(search)
                                                  parentQuery->minNrShouldMatch,
                                                  parentQuery->allowDocsOutOfOrder);
 
-      for (int i = 0 ; i < weights.size(); i++) {
+      for (size_t i = 0 ; i < weights.size(); i++) {
         BooleanClause* c = (*clauses)[i];
         Weight* w = weights[i];
         Scorer* subScorer = w->scorer(reader);

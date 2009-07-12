@@ -347,46 +347,36 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
           _CLDECDELETE(tm);
         }
         return q;
+      }else {
+		    MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
+		    mpq->setSlop(phraseSlop);
+		    CLArrayList<Term*> multiTerms;
+		    int32_t position = -1;
+		    for (size_t i = 0; i < v.size(); i++) {
+			    t = v.at(i);
+			    if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
+            ValueArray<Term*> termsArray(multiTerms.size());
+            multiTerms.toArray(termsArray.values, false);
+				    if (enablePositionIncrements) {
+					    mpq->add(&termsArray,position);
+				    } else {
+					    mpq->add(&termsArray);
+				    }
+				    multiTerms.clear();
+			    }
+			    position += t->getPositionIncrement();
+			    multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
+		    }
+        ValueArray<Term*> termsArray(multiTerms.size());
+        multiTerms.toArray(termsArray.values, false);
+		    if (enablePositionIncrements) {
+			    mpq->add(&termsArray,position);
+		    } else {
+			    mpq->add(&termsArray);
+		    }
+		    return mpq;
       }
-	  else {
-		  MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
-		  mpq->setSlop(phraseSlop);
-		  CLArrayList<Term*> multiTerms;
-		  int32_t position = -1;
-		  for (size_t i = 0; i < v.size(); i++) {
-			  t = v.at(i);
-			  if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
-				  if (enablePositionIncrements) {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray,position);
-					  _CLDELETE_LARRAY(termsArray);
-				  } else {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray);
-					  _CLDELETE_LARRAY(termsArray);
-				  }
-				  multiTerms.clear();
-			  }
-			  position += t->getPositionIncrement();
-			  multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
-		  }
-		  if (enablePositionIncrements) {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray,position);
-			  _CLDELETE_LARRAY(termsArray);
-		  } else {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray);
-			  _CLDELETE_LARRAY(termsArray);
-		  }
-		  return mpq;
-      }
-    }
-    else {
+    }else {
       PhraseQuery* pq = _CLNEW PhraseQuery();
       pq->setSlop(phraseSlop);
       int32_t position = -1;
