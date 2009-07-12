@@ -213,7 +213,7 @@ public:
 	*/
 	ReqExclScorer( Scorer* reqScorer, Scorer* exclScorer );
 	virtual ~ReqExclScorer();
-	
+
 	int32_t doc() const {
 		return reqScorer->doc();
 	}
@@ -250,7 +250,7 @@ public:
 	* @return true iff there is such a match.
 	*/
 	bool skipTo( int32_t target );
-	
+
 private:
 	/** Advance to non excluded doc.
 	* <br>On entry:
@@ -264,7 +264,7 @@ private:
 	* @return true iff there is a non excluded required doc.
 	*/
 	bool toNonExcluded();
-	
+
 };
 
 class BooleanScorer2::BSConjunctionScorer: public CL_NS(search)::ConjunctionScorer {
@@ -291,7 +291,7 @@ public:
 };
 
 
-	
+
 
 BooleanScorer2::Coordinator::Coordinator( Scorer* parent ):
 maxCoord(0),
@@ -435,9 +435,11 @@ bool BooleanScorer2::ReqExclScorer::toNonExcluded()
 		if ( reqDoc < exclDoc ) {
 			return true;
 		} else if ( reqDoc > exclDoc ) {
-			_CLDELETE( exclScorer );
-			exclScorer = NULL;
-			return true;
+			if (! exclScorer->skipTo(reqDoc)) {
+				_CLDELETE( exclScorer ); // exhausted, no more exclusions
+				exclScorer = NULL;
+				return true;
+			}
 		}
 		exclDoc = exclScorer->doc();
 		if ( exclDoc > reqDoc ) {
@@ -492,7 +494,7 @@ BooleanScorer2::Internal::Internal( BooleanScorer2* parent, int32_t minNrShouldM
 	requiredScorers(false),
 	optionalScorers(false),
 	prohibitedScorers(false),
-    countingSumScorer(NULL),
+  countingSumScorer(NULL),
 	minNrShouldMatch(minNrShouldMatch),
 	allowDocsOutOfOrder(allowDocsOutOfOrder)
 {
