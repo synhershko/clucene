@@ -1,14 +1,14 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_ConjunctionScorer_
 #define _lucene_search_ConjunctionScorer_
 
 #include "Scorer.h"
-#include "CLucene/util/Array.H"
+#include "CLucene/util/Array.h"
 CL_NS_DEF(search)
 
 /** Scorer for conjunctions, sets of queries, all of which are required. */
@@ -23,7 +23,7 @@ private:
 
   Scorer* last();
   bool doNext();
-  
+
   bool init(int32_t target);
 public:
   ConjunctionScorer(Similarity* similarity, ScorersType* scorers);
