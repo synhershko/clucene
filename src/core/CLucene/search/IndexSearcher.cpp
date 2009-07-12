@@ -220,7 +220,7 @@ CL_NS_DEF(search)
       CND_PRECONDITION(query != NULL, "query is NULL");
 
 	  Weight* weight = query->weight(this);
-      Scorer* scorer = weight->scorer(reader);
+    Scorer* scorer = weight->scorer(reader);
 	  if (scorer == NULL){
           return _CLNEW TopDocs(0, NULL, 0);
 	  }
