@@ -80,8 +80,9 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
   bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
-	waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) ),
-  freeByteBlocks(FreeByteBlocksType(true)), freeCharBlocks(FreeCharBlocksType(true))
+  freeCharBlocks(FreeCharBlocksType(true)),
+  freeByteBlocks(FreeByteBlocksType(true)),
+  waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) )
 {
   numBytesAlloc = 0;
   numBytesUsed = 0;
@@ -1211,7 +1212,7 @@ uint8_t* DocumentsWriter::getByteBlock(bool trackAllocations) {
     b = _CL_NEWARRAY(uint8_t, BYTE_BLOCK_SIZE);
     memset(b,0,sizeof(uint8_t) * BYTE_BLOCK_SIZE);
   } else {
-    b = *freeByteBlocks.begin();    
+    b = *freeByteBlocks.begin();
     freeByteBlocks.remove(freeByteBlocks.begin(),true);
   }
   if (trackAllocations)
@@ -1561,7 +1562,7 @@ void DocumentsWriter::ByteSliceReader::readBytes(uint8_t* b, int32_t len) {
 
 int64_t DocumentsWriter::ByteSliceReader::getFilePointer() const{_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 int64_t DocumentsWriter::ByteSliceReader::length() const{_CLTHROWA(CL_ERR_Runtime,"not implemented");}
-void DocumentsWriter::ByteSliceReader::seek(const int64_t pos) {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
+void DocumentsWriter::ByteSliceReader::seek(const int64_t /*pos*/) {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 void DocumentsWriter::ByteSliceReader::close() {_CLTHROWA(CL_ERR_Runtime,"not implemented");}
 
 DocumentsWriter::ByteBlockPool::ByteBlockPool( bool _trackAllocations, DocumentsWriter* _parent):

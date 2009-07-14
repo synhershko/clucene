@@ -174,6 +174,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, bool closeDir, IndexDeletionPo
 
 void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool closeDir, IndexDeletionPolicy* deletionPolicy, const bool autoCommit){
   this->_internal = new Internal(this);
+
   this->termIndexInterval = IndexWriter::DEFAULT_TERM_INDEX_INTERVAL;
   this->mergeScheduler = _CLNEW SerialMergeScheduler(); //TODO: implement and use ConcurrentMergeScheduler
   this->mergingSegments = _CLNEW MergingSegmentsType;
@@ -2318,7 +2319,7 @@ string IndexWriter::segString() {
   return buffer;
 }
 
-bool IndexWriter::testPoint(const char* name) {
+bool IndexWriter::testPoint(const char* /*name*/) {
   return true;
 }
 

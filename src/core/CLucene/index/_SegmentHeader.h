@@ -78,7 +78,7 @@ public:
 
 protected:
 	virtual void skippingDoc(){}
-	virtual void skipProx(const int64_t proxPointer, const int32_t payloadLength){}
+	virtual void skipProx(const int64_t /*proxPointer*/, const int32_t /*payloadLength*/){}
 };
 
 

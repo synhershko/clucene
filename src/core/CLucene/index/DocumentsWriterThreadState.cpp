@@ -49,8 +49,8 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataArray(ValueArray<FieldData*>(8)),
   fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ObjectArray<PostingVector>(1)),
-  allFieldDataArray(ValueArray<FieldData*>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent) ),
+  allFieldDataArray(ValueArray<FieldData*>(10)),
   vectorsPool( _CLNEW ByteBlockPool(false, __parent) ),
   charPool( _CLNEW CharBlockPool(__parent) ),
   _parent(__parent)
@@ -701,6 +701,7 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
 
 
 DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
+  previousStream(NULL),
   docFields(ValueArray<Field*>(1)),
   _parent(__parent),
   localToken (_CLNEW Token),

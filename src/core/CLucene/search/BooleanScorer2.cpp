@@ -127,10 +127,10 @@ public:
 		_CLTHROWA(CL_ERR_UnsupportedOperation, "UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::score");
 		return 0.0;
 	}
-	bool skipTo( int32_t target ) { return false; }
+	bool skipTo( int32_t /*target*/ ) { return false; }
 	virtual TCHAR* toString() { return stringDuplicate(_T("NonMatchingScorer")); }
 
-	Explanation* explain( int32_t doc ) {
+	Explanation* explain( int32_t /*doc*/ ) {
 		Explanation* e = _CLNEW Explanation();
 		e->setDescription(_T("No document matches."));
 		return e;

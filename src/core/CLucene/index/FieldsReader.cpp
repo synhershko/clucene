@@ -510,20 +510,15 @@ CL_NS(analysis)::TokenStream* FieldsReader::FieldForMerge::tokenStreamValue() co
 FieldsReader::FieldForMerge::FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) : Field(fi->name, 0) {
 
 	uint32_t bits = STORE_YES;
-	if (compressed) bits |= STORE_COMPRESS;
 
 	this->fieldsData = _value;
 	this->valueType = _type;
 
-	//this->isTokenized = tokenize;
 	if (tokenize) bits |= INDEX_TOKENIZED;
+	if (compressed) bits |= STORE_COMPRESS;
 
 	if (fi->isIndexed && !tokenize) bits |= INDEX_UNTOKENIZED;
-	//this->isIndexed = fi->isIndexed;
-
 	if (fi->omitNorms) bits |= INDEX_NONORMS;
-	//this->omitNorms = fi->omitNorms;
-
 	if (fi->storeOffsetWithTermVector) bits |= TERMVECTOR_WITH_OFFSETS;
 	if (fi->storePositionWithTermVector) bits |= TERMVECTOR_WITH_POSITIONS;
 	if (fi->storeTermVector) bits |= TERMVECTOR_YES;

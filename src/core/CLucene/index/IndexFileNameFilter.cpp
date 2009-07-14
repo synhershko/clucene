@@ -22,7 +22,7 @@ IndexFileNameFilter::IndexFileNameFilter() {
 }
 IndexFileNameFilter::~IndexFileNameFilter(){
 }
-bool IndexFileNameFilter::accept(const char* dir, const char* name) const {
+bool IndexFileNameFilter::accept(const char* /*dir*/, const char* name) const {
 	string _name(name);
 	size_t i = _name.find_last_of('.');
 	if (i != string::npos) {

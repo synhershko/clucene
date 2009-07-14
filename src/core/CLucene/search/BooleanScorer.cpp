@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -49,7 +49,7 @@ CL_NS_DEF(search)
 			bucketTable->first = current->next;         // pop the queue
 
 			// check prohibited & required
-			if ((current->bits & prohibitedMask) == 0 && 
+			if ((current->bits & prohibitedMask) == 0 &&
 				(current->bits & requiredMask) == requiredMask) {
 			return true;
 		}
@@ -84,12 +84,12 @@ CL_NS_DEF(search)
 		next();
 		score( results, LUCENE_INT32_MAX_SHOULDBE );
 	}
-	
-	bool BooleanScorer::skipTo(int32_t target) {
+
+	bool BooleanScorer::skipTo(int32_t /*target*/) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::skipTo");
 	}
 
-	Explanation* BooleanScorer::explain(int32_t doc) {
+	Explanation* BooleanScorer::explain(int32_t /*doc*/) {
 		_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer::explain");
 	}
 
@@ -142,14 +142,14 @@ CL_NS_DEF(search)
 
     bool more;
     Bucket* tmp;
-    
+
     do {
     	bucketTable->first = NULL;
     	while ( current != NULL ) {
-    		
+
     		if (( current->bits & prohibitedMask ) == 0 &&
     		    ( current->bits & requiredMask ) == requiredMask ) {
-    			
+
     			if ( current->doc >= maxDoc ) {
     				tmp = current;
     				current = current->next;
@@ -157,24 +157,24 @@ CL_NS_DEF(search)
     				bucketTable->first = tmp;
     				continue;
     			}
-    			
+
     			if ( current->coord >= minNrShouldMatch ) {
     				results->collect( current->doc, current->score * coordFactors[current->coord] );
     			}
     		}
-    		
+
     		current = current->next;
     	}
-    	
+
     	if ( bucketTable->first != NULL ) {
     		current = bucketTable->first;
     		bucketTable->first = current->next;
     		return true;
     	}
-    	
+
     	more = false;
     	end += BucketTable_SIZE;
-    	
+
     	for ( SubScorer* sub = scorers; sub != NULL; sub = sub->next ) {
     		if ( !sub->done ) {
     			sub->done = !sub->scorer->score( sub->collector, end );
@@ -183,9 +183,9 @@ CL_NS_DEF(search)
     		}
     	}
     	current = bucketTable->first;
-    	
+
     } while ( current != NULL || more );
-    
+
     return false;
   }
 
@@ -199,7 +199,7 @@ CL_NS_DEF(search)
       next(nxt)
   {
   //Func - Constructor
-  //Pre  - scr != NULL, 
+  //Pre  - scr != NULL,
   //       c   != NULL
   //       nxt may or may not be NULL
   //Post - The instance has been created
@@ -231,7 +231,7 @@ CL_NS_DEF(search)
       bits(0),
       coord(0),
       next(NULL)
-  {	
+  {
   }
   BooleanScorer::Bucket::~Bucket(){
   }

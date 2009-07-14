@@ -209,7 +209,7 @@ void SegmentMerger::addIndexed(IndexReader* reader, FieldInfos* fieldInfos, Stri
 // in  merge mode, we use this FieldSelector
 class FieldSelectorMerge: public FieldSelector{
 public:
-  FieldSelectorResult accept(const TCHAR* fieldName) const{
+  FieldSelectorResult accept(const TCHAR* /*fieldName*/) const{
     return FieldSelector::LOAD_FOR_MERGE;
   }
 };

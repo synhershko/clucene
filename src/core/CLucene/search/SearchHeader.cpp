@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -51,7 +51,7 @@ Query* Query::mergeBooleanQueries(CL_NS(util)::ArrayBase<Query*>* queries) {
 
 Query::Query(const Query& clone):boost(clone.boost){
 }
-Weight* Query::_createWeight(Searcher* searcher){
+Weight* Query::_createWeight(Searcher* /*searcher*/){
 	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: Query::_createWeight");
 }
 
@@ -63,7 +63,7 @@ Query::~Query(){
 }
 
 /** Expert: called to re-write queries into primitive queries. */
-Query* Query::rewrite(CL_NS(index)::IndexReader* reader){
+Query* Query::rewrite(CL_NS(index)::IndexReader* /*reader*/){
    return this;
 }
 

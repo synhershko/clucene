@@ -21,7 +21,7 @@ MatchAllDocsQuery::MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _re
 	_score = w->getValue();
 }
 
-Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc) {
+Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t /*doc*/) {
 	// not called... see MatchAllDocsWeight::explain()
 	return NULL;
 }
@@ -115,14 +115,14 @@ const char* MatchAllDocsQuery::getObjectName() const{
 	return getClassName();
 }
 
-TCHAR* MatchAllDocsQuery::toString(const TCHAR* field) const{
+TCHAR* MatchAllDocsQuery::toString(const TCHAR* /*field*/) const{
 	CL_NS(util)::StringBuffer buffer(25);
     buffer.append(_T("MatchAllDocsQuery"));
     buffer.appendBoost(getBoost());
     return buffer.giveBuffer();
 }
 
-MatchAllDocsQuery::MatchAllDocsQuery(const MatchAllDocsQuery& clone){
+MatchAllDocsQuery::MatchAllDocsQuery(const MatchAllDocsQuery& /*clone*/){
 }
 
 Query* MatchAllDocsQuery::clone() const{

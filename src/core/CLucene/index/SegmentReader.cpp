@@ -30,9 +30,9 @@ CL_NS_DEF(index)
 	normSeek(ns),
 	_this(r),
 	segment(seg),
-  useSingleNormStream(_useSingleNormStream),
-	dirty(false),
+    useSingleNormStream(_useSingleNormStream),
 	in(instrm),
+	dirty(false),
 	bytes(NULL){
   //Func - Constructor
   //Pre  - instrm is a valid reference to an IndexInput

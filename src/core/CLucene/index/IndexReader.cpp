@@ -43,7 +43,7 @@ CL_NS_DEF(index)
 		bool operator()( IndexReader::CloseCallback t1, IndexReader::CloseCallback t2 ) const{
 			return t1 > t2;
 		}
-		static void doDelete(IndexReader::CloseCallback dummy){
+		static void doDelete(IndexReader::CloseCallback /*dummy*/){
 		}
 	};
 
@@ -203,7 +203,7 @@ CL_NS_DEF(index)
           _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
     }
 
-  void IndexReader::setTermInfosIndexDivisor(int32_t indexDivisor) {
+  void IndexReader::setTermInfosIndexDivisor(int32_t /*indexDivisor*/) {
     _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
   }
 

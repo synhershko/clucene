@@ -18,7 +18,7 @@ CL_NS_USE(util)
 	IndexInput::~IndexInput()
 	{
 	}
-	IndexInput::IndexInput(const IndexInput& other)
+	IndexInput::IndexInput(const IndexInput& /*other*/)
 	{
 	}
 
@@ -113,7 +113,7 @@ CL_NS_USE(util)
     return ret;
   }
 
-  void IndexInput::readBytes( uint8_t* b, const int32_t len, bool useBuffer) {
+  void IndexInput::readBytes( uint8_t* b, const int32_t len, bool /*useBuffer*/) {
     // Default to ignoring useBuffer entirely
     readBytes(b, len);
   }
