@@ -153,9 +153,9 @@ void Field::setValue(ValueArray<uint8_t>* value) {
 
 /** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
 void Field::setValue(CL_NS(analysis)::TokenStream* value) {
-	//_resetValue();
-	//fieldsData = value;
-	//valueType = VALUE_TOKENSTREAM;
+	_resetValue();
+    fieldsData = value;
+	valueType = VALUE_TOKENSTREAM;
 }
 
 void Field::setBoost(const float_t boost)	{ this->boost = boost; }
