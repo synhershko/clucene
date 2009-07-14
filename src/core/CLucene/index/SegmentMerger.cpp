@@ -634,8 +634,7 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
   SegmentMergeInfo* smi = NULL;
 
   //Iterate through all SegmentMergeInfo instances in smis
-  int32_t i = 0;
-  while ( (smi=smis[i]) != NULL ){
+  for ( int32_t i=0;i<n;i++ ){
     //Get the i-th SegmentMergeInfo
 
     //Condition check to see if smi points to a valid instance
