@@ -136,7 +136,7 @@ TermPositionVector* SegmentTermPositionVector::__asTermPositionVector(){
 const ArrayBase<TermVectorOffsetInfo*>* SegmentTermPositionVector::getOffsets(const size_t index) {
 	if(offsets == NULL)
 		return NULL;
-	if (index >=0 && index < offsets->length)
+	if (index < offsets->length)
 		return offsets->values[index];
 	else
 		return TermVectorOffsetInfo_EMPTY_OFFSET_INFO;
@@ -146,7 +146,7 @@ const ArrayBase<int32_t>* SegmentTermPositionVector::getTermPositions(const size
 	if(positions == NULL)
 		return NULL;
 
-	if (index >=0 && index < positions->length)
+	if (index < positions->length)
 		return positions->values[index];
 	else
 		return &EMPTY_TERM_POS;
