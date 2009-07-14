@@ -73,22 +73,8 @@ ENDIF ( ZLIB_FOUND )
    
 SET(test_monolithic_Files ${clucene-core_SOURCE_DIR}/CLucene/CLMonolithic.cpp ./CLMonolithic_Test.cpp)
 
-IF ( CMAKE_COMPILER_IS_GNUCC )
-    CHECK_CXX_ACCEPTS_FLAG(-Wall GccFlagWall)
-    CHECK_CXX_ACCEPTS_FLAG(-pedantic GccFlagPedantic)
-ENDIF ( CMAKE_COMPILER_IS_GNUCC )
-
-
 SET (TESTS_CXX_FLAGS "-DMAKE_CLUCENE_SHARED_LIB -DMAKE_CLUCENE_CORE_LIB")
 SET (TESTS_EXE_LINKER_FLAGS "${CMAKE_THREAD_LIBS_INIT}")
-IF ( GccFlagG )
-    SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -g")
-ENDIF ( GccFlagG )
-IF ( GccFlagWall )
-    #SET(TESTS_CXX_FLAGS "${TESTS_CXX_FLAGS} -Wall")
-    #SET(TESTS_EXE_LINKER_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
-ENDIF ( GccFlagWall )
-
 
 ADD_EXECUTABLE(cl_test-ascii EXCLUDE_FROM_ALL ${test_monolithic_Files} )
 TARGET_LINK_LIBRARIES(cl_test-ascii "${EXTRA_LIBS}")
@@ -162,9 +148,9 @@ ADD_CUSTOM_TARGET(test-platform-charfuncs
 ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
 TARGET_LINK_LIBRARIES(cl_test-pedantic "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES
-    COMPILE_DEFINITIONS "-pedantic"
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -pedantic"
-    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS}")
+    COMPILE_DEFINITIONS "-pedantic "
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -std=gnu++98 -pedantic -Wextra -Wall -Wno-long-long -Wno-sign-compare"
+    LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
 ADD_CUSTOM_TARGET(test-pedantic
     COMMENT "Running cl_test-pedantic"
     COMMAND ${EXECUTABLE_OUTPUT_PATH}/cl_test-pedantic
