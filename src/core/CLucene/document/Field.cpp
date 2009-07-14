@@ -122,8 +122,13 @@ bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YE
 bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
 
 bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
-void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
-    
+void Field::setOmitNorms(const bool omitNorms) {
+    if ( omitNorms )
+        config |= INDEX_NONORMS;
+    else
+        config &= ~INDEX_NONORMS;
+}
+
 bool Field::isLazy() const { return lazy; }
 
 void Field::setValue(TCHAR* value, const bool duplicateValue) {
