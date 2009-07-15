@@ -154,7 +154,7 @@ CL_NS_DEF(index)
       return reader;
     }
   public:
-    FindSegmentsFile_Open( bool closeDirectory, IndexDeletionPolicy* deletionPolicy,
+    FindSegmentsFile_Open( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
         CL_NS(store)::Directory* dir ):
       SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>(dir)
     {
@@ -188,7 +188,7 @@ CL_NS_DEF(index)
       return newReader;
     }
   public:
-    FindSegmentsFile_Reopen( bool closeDirectory, IndexDeletionPolicy* deletionPolicy,
+    FindSegmentsFile_Reopen( bool closeDirectory, IndexDeletionPolicy* deletionPolicy, 
         CL_NS(store)::Directory* dir, DirectoryIndexReader* _this ):
       SegmentInfos::FindSegmentsFile<DirectoryIndexReader*>(dir)
     {
@@ -206,7 +206,7 @@ CL_NS_DEF(index)
       // the index hasn't changed - nothing to do here
       return this;
     }
-    FindSegmentsFile_Reopen runner(closeDirectory, deletionPolicy, _directory, this);
+    FindSegmentsFile_Reopen runner(closeDirectory, deletionPolicy, _directory, this); 
     IndexReader* ret = runner.run();
 
     //disown this memory...

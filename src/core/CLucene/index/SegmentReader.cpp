@@ -32,8 +32,8 @@ CL_NS_DEF(index)
 	segment(seg),
     useSingleNormStream(_useSingleNormStream),
 	in(instrm),
-	bytes(NULL),
-	dirty(false){
+	dirty(false),
+	bytes(NULL){
   //Func - Constructor
   //Pre  - instrm is a valid reference to an IndexInput
   //Post - A Norm instance has been created with an empty bytes array

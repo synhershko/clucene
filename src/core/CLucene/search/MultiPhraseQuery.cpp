@@ -206,7 +206,7 @@ public:
 	}
 };
 
-Query* MultiPhraseQuery::rewrite(IndexReader* /*reader*/) {
+Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
   if (termArrays->size() == 1) {                 // optimize one-term case
 	  ArrayBase<Term*>* terms = termArrays->at(0);
 	  BooleanQuery* boq = _CLNEW BooleanQuery(true);
@@ -295,7 +295,7 @@ TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 	}
 
 	buffer.appendChar(_T('"'));
-
+	
   CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator i;
   i = termArrays->begin();
   while (i != termArrays->end()){

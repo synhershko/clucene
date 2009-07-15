@@ -148,8 +148,8 @@ ADD_CUSTOM_TARGET(test-platform-charfuncs
 ADD_EXECUTABLE(cl_test-pedantic EXCLUDE_FROM_ALL ${test_monolithic_Files})
 TARGET_LINK_LIBRARIES(cl_test-pedantic "${EXTRA_LIBS}")
 SET_TARGET_PROPERTIES(cl_test-pedantic PROPERTIES
-    COMPILE_DEFINITIONS "-pedantic "
-    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -std=gnu++98 -pedantic -Wextra -Wall -Wno-long-long -Wno-sign-compare"
+    COMPILE_DEFINITIONS ""
+    COMPILE_FLAGS "${TESTS_CXX_FLAGS} -std=gnu++98 -pedantic -Wnon-virtual-dtor -Wundef -Wcast-align -Wchar-subscripts -W -Wformat-security -Wextra -Wall -Wno-long-long -Wno-sign-compare"
     LINK_FLAGS "${TESTS_EXE_LINKER_FLAGS} -Wall")
 ADD_CUSTOM_TARGET(test-pedantic
     COMMENT "Running cl_test-pedantic"
