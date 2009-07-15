@@ -79,7 +79,7 @@ AbortException::AbortException(CLuceneError& _err, DocumentsWriter* docWriter):
 }
 
 DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter* writer):
-  bufferedDeleteTerms(_CLNEW CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals>),
+  bufferedDeleteTerms(_CLNEW TermNumMapType(true, true)),
   freeCharBlocks(FreeCharBlocksType(true)),
   freeByteBlocks(FreeByteBlocksType(true)),
   waitingThreadStates( CL_NS(util)::ValueArray<ThreadState*>(MAX_THREAD_STATE) )

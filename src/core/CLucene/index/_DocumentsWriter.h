@@ -149,7 +149,8 @@ public:
         this->num = num;
     }
   };
-  typedef CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals> TermNumMapType;
+  typedef CL_NS(util)::CLHashMap<Term*,Num*, Term_Compare,Term_Equals,
+    CL_NS(util)::Deletor::Object<Term>, CL_NS(util)::Deletor::Object<Num> > TermNumMapType;
 
 private:
   IndexWriter* writer;
