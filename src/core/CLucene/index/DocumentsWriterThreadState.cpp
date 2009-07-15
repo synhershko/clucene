@@ -701,7 +701,6 @@ void DocumentsWriter::ThreadState::writePosByte(uint8_t b) {
 
 
 DocumentsWriter::ThreadState::FieldData::FieldData(DocumentsWriter* __parent, ThreadState* __threadState, FieldInfo* fieldInfo):
-  previousStream(NULL),
   docFields(ValueArray<Field*>(1)),
   _parent(__parent),
   localToken (_CLNEW Token),
