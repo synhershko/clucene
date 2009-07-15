@@ -130,7 +130,7 @@ bool ScorerDocQueue::checkAdjustElsePop( bool cond )
 	if ( cond ) {
 		topHsd->_doc = topHsd->_scorer->doc();
 	} else {
-		_CLDELETE( heap[1] );
+		_CLLDELETE( heap[1] );
 		heap[1] = heap[_size];
 		heap[_size] = NULL;
 		_size--;
@@ -141,7 +141,7 @@ bool ScorerDocQueue::checkAdjustElsePop( bool cond )
 
 void ScorerDocQueue::popNoResult()
 {
-	_CLDELETE( heap[1] );
+	_CLLDELETE( heap[1] );
 	heap[1] = heap[_size];
 	heap[_size] = NULL;
 	_size--;

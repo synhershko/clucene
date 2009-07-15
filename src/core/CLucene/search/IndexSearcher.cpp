@@ -279,7 +279,7 @@ CL_NS_DEF(search)
     
 	SortedTopDocsCollector hitCol(bits,&hq,totalHits,nDocs);
 	scorer->score(&hitCol);
-    _CLDELETE(scorer);
+    _CLLDELETE(scorer);
 
 	int32_t hqLen = hq.size();
     FieldDoc** fieldDocs = _CL_NEWARRAY(FieldDoc*,hqLen);
@@ -290,14 +290,14 @@ CL_NS_DEF(search)
     Query* wq = weight->getQuery();
 	if ( query != wq ) //query was re-written
 		_CLLDELETE(wq);
-	_CLDELETE(weight);
+	_CLLDELETE(weight);
 
     SortField** hqFields = hq.getFields();
 	hq.setFields(NULL); //move ownership of memory over to TopFieldDocs
     int32_t totalHits0 = totalHits[0];
 	if ( bits != NULL && filter->shouldDeleteBitSet(bits) )
-		_CLDELETE(bits);
-    _CLDELETE_ARRAY(totalHits);
+		_CLLDELETE(bits);
+    _CLDELETE_LARRAY(totalHits);
     return _CLNEW TopFieldDocs(totalHits0, fieldDocs, hqLen, hqFields );
   }
 
@@ -333,10 +333,10 @@ CL_NS_DEF(search)
           _CLDELETE(scorer); 
       }
 
-    _CLDELETE(fc);
-	_CLDELETE(weight);
+    _CLLDELETE(fc);
+	_CLLDELETE(weight);
 	if ( bits != NULL && filter->shouldDeleteBitSet(bits) )
-		_CLDELETE(bits);
+		_CLLDELETE(bits);
   }
 
   Query* IndexSearcher::rewrite(Query* original) {
@@ -347,7 +347,7 @@ CL_NS_DEF(search)
 				rewrittenQuery = query->rewrite(reader)) {
 			query = rewrittenQuery;
 			if ( query != last && last != original ){
-				_CLDELETE(last);
+				_CLLDELETE(last);
 			}
 			last = query;
         }

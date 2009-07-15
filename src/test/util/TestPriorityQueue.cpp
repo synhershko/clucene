@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+    //test string buffer
+    //StringBuffer sb;
+    //sb.appendFloat(0.02f,2);
+    //CuAssertStrEquals(tc, _T("appendFloat failed"), _T("0.02"), sb.getBuffer());
+
+
 	class integerQueue: public CL_NS(util)::PriorityQueue<int32_t,Deletor::DummyInt32 >{
 	public:
 		integerQueue(int32_t count)
