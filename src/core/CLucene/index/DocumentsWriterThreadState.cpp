@@ -50,9 +50,9 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ObjectArray<PostingVector>(1)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent) ),
-  allFieldDataArray(ValueArray<FieldData*>(10)),
   vectorsPool( _CLNEW ByteBlockPool(false, __parent) ),
   charPool( _CLNEW CharBlockPool(__parent) ),
+  allFieldDataArray(ValueArray<FieldData*>(10)),
   _parent(__parent)
 {
   fieldDataHashMask = 15;

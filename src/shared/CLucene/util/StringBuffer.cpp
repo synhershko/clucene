@@ -271,7 +271,7 @@ CL_NS_DEF(util)
 
     return buffer;
   }
- 
+
   TCHAR* StringBuffer::giveBuffer() {
     TCHAR* ret = getBuffer();
     buffer = NULL;
@@ -311,7 +311,6 @@ CL_NS_DEF(util)
   //       leaving the first skippingNInitialChars uninitialized (presumably to be
   //       filled immediately thereafter by the caller).
 
-    CND_PRECONDITION (skippingNInitialChars >= 0, "skippingNInitialChars is less than zero");
     CND_PRECONDITION (minLength >= skippingNInitialChars + len + 1,"skippingNInitialChars is not large enough");
 
     //More aggressive growth strategy to offset smaller default buffer size:
@@ -319,14 +318,14 @@ CL_NS_DEF(util)
       assert(bufferLength>=minLength);
       return;
     }
-  
+
     bufferLength *= 2;
     //Check that bufferLength is bigger than minLength
     if (bufferLength < minLength){
       //Have bufferLength become minLength because it still was too small
       bufferLength = minLength;
     }
-  
+
     //Allocate a new buffer of length bufferLength
     TCHAR* tmp = _CL_NEWARRAY(TCHAR,bufferLength);
     memset(tmp, 0, sizeof(TCHAR) * skippingNInitialChars);

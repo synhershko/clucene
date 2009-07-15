@@ -195,7 +195,7 @@ public:
 };
 
 
-#if _MSC_VER
+#ifdef _MSC_VER
     #pragma warning(disable : 4250)
 #endif
 class MultiTermPositions:public MultiTermDocs,public TermPositions {

@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "CLucene/store/Directory.h"
-//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
 
 CL_NS_USE(store)

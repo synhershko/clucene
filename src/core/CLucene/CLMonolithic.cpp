@@ -41,6 +41,7 @@
 #include "CLucene/index/MergeScheduler.cpp"
 #include "CLucene/index/MultiReader.cpp"
 #include "CLucene/index/MultiSegmentReader.cpp"
+#include "CLucene/index/MultipleTermPositions.cpp"
 #include "CLucene/index/Payload.cpp"
 #include "CLucene/index/SegmentInfos.cpp"
 #include "CLucene/index/SegmentMergeInfo.cpp"

@@ -56,7 +56,7 @@ public:
 	}
 
 	/** Filters LowerCaseTokenizer with StopFilter. */
-	TokenStream* tokenStream(const TCHAR* fieldName, Reader* reader) {
+	TokenStream* tokenStream(const TCHAR* /*fieldName*/, Reader* reader) {
 		return _CLNEW QPTestFilter(_CLNEW LowerCaseTokenizer(reader));
 	}
 };
@@ -69,11 +69,11 @@ public:
 	}
 
 protected:
-	Query* getFuzzyQuery(TCHAR* field, TCHAR* termStr, float_t minSimilarity) {
+	Query* getFuzzyQuery(TCHAR* /*field*/, TCHAR* /*termStr*/, float_t /*minSimilarity*/) {
 		_CLTHROWA(CL_ERR_Parse,"Fuzzy queries not allowed");
 	}
 
-	Query* getWildcardQuery(TCHAR* field, TCHAR* termStr) {
+	Query* getWildcardQuery(TCHAR* /*field*/, TCHAR* /*termStr*/) {
 		_CLTHROWA(CL_ERR_Parse,"Wildcard queries not allowed");
 	}
 };
@@ -170,7 +170,7 @@ void assertTrue(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false
 
 void assertParseException(CuTest *tc,const TCHAR* queryString) {
 	try {
-		Query* q = getQuery(tc,queryString, NULL, CL_ERR_Parse);
+		getQuery(tc,queryString, NULL, CL_ERR_Parse);
 	} catch (CLuceneError&){
 		return;
 	}

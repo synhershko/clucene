@@ -9,23 +9,6 @@
 #include "CLucene/store/IndexInput.h"
 #include <stdlib.h>
 
-void hashTest(CuTest *tc){
-    //todo: this is testing internal stuff, turn it on again using a shared test..
-	/*CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
-	map.put(STRDUP_AtoA("a1"),1);
-	map.put(STRDUP_AtoA("a1"),2);
-	map.put(STRDUP_AtoA("a2"),3);
-	map.put(STRDUP_AtoA("a3"),4);
-
-
-	CuAssertIntEquals(tc, _T("map size!=3"), 3, map.size());
-
-	map.remove("a1");
-	CuAssertIntEquals(tc, _T("map size!=2"), 2, map.size());
-
-	map.put(STRDUP_AtoA("a1"),5);
-	CuAssertIntEquals(tc, _T("mapsize!=3"),3, map.size());*/
-}
 
 void StoreTest(CuTest *tc,int32_t count, bool ram){
 	srand(1251971);
@@ -122,7 +105,6 @@ CuSuite *teststore(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Store Test"));
 
-    SUITE_ADD_TEST(suite, hashTest);
     SUITE_ADD_TEST(suite, ramtest);
     SUITE_ADD_TEST(suite, fstest);
 
