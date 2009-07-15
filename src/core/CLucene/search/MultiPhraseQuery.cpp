@@ -267,7 +267,7 @@ void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _t
   for ( size_t i=0;i<_terms->length;i++ ){
 		if ( _tcscmp(_terms->values[i]->field(), field) != 0) {
 			TCHAR buf[250];
-			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]);
+			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]->field());
 			_CLTHROWT(CL_ERR_IllegalArgument,buf);
 		}
     terms->values[i] = _CL_POINTER(_terms->values[i]);
