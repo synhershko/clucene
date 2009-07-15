@@ -29,7 +29,7 @@ CL_NS_DEF(search)
 
 	FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t _prefixLength):
 		FilteredTermEnum(),d(NULL),dLen(0),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
-		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(_prefixLength),
+		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(0),
 		minimumSimilarity(minSimilarity)
 	{
 		CND_PRECONDITION(term != NULL,"term is NULL");
@@ -52,10 +52,10 @@ CL_NS_DEF(search)
 		text = STRDUP_TtoT(searchTerm->text() + realPrefixLength);
 		textLen = fullSearchTermLength - realPrefixLength;
 
-		// TODO: what is safer to use, prefixLength or realPrefixLength?
 		prefix = _CL_NEWARRAY(TCHAR,realPrefixLength+1);
 		_tcsncpy(prefix, searchTerm->text(), realPrefixLength);
 		prefix[realPrefixLength]='\0';
+        prefixLength = realPrefixLength;
 
 		initializeMaxDistances();
 
