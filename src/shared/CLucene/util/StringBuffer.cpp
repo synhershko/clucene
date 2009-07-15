@@ -337,9 +337,8 @@ CL_NS_DEF(util)
     tmp[skippingNInitialChars + len] = '\0';
 
     //destroy the old buffer
-    if (buffer){
-      _CLDELETE_CARRAY(buffer);
-	}
+    _CLDELETE_LCARRAY(buffer);
+
 	//Assign the new buffer tmp to buffer
     buffer = tmp;
   }
