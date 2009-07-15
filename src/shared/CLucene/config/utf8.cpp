@@ -19,12 +19,12 @@
  *
  *
  ************************************************
- * Also licensed with permission from Tom Tromey 
+ * Also licensed with permission from Tom Tromey
  * and Owen Taylor under the Apache license.
  * Original location:
  * http://cvs.gnome.org/viewcvs/glib/glib/gutf8.c?rev=1.50&view=log
  ************************************************
- * 
+ *
  * Copyright 2003-2006 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -173,7 +173,7 @@ size_t	lucene_wctoutf8(char * outbuf, const wchar_t ch)
  * valid Unicode characters, you should use lucene_utf8towc_validated()
  * instead.
  *
- * Return value: the number of p consumed for the character
+ * Return value: the number of p consumed for the character, or 0 on error
  **/
 size_t lucene_utf8towc(wchar_t& pwc, const char *p)
 {
@@ -211,7 +211,7 @@ size_t lucene_utf8towcs(wchar_t * result, const char * str, size_t result_length
 
   while (rp < result + result_length && *sp!=0){
     size_t r = lucene_utf8towc(*rp,sp);
-    if ( r == -1 )
+    if ( r == 0 )
       return 0;
     sp += r;
     rp++;
@@ -235,7 +235,7 @@ size_t lucene_utf8charlen(const unsigned char c)
 }
 //convert unicode string to a utf8 string
 std::string lucene_wcstoutf8string(const wchar_t* str, size_t strlen){
-  int i = 0;
+  size_t i = 0;
   std::string result;
   char p[6];
 
