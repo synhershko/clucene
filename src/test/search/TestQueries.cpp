@@ -42,6 +42,7 @@ void testPrefixQuery(CuTest *tc){
 
 #ifndef NO_FUZZY_QUERY
 
+/// Java FuzzyQuery test, 2009-06-02
 class TestFuzzyQuery {
 private:
 	CuTest *tc;
