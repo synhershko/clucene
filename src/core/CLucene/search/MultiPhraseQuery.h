@@ -30,7 +30,7 @@ class MultiPhraseWeight;
 class CLUCENE_EXPORT MultiPhraseQuery : public Query {
 private:
 	TCHAR* field;
-	CL_NS(util)::CLArrayList<CL_NS(index)::Term**>* termArrays;
+  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* termArrays;
 	CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>* positions;
 
 	int32_t slop;
@@ -52,15 +52,16 @@ public:
 
 	/** Add a single term at the next position in the phrase.
 	* @see PhraseQuery#add(Term)
+  * @memory A pointer is taken to term
 	*/
 	void add(CL_NS(index)::Term* term);
 
 	/** Add multiple terms at the next position in the phrase.  Any of the terms
 	* may match.
-	*
+	* @memory A pointer is taken of each term, the array memory must be cleaned up by calle
 	* @see PhraseQuery#add(Term)
 	*/
-	void add(CL_NS(index)::Term** terms);
+	void add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* terms);
 
 	/**
 	* Allows to specify the relative position of terms within the phrase.
@@ -68,8 +69,9 @@ public:
 	* @see PhraseQuery#add(Term, int)
 	* @param terms
 	* @param position
+  * @memory A pointer is taken of each term, the array memory must be cleaned up by calle
 	*/
-	void add(CL_NS(index)::Term** terms, const int32_t position);
+  void add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* terms, const int32_t position);
 
 	/**
 	* Returns a List<Term[]> of the terms in the multiphrase.

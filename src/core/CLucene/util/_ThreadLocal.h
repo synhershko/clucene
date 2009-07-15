@@ -18,7 +18,7 @@ class _ThreadLocal
 {
 	private:
 		class Internal;
-		Internal* internal;
+		Internal* _internal;
 	public:
 		_ThreadLocal ( CL_NS ( util ) ::AbstractDeletor* _deletor );
 		void* get();

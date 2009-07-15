@@ -347,46 +347,36 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
           _CLDECDELETE(tm);
         }
         return q;
+      }else {
+		    MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
+		    mpq->setSlop(phraseSlop);
+		    CLArrayList<Term*> multiTerms;
+		    int32_t position = -1;
+		    for (size_t i = 0; i < v.size(); i++) {
+			    t = v.at(i);
+			    if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
+            ValueArray<Term*> termsArray(multiTerms.size());
+            multiTerms.toArray(termsArray.values, false);
+				    if (enablePositionIncrements) {
+					    mpq->add(&termsArray,position);
+				    } else {
+					    mpq->add(&termsArray);
+				    }
+				    multiTerms.clear();
+			    }
+			    position += t->getPositionIncrement();
+			    multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
+		    }
+        ValueArray<Term*> termsArray(multiTerms.size());
+        multiTerms.toArray(termsArray.values, false);
+		    if (enablePositionIncrements) {
+			    mpq->add(&termsArray,position);
+		    } else {
+			    mpq->add(&termsArray);
+		    }
+		    return mpq;
       }
-	  else {
-		  MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
-		  mpq->setSlop(phraseSlop);
-		  CLArrayList<Term*> multiTerms;
-		  int32_t position = -1;
-		  for (size_t i = 0; i < v.size(); i++) {
-			  t = v.at(i);
-			  if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
-				  if (enablePositionIncrements) {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray,position);
-					  _CLDELETE_LARRAY(termsArray);
-				  } else {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray);
-					  _CLDELETE_LARRAY(termsArray);
-				  }
-				  multiTerms.clear();
-			  }
-			  position += t->getPositionIncrement();
-			  multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
-		  }
-		  if (enablePositionIncrements) {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray,position);
-			  _CLDELETE_LARRAY(termsArray);
-		  } else {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray);
-			  _CLDELETE_LARRAY(termsArray);
-		  }
-		  return mpq;
-      }
-    }
-    else {
+    }else {
       PhraseQuery* pq = _CLNEW PhraseQuery();
       pq->setSlop(phraseSlop);
       int32_t position = -1;
@@ -620,8 +610,8 @@ int32_t QueryParser::hexToInt(TCHAR c) {
   } else if (_T('A') <= c && c <= _T('F')) {
     return c - _T('A') + 10;
   } else {
-    TCHAR err[48];
-    cl_stprintf(err,48,_T("None-hex character in unicode escape sequence: %c"));
+    TCHAR err[50];
+    cl_stprintf(err,50, _T("Non-hex character in unicode escape sequence: %c"), c);
     _CLTHROWT(CL_ERR_Parse,err);
   }
 }
@@ -633,7 +623,7 @@ TCHAR* QueryParser::escape(const TCHAR* s) {
   // and declare we are the owners of the buffer (to save on a copy)
   // TODO: 1. Test to see what is the optimal initial length
   //     2. Allow re-using the provided string buffer (argument s) instead of creating another one?
-  StringBuffer sb(len+5,false);
+  StringBuffer sb(len+5);
   for (size_t i = 0; i < len; i++) {
     const TCHAR c = s[i];
     // These characters are part of the query syntax and must be escaped
@@ -644,7 +634,7 @@ TCHAR* QueryParser::escape(const TCHAR* s) {
     }
     sb.appendChar(c);
   }
-  return sb.getBuffer();
+  return sb.giveBuffer();
 }
 
 int32_t QueryParser::Conjunction() {
@@ -1072,7 +1062,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
           s = _ttoi(fuzzySlop->image + 1);
         }
         catch (...) { /* ignore exceptions */ }
-      }	  
+      }
 	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
 	  const size_t st = _tcslen(term->image);
 	  term->image[st-1]=NULL;
@@ -1378,7 +1368,7 @@ void QueryParser::jj_save(const int32_t index, int32_t xla) {
 
 TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
   const size_t len = _tcslen(str);
-  StringBuffer retval(len * 2, false);
+  StringBuffer retval(len * 2);
   TCHAR ch;
   for (size_t i = 0; i < len; i++) {
     switch (str[i])
@@ -1421,7 +1411,7 @@ TCHAR* QueryParserConstants::addEscapes(TCHAR* str) {
       continue;
     }
   }
-  return retval.getBuffer();
+  return retval.giveBuffer();
 }
 
 TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
@@ -1449,7 +1439,7 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
     expected.append(_T("    "));
   }
 
-  StringBuffer retval(CL_MAX_PATH, false);
+  StringBuffer retval(CL_MAX_PATH);
   retval.append(_T("Encountered \""));
   QueryToken* tok = currentToken->next;
   for (size_t i = 0; i < maxSize; i++) {
@@ -1459,9 +1449,9 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
       break;
     }
     if (tok->image){
-      const TCHAR* buf = addEscapes(tok->image);
+      TCHAR* buf = addEscapes(tok->image);
       retval.append(buf);
-      _CLLDELETE(buf);
+      _CLDELETE_CARRAY(buf);
     }
     tok = tok->next;
   }
@@ -1482,7 +1472,7 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
   }
   retval.append(expected.getBuffer());
 
-  return retval.getBuffer();
+  return retval.giveBuffer();
 }
 
 CL_NS_END

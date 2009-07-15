@@ -35,7 +35,7 @@ FieldInfo::FieldInfo(	const TCHAR* _fieldName,
 	number(_fieldNumber),
 	storeTermVector(_storeTermVector),
 	storeOffsetWithTermVector(_storeOffsetWithTermVector),
-	storePositionWithTermVector(_storeTermVector),
+	storePositionWithTermVector(_storePositionWithTermVector),
 	omitNorms(_omitNorms), storePayloads(_storePayloads)
 {
 }

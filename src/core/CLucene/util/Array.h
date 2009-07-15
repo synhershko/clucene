@@ -191,7 +191,7 @@ public:
 	}
   void deleteValue(T v){} //nothing to do...
   virtual ~ValueArray(){
-	  deleteValues();
+    deleteValues();
   }
 };
 

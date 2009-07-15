@@ -400,6 +400,7 @@ const ValueArray<uint8_t>* FieldsReader::LazyField::binaryValue(){
         }catch (CLuceneError& err){
           _CLDELETE(data);
           _CLDELETE(b);
+          throw err;
         }
         _CLDELETE(b);
         fieldsData = data;

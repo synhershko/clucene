@@ -12,6 +12,7 @@
 #include "Searchable.h"
 #include "Hits.h"
 #include "_FieldDocSortedHitQueue.h"
+#include <assert.h>
 
 CL_NS_USE(index)
 CL_NS_DEF(search)
@@ -24,35 +25,28 @@ CL_NS(document)::Document* Searchable::doc(const int32_t i){
 }
 
 //static
-Query* Query::mergeBooleanQueries(Query** queries) {
-    CL_NS(util)::CLVector<BooleanClause*> allClauses;
-    int32_t i = 0;
-    int32_t queriesLength = 0;
-    
-    while ( queries[i] != NULL ){
-		BooleanQuery* bq = (BooleanQuery*)queries[i];
-		
-		int32_t size = bq->getClauseCount();
-		BooleanClause** clauses = _CL_NEWARRAY(BooleanClause*, size);
-		bq->getClauses(clauses);
-		
-		for (int32_t j = 0;j<size;++j ){
-			allClauses.push_back(clauses[j]);
-			j++;
-		}
-		_CLDELETE_LARRAY(clauses);
-		i++;
-		queriesLength++;
-    }
+Query* Query::mergeBooleanQueries(CL_NS(util)::ArrayBase<Query*>* queries) {
+  std::vector<BooleanClause*> allClauses;
 
-    bool coordDisabled = ( queriesLength == 0 ) ? false : ((BooleanQuery*)queries[0])->isCoordDisabled();
-    BooleanQuery* result = _CLNEW BooleanQuery(coordDisabled);
-    
-    CL_NS(util)::CLVector<BooleanClause*>::iterator itr = allClauses.begin();
-    while (itr != allClauses.end() ) {
-		result->add(*itr);
+  CL_NS(util)::ValueArray<BooleanClause*> clauses;
+  for (size_t i = 0; i < queries->length; i++) {
+    assert(BooleanQuery::getClassName() == queries->values[i]->getObjectName());
+    BooleanQuery* booleanQuery = (BooleanQuery*)queries->values[i];
+	  clauses.resize((booleanQuery->getClauseCount()));
+    booleanQuery->getClauses(clauses.values);
+    for (size_t j = 0; j < clauses.length; j++) {
+      allClauses.push_back(clauses.values[j]->clone());
     }
-    return result;
+  }
+
+  bool coordDisabled = ( queries->length == 0 ) ? false : ((BooleanQuery*)queries->values[0])->isCoordDisabled();
+  BooleanQuery* result = _CLNEW BooleanQuery(coordDisabled);
+  std::vector<BooleanClause*>::iterator i = allClauses.begin();
+  while ( i != allClauses.end() ){
+    result->add(*i);
+	i++;
+  }
+  return result;
 }
 
 Query::Query(const Query& clone):boost(clone.boost){
@@ -73,8 +67,42 @@ Query* Query::rewrite(CL_NS(index)::IndexReader* reader){
    return this;
 }
 
-Query* Query::combine(Query** queries){
-   _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: Query::combine");
+Query* Query::combine(CL_NS(util)::ArrayBase<Query*>* queries){
+  std::vector<Query*> uniques;
+  for (size_t i = 0; i < queries->length; i++) {
+    Query* query = queries->values[i];
+    CL_NS(util)::ValueArray<BooleanClause*> clauses;
+    // check if we can split the query into clauses
+    bool splittable = query->instanceOf(BooleanQuery::getClassName());
+    if(splittable){
+      BooleanQuery* bq = (BooleanQuery*) query;
+      splittable = bq->isCoordDisabled();
+      clauses.resize(bq->getClauseCount());
+      bq->getClauses(clauses.values);
+      for (size_t j = 0; splittable && j < clauses.length; j++) {
+        splittable = (clauses[j]->getOccur() == BooleanClause::SHOULD);
+      }
+    }
+    if(splittable){
+      for (size_t j = 0; j < clauses.length; j++) {
+        uniques.push_back(clauses[j]->getQuery());
+      }
+    } else {
+      uniques.push_back(query);
+    }
+  }
+  // optimization: if we have just one query, just return it
+  if(uniques.size() == 1){
+    return *uniques.begin();
+  }
+  std::vector<Query*>::iterator it = uniques.begin();
+  BooleanQuery* result = _CLNEW BooleanQuery(true);
+  while (it != uniques.end() ){
+    result->add(*it, BooleanClause::SHOULD);
+
+    it++;
+  }
+  return result;
 }
 Similarity* Query::getSimilarity(Searcher* searcher) {
    return searcher->getSimilarity();

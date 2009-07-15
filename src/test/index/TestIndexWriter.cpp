@@ -7,6 +7,64 @@
 #include "test.h"
 #include <iostream>
 
+//checks if a merged index finds phrases correctly
+void testIWmergePhraseSegments(CuTest *tc){
+	char fsdir[CL_MAX_PATH];
+	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
+	SimpleAnalyzer a;
+  Directory* dir = FSDirectory::getDirectory(fsdir, true);
+
+	IndexWriter ndx2(dir,&a,true);
+	ndx2.setUseCompoundFile(false);
+	Document doc0;
+	doc0.add(
+		*_CLNEW Field(
+			_T("field0"),
+			_T("value0 value1"),
+			Field::STORE_YES | Field::INDEX_TOKENIZED
+		)
+	);
+	ndx2.addDocument(&doc0);
+	ndx2.optimize();
+	ndx2.close();
+
+	IndexWriter ndx(fsdir,&a,false);
+	ndx.setUseCompoundFile(false);
+	Document doc1;
+	doc1.add(
+		*_CLNEW Field(
+			_T("field0"),
+			_T("value1 value0"),
+			Field::STORE_YES | Field::INDEX_TOKENIZED
+		)
+	);
+	ndx.addDocument(&doc1);
+	ndx.optimize();
+	ndx.close();
+
+	//test the index querying
+	IndexSearcher searcher(fsdir);
+	Query* query0 = QueryParser::parse(
+		_T("\"value0 value1\""),
+		_T("field0"),
+		&a
+	);
+	Hits* hits0 = searcher.search(query0);
+	CLUCENE_ASSERT(hits0->length() > 0);
+	Query* query1 = QueryParser::parse(
+		_T("\"value1 value0\""),
+		_T("field0"),
+		&a
+	);
+	Hits* hits1 = searcher.search(query1);
+	CLUCENE_ASSERT(hits1->length() > 0);
+	_CLDELETE(query0);
+	_CLDELETE(query1);
+	_CLDELETE(hits0);
+	_CLDELETE(hits1);
+	_CLDECDELETE(dir);
+}
+
 //checks that adding more than the min_merge value goes ok...
 //checks for a mem leak that used to occur
 void testIWmergeSegments1(CuTest *tc){
@@ -45,6 +103,61 @@ void testIWmergeSegments1(CuTest *tc){
 	_CLDECDELETE(term);
 	_CLDELETE(reader2);
 }
+
+//checks if appending to an index works correctly
+void testIWmergeSegments2(CuTest *tc){
+	char fsdir[CL_MAX_PATH];
+	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
+	SimpleAnalyzer a;
+  Directory* dir = FSDirectory::getDirectory(fsdir, true);
+
+	IndexWriter ndx2(dir,&a,true);
+	ndx2.setUseCompoundFile(false);
+	Document doc0;
+	doc0.add(
+		*_CLNEW Field(
+			_T("field0"),
+			_T("value0"),
+			Field::STORE_YES | Field::INDEX_TOKENIZED
+		)
+	);
+	ndx2.addDocument(&doc0);
+	ndx2.optimize();
+	ndx2.close();
+
+	IndexWriter ndx(fsdir,&a,false);
+	ndx.setUseCompoundFile(false);
+	Document doc1;
+	doc1.add(
+		*_CLNEW Field(
+			_T("field0"),
+			_T("value1"),
+			Field::STORE_YES | Field::INDEX_TOKENIZED
+		)
+	);
+	ndx.addDocument(&doc1);
+	ndx.optimize();
+	ndx.close();
+
+	//test the ram querying
+	IndexSearcher searcher(fsdir);
+	Term* term0 = _CLNEW Term(_T("field0"),_T("value1"));
+	Query* query0 = QueryParser::parse(_T("value0"),_T("field0"),&a);
+	Hits* hits0 = searcher.search(query0);
+	CLUCENE_ASSERT(hits0->length() > 0);
+	Term* term1 = _CLNEW Term(_T("field0"),_T("value0"));
+	Query* query1 = QueryParser::parse(_T("value1"),_T("field0"),&a);
+	Hits* hits1 = searcher.search(query1);
+	CLUCENE_ASSERT(hits1->length() > 0);
+	_CLDELETE(query0);
+	_CLDELETE(query1);
+	_CLDELETE(hits0);
+  _CLDELETE(hits1);
+	_CLDECDELETE(term0);
+	_CLDECDELETE(term1);
+	_CLDECDELETE(dir);
+}
+
 void testAddIndexes(CuTest *tc){
 	char reuters_origdirectory[1024];
   strcpy(reuters_origdirectory, clucene_data_location);
@@ -73,11 +186,14 @@ void testAddIndexes(CuTest *tc){
     CLUCENE_ASSERT(w.docCount()==62); //31 docs in reuters...
   }
 }
+
 CuSuite *testindexwriter(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
 	SUITE_ADD_TEST(suite, testAddIndexes);
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
+  SUITE_ADD_TEST(suite, testIWmergeSegments2);
+	SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
 
   return suite;
 }

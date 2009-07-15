@@ -61,7 +61,7 @@ public:
 
   Query* rewrite(CL_NS(index)::IndexReader* reader);
 
-  Query* combine(Query** queries);
+  Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
 
   // Prints a user-readable version of this query.
   TCHAR* toString(const TCHAR* field) const;

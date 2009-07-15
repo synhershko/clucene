@@ -183,24 +183,21 @@ public:
    * <p>
    * If the index has not changed since this instance was (re)opened, then this
    * call is a NOOP and returns this instance. Otherwise, a new instance is
-   * returned. The old instance is <b>not</b> closed and remains usable.<br>
-   * <b>Note:</b> The re-opened reader instance and the old instance might share
-   * the same resources. For this reason no index modification operations
-   * (e. g. {@link #deleteDocument(int)}, {@link #setNorm(int, String, byte)})
-   * should be performed using one of the readers until the old reader instance
-   * is closed. <b>Otherwise, the behavior of the readers is undefined.</b>
+   * returned. The old instance <B>is</b> closed (unlink JLucene) and must
+   * be deleted<br>
    * <p>
    * You can determine whether a reader was actually reopened by comparing the
    * old instance with the instance returned by this method:
    * <pre>
-   * IndexReader reader = ...
+   * IndexReader* reader = ...
    * ...
-   * IndexReader new = r.reopen();
-   * if (new != reader) {
+   * IndexReader* newreader = r->reopen();
+   * if (newreader != reader) {
    *   ...     // reader was reopened
-   *   reader.close();
+   *   reader->close();
+   *   _CLDELETE(reader);
    * }
-   * reader = new;
+   * reader = newreader;
    * ...
    * </pre>
    *
@@ -272,6 +269,8 @@ public:
 
 	/** Reads the byte-encoded normalization factor for the named field of every
 	*  document.  This is used by the search code to score documents.
+	*
+	* The size of bytes must be the size of the IndexReader->maxDoc()
 	*
 	* @see Field#setBoost(float_t)
 	*/

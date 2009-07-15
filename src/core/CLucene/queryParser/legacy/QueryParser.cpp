@@ -244,7 +244,7 @@ CL_NS_DEF2(queryParser,legacy)
 
 		Query* q = NULL;
 		const TCHAR* sfield = field;
-		TCHAR* tmp;
+		TCHAR* tmp = NULL;
 
 		QueryToken *DelToken = NULL;
 

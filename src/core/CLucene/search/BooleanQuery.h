@@ -9,7 +9,6 @@
 
 CL_CLASS_DEF(util,StringBuffer)
 CL_CLASS_DEF(search,Weight)
-CL_CLASS_DEF(search,BooleanWeight2)
 #include "Query.h"
 //#include "SearchHeader.h"
 #include "BooleanClause.h"
@@ -28,10 +27,10 @@ CL_NS_DEF(search)
 	private:
 		ClausesType* clauses;
 		static size_t maxClauseCount;
-		static bool useScorer14;
+
+    /** Whether hit docs may be collected out of docid order. */
+    static bool allowDocsOutOfOrder;
 	
-		LUCENE_STATIC_CONSTANT(bool, allowDocsOutOfOrder=false);
-		
 		bool disableCoord;
     protected:
 		int32_t minNrShouldMatch;
@@ -47,8 +46,8 @@ CL_NS_DEF(search)
 		static const char* getClassName();
         
      /** Return the maximum number of clauses permitted, 1024 by default.
-        * Attempts to add more than the permitted number of clauses cause {@link
-        * TooManyClauses} to be thrown.*/
+      * Attempts to add more than the permitted number of clauses cause {@link
+      * TooManyClauses} to be thrown.*/
      static size_t getMaxClauseCount();
 
      /** Set the maximum number of clauses permitted. */
@@ -91,37 +90,68 @@ CL_NS_DEF(search)
 		///@deprecated
 		_CL_DEPRECATED( getClauses(clauses) ) BooleanClause** getClauses() const;
 		
-	    /**
-	    * Give client code access to clauses.size() so we know how
-	    * large the array returned by getClauses is. 
-	    */
-	    size_t getClauseCount() const;
+    /**
+    * Give client code access to clauses.size() so we know how
+    * large the array returned by getClauses is. 
+    */
+    size_t getClauseCount() const;
 
-		/** Adds a clause to a boolean query.
-		* @see #getMaxClauseCount()
-		*/
-		void add(BooleanClause* clause);
+	  /** Adds a clause to a boolean query.
+	  * @see #getMaxClauseCount()
+	  */
+	  void add(BooleanClause* clause);
 
-		Query* rewrite(CL_NS(index)::IndexReader* reader);
-		Query* clone() const;
+	  Query* rewrite(CL_NS(index)::IndexReader* reader);
+	  Query* clone() const;
 
-		bool equals(Query* o) const;
-		Similarity* getSimilarity( Searcher* searcher );
+	  bool equals(Query* o) const;
+	  Similarity* getSimilarity( Searcher* searcher );
 		
-		bool isCoordDisabled();
-		void setCoordDisabled( bool disableCoord );
+	  bool isCoordDisabled();
+	  void setCoordDisabled( bool disableCoord );
 		
-		static bool getUseScorer14();
-		static void setUseScorer14( bool use14 );
-		 
-	  	/** Prints a user-readable version of this query. */
-		TCHAR* toString(const TCHAR* field) const;
-		/** Returns a hash code value for this object.*/
-		size_t hashCode() const;
+	  static bool getUseScorer14();
+	  static void setUseScorer14( bool use14 );
+      
+    /**
+     * Expert: Indicates whether hit docs may be collected out of docid
+     * order.
+     *
+     * <p>
+     * Background: although the contract of the Scorer class requires that
+     * documents be iterated in order of doc id, this was not true in early
+     * versions of Lucene.  Many pieces of functionality in the current
+     * Lucene code base have undefined behavior if this contract is not
+     * upheld, but in some specific simple cases may be faster.  (For
+     * example: disjunction queries with less than 32 prohibited clauses;
+     * This setting has no effect for other queries.)
+     * </p>
+     *
+     * <p>
+     * Specifics: By setting this option to true, calls to 
+     * {@link HitCollector#collect(int,float)} might be
+     * invoked first for docid N and only later for docid N-1.
+     * Being static, this setting is system wide.
+     * </p>
+     */
+    static void setAllowDocsOutOfOrder(bool allow);
+    
+    /**
+     * Whether hit docs may be collected out of docid order.
+     * @see #setAllowDocsOutOfOrder(boolean)
+     */
+    static bool getAllowDocsOutOfOrder();
+    
+	 
+  	/** Prints a user-readable version of this query. */
+	  TCHAR* toString(const TCHAR* field) const;
+	  /** Returns a hash code value for this object.*/
+	  size_t hashCode() const;
 		
-		//internal
-		int32_t getMinNrShouldMatch();
-    };
+	  //internal
+	  int32_t getMinNrShouldMatch();
+    friend class BooleanWeight;
+  };
 
 CL_NS_END
 #endif

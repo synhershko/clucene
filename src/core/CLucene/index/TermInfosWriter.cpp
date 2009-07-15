@@ -62,8 +62,6 @@ CL_NS_DEF(index)
     maxSkipLevels = 10;
     lastTermTextLength = 0;
     lastFieldNumber = -1;
-    termTextBuffer = NULL;
-    termTextBufferLen = 0;
 
     lastTi  = _CLNEW TermInfo();
 
@@ -98,16 +96,12 @@ CL_NS_DEF(index)
 
   void TermInfosWriter::add(Term* term, TermInfo* ti){
     const size_t length = term->textLength();
-    if ( termTextBuffer == NULL ){
-      termTextBufferLen = (int32_t)(length*1.25);
-      termTextBuffer = (TCHAR*)malloc(sizeof(TCHAR) * termTextBufferLen);
-    }else if (termTextBufferLen < length){
-      termTextBufferLen = (int32_t)(length*1.25);
-      termTextBuffer = (TCHAR*)realloc(termTextBuffer, sizeof(TCHAR) * termTextBufferLen);
+    if ( termTextBuffer.values == NULL || termTextBuffer.length < length ){
+      termTextBuffer.resize( (int32_t)(length*1.25) );
     }
-    _tcsncpy(termTextBuffer, term->text(), length);
+    _tcsncpy(termTextBuffer.values, term->text(), length);
 
-    add(fieldInfos->fieldNumber(term->field()), termTextBuffer, length, ti);
+    add(fieldInfos->fieldNumber(term->field()), termTextBuffer.values, length, ti);
   }
 
   // Currently used only by assert statement

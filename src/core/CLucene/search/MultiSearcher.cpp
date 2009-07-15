@@ -214,12 +214,12 @@ CL_NS_DEF(search)
     return _CLNEW TopFieldDocs (totalHits, fieldDocs, hqlen, hqFields);
   }
 
-  Query* MultiSearcher::rewrite(Query* original) {
-    Query** queries = _CL_NEWARRAY(Query*,searchablesLen+1);
-	for (int32_t i = 0; i < searchablesLen; ++i)
-      queries[i] = searchables[i]->rewrite(original);
-    queries[searchablesLen]=NULL;
-    return original->combine(queries);
+  Query* MultiSearcher::rewrite(Query* query) {
+    // this is a bit of a hack. We know that a query which
+    // creates a Weight based on this Dummy-Searcher is
+    // always already rewritten (see preparedWeight()).
+    // Therefore we just return the unmodified query here
+    return query;
   }
 
   void MultiSearcher::explain(Query* query, int32_t doc, Explanation* ret) {

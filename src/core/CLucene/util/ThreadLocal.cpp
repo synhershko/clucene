@@ -115,34 +115,34 @@ class _ThreadLocal::Internal
 };
 
 _ThreadLocal::_ThreadLocal ( CL_NS ( util ) ::AbstractDeletor* _deletor ) :
-		internal ( _CLNEW Internal ( _deletor ) )
+		_internal ( _CLNEW Internal ( _deletor ) )
 {
 
 }
 
 _ThreadLocal::~_ThreadLocal()
 {
-	delete internal;
+	delete _internal;
 }
 
 
 void* _ThreadLocal::get()
 {
-	SCOPED_LOCK_MUTEX(internal->locals_LOCK)
-	return internal->locals.get ( _LUCENE_CURRTHREADID );
+	SCOPED_LOCK_MUTEX(_internal->locals_LOCK)
+	return _internal->locals.get ( _LUCENE_CURRTHREADID );
 }
 
 void _ThreadLocal::setNull()
 {
 	//just delete this thread from the locals list
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
-	SCOPED_LOCK_MUTEX(internal->locals_LOCK)
-	Internal::LocalsType::iterator itr = internal->locals.find ( id );
-	if ( itr != internal->locals.end() )
+	SCOPED_LOCK_MUTEX(_internal->locals_LOCK)
+	Internal::LocalsType::iterator itr = _internal->locals.find ( id );
+	if ( itr != _internal->locals.end() )
 	{
 		void* val = itr->second;
-		internal->locals.removeitr ( itr );
-		internal->_deletor->Delete ( val );
+		_internal->locals.removeitr ( itr );
+		_internal->_deletor->Delete ( val );
 	}
 }
 
@@ -181,17 +181,17 @@ void _ThreadLocal::set ( void* t )
 	}
 
 	{
-		SCOPED_LOCK_MUTEX(internal->locals_LOCK)
-		Internal::LocalsType::iterator itr = internal->locals.find ( id );
-		if ( itr != internal->locals.end() )
+		SCOPED_LOCK_MUTEX(_internal->locals_LOCK)
+		Internal::LocalsType::iterator itr = _internal->locals.find ( id );
+		if ( itr != _internal->locals.end() )
 		{
 			void* val = itr->second;
-			internal->locals.removeitr ( itr );
-			internal->_deletor->Delete ( val );
+			_internal->locals.removeitr ( itr );
+			_internal->_deletor->Delete ( val );
 		}
 	
 		if ( t != NULL )
-			internal->locals.put ( id, t );
+			_internal->locals.put ( id, t );
 	}
 
 }

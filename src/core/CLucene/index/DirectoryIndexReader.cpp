@@ -207,7 +207,14 @@ CL_NS_DEF(index)
       return this;
     }
     FindSegmentsFile_Reopen runner(closeDirectory, deletionPolicy, _directory, this); 
-    return runner.run();
+    IndexReader* ret = runner.run();
+
+    //disown this memory...
+    this->writeLock = NULL;
+    this->_directory = NULL;
+    this->deletionPolicy = NULL;
+
+    return ret;
   }
 
   void DirectoryIndexReader::setDeletionPolicy(IndexDeletionPolicy* deletionPolicy) {

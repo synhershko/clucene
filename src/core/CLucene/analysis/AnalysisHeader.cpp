@@ -18,19 +18,19 @@ struct Analyzer::Internal{
 		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
 };
 Analyzer::Analyzer(){
-	internal = new Internal;
-	internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
+	_internal = new Internal;
+	_internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
 		CL_NS(util)::Deletor::Object<TokenStream> >;
 }
 Analyzer::~Analyzer(){
-	_CLDELETE(internal->tokenStreams);
-	delete internal;
+	_CLDELETE(_internal->tokenStreams);
+	delete _internal;
 }
 TokenStream* Analyzer::getPreviousTokenStream() {
-	return internal->tokenStreams->get();
+	return _internal->tokenStreams->get();
 }
 void Analyzer::setPreviousTokenStream(TokenStream* obj) {
-	internal->tokenStreams->set(obj);
+	_internal->tokenStreams->set(obj);
 }
 TokenStream* Analyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
 	return tokenStream(fieldName, reader);

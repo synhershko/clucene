@@ -202,7 +202,7 @@ Query* getQueryDOA(const TCHAR* query, Analyzer* a=NULL) {
 	return q;
 }
 
-void assertQueryEqualsDOA(CuTest *tc,const TCHAR* query, Analyzer* a, TCHAR* result){
+void assertQueryEqualsDOA(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* result){
 	Query* q = getQueryDOA(query, a);
 	TCHAR* s = q->toString(_T("field"));
 	_CLLDELETE(q);
@@ -533,35 +533,35 @@ void testEscaped(CuTest *tc) {
     assertQueryEquals(tc,_T("[ a\\: TO a\\~ ]"), &a, _T("[a: TO a~]") );
     assertQueryEquals(tc,_T("[ a\\\\ TO a\\* ]"), &a, _T("[a\\ TO a*]") );
 
-    assertQueryEquals(tc, _T("[\"c\\:\\\\temp\\\\\\~foo0.txt\" TO \"c\\:\\\\temp\\\\\\~foo9.txt\"]"), &a, 
+    assertQueryEquals(tc, _T("[\"c\\:\\\\temp\\\\\\~foo0.txt\" TO \"c\\:\\\\temp\\\\\\~foo9.txt\"]"), &a,
                       _T("[c:\\temp\\~foo0.txt TO c:\\temp\\~foo9.txt]"));
-    
+
     assertQueryEquals(tc, _T("a\\\\\\+b"), &a, _T("a\\+b"));
-    
+
     assertQueryEquals(tc, _T("a \\\"b c\\\" d"), &a, _T("a \"b c\" d"));
     assertQueryEquals(tc, _T("\"a \\\"b c\\\" d\""), &a, _T("\"a \"b c\" d\""));
     assertQueryEquals(tc, _T("\"a \\+b c d\""), &a, _T("\"a +b c d\""));
-    
+
     assertQueryEquals(tc, _T("c\\:\\\\temp\\\\\\~foo.txt"), &a, _T("c:\\temp\\~foo.txt"));
-    
+
 	assertParseException(tc, _T("XY\\")); // there must be a character after the escape char
-    
+
     // test unicode escaping
     assertQueryEquals(tc,_T("a\\u0062c"), &a, _T("abc"));
     assertQueryEquals(tc,_T("XY\\u005a"), &a, _T("XYZ"));
     assertQueryEquals(tc,_T("XY\\u005A"), &a, _T("XYZ"));
     assertQueryEquals(tc,_T("\"a \\\\\\u0028\\u0062\\\" c\""), &a, _T("\"a \\(b\" c\""));
-    
+
     assertParseException(tc,_T("XY\\u005G"));  // test non-hex character in escaped unicode sequence
     assertParseException(tc,_T("XY\\u005"));   // test incomplete escaped unicode sequence
-    
+
     // Tests bug LUCENE-800
     assertQueryEquals(tc,_T("(item:\\\\ item:ABCD\\\\)"), &a, _T("item:\\ item:ABCD\\"));
-    assertParseException(tc,_T("(item:\\\\ item:ABCD\\\\))")); // unmatched closing paranthesis 
+    assertParseException(tc,_T("(item:\\\\ item:ABCD\\\\))")); // unmatched closing paranthesis
     assertQueryEquals(tc,_T("\\*"), &a, _T("*"));
     assertQueryEquals(tc,_T("\\\\"), &a, _T("\\"));  // escaped backslash
-    
-    assertParseException(tc,_T("\\")); // a backslash must always be escaped 
+
+    assertParseException(tc,_T("\\")); // a backslash must always be escaped
 }
 
 // TODO: testLegacyDateRange, testDateRange

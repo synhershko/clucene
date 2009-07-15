@@ -270,7 +270,7 @@ private:
 
 	DEFINE_MUTEX(THIS_LOCK)
 	struct Internal;
-	Internal* internal;
+	Internal* _internal;
 protected:
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to retrieve previously saved TokenStreams for re-use

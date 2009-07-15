@@ -279,7 +279,7 @@ int32_t SegmentMerger::mergeFields() {
 	    tmp.clear(); reader->getFieldNames(IndexReader::UNINDEXED, tmp);
 	    if ( tmp.size() > 0 ){
 		    TCHAR** arr = _CL_NEWARRAY(TCHAR*,tmp.size()+1);
-		    tmp.toArray(arr);
+		    tmp.toArray(arr, true);
 		    fieldInfos->add((const TCHAR**)arr, false);
 		    _CLDELETE_ARRAY(arr); //no need to delete the contents, since tmp is responsible for it
 	    }
@@ -767,7 +767,9 @@ void SegmentMerger::mergeNorms() {
 			    //Get an IndexInput to the norm file for this field in this segment
           if ( normBuffer.length < maxDoc ){
             normBuffer.resize(maxDoc);
+            memset(normBuffer.values,0,sizeof(uint8_t) * maxDoc);
 			    }
+          reader->norms(fi->name, normBuffer.values);
 
           if (!reader->hasDeletions()) {
             //optimized case for segments without deleted docs

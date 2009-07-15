@@ -49,7 +49,7 @@ private:
 
 	void addDoc(const TCHAR* text, IndexWriter* writer) {
 		Document* doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES, Field::INDEX_TOKENIZED));
+		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLLDELETE(doc);
 	}
