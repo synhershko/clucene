@@ -78,7 +78,7 @@ class CLUCENE_INLINE_EXPORT PriorityQueue {
 	public:
 		virtual ~PriorityQueue(){
 			clear();
-			_CLDELETE_ARRAY(heap);
+			_CLDELETE_LARRAY(heap);
 		}
 
 	 /**

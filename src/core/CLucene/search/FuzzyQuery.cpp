@@ -61,7 +61,7 @@ CL_NS_DEF(search)
 
 		Term* trm = _CLNEW Term(searchTerm->field(), prefix); // _CLNEW Term(term, prefix); -- not intern'd?
 		setEnum(reader->terms(trm));
-		_CLDECDELETE(trm);
+		_CLLDECDELETE(trm);
 
 
 		/* LEGACY:
@@ -250,6 +250,7 @@ CL_NS_DEF(search)
 	  ScoreTerm(Term* _term, float_t _score):term(_term),score(_score){
 	  }
 	  virtual ~ScoreTerm(){
+          _CLLDECDELETE(term);
 	  }
   };
 
@@ -382,7 +383,7 @@ CL_NS_DEF(search)
 
   Query* FuzzyQuery::rewrite(IndexReader* reader) {
 	  FilteredTermEnum* enumerator = getEnum(reader);
-	  const int32_t maxClauseCount = BooleanQuery::getMaxClauseCount();
+	  const size_t maxClauseCount = BooleanQuery::getMaxClauseCount();
 	  ScoreTermQueue* stQueue = _CLNEW ScoreTermQueue(maxClauseCount);
 	  ScoreTerm* reusableST = NULL;
 
@@ -410,7 +411,8 @@ CL_NS_DEF(search)
 	  } _CLFINALLY({
 		  enumerator->close();
 		  _CLLDELETE(enumerator);
-	  })
+          //_CLLDELETE(reusableST);
+	  });
 
 	  BooleanQuery* query = _CLNEW BooleanQuery(true);
 	  const size_t size = stQueue->size();
@@ -418,11 +420,10 @@ CL_NS_DEF(search)
 		  ScoreTerm* st = stQueue->pop();
 		  TermQuery* tq = _CLNEW TermQuery(st->term);      // found a match
 		  tq->setBoost(getBoost() * st->score); // set the boost
-		  query->add(tq, BooleanClause::SHOULD);          // add to query
+		  query->add(tq, true, BooleanClause::SHOULD);          // add to query
+          _CLLDELETE(st);
 	  }
 	  _CLLDELETE(stQueue);
-
-	  //_CLDELETE(reusableST);
 
 	  return query;
   }
