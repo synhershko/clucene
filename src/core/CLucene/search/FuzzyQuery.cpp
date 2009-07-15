@@ -47,7 +47,7 @@ CL_NS_DEF(search)
 		//The prefix could be longer than the word.
 		//It's kind of silly though.  It means we must match the entire word.
 		const size_t fullSearchTermLength = searchTerm->textLength();
-		const size_t realPrefixLength = prefixLength > fullSearchTermLength ? fullSearchTermLength : prefixLength;
+		const size_t realPrefixLength = _prefixLength > fullSearchTermLength ? fullSearchTermLength : _prefixLength;
 
 		text = STRDUP_TtoT(searchTerm->text() + realPrefixLength);
 		textLen = fullSearchTermLength - realPrefixLength;
