@@ -29,7 +29,7 @@ CL_NS_DEF(search)
 
 	FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t _prefixLength):
 		FilteredTermEnum(),d(NULL),dLen(0),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
-		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(_prefixLength),
+		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(0),
 		minimumSimilarity(minSimilarity)
 	{
 		CND_PRECONDITION(term != NULL,"term is NULL");
@@ -45,21 +45,21 @@ CL_NS_DEF(search)
 		//The prefix could be longer than the word.
 		//It's kind of silly though.  It means we must match the entire word.
 		const size_t fullSearchTermLength = searchTerm->textLength();
-		const size_t realPrefixLength = prefixLength > fullSearchTermLength ? fullSearchTermLength : prefixLength;
+		const size_t realPrefixLength = _prefixLength > fullSearchTermLength ? fullSearchTermLength : _prefixLength;
 
 		text = STRDUP_TtoT(searchTerm->text() + realPrefixLength);
 		textLen = fullSearchTermLength - realPrefixLength;
 
-		// TODO: what is safer to use, prefixLength or realPrefixLength?
 		prefix = _CL_NEWARRAY(TCHAR,realPrefixLength+1);
 		_tcsncpy(prefix, searchTerm->text(), realPrefixLength);
 		prefix[realPrefixLength]='\0';
+        prefixLength = realPrefixLength;
 
 		initializeMaxDistances();
 
 		Term* trm = _CLNEW Term(searchTerm->field(), prefix); // _CLNEW Term(term, prefix); -- not intern'd?
 		setEnum(reader->terms(trm));
-		_CLDECDELETE(trm);
+		_CLLDECDELETE(trm);
 
 
 		/* LEGACY:
@@ -248,6 +248,7 @@ CL_NS_DEF(search)
 	  ScoreTerm(Term* _term, float_t _score):term(_term),score(_score){
 	  }
 	  virtual ~ScoreTerm(){
+          _CLLDECDELETE(term);
 	  }
   };
 
@@ -374,7 +375,7 @@ CL_NS_DEF(search)
 
   Query* FuzzyQuery::rewrite(IndexReader* reader) {
 	  FilteredTermEnum* enumerator = getEnum(reader);
-	  const int32_t maxClauseCount = BooleanQuery::getMaxClauseCount();
+	  const size_t maxClauseCount = BooleanQuery::getMaxClauseCount();
 	  ScoreTermQueue* stQueue = _CLNEW ScoreTermQueue(maxClauseCount);
 	  ScoreTerm* reusableST = NULL;
 
@@ -402,7 +403,8 @@ CL_NS_DEF(search)
 	  } _CLFINALLY({
 		  enumerator->close();
 		  _CLLDELETE(enumerator);
-	  })
+          //_CLLDELETE(reusableST);
+	  });
 
 	  BooleanQuery* query = _CLNEW BooleanQuery(true);
 	  const size_t size = stQueue->size();
@@ -410,11 +412,10 @@ CL_NS_DEF(search)
 		  ScoreTerm* st = stQueue->pop();
 		  TermQuery* tq = _CLNEW TermQuery(st->term);      // found a match
 		  tq->setBoost(getBoost() * st->score); // set the boost
-		  query->add(tq, BooleanClause::SHOULD);          // add to query
+		  query->add(tq, true, BooleanClause::SHOULD);          // add to query
+          _CLLDELETE(st);
 	  }
 	  _CLLDELETE(stQueue);
-
-	  //_CLDELETE(reusableST);
 
 	  return query;
   }
