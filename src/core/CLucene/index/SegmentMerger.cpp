@@ -637,6 +637,7 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
   int32_t i = 0;
   while ( (smi=smis[i]) != NULL ){
     //Get the i-th SegmentMergeInfo
+    smi = smis[i];
 
     //Condition check to see if smi points to a valid instance
     CND_PRECONDITION(smi!=NULL,"	 is NULL");
