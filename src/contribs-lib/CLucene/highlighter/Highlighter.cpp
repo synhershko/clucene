@@ -373,7 +373,7 @@ CL_NS_USE(util)
   	            }
 				_CLDELETE_ARRAY(frags);
 				frags = _CL_NEWARRAY(TextFragment*,fragTexts.size()+1);
-				fragTexts.toArray(frags);
+				fragTexts.toArray(frags, true);
   	        }
 
 			_CLDELETE(tokenGroup);
