@@ -164,15 +164,28 @@ if [ $t_license -eq 1 ]; then
         BH_len=${#BH}
         
         if [ "${BH:BH_len-2}" == ".h" ] || [ "${BH:BH_len-2}" == ".c" ] || [ "${BH:BH_len-4}" == ".cpp" ]; then
+		        
+		        #snowball has its own license...
+		        if [ "echo $H|grep 'snowball/src_c'" != "" ]; then
+		        	continue
+		        fi
+		        #snowball has its own license...
+		        if [ "echo $H|grep 'libstemmer'" != "" ]; then
+		        	continue
+		        fi
+		        #zlib has its own license...
+		        if [ "echo $H|grep 'CLucene/util/zlib'" != "" ]; then
+		        	continue
+		        fi
+		        
             if [ "`awk '/\* Copyright \(C\) [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
                 if [ "`awk '/\* Copyright [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
-                    echo "$H has invalid license"
+                    echo "$H ($BH) has invalid license"
                     FAIL=1
                 fi
             fi
         fi
     done
-
 fi
 
 
