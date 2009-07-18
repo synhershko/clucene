@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
-#include "IndexFileNameFilter.h"
+#include "_IndexFileNameFilter.h"
 #include "_IndexFileNames.h"
 
 CL_NS_DEF(index)

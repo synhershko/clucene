@@ -1,6 +1,6 @@
 #include "CLucene/_ApiHeader.h"
 #include "_IndexFileDeleter.h"
-#include "IndexFileNameFilter.h"
+#include "_IndexFileNameFilter.h"
 #include "_DocumentsWriter.h"
 #include "_SegmentHeader.h"
 #include "CLucene/store/Directory.h"
