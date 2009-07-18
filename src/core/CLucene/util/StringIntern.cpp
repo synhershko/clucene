@@ -24,7 +24,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
     #ifdef _DEBUG
 		SCOPED_LOCK_MUTEX(StringIntern_THIS_LOCK)
         if ( StringIntern_stringaPool.size() > 0 ){
-            printf("ERROR: stringaPool still contains intern'd strings (refcounts):\n");
+            printf("WARNING: stringaPool still contains intern'd strings (refcounts):\n");
             __strintrntype::iterator itr = StringIntern_stringaPool.begin();
             while ( itr != StringIntern_stringaPool.end() ){
                 printf(" %s (%d)\n",(itr->first), (itr->second));
@@ -33,7 +33,7 @@ DEFINE_MUTEX(StringIntern_THIS_LOCK)
         }
         
         if ( StringIntern_stringPool.size() > 0 ){
-            printf("ERROR: stringPool still contains intern'd strings (refcounts):\n");
+            printf("WARNING: stringPool still contains intern'd strings (refcounts):\n");
             __wcsintrntype::iterator itr = StringIntern_stringPool.begin();
             while ( itr != StringIntern_stringPool.end() ){
                 _tprintf(_T(" %s (%d)\n"),(itr->first), (itr->second));
