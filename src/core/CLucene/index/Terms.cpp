@@ -10,6 +10,9 @@
 
 CL_NS_DEF(index)
 
+TermDocs::~TermDocs(){
+}
+
 Term* TermEnum::term(bool pointer){
 	Term* ret = term();
 	if ( !pointer )

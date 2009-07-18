@@ -88,6 +88,8 @@ CL_NS_DEF(search)
   Query* PhraseQuery::clone() const{
 	  return _CLNEW PhraseQuery(*this);
   }
+  
+  const TCHAR* PhraseQuery::getFieldName() const{ return field; }
 
   void PhraseQuery::setSlop(const int32_t s) { slop = s; }
   int32_t PhraseQuery::getSlop() const { return slop; }

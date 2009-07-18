@@ -25,8 +25,7 @@ class TermPositions;
  */
 class CLUCENE_EXPORT TermDocs: LUCENE_BASE {
 public:
-	virtual ~TermDocs(){
-	}
+	virtual ~TermDocs();
 
 	// Sets this to the data for a term.
 	// The enumeration is reset to the start of the data for this term.

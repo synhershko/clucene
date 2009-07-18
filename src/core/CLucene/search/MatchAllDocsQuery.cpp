@@ -8,6 +8,7 @@
 #include "Query.h"
 #include "MatchAllDocsQuery.h"
 #include "Explanation.h"
+#include "SearchHeader.h"
 
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/StringBuffer.h"
@@ -53,7 +54,8 @@ TCHAR* MatchAllDocsQuery::MatchAllScorer::toString(){
 	return stringDuplicate(_T("MatchAllScorer"));
 }
 
-MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):parentQuery(enclosingInstance){
+MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):
+		parentQuery(enclosingInstance){
 	this->similarity = searcher->getSimilarity();
 }
 

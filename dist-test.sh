@@ -199,7 +199,7 @@ if [ $t_c_all -eq 1 ]; then
 fi
 
 if [ $t_inline -eq 1 ]; then
-		if [ ! -f "./doc" ]; then
+		if [ ! -d "./doc" ]; then
 			echo "Couldn't find docs, run:"
 		  echo "# cmake -DENABLE_CLDOCS:BOOLEAN=TRUE ."
 		  echo "# make doc"
@@ -214,7 +214,13 @@ if [ $t_inline -eq 1 ]; then
         if [ "doc/html/classlucene_1_1index_1_1Term.html:1" == $line ]; then
             continue;
         fi
-
+        if [ "doc/html/classlucene_1_1search_1_1Similarity.html:1" == $line ]; then
+            continue;
+        fi
+        if [ "doc/html/classlucene_1_1store_1_1BufferedIndexInput.html:1" == $line ]; then
+            continue;
+        fi
+        
         if [ $INLINES -eq 0 ]; then
             echo "These files report inline code:"
             INLINES=1

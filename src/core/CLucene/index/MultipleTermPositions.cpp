@@ -6,9 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "MultipleTermPositions.h"
-
 #include "IndexReader.h"
-
 #include "CLucene/util/Array.h"
 #include "CLucene/util/PriorityQueue.h"
 
@@ -16,6 +14,38 @@ CL_NS_USE(util)
 
 CL_NS_DEF(index)
 
+void MultipleTermPositions::seek(Term*) {
+	_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::seek");
+}
+
+void MultipleTermPositions::seek(TermEnum*) {
+	_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::seek");
+}
+
+int32_t MultipleTermPositions::read(int32_t*, int32_t*,int32_t) {
+	_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::read");
+}
+
+int32_t MultipleTermPositions::getPayloadLength() const {
+	_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::getPayloadLength");
+}
+
+uint8_t* MultipleTermPositions::getPayload(uint8_t*) {
+	_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::getPayload");
+}
+
+bool MultipleTermPositions::isPayloadAvailable() const{
+	return false;
+} 
+
+TermDocs* MultipleTermPositions::__asTermDocs(){ 
+	return (TermDocs*)this; 
+}
+TermPositions* MultipleTermPositions::__asTermPositions(){ 
+	return (TermPositions*)this; 
+}
+
+	
 class MultipleTermPositions::TermPositionsQueue : public CL_NS(util)::PriorityQueue<TermPositions*,
 	CL_NS(util)::Deletor::Object<TermPositions> > {
 public:

@@ -12,7 +12,8 @@
 CL_NS_DEF(store)
 CL_NS_USE(util)
 
-	IndexInput::IndexInput()
+	IndexInput::IndexInput():
+		NamedObject()
 	{
 	}
 	IndexInput::~IndexInput()
@@ -167,6 +168,9 @@ BufferedIndexInput::BufferedIndexInput(int32_t _bufferSize):
     }
   }
 
+	const char* BufferedIndexInput::getObjectName(){ return getClassName(); }
+	const char* BufferedIndexInput::getClassName(){ return "BufferedIndexInput"; }
+		
   void BufferedIndexInput::readBytes(uint8_t* b, const int32_t len){
     readBytes(b, len, true);
   }

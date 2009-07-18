@@ -137,29 +137,15 @@ public:
   /**
    * Deletes all commits except the most recent one.
    */
-  void onInit(std::vector<IndexCommitPoint*>& commits) {
-    // Note that commits.size() should normally be 1:
-    onCommit(commits);
-  }
+  void onInit(std::vector<IndexCommitPoint*>& commits);
 
   /**
    * Deletes all commits except the most recent one.
    */
-  void onCommit(std::vector<IndexCommitPoint*>& commits) {
-    // Note that commits.size() should normally be 2 (if not
-    // called by onInit above):
-    size_t size = commits.size();
-    for(size_t i=0;i<size-1;i++) {
-      commits[i]->deleteCommitPoint();
-    }
-  }
+  void onCommit(std::vector<IndexCommitPoint*>& commits);
 
-	static const char* getClassName(){
-		return "KeepOnlyLastCommitDeletionPolicy";
-	}
-	const char* getObjectName() const{
-		return getClassName();
-	}
+	static const char* getClassName();
+	const char* getObjectName() const;
 };
 
 CL_NS_END

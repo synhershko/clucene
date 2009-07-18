@@ -62,6 +62,7 @@ Query::Query():
 Query::~Query(){
 }
 
+const char* Query::getQueryName() const{ return getObjectName(); }
 /** Expert: called to re-write queries into primitive queries. */
 Query* Query::rewrite(CL_NS(index)::IndexReader* /*reader*/){
    return this;
