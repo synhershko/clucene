@@ -7,6 +7,8 @@
 #ifndef _lucene_index_MergeScheduler_
 #define _lucene_index_MergeScheduler_
 
+#include "CLucene/util/Equators.h"
+#include "CLucene/LuceneThreads.h"
 CL_NS_DEF(index)
 
 class IndexWriter;

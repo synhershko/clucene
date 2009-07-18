@@ -8,6 +8,7 @@
 #define _lucene_store_IndexInput_
 
 #include "CLucene/LuceneThreads.h"
+#include "CLucene/util/Equators.h"
 
 CL_NS_DEF(store)
 

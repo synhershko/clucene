@@ -9,12 +9,8 @@
 
 
 #include "CLucene/util/Array.h"
+#include "CLucene/util/Equators.h"
 CL_CLASS_DEF(index,IndexReader)
-//#include "Filter.h"
-//#include "Sort.h"
-//#include "CLucene/util/VoidList.h"
-//#include "Explanation.h"
-//#include "Similarity.h"
 
 CL_NS_DEF(search)
     class Weight;
@@ -40,7 +36,7 @@ CL_NS_DEF(search)
     <li>{@link queryParser.QueryParser QueryParser}
     </ul>
 	*/
-  class CLUCENE_EXPORT Query :/*LUCENE_BASE,*/ public CL_NS(util)::NamedObject { 
+  class CLUCENE_EXPORT Query : public CL_NS(util)::NamedObject { 
 	private:
 		// query boost factor
 		float_t boost;
