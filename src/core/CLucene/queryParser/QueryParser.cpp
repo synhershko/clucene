@@ -235,7 +235,7 @@ CL_NS(document)::DateTools::Resolution QueryParser::getDateResolution(const TCHA
   }
 
   CL_NS(document)::DateTools::Resolution resolution = fieldToDateResolution->get(fieldName);
-  if (resolution == NULL) {
+  if (resolution == CL_NS(document)::DateTools::Resolution::NO_RESOLUTION) {
     // no date resolutions set for the given field; return default date resolution instead
     resolution = dateResolution;
   }
@@ -837,7 +837,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
   bool prefix = false;
   bool wildcard = false;
   bool fuzzy = false;
-  bool rangein = false;
+  //bool rangein = false;
   Query* q = NULL;
   switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
   {
@@ -969,11 +969,11 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
 	  // TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
       if (goop1->kind == RANGEIN_QUOTED) {
         _tcscpy(goop1->image, goop1->image+1);
-		goop1->image[_tcslen(goop1->image)-1]=NULL;
+		goop1->image[_tcslen(goop1->image)-1]='\0';
       }
       if (goop2->kind == RANGEIN_QUOTED) {
         _tcscpy(goop2->image, goop2->image+1);
-		goop2->image[_tcslen(goop2->image)-1]=NULL;
+		goop2->image[_tcslen(goop2->image)-1]='\0';
       }
       TCHAR* t1 = discardEscapeChar(goop1->image);
       TCHAR* t2 = discardEscapeChar(goop2->image);
@@ -1065,7 +1065,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
       }
 	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
 	  const size_t st = _tcslen(term->image);
-	  term->image[st-1]=NULL;
+	  term->image[st-1]='\0';
       TCHAR* tmp = discardEscapeChar(term->image+1);
       q = getFieldQuery(_field, tmp, s);
       _CLDELETE_LCARRAY(tmp);
@@ -1355,7 +1355,7 @@ void QueryParser::jj_rescan_token() {
   jj_rescan = false;
 }
 
-void QueryParser::jj_save(const int32_t index, int32_t xla) {
+void QueryParser::jj_save(const int32_t /*index*/, int32_t xla) {
   JJCalls* p = jj_2_rtns;
   while (p->gen > jj_gen) {
     if (p->next == NULL) { p = p->next = new JJCalls(); break; }

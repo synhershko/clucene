@@ -31,7 +31,7 @@ TCHAR* QueryToken::toString() const
 }
 
 /*static*/
-QueryToken* QueryToken::newToken(const int32_t ofKind)
+QueryToken* QueryToken::newToken(const int32_t /*ofKind*/)
 {
 	//switch(ofKind)
 	//{
