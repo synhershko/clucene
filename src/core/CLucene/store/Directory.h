@@ -7,8 +7,10 @@
 #ifndef _lucene_store_Directory
 #define _lucene_store_Directory
 
+#include "CLucene/util/Equators.h"
 #include "CLucene/LuceneThreads.h"
 #include <string>
+#include <vector>
 
 CL_CLASS_DEF(store,Lock)
 CL_CLASS_DEF(store,IndexInput)

@@ -95,12 +95,12 @@ if [ $t_env -eq 1 ]; then
         if [ "${BH:0:1}" != "_" ]; then
             DH=`dirname "${H:3}"`
         
-            #move headers somewhere to compile
-            mkdir -p "$TMP/$DH" 2>/dev/null
-            ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
-            
-            #create pub-headers.cpp
             if [ "${H:7}" != "core/CLucene/util/Reader.h" ]; then
+	            #move headers somewhere to compile
+	            mkdir -p "$TMP/$DH" 2>/dev/null
+	            ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
+	            
+	            #create pub-headers.cpp
               echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
             fi
         fi
@@ -130,7 +130,7 @@ if [ $t_c_h -eq 1 ] || [ $t_ifdefs -eq 1 ] || [ $t_exports -eq 1 ]; then
       			#internal headers... none must be exported
 	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
 	          if [ "$XX" == "" ]; then
-	              echo "$H has exported class: $XX"
+	              echo "$H is internal but has exported class: $XX"
 	              echo ""
 	              FAIL=1
 	          fi
@@ -146,13 +146,17 @@ if [ $t_c_h -eq 1 ] || [ $t_ifdefs -eq 1 ] || [ $t_exports -eq 1 ]; then
         fi
         
         #test that each header compiles independently...
-        if [ $t_c_h -eq 1 ] && [ "${H:7}" != "disttest/src/core/CLucene/util/Reader.h" ]; then
-            echo "Test that $H compiles seperately..."
+        if [ $t_c_h -eq 1 ]; then
             echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-header.cpp
             echo "#include \"$H"\" >>$TMP/pub-header.cpp
             echo "int main(){ return 0; }" >>"$TMP/pub-header.cpp"
-            g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp
-            if [ $? -ne 0 ]; then FAIL=1; fi
+            ERROR=`g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp`
+            if [ $? -ne 0 ]; then 
+              echo ""
+            	echo "$H doesn't compile seperately..."
+            	echo $ERROR
+            	FAIL=1; 
+            fi
         fi
     done
 fi

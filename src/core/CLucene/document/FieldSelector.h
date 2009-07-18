@@ -9,6 +9,7 @@
 
 #include "CLucene/util/Equators.h"
 #include "CLucene/util/Array.h"
+#include "CLucene/util/VoidMap.h"
 
 CL_NS_DEF(document)
 

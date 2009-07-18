@@ -11,6 +11,7 @@
 #include "QueryParserTokenManager.h"
 #include "CLucene/document/DateTools.h"
 #include "CLucene/util/VoidMap.h"
+#include "CLucene/util/VoidList.h"
 
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(analysis,Analyzer)

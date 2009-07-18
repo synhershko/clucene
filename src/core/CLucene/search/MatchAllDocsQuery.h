@@ -7,16 +7,16 @@
 #ifndef _lucene_search_MatchAllDocsQuery_h
 #define _lucene_search_MatchAllDocsQuery_h
 
-#include "SearchHeader.h"
-#include "Explanation.h"
 #include "Scorer.h"
-#include "Similarity.h"
-#include "Searchable.h"
+#include "SearchHeader.h"
+#include "Query.h"
 
+CL_CLASS_DEF(index,Explanation)
+CL_CLASS_DEF(index,Similarity)
 CL_CLASS_DEF(index,IndexReader)
 
 CL_NS_DEF(search)
-    class Query;
+  class Weight;
     
 	/**
 	* A query that matches all documents.
