@@ -20,7 +20,7 @@ class IndexDeletionPolicy;
  * "own" the directory, which means that they try to acquire a write lock
  * whenever index modifications are performed.
  */
-class DirectoryIndexReader: public IndexReader {
+class CLUCENE_EXPORT DirectoryIndexReader: public IndexReader {
 private:
   IndexDeletionPolicy* deletionPolicy;
 

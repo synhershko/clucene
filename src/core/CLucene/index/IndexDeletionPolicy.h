@@ -13,7 +13,7 @@
 CL_NS_DEF(index)
 
 
-class IndexCommitPoint {
+class CLUCENE_EXPORT IndexCommitPoint {
 public:
   virtual ~IndexCommitPoint();
   /**
@@ -67,7 +67,7 @@ public:
  * href="http://issues.apache.org/jira/browse/LUCENE-710">LUCENE-710</a>
  * for details.</p>
  */
-class IndexDeletionPolicy: public CL_NS(util)::NamedObject{
+class CLUCENE_EXPORT IndexDeletionPolicy: public CL_NS(util)::NamedObject{
 public:
   virtual ~IndexDeletionPolicy();
 
@@ -131,7 +131,7 @@ public:
  * the default deletion policy.
  */
 
-class KeepOnlyLastCommitDeletionPolicy: public IndexDeletionPolicy {
+class CLUCENE_EXPORT KeepOnlyLastCommitDeletionPolicy: public IndexDeletionPolicy {
 public:
   virtual ~KeepOnlyLastCommitDeletionPolicy();
   /**

@@ -94,7 +94,7 @@ public:
  * <p/>
  * See {@link FieldSelectorResult#LOAD_AND_BREAK}
  */
-class LoadFirstFieldSelector :public FieldSelector {
+class CLUCENE_EXPORT LoadFirstFieldSelector :public FieldSelector {
 public:
 	~LoadFirstFieldSelector();
 

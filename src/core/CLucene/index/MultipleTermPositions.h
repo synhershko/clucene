@@ -15,7 +15,7 @@ CL_NS_DEF(index)
 class Term;
 class IndexReader;
 
-class MultipleTermPositions : public TermPositions {
+class CLUCENE_EXPORT MultipleTermPositions : public TermPositions {
 private:
 	class TermPositionsQueue;
 	class IntQueue;
