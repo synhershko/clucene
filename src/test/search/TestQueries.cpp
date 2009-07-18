@@ -206,8 +206,6 @@ public:
         writer.optimize();
         writer.close();
         IndexSearcher searcher(&directory);
-
-        FuzzyQuery* query;
         
         // not similar enough:
         CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("xxxxx")) == 0);

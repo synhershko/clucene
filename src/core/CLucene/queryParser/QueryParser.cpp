@@ -78,6 +78,17 @@ const TCHAR* QueryParserConstants::tokenImage[] = {
 const int32_t QueryParser::jj_la1_0[] = {0x180,0x180,0xe00,0xe00,0x1f69f80,0x48000,0x10000,0x1f69000,0x1348000,0x80000,0x80000,0x10000,0x18000000,0x2000000,0x18000000,0x10000,0x80000000,0x20000000,0x80000000,0x10000,0x80000,0x10000,0x1f68000};
 const int32_t QueryParser::jj_la1_1[] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0};
 
+struct QueryParser::JJCalls {
+public:
+    int32_t gen;
+    QueryToken* first;
+    int32_t arg;
+    JJCalls* next;
+
+    JJCalls();
+    ~JJCalls();
+};
+
 QueryParser::QueryParser(const TCHAR* f, Analyzer* a) : _operator(OR_OPERATOR),
   lowercaseExpandedTerms(true),useOldRangeQuery(false),allowLeadingWildcard(false),enablePositionIncrements(false),
   analyzer(a),field(NULL),phraseSlop(0),fuzzyMinSim(FuzzyQuery::defaultMinSimilarity),
@@ -235,7 +246,7 @@ CL_NS(document)::DateTools::Resolution QueryParser::getDateResolution(const TCHA
   }
 
   CL_NS(document)::DateTools::Resolution resolution = fieldToDateResolution->get(fieldName);
-  if (resolution == CL_NS(document)::DateTools::Resolution::NO_RESOLUTION) {
+  if (resolution == CL_NS(document)::DateTools::NO_RESOLUTION) {
     // no date resolutions set for the given field; return default date resolution instead
     resolution = dateResolution;
   }
