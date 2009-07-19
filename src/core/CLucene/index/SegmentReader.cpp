@@ -32,8 +32,8 @@ CL_NS_DEF(index)
 	segment(seg),
     useSingleNormStream(_useSingleNormStream),
 	in(instrm),
-	dirty(false),
-	bytes(NULL){
+	bytes(NULL),
+	dirty(false){
   //Func - Constructor
   //Pre  - instrm is a valid reference to an IndexInput
   //Post - A Norm instance has been created with an empty bytes array
@@ -226,43 +226,23 @@ CL_NS_DEF(index)
     return get(si->dir, si, NULL, false, false, BufferedIndexInput::BUFFER_SIZE, true);
   }
 
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
   SegmentReader* SegmentReader::get(SegmentInfo* si, bool doOpenStores) {
     return get(si->dir, si, NULL, false, false, BufferedIndexInput::BUFFER_SIZE, doOpenStores);
   }
 
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
   SegmentReader* SegmentReader::get(SegmentInfo* si, int32_t readBufferSize){
     return get(si->dir, si, NULL, false, false, readBufferSize, true);
   }
 
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
   SegmentReader* SegmentReader::get(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores){
     return get(si->dir, si, NULL, false, false, readBufferSize, doOpenStores);
   }
 
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
   SegmentReader* SegmentReader::get(SegmentInfos* sis, SegmentInfo* si,
                                   bool closeDir) {
     return get(si->dir, si, sis, closeDir, true, BufferedIndexInput::BUFFER_SIZE, true);
   }
 
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
   SegmentReader* SegmentReader::get(Directory* dir, SegmentInfo* si,
                                   SegmentInfos* sis,
                                   bool closeDir, bool ownDir,
