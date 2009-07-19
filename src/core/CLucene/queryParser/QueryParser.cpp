@@ -610,8 +610,8 @@ int32_t QueryParser::hexToInt(TCHAR c) {
   } else if (_T('A') <= c && c <= _T('F')) {
     return c - _T('A') + 10;
   } else {
-    TCHAR err[48];
-    cl_stprintf(err,48,_T("Non-hex character in unicode escape sequence: %c"));
+    TCHAR err[50];
+    cl_stprintf(err,50, _T("Non-hex character in unicode escape sequence: %c"), c);
     _CLTHROWT(CL_ERR_Parse,err);
   }
 }
