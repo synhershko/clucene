@@ -1467,6 +1467,7 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
                 segmentInfos->size() > 0 &&
                 segmentInfos->info(segmentInfos->size()-1) == newSegment)
               segmentInfos->remove(segmentInfos->size()-1);
+            _CLDELETE(rollback);
           }
           if (flushDocs)
             docWriter->abort(NULL);
@@ -1475,6 +1476,8 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
 
           if (!segment.empty())
             deleter->refresh(segment.c_str());
+        }else{
+          _CLDELETE(rollback);
         }
       )
 
@@ -1708,8 +1711,9 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
       segmentInfos->insert(rollback,true);
       deletePartialSegmentsFile();
       deleter->refresh(_merge->info->name.c_str());
+    }else{
+      _CLDELETE(rollback);
     }
-    _CLDELETE(rollback);
   )
 
   if (_merge->optimize)

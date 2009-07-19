@@ -722,30 +722,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
         return norm->bytes;
     }
   }
-/**
-   * Increments the RC of this reader, as well as
-   * of all norms this reader is using
-   */
-  void SegmentReader::incRef() {
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    DirectoryIndexReader::incRef();
-    NormsType::iterator it = _norms.begin();
-    while (it != _norms.end()) {
-      Norm* norm = it->second;
-      norm->incRef();
-      it++;
-    }
-  }
-  void SegmentReader::decRef(){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    DirectoryIndexReader::decRef();
-    NormsType::iterator it = _norms.begin();
-    while (it != _norms.end()) {
-      Norm* norm = it->second;
-      norm->decRef();
-      it++;
-    }
-  }
+
   DirectoryIndexReader* SegmentReader::doReopen(SegmentInfos* infos){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     DirectoryIndexReader* newReader;
@@ -935,18 +912,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
   }
 
 
-
-
-  void SegmentReader::incRefReaderNotNorms() {
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    DirectoryIndexReader::incRef();
-  }
-
-  void SegmentReader::decRefReaderNotNorms(){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    DirectoryIndexReader::decRef();
-  }
-
   void SegmentReader::loadDeletedDocs(){
     // NOTE: the bitvector is stored using the regular directory, not cfs
     if (hasDeletions(si)) {
@@ -983,6 +948,7 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     }
 
     if (normsUpToDate && deletionsUpToDate) {
+      this->si = si; //force the result to use the new segment info (the old one is going to go away!)
       return this;
     }
 
@@ -991,101 +957,107 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     SegmentReader* clone = NULL;
     bool success = false;
     try {
-      clone = _CLNEW SegmentReader();
-      clone->init(_directory, NULL, false);
-      clone->initialize(si, readBufferSize, false, true);
-      clone->cfsReader = cfsReader;
-      clone->storeCFSReader = storeCFSReader;
-      clone->_fieldInfos = _fieldInfos;
-      clone->tis = tis;
-      clone->freqStream = freqStream;
-      clone->proxStream = proxStream;
-      clone->termVectorsReaderOrig = termVectorsReaderOrig;
+    clone = _CLNEW SegmentReader();
+    clone->init(_directory, NULL, false);
+    clone->initialize(si, readBufferSize, false, true);
+    clone->cfsReader = cfsReader;
+    clone->storeCFSReader = storeCFSReader;
+    clone->_fieldInfos = _fieldInfos;
+    clone->tis = tis;
+    clone->freqStream = freqStream;
+    clone->proxStream = proxStream;
+    clone->termVectorsReaderOrig = termVectorsReaderOrig;
 
-      // we have to open a new FieldsReader, because it is not thread-safe
-      // and can thus not be shared among multiple SegmentReaders
-      // TODO: Change this in case FieldsReader becomes thread-safe in the future
-      string fieldsSegment;
+    // we have to open a new FieldsReader, because it is not thread-safe
+    // and can thus not be shared among multiple SegmentReaders
+    // TODO: Change this in case FieldsReader becomes thread-safe in the future
+    string fieldsSegment;
 
-      Directory* storeDir = directory();
+    Directory* storeDir = directory();
 
-      if (si->getDocStoreOffset() != -1) {
-        fieldsSegment = si->getDocStoreSegment();
-        if (storeCFSReader != NULL) {
-          storeDir = storeCFSReader;
-        }
-      } else {
-        fieldsSegment = segment;
-        if (cfsReader != NULL) {
-          storeDir = cfsReader;
-        }
+    if (si->getDocStoreOffset() != -1) {
+      fieldsSegment = si->getDocStoreSegment();
+      if (storeCFSReader != NULL) {
+        storeDir = storeCFSReader;
       }
-
-      if (fieldsReader != NULL) {
-        clone->fieldsReader = _CLNEW FieldsReader(storeDir, fieldsSegment.c_str(), _fieldInfos, readBufferSize,
-                                        si->getDocStoreOffset(), si->docCount);
+    } else {
+      fieldsSegment = segment;
+      if (cfsReader != NULL) {
+        storeDir = cfsReader;
       }
+    }
+
+    if (fieldsReader != NULL) {
+      clone->fieldsReader = _CLNEW FieldsReader(storeDir, fieldsSegment.c_str(), _fieldInfos, readBufferSize,
+                                      si->getDocStoreOffset(), si->docCount);
+    }
 
 
-      if (!deletionsUpToDate) {
-        // load deleted docs
-        clone->deletedDocs = NULL;
-        clone->loadDeletedDocs();
-      } else {
-        clone->deletedDocs = this->deletedDocs;
-      }
+    if (!deletionsUpToDate) {
+      // load deleted docs
+      clone->deletedDocs = NULL;
+      clone->loadDeletedDocs();
+    } else {
+      clone->deletedDocs = this->deletedDocs;
+    }
 
-      if (!normsUpToDate) {
-        // load norms
-        for (size_t i = 0; i < fieldNormsChanged.length; i++) {
-          // copy unchanged norms to the cloned reader and incRef those norms
-          if (!fieldNormsChanged[i]) {
-            const TCHAR* curField = _fieldInfos->fieldInfo(i)->name;
-            Norm* norm = this->_norms.get(curField);
+    if (!normsUpToDate) {
+      // load norms
+      for (size_t i = 0; i < fieldNormsChanged.length; i++) {
+        // copy unchanged norms to the cloned reader and incRef those norms
+        if (!fieldNormsChanged[i]) {
+          const TCHAR* curField = _fieldInfos->fieldInfo(i)->name;
+          Norm* norm = this->_norms.get(curField);
             norm->incRef();
-            norm->_this = clone; //give the norm to the clone
-          clone->_norms.put(curField, norm);
-          }
-        }
-
-        clone->openNorms(si->getUseCompoundFile() ? cfsReader : directory(), readBufferSize);
-      } else {
-        NormsType::iterator it = _norms.begin();
-        while (it != _norms.end()) {
-          const TCHAR* field = it->first;
-          Norm* norm = _norms[field];
-          norm->incRef();
           norm->_this = clone; //give the norm to the clone
-          clone->_norms.put(field, norm);
-          it++;
+          clone->_norms.put(curField, norm);
         }
       }
 
-      if (clone->singleNormStream == NULL) {
-        for (size_t i = 0; i < _fieldInfos->size(); i++) {
-          FieldInfo* fi = _fieldInfos->fieldInfo(i);
-          if (fi->isIndexed && !fi->omitNorms) {
-            Directory* d = si->getUseCompoundFile() ? cfsReader : directory();
-            string fileName = si->getNormFileName(fi->number);
-            if (si->hasSeparateNorms(fi->number)) {
-              continue;
-            }
+      clone->openNorms(si->getUseCompoundFile() ? cfsReader : directory(), readBufferSize);
+    } else {
+      NormsType::iterator it = _norms.begin();
+      while (it != _norms.end()) {
+        const TCHAR* field = it->first;
+        Norm* norm = _norms[field];
+        norm->incRef();
+        norm->_this = clone; //give the norm to the clone
+        clone->_norms.put(field, norm);
+        it++;
+      }
+    }
 
-            string ext = string(".") + IndexFileNames::NORMS_EXTENSION;
-            if (fileName.compare(fileName.length()-ext.length(),ext.length(),ext)==0) {
-              clone->singleNormStream = d->openInput(fileName.c_str(), readBufferSize);
-              break;
-            }
+    if (clone->singleNormStream == NULL) {
+      for (size_t i = 0; i < _fieldInfos->size(); i++) {
+        FieldInfo* fi = _fieldInfos->fieldInfo(i);
+        if (fi->isIndexed && !fi->omitNorms) {
+          Directory* d = si->getUseCompoundFile() ? cfsReader : directory();
+          string fileName = si->getNormFileName(fi->number);
+          if (si->hasSeparateNorms(fi->number)) {
+            continue;
+          }
+
+          string ext = string(".") + IndexFileNames::NORMS_EXTENSION;
+          if (fileName.compare(fileName.length()-ext.length(),ext.length(),ext)==0) {
+            clone->singleNormStream = d->openInput(fileName.c_str(), readBufferSize);
+            break;
           }
         }
       }
+    }
 
-      success = true;
+    success = true;
     } _CLFINALLY (
       if (!success) {
         // An exception occured during reopen, we have to decRef the norms
         // that we incRef'ed already and close singleNormsStream and FieldsReader
-        clone->decRef();
+        NormsType::iterator it = _norms.begin();
+        while (it != _norms.end()) {
+          const TCHAR* field = it->first;
+          Norm* norm = _norms[field];
+          norm->decRef();
+          it++;
+        }
       }
     )
 
@@ -1098,8 +1070,6 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     this->ones = NULL;
     this->termVectorsReaderOrig = NULL;
     this->cfsReader = NULL;
-    this->fieldsReader = NULL;
-    this->tis = NULL;
     this->freqStream = NULL;
     this->proxStream = NULL;
     this->termVectorsReaderOrig = NULL;

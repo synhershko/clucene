@@ -54,7 +54,6 @@ class TermVectorMapper;
 */
 class CLUCENE_EXPORT IndexReader: public CL_NS(util)::NamedObject{
   bool closed;
-  mutable int refCount;
 protected:
   bool hasChanges;
 
@@ -94,21 +93,6 @@ protected:
   * @throws AlreadyClosedException if this IndexReader is closed
   */
   virtual void ensureOpen();
-
-  /**
-   * Increments the refCount of this IndexReader instance. RefCounts are used to determine
-   * when a reader can be closed safely, i. e. as soon as no other IndexReader is referencing
-   * it anymore.
-   */
-  virtual void incRef();
-
-  /**
-   * Decreases the refCount of this IndexReader instance. If the refCount drops
-   * to 0, then pending changes are committed to the index and this reader is closed.
-   *
-   * @throws IOException in case an IOException occurs in commit() or doClose()
-   */
-  virtual void decRef();
 
   /** Does nothing by default. Subclasses that require a write lock for
    *  index modifications must implement this method. */
