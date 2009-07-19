@@ -115,7 +115,6 @@
 #include "CLucene/store/IndexOutput.cpp"
 #include "CLucene/store/Directory.cpp"
 #include "CLucene/store/RAMDirectory.cpp"
-//#include "CLucene/store/TransactionalRAMDirectory.cpp"
 #include "CLucene/util/BitSet.cpp"
 #include "CLucene/util/Equators.cpp"
 #include "CLucene/util/FastCharStream.cpp"
