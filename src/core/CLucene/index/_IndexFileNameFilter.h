@@ -14,11 +14,12 @@ CL_NS_DEF(index)
 class FilenameFilter{
 public:
 	virtual bool accept(const char* dir, const char* name) const = 0;
+	virtual ~FilenameFilter();
 };
 
 /**
  * Filename filter that accept filenames and extensions only created by Lucene.
- * 
+ *
  * @author Daniel Naber / Bernhard Messer
  * @version $rcs = ' $Id: Exp $ ' ;
  */

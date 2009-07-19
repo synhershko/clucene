@@ -8,6 +8,8 @@
 #include "Query.h"
 #include "MatchAllDocsQuery.h"
 #include "Explanation.h"
+#include "SearchHeader.h"
+#include "Searchable.h"
 
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/StringBuffer.h"
