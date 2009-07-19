@@ -192,7 +192,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool 
   this->commitLockTimeout =0;
   this->closeDir = closeDir;
   this->commitPending = this->closed = this->closing = false;
-  directory = d;
+  directory = _CL_POINTER(d);
   analyzer = a;
   this->infoStream = defaultInfoStream;
   setMessageID();
@@ -542,6 +542,7 @@ void IndexWriter::closeInternal(bool waitForMerges) {
 
     if (closeDir)
       directory->close();
+    _CLDECDELETE(directory);
 
     if (writeLock != NULL) {
       writeLock->release();                          // release write lock

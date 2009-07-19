@@ -126,15 +126,15 @@ IndexReader* MultiReader::reopen() {
       success = true;
       ret = mr;
     } else {
+      success = true;
+      ret = this;
+
       //newSubReaders doesn't get used... clear out all the references to the other readers
       for (size_t i = 0; i < subReaders->length; i++) {
         newSubReaders->values[i] = NULL;
       }
       //then delete the memory..
       _CLDELETE(newSubReaders);
-
-      success = true;
-      ret = this;
     }
   } _CLFINALLY (
     if (!success && reopened) {
@@ -190,8 +190,9 @@ int32_t MultiReader::numDocs() {
     // Don't call ensureOpen() here (it could affect performance)
 	if (_internal->_numDocs == -1) {			  // check cache
 	  int32_t n = 0;				  // cache miss--recompute
-	  for (size_t i = 0; i < subReaders->length; i++)
+	  for (size_t i = 0; i < subReaders->length; i++){
 	    n += (*subReaders)[i]->numDocs();		  // sum from readers
+	  }
 	  _internal->_numDocs = n;
 	}
 	return _internal->_numDocs;

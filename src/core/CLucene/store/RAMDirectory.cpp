@@ -452,7 +452,7 @@ CL_NS_DEF(store)
   }
 
 
-  bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize) {
+  bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t /*bufferSize*/) {
     SCOPED_LOCK_MUTEX(files_mutex);
     RAMFile* file = files->get((char*)name);
     if (file == NULL) {
@@ -460,7 +460,7 @@ CL_NS_DEF(store)
 		  return false;
     }
     ret = _CLNEW RAMInputStream( file );
-	return true;
+	  return true;
   }
 
   void RAMDirectory::close(){
