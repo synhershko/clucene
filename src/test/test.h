@@ -36,6 +36,7 @@ CL_NS_USE2(analysis,standard)
 
 CuSuite *testatomicupdates(void);
 CuSuite *testindexwriter(void);
+CuSuite *testindexmodifier(void);
 CuSuite *testindexreader(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
