@@ -460,7 +460,7 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
 			//read in chars b/c we already know the length we need to read
 			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead+1);
 			localFieldsStream->readChars(chars, 0, toRead);
-      chars[toRead] = NULL;
+			chars[toRead] = _T('\0');
 			_resetValue();
 			fieldsData = chars;
 		}

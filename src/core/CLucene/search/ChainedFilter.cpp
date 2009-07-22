@@ -19,18 +19,21 @@ CL_NS_USE(document)
 
 
 ChainedFilter::ChainedFilter( Filter ** _filters, int _op ):
+	Filter(),
 	filters(_filters),
 	logicArray(NULL),
 	logic(_op)
 {
 }
 ChainedFilter::ChainedFilter( Filter** _filters, int* _array ):
+	Filter(),
 	filters(_filters),
 	logicArray(_array),
 	logic(-1)
 {
 }
 ChainedFilter::ChainedFilter( const ChainedFilter& copy ) :
+	Filter(copy),
 	logicArray( copy.logicArray ),
 	logic( copy.logic )
 {

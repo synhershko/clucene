@@ -88,7 +88,7 @@ DocumentsWriter::ThreadState::~ThreadState(){
   _CLDELETE(tvfLocal);
   _CLDELETE(fdtLocal);
 
-  for ( int i=0; i<allFieldDataArray.length;i++)
+  for ( size_t i=0; i<allFieldDataArray.length;i++)
     _CLDELETE(allFieldDataArray.values[i]);
 }
 
@@ -506,7 +506,7 @@ void DocumentsWriter::ThreadState::trimFields() {
     }
   }
   //delete everything after up to in allFieldDataArray
-  for ( int i=upto;i<allFieldDataArray.length;i++ ){
+  for ( size_t i=upto;i<allFieldDataArray.length;i++ ){
     allFieldDataArray[i] = NULL;
   }
 
