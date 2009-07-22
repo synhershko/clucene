@@ -209,16 +209,6 @@ CL_NS_DEF(index)
 		return true;
 	}
 
-	Term* SegmentTermEnum::term() {
-	//Func - Returns the current term.
-	//Pre  - pointer is true or false and indicates if the reference counter
-	//       of term must be increased or not
-	//       next() must have been called once!
-	//Post - pointer = true -> term has been returned with an increased reference counter
-	//       pointer = false -> term has been returned
-
-		return _CL_POINTER(_term);
-	}
 	Term* SegmentTermEnum::term(bool pointer) {
 		if ( pointer )
 			return _CL_POINTER(_term);
