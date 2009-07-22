@@ -190,7 +190,7 @@ bool Term::equals(const Term* other) const{
    if ( cachedHashCode != 0 && other->cachedHashCode != 0 && other->cachedHashCode != cachedHashCode )
 		return false;
 
-  if ( _field==other->_field || (0 == _tcscmp(_field,other->_field)) ){
+  if ( _field==other->_field ){
      //this can be quicker than using compareTo, because checks
      //field length first
 	  if ( textLen == other->textLen ){

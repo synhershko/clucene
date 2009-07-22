@@ -42,7 +42,7 @@ void testIMinsertDelete(CuTest *tc){
 		Term deleted(
 			_T("field0"),
 			field.str().c_str(),
-			false
+			true
 		);
 		CLUCENE_ASSERT(ndx.deleteDocuments(&deleted) > 0);
 	}
