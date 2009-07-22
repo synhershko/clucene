@@ -102,7 +102,7 @@ public:
 	* @param create <code>true</code> to create the index or overwrite the existing one;
 	* 	<code>false</code> to append to the existing index
 	*/
-	IndexModifier(CL_NS(store)::Directory* directory, CL_NS(analysis)::Analyzer* analyzer);
+	IndexModifier(CL_NS(store)::Directory* directory, CL_NS(analysis)::Analyzer* analyzer, bool create);
 
 	~IndexModifier();
 
@@ -122,7 +122,7 @@ protected:
 	* Initialize an IndexWriter.
 	* @throws IOException
 	*/
-	void init(CL_NS(store)::Directory* directory, CL_NS(analysis)::Analyzer* analyzer);
+	void init(CL_NS(store)::Directory* directory, CL_NS(analysis)::Analyzer* analyzer, bool create);
 
 	/**
 	* Throw an IllegalStateException if the index is closed.

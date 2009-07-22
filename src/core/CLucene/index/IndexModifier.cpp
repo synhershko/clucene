@@ -24,16 +24,16 @@ CL_NS_USE(store)
 CL_NS_USE(analysis)
 CL_NS_USE(document)
 
-IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer) {
-	init(directory, analyzer);
+IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer, bool create) {
+	init(directory, analyzer, create);
 }
 
 IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool create) {
 	Directory* dir = FSDirectory::getDirectory(dirName, create);
-	init(dir, analyzer);
+	init(dir, analyzer, create);
 }
 
-void IndexModifier::init(Directory* directory, Analyzer* analyzer) {
+void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) {
 	indexWriter = NULL;
 	indexReader = NULL;
 	this->analyzer = analyzer;
