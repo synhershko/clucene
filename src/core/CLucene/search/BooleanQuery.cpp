@@ -340,8 +340,10 @@ CL_NS_DEF(search)
         Scorer* subScorer = w->scorer(reader);
         if (subScorer != NULL)
           result->add(subScorer, c->isRequired(), c->isProhibited());
-        else if (c->isRequired())
+        else if (c->isRequired()){
+          _CLDELETE(result);
           return NULL;
+        }
       }
 
       return result;
