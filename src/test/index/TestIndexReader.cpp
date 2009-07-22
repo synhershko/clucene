@@ -170,7 +170,7 @@ IndexReader* defaultModifyIndexTestMulti(CuTest* tc, IndexReader* reader, int i)
   _CLDELETE(x);
   defaultModifyIndexTestDir1 = tmp;
 
-  ObjectArray<IndexReader> readers(2);
+  ValueArray<IndexReader*> readers(2);
   readers[0] = IndexReader::open(defaultModifyIndexTestDir1);
   readers[1] = IndexReader::open(defaultModifyIndexTestDir2);
   return _CLNEW MultiReader(&readers, true);
@@ -271,17 +271,17 @@ void testMultiReaderReopen(CuTest *tc){
   RAMDirectory dir2 ;
   createIndex(tc, &dir2, true);
 
-  ObjectArray<IndexReader> readers1(2);
+  ValueArray<IndexReader*> readers1(2);
   readers1[0] = IndexReader::open(&dir1);
   readers1[1] = IndexReader::open(&dir2);
   IndexReader* index1 = _CLNEW MultiReader(&readers1, true);
 
-  ObjectArray<IndexReader> readers2(2);
+  ValueArray<IndexReader*> readers2(2);
   readers2[0] = IndexReader::open(&dir1);
   readers2[1] = IndexReader::open(&dir2);
   IndexReader* index2 = _CLNEW MultiReader(&readers2, true);
 
-  ObjectArray<IndexReader> readers2b(2);
+  ValueArray<IndexReader*> readers2b(2);
   readers2b[0] = IndexReader::open(&dir1);
   readers2b[1] = IndexReader::open(&dir2);
   IndexReader* index2b = _CLNEW MultiReader(&readers2b, true);
