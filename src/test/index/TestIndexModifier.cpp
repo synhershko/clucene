@@ -21,7 +21,7 @@ public:
 template<typename modification>
 class IMinsertDelete_tester : public modification {
 public:
-	void invoke(CuTest *tc);
+	void invoke(Directory& storage, CuTest *tc);
 };
 
 void bulk_modification::modify_index(CuTest *tc, IndexModifier& ndx){
@@ -82,13 +82,15 @@ void incremental_modification::modify_index(CuTest *tc, IndexModifier& ndx){
 }
 
 template<typename modification>
-void IMinsertDelete_tester<modification>::invoke(CuTest *tc){
-	RAMDirectory ram;
+void IMinsertDelete_tester<modification>::invoke(
+	Directory& storage,
+	CuTest *tc
+){
 	SimpleAnalyzer a;
 
-	IndexModifier ndx2(&ram,&a,true);
+	IndexModifier ndx2(&storage,&a,true);
 	ndx2.close();
-	IndexModifier ndx(&ram,&a,false);
+	IndexModifier ndx(&storage,&a,false);
 
 	ndx.setUseCompoundFile(false);
 	ndx.setMergeFactor(2);
@@ -99,7 +101,7 @@ void IMinsertDelete_tester<modification>::invoke(CuTest *tc){
 	ndx.close();
 
 	//test the ram loading
-	RAMDirectory ram2(&ram);
+	RAMDirectory ram2(&storage);
 	IndexReader* reader2 = IndexReader::open(&ram2);
 	Term* term = _CLNEW Term(_T("field0"),_T("fielddata1"));
 	TermDocs* en = reader2->termDocs(term);
@@ -115,8 +117,16 @@ void IMinsertDelete_tester<modification>::invoke(CuTest *tc){
 }
 
 void testIMinsertDelete(CuTest *tc){
-	IMinsertDelete_tester<bulk_modification>().invoke(tc);
-	IMinsertDelete_tester<incremental_modification>().invoke(tc);
+	char fsdir[CL_MAX_PATH];
+	sprintf(fsdir,"%s/%s",cl_tempDir, "test.search");
+	RAMDirectory ram;
+	FSDirectory* disk = FSDirectory::getDirectory(fsdir, true);
+	IMinsertDelete_tester<bulk_modification>().invoke(ram, tc);
+	IMinsertDelete_tester<incremental_modification>().invoke(ram, tc);
+	IMinsertDelete_tester<bulk_modification>().invoke(*disk, tc);
+	IMinsertDelete_tester<incremental_modification>().invoke(*disk, tc);
+	disk->close();
+	_CLDECDELETE(disk);
 }
 
 CuSuite *testindexmodifier(void)
