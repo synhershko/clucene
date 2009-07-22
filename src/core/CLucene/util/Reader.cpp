@@ -82,7 +82,7 @@ int32_t StringReader::read(const TCHAR*& start, int32_t min, int32_t max){
 int64_t StringReader::position(){
 	return pos;
 }
-void StringReader::setMinBufSize(int32_t s){
+void StringReader::setMinBufSize(int32_t /*s*/){
 }
 int64_t StringReader::reset(int64_t pos){
 	if ( pos >= 0 && pos < this->m_size )
@@ -148,7 +148,7 @@ int32_t AStringReader::read(const unsigned char*& start, int32_t min, int32_t ma
 int64_t AStringReader::position(){
 	return pos;
 }
-void AStringReader::setMinBufSize(int32_t s){
+void AStringReader::setMinBufSize(int32_t /*s*/){
 }
 int64_t AStringReader::reset(int64_t pos){
 	if ( pos >= 0 && pos < this->m_size )

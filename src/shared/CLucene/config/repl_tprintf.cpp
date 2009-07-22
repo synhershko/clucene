@@ -13,7 +13,7 @@ CL_NS_USE(util)
 
 //print a variable argument to a stream
 //currently special number formatting is not supported. it is very minimalistic
-void lucene_vfnwprintf(StringBuffer* buffer, size_t count, const wchar_t * format, va_list& valist){
+void lucene_vfnwprintf(StringBuffer* buffer, size_t /*count*/, const wchar_t * format, va_list& valist){
 	const wchar_t *iter = format;
 	StringBuffer* tmp = NULL;
 	if ( buffer == NULL )
