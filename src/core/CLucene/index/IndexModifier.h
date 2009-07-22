@@ -134,7 +134,7 @@ protected:
 	* Close the IndexReader and open an IndexWriter.
 	* @throws IOException
 	*/
-	void createIndexWriter();
+	void createIndexWriter(bool create = false);
 
 	/**
 	* Close the IndexWriter and open an IndexReader.
