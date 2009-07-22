@@ -154,7 +154,7 @@ BitSet* BitSet::clone() const {
     int32_t last=0;
     int32_t n = count();
     int32_t m = (_size >> 3);
-    for (int32_t i=0; i<m && n>0; i++) {
+    for (int32_t i=0; i<=m && n>0; i++) {
       if (bits[i]!=0) {
         output->writeVInt(i-last);
         output->writeByte(bits[i]);
