@@ -133,11 +133,13 @@ CL_NS_DEF(store)
   		writeString(buf,length);
   	}_CLFINALLY ( _CLDELETE_CARRAY(buf); )
   }
-  
+
+#ifdef _UCS2
   void IndexOutput::writeString(const TCHAR* s, const int32_t length ) {
     writeVInt(length);
     writeChars(s, length);
   }
+#endif
 
   void IndexOutput::writeChars(const TCHAR* s, const int32_t length){
     if ( length < 0 )
