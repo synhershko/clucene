@@ -562,6 +562,11 @@ public:
 	~Internal(){
 		_CLDELETE( coordinator );
 		_CLDELETE( countingSumScorer );
+		/* TODO: these leak memory... haven't figure out how it should be fixed though...
+		requiredScorers.clear();
+		optionalScorers.clear();
+		prohibitedScorers.clear();
+		*/
 	}
 
 };
