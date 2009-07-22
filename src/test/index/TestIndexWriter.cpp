@@ -187,9 +187,72 @@ void testAddIndexes(CuTest *tc){
   }
 }
 
+void testHashingBug(CuTest *tc){
+  //Manuel Freiholz's indexing bug
+
+  CL_NS(document)::Document doc;
+  CL_NS(document)::Field* field;
+  CL_NS(analysis::standard)::StandardAnalyzer analyzer;
+  CL_NS(store)::RAMDirectory dir;
+  CL_NS(index)::IndexWriter writer(&dir, &analyzer, true, true );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VERSION"), _T("1"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_PID"), _T("5"), CL_NS(document)::Field::STORE_YES | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_DATE"), _T("20090722"), CL_NS(document)::Field::STORE_YES | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_SEARCHDATA"), _T("all kind of data"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_TOKENIZED );
+  doc.add( (*field) );
+
+  writer.addDocument( &doc ); // ADDING FIRST DOCUMENT. -> this works!
+
+  doc.clear();
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VERSION"), _T("1"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_PID"), _T("5"), CL_NS(document)::Field::STORE_YES | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_LINEID"), _T("20"), CL_NS(document)::Field::STORE_YES | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VT_ORDER"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_H"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_HF"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_D"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_OD"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_P1"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) );
+
+  field = _CLNEW CL_NS(document)::Field( _T("CNS_VN_H1"), _T("456033000"), CL_NS(document)::Field::STORE_NO | CL_NS(document)::Field::INDEX_UNTOKENIZED );
+  doc.add( (*field) ); // the problematic field!
+
+  writer.addDocument( &doc ); // ADDING SECOND DOCUMENT - will never return from this function
+  writer.optimize();          // stucks in line 222-223
+  writer.close();
+  _CL_DECREF(&dir);
+}
+
+
 CuSuite *testindexwriter(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
+	SUITE_ADD_TEST(suite, testHashingBug);
 	SUITE_ADD_TEST(suite, testAddIndexes);
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
   SUITE_ADD_TEST(suite, testIWmergeSegments2);

@@ -62,23 +62,27 @@
 #else
 class CLUCENE_EXPORT CLuceneError
 {
+#ifndef _ASCII
 	char* _awhat;
+#endif
 	TCHAR* _twhat;
 	int error_number;
 public:
 	CLuceneError();
 	CLuceneError(const CLuceneError& clone);
+#ifndef _ASCII
 	CLuceneError(int num, const char* str, bool ownstr);
-#ifdef _UCS2
-	CLuceneError(int num, const TCHAR* str, bool ownstr);
 #endif
+	CLuceneError(int num, const TCHAR* str, bool ownstr);
   	int number() const{return error_number;}
 		char* what();
 		TCHAR* twhat();
 		~CLuceneError() throw();
 
-	void set(int num, const char*, bool ownstr=false);
 	void set(int num, const TCHAR*, bool ownstr=false);
+#ifndef _ASCII
+	void set(int num, const char*, bool ownstr=false);
+#endif
 };
 	
  //#define _THROWS //does nothing
