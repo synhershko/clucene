@@ -75,7 +75,9 @@ void AbstractCachingFilter::closeCallback(CL_NS(index)::IndexReader* reader, voi
 
 
 
-CachingWrapperFilter::CachingWrapperFilter(Filter* filter, bool deleteFilter){
+CachingWrapperFilter::CachingWrapperFilter(Filter* filter, bool deleteFilter):
+	AbstractCachingFilter()
+{
 	this->filter = filter;
 	this->deleteFilter = deleteFilter;
 }

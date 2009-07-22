@@ -26,7 +26,7 @@ private:
 	bool hasNorms(const TCHAR* field);
 	uint8_t* fakeNorms();
 
-  void init(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders);
+  void init(const CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders);
 protected:
 	CL_NS(util)::ArrayBase<IndexReader*>* subReaders;
 	int32_t* starts;			  // 1st docno for each segment
@@ -41,11 +41,12 @@ public:
 	* <p>Construct a MultiReader aggregating the named set of (sub)readers.
 	* Directory locking for delete, undeleteAll, and setNorm operations is
 	* left to the subreaders. </p>
-	* <p>Note that all subreaders are closed if this Multireader is closed.</p>
 	* @param subReaders set of (sub)readers
+  * @param closeSubReaders The subReaders (IndexReader instances) are deleted if true
 	* @throws IOException
+  * @memory The subReaders array itself belongs to the caller
 	*/
-	MultiReader(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders=true);
+	MultiReader(const CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders=true);
 
 	~MultiReader();
 

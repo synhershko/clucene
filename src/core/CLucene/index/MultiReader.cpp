@@ -49,18 +49,19 @@ public:
 	}
 };
 
-MultiReader::MultiReader(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders)
+MultiReader::MultiReader(const CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders)
 {
 	this->_internal = _CLNEW Internal();
   this->init(subReaders, closeSubReaders);
 }
 
-void MultiReader::init(CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
-  this->subReaders = _subReaders;
+void MultiReader::init(const CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
+  this->subReaders = _CLNEW CL_NS(util)::ValueArray<IndexReader*>(_subReaders->length);
   starts = _CL_NEWARRAY(int32_t, subReaders->length + 1);    // build starts array
   _internal->decrefOnClose = _CL_NEWARRAY(bool, subReaders->length);
 
   for (size_t i = 0; i < subReaders->length; i++) {
+    this->subReaders->values[i] = _subReaders->values[i];
       starts[i] = _internal->_maxDoc;
 
       // compute maxDocs
@@ -84,9 +85,10 @@ MultiReader::~MultiReader() {
 //Post - The instance has been destroyed all IndexReader instances
 //       this instance managed have been destroyed to
 
+  close();
 	_CLDELETE(_internal);
   _CLDELETE_ARRAY(starts);
-  subReaders->deleteValues();
+  _CLDELETE(subReaders);
 }
 
 
@@ -94,18 +96,18 @@ IndexReader* MultiReader::reopen() {
   ensureOpen();
 
   bool reopened = false;
-  ArrayBase<IndexReader*>* newSubReaders = _CLNEW ObjectArray<IndexReader>(subReaders->length);
+  ValueArray<IndexReader*> newSubReaders(subReaders->length);
   ValueArray<bool> newDecrefOnClose(subReaders->length);
 
   bool success = false;
   IndexReader* ret = NULL;
   try {
     for (size_t i = 0; i < subReaders->length; i++) {
-      newSubReaders->values[i] = (*subReaders)[i]->reopen();
+      newSubReaders[i] = (*subReaders)[i]->reopen();
 
       // if at least one of the subreaders was updated we remember that
       // and return a new MultiReader
-      if ((*newSubReaders)[i] != (*subReaders)[i]) {
+      if (newSubReaders[i] != (*subReaders)[i]) {
         reopened = true;
         // this is a new subreader instance, so on close() we don't
         // decRef but close it
@@ -114,10 +116,10 @@ IndexReader* MultiReader::reopen() {
     }
 
     if (reopened) {
-      MultiReader* mr = _CLNEW MultiReader(newSubReaders);
+      MultiReader* mr = _CLNEW MultiReader(&newSubReaders);
 
       for (size_t i = 0; i < subReaders->length; i++) {
-        if ((*newSubReaders)[i] == (*subReaders)[i]) {
+        if (newSubReaders[i] == (*subReaders)[i]) {
           // 'give' the memory to the new object
           mr->_internal->decrefOnClose[i] = this->_internal->decrefOnClose[i];
           this->subReaders->values[i] = NULL;
@@ -128,22 +130,15 @@ IndexReader* MultiReader::reopen() {
     } else {
       success = true;
       ret = this;
-
-      //newSubReaders doesn't get used... clear out all the references to the other readers
-      for (size_t i = 0; i < subReaders->length; i++) {
-        newSubReaders->values[i] = NULL;
-      }
-      //then delete the memory..
-      _CLDELETE(newSubReaders);
     }
   } _CLFINALLY (
     if (!success && reopened) {
-      for (size_t i = 0; i < newSubReaders->length; i++) {
-        if ((*newSubReaders)[i] != NULL) {
+      for (size_t i = 0; i < newSubReaders.length; i++) {
+        if (newSubReaders[i] != NULL) {
           try {
             if (!newDecrefOnClose[i]) {
-              (*newSubReaders)[i]->close();
-              _CLDELETE(newSubReaders->values[i]);
+              newSubReaders[i]->close();
+              _CLDELETE(newSubReaders.values[i]);
             }
           } catch (CLuceneError& ignore) {
             if ( ignore.number() != CL_ERR_IO ) throw ignore;
