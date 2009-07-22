@@ -28,7 +28,7 @@ class MultiReader::Internal: LUCENE_BASE{
 public:
   MultiSegmentReader::NormsCacheType normsCache;
 
-  bool* decrefOnClose; //remember which subreaders to decRef on close
+  bool* closeOnClose; //remember which subreaders to close on close
   bool _hasDeletions;
   uint8_t* ones;
   int32_t _maxDoc;
@@ -41,11 +41,11 @@ public:
     _numDocs       = -1;
     ones           = NULL;
     _hasDeletions  = false;
-    decrefOnClose  = NULL;
+    closeOnClose  = NULL;
 	}
 	~Internal(){
     _CLDELETE_ARRAY(ones);
-    _CLDELETE_ARRAY(decrefOnClose);
+    _CLDELETE_ARRAY(closeOnClose);
 	}
 };
 
@@ -58,7 +58,7 @@ MultiReader::MultiReader(const CL_NS(util)::ArrayBase<IndexReader*>* subReaders,
 void MultiReader::init(const CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
   this->subReaders = _CLNEW CL_NS(util)::ValueArray<IndexReader*>(_subReaders->length);
   starts = _CL_NEWARRAY(int32_t, subReaders->length + 1);    // build starts array
-  _internal->decrefOnClose = _CL_NEWARRAY(bool, subReaders->length);
+  _internal->closeOnClose = _CL_NEWARRAY(bool, subReaders->length);
 
   for (size_t i = 0; i < subReaders->length; i++) {
     this->subReaders->values[i] = _subReaders->values[i];
@@ -66,13 +66,7 @@ void MultiReader::init(const CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, 
 
       // compute maxDocs
       _internal->_maxDoc += (*subReaders)[i]->maxDoc();
-
-      if (!closeSubReaders) {
-        _internal->decrefOnClose[i] = true;
-      } else {
-        _internal->decrefOnClose[i] = false;
-      }
-
+      _internal->closeOnClose[i] = closeSubReaders;
       if ((*subReaders)[i]->hasDeletions())
         _internal->_hasDeletions = true;
   }
@@ -97,7 +91,7 @@ IndexReader* MultiReader::reopen() {
 
   bool reopened = false;
   ValueArray<IndexReader*> newSubReaders(subReaders->length);
-  ValueArray<bool> newDecrefOnClose(subReaders->length);
+  ValueArray<bool> newCloseOnClose(subReaders->length);
 
   bool success = false;
   IndexReader* ret = NULL;
@@ -109,9 +103,8 @@ IndexReader* MultiReader::reopen() {
       // and return a new MultiReader
       if (newSubReaders[i] != (*subReaders)[i]) {
         reopened = true;
-        // this is a new subreader instance, so on close() we don't
-        // decRef but close it
-        newDecrefOnClose[i] = false;
+        // this is a new subreader instance, so on close() we don't close it
+        newCloseOnClose[i] = true;
       }
     }
 
@@ -121,7 +114,7 @@ IndexReader* MultiReader::reopen() {
       for (size_t i = 0; i < subReaders->length; i++) {
         if (newSubReaders[i] == (*subReaders)[i]) {
           // 'give' the memory to the new object
-          mr->_internal->decrefOnClose[i] = this->_internal->decrefOnClose[i];
+          mr->_internal->closeOnClose[i] = this->_internal->closeOnClose[i];
           this->subReaders->values[i] = NULL;
         }
       }
@@ -136,10 +129,10 @@ IndexReader* MultiReader::reopen() {
       for (size_t i = 0; i < newSubReaders.length; i++) {
         if (newSubReaders[i] != NULL) {
           try {
-            if (!newDecrefOnClose[i]) {
-              newSubReaders[i]->close();
-              _CLDELETE(newSubReaders.values[i]);
-            }
+            if (newCloseOnClose[i]) {
+               newSubReaders.values[i]->close();
+               _CLDELETE(newSubReaders.values[i]);
+             }
           } catch (CLuceneError& ignore) {
             if ( ignore.number() != CL_ERR_IO ) throw ignore;
             // keep going - we want to clean up as much as possible
@@ -329,9 +322,9 @@ void MultiReader::doCommit() {
 void MultiReader::doClose() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	for (size_t i = 0; i < subReaders->length; i++){
-	  if ( (*subReaders)[i] == NULL ) continue; //reopen may take some memory...
-      if (!_internal->decrefOnClose[i]) {
-        (*subReaders)[i]->close();
+      if ( (*subReaders)[i] == NULL ) continue; //reopen may take some memory...
+      if (_internal->closeOnClose[i]) {
+        subReaders->values[i]->close();
         _CLDELETE(subReaders->values[i]);
       }
 	}
