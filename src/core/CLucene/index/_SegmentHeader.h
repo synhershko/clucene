@@ -265,6 +265,12 @@ protected:
   // can return null if norms aren't stored
   uint8_t* getNorms(const TCHAR* field);
 
+  /**
+   * Decrements the RC of the norms this reader is using
+   */
+  void decRefNorms();
+
+
   DirectoryIndexReader* doReopen(SegmentInfos* infos);
 
 public:
