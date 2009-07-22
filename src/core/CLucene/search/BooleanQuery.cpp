@@ -367,7 +367,6 @@ CL_NS_DEF(search)
 					sumExpl->addDetail(e);
 					sum += e->getValue();
 					coord++;
-					e = NULL; //prevent e from being deleted
 				} else {
 					StringBuffer buf(100);
 					buf.append(_T("match on prohibited clause ("));
@@ -395,6 +394,8 @@ CL_NS_DEF(search)
 				r->addDetail(e);
 				sumExpl->addDetail(r);
 				fail = true;
+			}else{
+			  _CLDELETE(e);
 			}
 		}
 		if (fail) {
