@@ -265,14 +265,6 @@ protected:
   // can return null if norms aren't stored
   uint8_t* getNorms(const TCHAR* field);
 
-  /**
-   * Increments the RC of this reader, as well as
-   * of all norms this reader is using
-   */
-  void incRef();
-  void decRef();
-
-
   DirectoryIndexReader* doReopen(SegmentInfos* infos);
 
 public:
@@ -435,21 +427,8 @@ private:
   static bool hasSeparateNorms(SegmentInfo* si);
   static uint8_t* createFakeNorms(int32_t size);
 
-
-
-
-  /**
-   * only increments the RC of this reader, not tof
-   * he norms. This is important whenever a reopen()
-   * creates a new SegmentReader that doesn't share
-   * the norms with this one
-   */
-  void incRefReaderNotNorms();
-  void decRefReaderNotNorms();
   void loadDeletedDocs();
   SegmentReader* reopenSegment(SegmentInfo* si);
-
-
 
   /** Returns the field infos of this segment */
   FieldInfos* fieldInfos();

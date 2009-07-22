@@ -10,6 +10,9 @@
 
 CL_NS_DEF(index)
 
+FilenameFilter::~FilenameFilter(){
+}
+
 IndexFileNameFilter* IndexFileNameFilter::singleton = _CLNEW IndexFileNameFilter();
 
 void IndexFileNameFilter::_shutdown(){
