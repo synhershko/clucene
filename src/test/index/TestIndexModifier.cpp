@@ -6,19 +6,25 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 #include "CLucene/index/IndexModifier.h"
-#include <iostream>
 #include <sstream>
 
-void testIMinsertDelete(CuTest *tc){
-	RAMDirectory ram;
-	SimpleAnalyzer a;
+class bulk_modification {
+public:
+	void modify_index(CuTest *tc, IndexModifier& ndx);
+};
 
-	IndexModifier ndx2(&ram,&a,true);
-	ndx2.close();
-	IndexModifier ndx(&ram,&a,false);
+class incremental_modification {
+public:
+	void modify_index(CuTest *tc, IndexModifier& ndx);
+};
 
-	ndx.setUseCompoundFile(false);
-	ndx.setMergeFactor(2);
+template<typename modification>
+class IMinsertDelete_tester : public modification {
+public:
+	void invoke(CuTest *tc);
+};
+
+void bulk_modification::modify_index(CuTest *tc, IndexModifier& ndx){
 	std::basic_stringstream<TCHAR> field;
 	for ( int i=0;i<1000;i++ ){
 		field.str(_T(""));
@@ -46,6 +52,49 @@ void testIMinsertDelete(CuTest *tc){
 		);
 		CLUCENE_ASSERT(ndx.deleteDocuments(&deleted) > 0);
 	}
+}
+
+void incremental_modification::modify_index(CuTest *tc, IndexModifier& ndx){
+	std::basic_stringstream<TCHAR> field;
+	for ( int i=0;i<1000;i++ ){
+		field.str(_T(""));
+		field << _T("fielddata") << i;
+
+		Document doc;
+		
+		doc.add (
+			*_CLNEW Field(
+				_T("field0"),
+				field.str().c_str(),
+				Field::STORE_YES | Field::INDEX_UNTOKENIZED
+			)
+		);
+		ndx.addDocument(&doc);
+		if ( 0 == i % 2 ) {
+			Term deleted(
+				_T("field0"),
+				field.str().c_str(),
+				true
+			);
+			CLUCENE_ASSERT(ndx.deleteDocuments(&deleted) > 0);
+		}
+	}
+}
+
+template<typename modification>
+void IMinsertDelete_tester<modification>::invoke(CuTest *tc){
+	RAMDirectory ram;
+	SimpleAnalyzer a;
+
+	IndexModifier ndx2(&ram,&a,true);
+	ndx2.close();
+	IndexModifier ndx(&ram,&a,false);
+
+	ndx.setUseCompoundFile(false);
+	ndx.setMergeFactor(2);
+
+	this->modify_index(tc, ndx);
+
 	ndx.optimize();
 	ndx.close();
 
@@ -64,6 +113,12 @@ void testIMinsertDelete(CuTest *tc){
 	_CLDECDELETE(term);
 	_CLDELETE(reader2);
 }
+
+void testIMinsertDelete(CuTest *tc){
+	IMinsertDelete_tester<bulk_modification>().invoke(tc);
+	IMinsertDelete_tester<incremental_modification>().invoke(tc);
+}
+
 CuSuite *testindexmodifier(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexModifier Test"));
