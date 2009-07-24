@@ -197,7 +197,8 @@ exit_point:
     if (alltests != NULL)
         CuSuiteListDelete(alltests);
     CuStringFree(output);
-    _CLDELETE_CaARRAY(cl_tempDir)
+    _CLDELETE_LCaARRAY(const_cast<char *>(cl_tempDir));
+    cl_tempDir = NULL;
 
     _lucene_shutdown(); //clears all static memory
     //print lucenebase debug
