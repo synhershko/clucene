@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -11,8 +11,15 @@
 
 CL_NS_DEF(queryParser)
 
-FastCharStream::FastCharStream(CL_NS(util)::Reader* r, bool ownsReader) : _bufferSize(0),buffer(NULL),
-	bufferLength(0),bufferPosition(0),tokenStart(0),bufferStart(0),input(r),_ownsReader(ownsReader)
+FastCharStream::FastCharStream(CL_NS(util)::Reader* r, bool ownsReader) :
+  buffer(NULL),
+  _bufferSize(0),
+  bufferLength(0),
+  bufferPosition(0),
+  tokenStart(0),
+  bufferStart(0),
+  input(r),
+  _ownsReader(ownsReader)
 {
 }
 
@@ -114,6 +121,6 @@ int32_t FastCharStream::getBeginColumn() const {
 }
 int32_t FastCharStream::getBeginLine() const {
 	return 1;
-} 
+}
 
 CL_NS_END

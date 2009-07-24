@@ -11,6 +11,7 @@
 #include "QueryParserTokenManager.h"
 #include "CLucene/document/DateTools.h"
 #include "CLucene/util/VoidMap.h"
+#include "CLucene/util/VoidList.h"
 
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(analysis,Analyzer)
@@ -429,16 +430,7 @@ private:
   /** Returns the numeric value of the hexadecimal character */
   static int32_t hexToInt(TCHAR c);
 
-  class JJCalls {
-  public:
-    int32_t gen;
-    QueryToken* first;
-    int32_t arg;
-    JJCalls* next;
-
-    JJCalls();
-    ~JJCalls();
-  };
+  struct JJCalls;
 
 public:
   /**

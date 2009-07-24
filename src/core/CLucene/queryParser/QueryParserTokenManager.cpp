@@ -57,7 +57,7 @@ QueryParserTokenManager::~QueryParserTokenManager()
 	_CLLDELETE(input_stream);
 }
 
-int32_t QueryParserTokenManager::jjStopStringLiteralDfa_3(const int32_t pos, int64_t active0)
+int32_t QueryParserTokenManager::jjStopStringLiteralDfa_3(const int32_t /*pos*/, int64_t /*active0*/)
 {
 	return -1;
 }
@@ -818,9 +818,8 @@ int32_t QueryParserTokenManager::jjMoveNfa_0(const int32_t startState, int32_t c
 		}
 		else if (curChar < 128)
 		{
-			uint64_t l = ((uint64_t)1L) << (curChar & 63);
-
 			/*
+            uint64_t l = ((uint64_t)1L) << (curChar & 63);
 			do
 		   {
 			   switch(jjstateSet[--i])
@@ -832,13 +831,13 @@ int32_t QueryParserTokenManager::jjMoveNfa_0(const int32_t startState, int32_t c
 		}
 		else
 		{
-			int32_t hiByte = (int)(curChar >> 8);
+			/*
+            int32_t hiByte = (int)(curChar >> 8);
 			int32_t i1 = hiByte >> 6;
 			uint64_t l1 = ((uint64_t)1L) << (hiByte & 63);
 			int32_t i2 = (curChar & 0xff) >> 6;
 			uint64_t l2 = ((uint64_t)1L) << (curChar & 63);
 
-			/*
 			do
 		   {
 			   switch(jjstateSet[--i])
@@ -1233,7 +1232,7 @@ QueryToken* QueryParserTokenManager::getNextToken() {
 	}
 }
 
-TCHAR* QueryParserTokenManager::getLexicalError(bool EOFSeen, int32_t lexState, int32_t errorLine,
+TCHAR* QueryParserTokenManager::getLexicalError(bool EOFSeen, int32_t /*lexState*/, int32_t errorLine,
 												int32_t errorColumn, TCHAR* errorAfter, TCHAR curChar)
 {
 	TCHAR* tmp = NULL;

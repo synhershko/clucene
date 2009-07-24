@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -84,7 +84,7 @@ CL_NS_DEF(search)
 
 		if (e == 0x7f800000 && f != 0)
 		u.i = 0x7fc00000;
-	    
+
 		return u.i;
 	}
 
@@ -95,7 +95,7 @@ CL_NS_DEF(search)
 		return u.f;
 	}
 
-	
+
    float_t Similarity::byteToFloat(uint8_t b) {
       if (b == 0)                                   // zero is a special case
          return 0.0f;
@@ -184,7 +184,7 @@ CL_NS_DEF(search)
       return idf(searcher->docFreq(term), searcher->maxDoc());
    }
 
-   
+
    float_t Similarity::idf(CL_NS(util)::CLVector<Term*>* terms, Searcher* searcher) {
       float_t _idf = 0.0f;
       for (CL_NS(util)::CLVector<Term*>::iterator i = terms->begin(); i != terms->end(); i++ ) {
@@ -204,13 +204,12 @@ CL_NS_DEF(search)
 	DefaultSimilarity::~DefaultSimilarity(){
 	}
 
-  float_t DefaultSimilarity::lengthNorm(const TCHAR* fieldName, int32_t numTerms) {
+  float_t DefaultSimilarity::lengthNorm(const TCHAR* /*fieldName*/, int32_t numTerms) {
     if ( numTerms == 0 ) //prevent div by zero
         return 0;
-    float_t ret = (float_t)(1.0 / sqrt((float_t)numTerms));
-	return ret;
+    return (1.0 / sqrt((float_t)numTerms));
   }
-  
+
   float_t DefaultSimilarity::queryNorm(float_t sumOfSquaredWeights) {
     if ( sumOfSquaredWeights == 0 ) //prevent div by zero
         return 0.0f;
@@ -220,15 +219,15 @@ CL_NS_DEF(search)
   float_t DefaultSimilarity::tf(float_t freq) {
     return sqrt(freq);
   }
-    
+
   float_t DefaultSimilarity::sloppyFreq(int32_t distance) {
     return 1.0f / (distance + 1);
   }
-    
+
   float_t DefaultSimilarity::idf(int32_t docFreq, int32_t numDocs) {
     return (float_t)(log(numDocs/(float_t)(docFreq+1)) + 1.0);
   }
-    
+
   float_t DefaultSimilarity::coord(int32_t overlap, int32_t maxOverlap) {
   	if ( maxOverlap == 0 )
   		return 0.0f;

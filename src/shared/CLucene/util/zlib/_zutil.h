@@ -14,7 +14,7 @@
 #define ZUTIL_H
 
 #define ZLIB_INTERNAL
-#include "zlib.h"
+#include "_zlib.h"
 
 #ifdef STDC
 #  ifndef _WIN32_WCE

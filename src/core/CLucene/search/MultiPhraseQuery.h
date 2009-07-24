@@ -9,6 +9,7 @@
 
 #include "Query.h"
 #include "CLucene/util/Array.h"
+#include "CLucene/util/VoidList.h"
 
 CL_CLASS_DEF(index,Term)
 

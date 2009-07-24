@@ -9,7 +9,7 @@
 
 CL_NS_DEF(queryParser)
 
-class QueryParserConstants {
+class CLUCENE_EXPORT QueryParserConstants {
 public:
 	enum Types {
 		_EOF = 0,

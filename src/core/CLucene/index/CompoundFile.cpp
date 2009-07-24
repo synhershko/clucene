@@ -54,8 +54,8 @@ protected:
 	* @param b the array to read uint8_ts into
 	* @param length the number of uint8_ts to read
 	*/
-	void readInternal(uint8_t* b, const int32_t len);
-	void seekInternal(const int64_t pos)
+	void readInternal(uint8_t* /*b*/, const int32_t /*len*/);
+	void seekInternal(const int64_t /*pos*/)
 	{
 	}
 
@@ -239,18 +239,18 @@ bool CompoundFileReader::fileExists(const char* name) const{
 }
 
 int64_t CompoundFileReader::fileModified(const char* name) const{
-  return directory->fileModified(fileName);
+  return directory->fileModified(name);
 }
 
 void CompoundFileReader::touchFile(const char* name){
-  directory->touchFile(fileName);
+  directory->touchFile(name);
 }
 
-bool CompoundFileReader::doDeleteFile(const char* name){
+bool CompoundFileReader::doDeleteFile(const char* /*name*/){
    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: CompoundFileReader::doDeleteFile");
 }
 
-void CompoundFileReader::renameFile(const char* from, const char* to){
+void CompoundFileReader::renameFile(const char* /*from*/, const char* /*to*/){
    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: CompoundFileReader::renameFile");
 }
 
@@ -265,10 +265,10 @@ int64_t CompoundFileReader::fileLength(const char* name) const{
   }
   return e->length;
 }
-IndexOutput* CompoundFileReader::createOutput(const char* name){
+IndexOutput* CompoundFileReader::createOutput(const char* /*name*/){
    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: CompoundFileReader::createOutput");
 }
-LuceneLock* CompoundFileReader::makeLock(const char* name){
+LuceneLock* CompoundFileReader::makeLock(const char* /*name*/){
    _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: CompoundFileReader::makeLock");
 }
 

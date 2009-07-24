@@ -33,7 +33,7 @@ void Explanation::set(const Explanation& copy){
     _CLDELETE(this->details);
 
 	if (copy.details != NULL) {
-		this->details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >;
+		this->details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >(true);
 		CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >::const_iterator itr;
 		itr = copy.details->begin();
 		while ( itr != copy.details->end() ){
@@ -91,7 +91,7 @@ void Explanation::getDetails(Explanation** ret) {
 Explanation* Explanation::getDetail(const size_t i){return (*details)[i];}
 
 void Explanation::addDetail(Explanation* detail) {
-	if (details==NULL) details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >;
+	if (details==NULL) details = _CLNEW CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> >(true);
 	details->push_back(detail);
 }
 
@@ -144,6 +144,11 @@ TCHAR* Explanation::toHtml() {
 }
 
 ComplexExplanation::ComplexExplanation():Explanation(){}
+ComplexExplanation::ComplexExplanation(const ComplexExplanation& copy):
+  Explanation(copy)
+{
+   this->match = copy.match;
+}
 ComplexExplanation::ComplexExplanation(const bool _match, const float_t _value, const TCHAR* _description):
 	Explanation(_value, _description), match(_match)
 {
@@ -165,9 +170,7 @@ TCHAR* ComplexExplanation::getSummary() {
 }
 
 Explanation* ComplexExplanation::clone() const{
-   ComplexExplanation* ret = static_cast<ComplexExplanation*>(_CLNEW Explanation(*this));
-   ret->match = this->match;
-   return ret;
+   return _CLNEW ComplexExplanation(*this);
 }
 
 CL_NS_END

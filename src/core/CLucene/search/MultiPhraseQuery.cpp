@@ -206,7 +206,7 @@ public:
 	}
 };
 
-Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
+Query* MultiPhraseQuery::rewrite(IndexReader* /*reader*/) {
   if (termArrays->size() == 1) {                 // optimize one-term case
 	  ArrayBase<Term*>* terms = termArrays->at(0);
 	  BooleanQuery* boq = _CLNEW BooleanQuery(true);
@@ -267,7 +267,7 @@ void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _t
   for ( size_t i=0;i<_terms->length;i++ ){
 		if ( _tcscmp(_terms->values[i]->field(), field) != 0) {
 			TCHAR buf[250];
-			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]);
+			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]->field());
 			_CLTHROWT(CL_ERR_IllegalArgument,buf);
 		}
     terms->values[i] = _CL_POINTER(_terms->values[i]);
@@ -295,7 +295,7 @@ TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 	}
 
 	buffer.appendChar(_T('"'));
-	
+
   CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator i;
   i = termArrays->begin();
   while (i != termArrays->end()){

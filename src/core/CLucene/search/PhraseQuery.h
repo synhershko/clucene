@@ -11,6 +11,7 @@
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(search,Scorer)
 #include "CLucene/util/Array.h"
+#include "CLucene/util/VoidList.h"
 
 CL_NS_DEF(search)
 	/** A Query that matches documents containing a particular sequence of terms.
@@ -79,17 +80,17 @@ CL_NS_DEF(search)
 		void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
 
 		//Returns the sum of squared weights 
-        float_t sumOfSquaredWeights(Searcher* searcher);
+    float_t sumOfSquaredWeights(Searcher* searcher);
         
 		//Normalizes the Weight
-        void normalize(const float_t norm);
-        
-        Scorer* scorer(CL_NS(index)::IndexReader* reader);
-        
-        const TCHAR* getFieldName() const{ return field; }
+    void normalize(const float_t norm);
+    
+    Scorer* scorer(CL_NS(index)::IndexReader* reader);
+    
+    const TCHAR* getFieldName() const;
  
 		/** Prints a user-readable version of this query. */
-        TCHAR* toString(const TCHAR* f) const;
+    TCHAR* toString(const TCHAR* f) const;
 
 		Query* clone() const;
 		bool equals(Query *) const;

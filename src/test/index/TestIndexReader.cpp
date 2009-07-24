@@ -80,7 +80,7 @@ void assertReaderClosed(CuTest* tc, IndexReader* reader, bool checkSubReaders, b
       }
     }*/
 
-    if (reader->instanceOf(MultiReader::getClassName())) {
+    if (reader != NULL && reader->instanceOf(MultiReader::getClassName())) {
       const CL_NS(util)::ArrayBase<IndexReader*>& subReaders = *((MultiReader*) reader)->getSubReaders();
       for (int i = 0; i < subReaders.length; i++) {
         assertReaderClosed(tc, subReaders[i], checkSubReaders, checkNormsClosed);
@@ -160,17 +160,20 @@ IndexReader* defaultModifyIndexTest(CuTest* tc, IndexReader* reader, int i){
 
 Directory* defaultModifyIndexTestDir2 = NULL;
 IndexReader* defaultModifyIndexTestMulti(CuTest* tc, IndexReader* reader, int i){
-  defaultModifyIndexTest(tc,reader,i); //call main test
+  IndexReader* x = defaultModifyIndexTest(tc,reader,i); //call main test
+  _CLDELETE(x);
+
 
   Directory* tmp = defaultModifyIndexTestDir1;
   defaultModifyIndexTestDir1 = defaultModifyIndexTestDir2;
-  defaultModifyIndexTest(tc,reader,i); //call main test
+  x = defaultModifyIndexTest(tc,reader,i); //call main test
+  _CLDELETE(x);
   defaultModifyIndexTestDir1 = tmp;
 
-  ObjectArray<IndexReader>* readers = _CLNEW ObjectArray<IndexReader>(2);
-  readers->values[0] = IndexReader::open(defaultModifyIndexTestDir1);
-  readers->values[1] = IndexReader::open(defaultModifyIndexTestDir2);
-  return _CLNEW MultiReader(readers, true);
+  ValueArray<IndexReader*> readers(2);
+  readers[0] = IndexReader::open(defaultModifyIndexTestDir1);
+  readers[1] = IndexReader::open(defaultModifyIndexTestDir2);
+  return _CLNEW MultiReader(&readers, true);
 }
 
 ReaderCouple refreshReader(CuTest* tc, IndexReader* reader, TestIRModifyIndex test, int modify, bool hasChanges) {
@@ -268,20 +271,20 @@ void testMultiReaderReopen(CuTest *tc){
   RAMDirectory dir2 ;
   createIndex(tc, &dir2, true);
 
-  ObjectArray<IndexReader>* readers1 = _CLNEW ObjectArray<IndexReader>(2);
-  readers1->values[0] = IndexReader::open(&dir1);
-  readers1->values[1] = IndexReader::open(&dir2);
-  IndexReader* index1 = _CLNEW MultiReader(readers1, true);
+  ValueArray<IndexReader*> readers1(2);
+  readers1[0] = IndexReader::open(&dir1);
+  readers1[1] = IndexReader::open(&dir2);
+  IndexReader* index1 = _CLNEW MultiReader(&readers1, true);
 
-  ObjectArray<IndexReader>* readers2 = _CLNEW ObjectArray<IndexReader>(2);
-  readers2->values[0] = IndexReader::open(&dir1);
-  readers2->values[1] = IndexReader::open(&dir2);
-  IndexReader* index2 = _CLNEW MultiReader(readers2, true);
+  ValueArray<IndexReader*> readers2(2);
+  readers2[0] = IndexReader::open(&dir1);
+  readers2[1] = IndexReader::open(&dir2);
+  IndexReader* index2 = _CLNEW MultiReader(&readers2, true);
 
-  ObjectArray<IndexReader>* readers2b = _CLNEW ObjectArray<IndexReader>(2);
-  readers2b->values[0] = IndexReader::open(&dir1);
-  readers2b->values[1] = IndexReader::open(&dir2);
-  IndexReader* index2b = _CLNEW MultiReader(readers2b, true);
+  ValueArray<IndexReader*> readers2b(2);
+  readers2b[0] = IndexReader::open(&dir1);
+  readers2b[1] = IndexReader::open(&dir2);
+  IndexReader* index2b = _CLNEW MultiReader(&readers2b, true);
 
   defaultModifyIndexTestDir1 = &dir1;
   defaultModifyIndexTestDir2 = &dir2;
@@ -298,7 +301,7 @@ CuSuite *testindexreader(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexReader Test"));
   SUITE_ADD_TEST(suite, testIndexReaderReopen);
-  //SUITE_ADD_TEST(suite, testMultiReaderReopen);
+  SUITE_ADD_TEST(suite, testMultiReaderReopen);
 
   return suite;
 }

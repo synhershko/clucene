@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -37,7 +37,7 @@ StringReader::StringReader ( const TCHAR* _value, const int32_t _length, bool co
 }
 
 void StringReader::init ( const TCHAR* _value, const int32_t _length, bool copyData ){
-  const int32_t length = ( _length < 0 ? _tcslen(_value) : _length );
+  const size_t length = ( _length < 0 ? _tcslen(_value) : _length );
 	this->pos = 0;
 	if ( copyData ){
     TCHAR* tmp = (TCHAR*)this->value;
@@ -82,7 +82,7 @@ int32_t StringReader::read(const TCHAR*& start, int32_t min, int32_t max){
 int64_t StringReader::position(){
 	return pos;
 }
-void StringReader::setMinBufSize(int32_t s){
+void StringReader::setMinBufSize(int32_t /*s*/){
 }
 int64_t StringReader::reset(int64_t pos){
 	if ( pos >= 0 && pos < this->m_size )
@@ -148,7 +148,7 @@ int32_t AStringReader::read(const unsigned char*& start, int32_t min, int32_t ma
 int64_t AStringReader::position(){
 	return pos;
 }
-void AStringReader::setMinBufSize(int32_t s){
+void AStringReader::setMinBufSize(int32_t /*s*/){
 }
 int64_t AStringReader::reset(int64_t pos){
 	if ( pos >= 0 && pos < this->m_size )
@@ -191,9 +191,9 @@ public:
 
 		JStreamsBuffer(int32_t fhandle, int32_t buffersize){
 			this->fhandle = fhandle;
-			
+
 			m_size = fileSize(fhandle); // no need to know the file length...
-			
+
 			// allocate memory in the buffer
 			int32_t bufsize = (int32_t)((m_size <= buffersize) ?m_size+1 :buffersize);
 			setMinBufSize(bufsize);
@@ -214,7 +214,7 @@ public:
 
 	Internal(const char* path, int32_t buffersize){
 		int32_t fhandle = _cl_open(path, _O_BINARY | O_RDONLY | _O_RANDOM, _S_IREAD );
-		
+
 		//Check if a valid handle was retrieved
 	   if (fhandle < 0){
 			int err = errno;
@@ -228,7 +228,7 @@ public:
 	    		_CLTHROWA(CL_ERR_IO, "Could not open file");
 	   }
 		jsbuffer = new JStreamsBuffer(fhandle, buffersize);
-		
+
 	}
 	~Internal(){
 		delete jsbuffer;
@@ -293,7 +293,7 @@ FileReader::~FileReader(){
 
 class SimpleInputStreamReader::Internal{
 public:
-	
+
 	class JStreamsBuffer: public BufferedReaderImpl{
 		InputStream* input;
 		char utf8buf[6]; //< buffer used for converting utf8 characters
@@ -322,7 +322,7 @@ public:
 				int32_t ret = this->input->read(buf, 1, 1);
 
 				if ( ret == 1 ){
-					size_t len = lucene_utf8charlen(buf[0]);
+					int len = lucene_utf8charlen(buf[0]);
 					if ( len > 1 ){
 						*utf8buf = buf[0];
 						ret = this->input->read(buf, len-1, len-1);
@@ -451,7 +451,7 @@ public:
 		}
 	};
 	JStreamsFilteredBuffer* jsbuffer;
-	
+
 	Internal(Reader* reader, bool deleteReader){
 		this->jsbuffer = new JStreamsFilteredBuffer(reader, deleteReader);
 	}
@@ -514,7 +514,7 @@ public:
 		}
 	};
 	JStreamsFilteredBuffer* jsbuffer;
-	
+
 	Internal(InputStream* input, bool deleteInput){
 		this->jsbuffer = new JStreamsFilteredBuffer(input, deleteInput);
 	}

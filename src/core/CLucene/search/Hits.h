@@ -7,6 +7,7 @@
 #ifndef _lucene_search_Hits_h
 #define _lucene_search_Hits_h
 
+#include "CLucene/util/VoidList.h"
 CL_CLASS_DEF(index,Term)
 CL_CLASS_DEF(document,Document)
 

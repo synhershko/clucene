@@ -43,7 +43,7 @@ CL_NS_DEF(index)
 		bool operator()( IndexReader::CloseCallback t1, IndexReader::CloseCallback t2 ) const{
 			return t1 > t2;
 		}
-		static void doDelete(IndexReader::CloseCallback dummy){
+		static void doDelete(IndexReader::CloseCallback /*dummy*/){
 		}
 	};
 
@@ -67,7 +67,6 @@ CL_NS_DEF(index)
         this->directory = _CL_POINTER(directory);
       else
         this->directory = NULL;
-      _this->refCount = 1;
       _this->closed = false;
       _this->hasChanges = false;
     }
@@ -142,30 +141,11 @@ CL_NS_DEF(index)
   }
 
   void IndexReader::ensureOpen(){
-    if (refCount <= 0) {
-      _CLTHROWA(CL_ERR_AlreadyClosed, "this IndexReader is closed");
-    }
-  }
-
-  void IndexReader::incRef() {
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    assert (refCount > 0);
-    refCount++;
   }
 
   void IndexReader::acquireWriteLock(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
     /* NOOP */
-  }
-
-  void IndexReader::decRef(){
-    SCOPED_LOCK_MUTEX(THIS_LOCK)
-    assert (refCount > 0);
-    if (refCount == 1) {
-      commit();
-      doClose();
-    }
-    refCount--;
   }
 
   CL_NS(document)::Document* IndexReader::document(const int32_t n){
@@ -203,7 +183,7 @@ CL_NS_DEF(index)
           _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
     }
 
-  void IndexReader::setTermInfosIndexDivisor(int32_t indexDivisor) {
+  void IndexReader::setTermInfosIndexDivisor(int32_t /*indexDivisor*/) {
     _CLTHROWA(CL_ERR_UnsupportedOperation, "This reader does not support this method.");
   }
 
@@ -422,16 +402,16 @@ CL_NS_DEF(index)
   //Post - All files associated with this index have been deleted and new deletions have been
   //       saved to disk
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-
-    Internal::CloseCallbackMap::iterator iter = _internal->closeCallbacks.begin();
-    for ( ;iter!=_internal->closeCallbacks.end();iter++){
-      CloseCallback callback = *iter->first;
-      callback(this,iter->second);
+    if ( !closed ){
+      Internal::CloseCallbackMap::iterator iter = _internal->closeCallbacks.begin();
+      for ( ;iter!=_internal->closeCallbacks.end();iter++){
+        CloseCallback callback = *iter->first;
+        callback(this,iter->second);
+      }
+      commit();
+      doClose();
     }
-	  if (!closed) {
-      decRef();
-      closed = true;
-    }
+	closed = true;
   }
 
   bool IndexReader::isLocked(Directory* directory) {

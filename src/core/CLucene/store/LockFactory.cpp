@@ -87,7 +87,7 @@ NoLockFactory* NoLockFactory::getNoLockFactory()
 	return singleton;
 }
 
-LuceneLock* NoLockFactory::makeLock( const char* lockName )
+LuceneLock* NoLockFactory::makeLock( const char* /*lockName*/ )
 {
 	if ( singletonLock == NULL ) {
 		singletonLock = _CLNEW NoLock();
@@ -95,7 +95,7 @@ LuceneLock* NoLockFactory::makeLock( const char* lockName )
 	return singletonLock;
 }
 
-void NoLockFactory::clearLock( const char* lockName )
+void NoLockFactory::clearLock( const char* /*lockName*/ )
 {
 }
 

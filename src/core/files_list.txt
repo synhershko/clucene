@@ -10,8 +10,6 @@ WORKING ISH	analysis\Analyzer.java
 ?	analysis\LetterTokenizer.java
 ?	analysis\LowerCaseFilter.java
 ?	analysis\LowerCaseTokenizer.java
-?	analysis\PorterStemFilter.java
-?	analysis\PorterStemmer.java
 ?	analysis\SinkTokenizer.java
 ?	analysis\standard\StandardAnalyzer.java
 ?	analysis\standard\StandardFilter.java
@@ -19,22 +17,14 @@ WORKING ISH	analysis\Analyzer.java
 ?	analysis\standard\StandardTokenizerImpl.java
 ?	analysis\standard\StandardTokenizerImpl.jflex
 DONE ISH	analysis\StopAnalyzer.java				- reusableTokenStream and StopAnalyzer(Set stopWords) were not implemented. May need to revisit reusableTokenStream()
-DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or similar? Radix/PATRICIA maybe?
 ?	analysis\TeeTokenFilter.java
 ?	analysis\Token.java
 ?	analysis\TokenFilter.java
-DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
 ?	analysis\WhitespaceTokenizer.java
-DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
-DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
 
-PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
-DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
-DONE ISH/BEN index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
-DONE ISH	index\MultipleTermPositions.java			- IntQueue::sort is not implemented yet
+
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
-DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
 DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, and some tests. _tcstod.
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
@@ -53,7 +43,6 @@ WORKING ISH	search\ConstantScoreRangeQuery.java - new file, not ported yet
 ?	search\FieldDoc.java
 ?	search\FieldDocSortedHitQueue.java
 ?	search\FieldSortedHitQueue.java
-DONE ISH	search\Filter.java				- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
 ?	search\FilteredQuery.java
 DONE ISH	search\FilteredTermEnum.java		- Can we mend term(void) and term(bool) ?
 ?	search\FilterManager.java
@@ -64,13 +53,8 @@ DONE ISH	search\FuzzyTermEnum.java			- See TODOs. Also, Old similarity code is c
 ?	search\HitIterator.java
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
-DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
-DONE ISH	search\MultiPhraseQuery.java	- Complete TODOs (2 unported functions, test hashCode(), clone(), and decide on memory contract for rewrite)
 ?	search\MultiSearcher.java
-DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 ?	search\PhrasePositions.java
-DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
-DONE ISH	search\Query.java			- Missing implementation for combine(Query**), extractTerms(Set terms)
 ?	search\QueryFilter.java
 ?	search\QueryTermVector.java
 ?	search\QueryWrapperFilter.java
@@ -88,6 +72,17 @@ PARTIAL JW	store\SimpleFSLockFactory.java - 1 class implemented as FSLockFactory
 
 ?	util\ScorerDocQueue.java
 
+Pending: waiting on other things...
+DONE ISH	search\Filter.java				- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
+
+Finished except a few functions:
+DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
+DONE ISH	search\Query.java			- Missing implementation for extractTerms(Set terms)
+DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
+DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
+DONE ISH	search\MultiPhraseQuery.java	- Complete TODOs (2 unported functions, test hashCode(), clone(), and decide on memory contract for rewrite)
+DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
+
 
 CMake:
 Check todos in (_)clucene-config.h.cmake. Some checks arent being done yet.
@@ -98,9 +93,6 @@ MapViewOfFile issues (cmake not picking up functions in kernel32)
 Use safe CRT where possible. For example, make _tcsdup / stringDuplicate require n and call the _s version if cmake realizes it exists
 
 Misc TODOs:
-Update jstreams from latest code of Strigi
-Create an auxiliary namespace with all the platform-dependant code, to enable static linking to it by contrib, tests and other apps which might need this
-update Internal* internal to be named otherwise (internal is a preserved word in VS; perhaps ChesireCat* chesCat?)?
 
 
 
@@ -109,6 +101,11 @@ update Internal* internal to be named otherwise (internal is a preserved word in
 
 
 Post v1 Final:
+DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or similar? Radix/PATRICIA maybe?
+DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? (ben: for me, it's fine as it is now) Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
+DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
+DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
+PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL)
 
 ?	search\CachingSpanFilter.java
 ?	search\CachingWrapperFilter.java
@@ -170,6 +167,9 @@ DONE BEN	document\SetBasedFieldSelector.java (Irrelevent, actually, we achive bo
 DONE ISH	document\Document.java				- All Fieldable mentiones were kept Field*.
 DONE ISH	document\Field.java				- Still need to complete all TODOs in file
 
+DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
+
+DONE ISH/BEN    index\TermInfosReader.java
 DONE ISH	index\FieldsReader.java
 DONE BEN	index\FieldsWriter.java
 DONE ISH	index\TermVectorMapper.java
@@ -233,6 +233,7 @@ DONE BEN	index\TermVectorEntry.java
 DONE BEN	index\TermVectorsWriter.java
 
 
+DONE ISH/BEN	index\MultipleTermPositions.java
 DONE BEN	search\BooleanQuery.java
 DONE BEN	search\DefaultSimilarity.java
 DONE BEN	search\ConjunctionScorer.java
@@ -268,6 +269,8 @@ DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
 
 
+IRRELEVANT	analysis\PorterStemFilter.java  - deprecated
+IRRELEVANT	analysis\PorterStemmer.java  - deprecated
 DONE ISH	analysis\WhitespaceAnalyzer.java
 DONE ISH	analysis\PerFieldAnalyzerWrapper.java
 DONE ISH	analysis\LengthFilter.java
@@ -304,3 +307,6 @@ DONE BEN	util\StringHelper.java
 DONE ISH	util\ToStringUtils.java
 DONE JW		util\PriorityQueue.java
 
+Update jstreams from latest code of Strigi: strigi isn't really used anymore... we can link to it as necessary...
+Create an auxiliary namespace with all the platform-dependant code, to enable static linking to it by contrib, tests and other apps which might need this: that's what the clucene-shared lib is
+update Internal* internal to be named otherwise (internal is a preserved word in VS; perhaps ChesireCat* chesCat?)? renamed to _internal

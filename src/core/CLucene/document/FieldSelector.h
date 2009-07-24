@@ -9,6 +9,7 @@
 
 #include "CLucene/util/Equators.h"
 #include "CLucene/util/Array.h"
+#include "CLucene/util/VoidMap.h"
 
 CL_NS_DEF(document)
 
@@ -94,7 +95,7 @@ public:
  * <p/>
  * See {@link FieldSelectorResult#LOAD_AND_BREAK}
  */
-class LoadFirstFieldSelector :public FieldSelector {
+class CLUCENE_EXPORT LoadFirstFieldSelector :public FieldSelector {
 public:
 	~LoadFirstFieldSelector();
 

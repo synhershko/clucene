@@ -44,8 +44,8 @@ void MultiSegmentReader::initialize(CL_NS(util)::ArrayBase<IndexReader*>* _subRe
 }
 
 MultiSegmentReader::MultiSegmentReader(CL_NS(store)::Directory* directory, SegmentInfos* sis, bool closeDirectory):
-  normsCache(NormsCacheType(true,true)),
-  DirectoryIndexReader(directory,sis,closeDirectory)
+  DirectoryIndexReader(directory,sis,closeDirectory),
+  normsCache(NormsCacheType(true,true))
 {
   // To reduce the chance of hitting FileNotFound
   // (and having to retry), we open segments in
@@ -82,8 +82,8 @@ MultiSegmentReader::MultiSegmentReader(
       CL_NS(util)::ArrayBase<IndexReader*>* oldReaders,
       int32_t* oldStarts,
       NormsCacheType* oldNormsCache):
-  normsCache(NormsCacheType(true,true)),
-  DirectoryIndexReader(directory, infos, closeDirectory)
+  DirectoryIndexReader(directory, infos, closeDirectory),
+  normsCache(NormsCacheType(true,true))
 {
   // we put the old SegmentReaders in a map, that allows us
   // to lookup a reader using its segment name
@@ -96,10 +96,6 @@ MultiSegmentReader::MultiSegmentReader(
   }
 
   ArrayBase<IndexReader*>* newReaders = _CLNEW ObjectArray<IndexReader>(infos->size());
-
-  // remember which readers are shared between the old and the re-opened
-  // MultiSegmentReader - we have to incRef those readers
-  ValueArray<bool> readerShared(infos->size());
 
   for (int32_t i = infos->size() - 1; i>=0; i--) {
     // find SegmentReader for this segment
@@ -122,30 +118,20 @@ MultiSegmentReader::MultiSegmentReader(
         newReader = ((SegmentReader*)(*newReaders)[i])->reopenSegment(infos->info(i));
       }
       if (newReader == (*newReaders)[i]) {
-        // this reader will be shared between the old and the new one,
-        // so we must incRef it
-        readerShared[i] = true;
-        newReader->incRef();
-      } else {
-        readerShared[i] = false;
-        newReaders->values[i] = newReader;
+        // this reader is being re-used, so we take ownership of it...
+        oldReaders->values[i] = NULL;
       }
+
+      newReaders->values[i] = newReader;
       success = true;
     } _CLFINALLY (
       if (!success) {
         for (i++; i < infos->size(); i++) {
           if (newReaders->values[i] != NULL) {
             try {
-              if (!readerShared[i]) {
-                // this is a new subReader that is not used by the old one,
-                // we can close it
-                (*newReaders)[i]->close();
-              } else {
-                // this subReader is also used by the old reader, so instead
-                // closing we must decRef it
-                (*newReaders)[i]->decRef();
-              }
-            } catch (CLuceneError& ignore) {
+              (*newReaders)[i]->close();
+              _CLDELETE(newReaders->values[i]);
+            }catch(CLuceneError& ignore){
               if ( ignore.number() != CL_ERR_IO ) throw ignore;
               // keep going - we want to clean up as much as possible
             }
@@ -441,10 +427,13 @@ void MultiSegmentReader::commitChanges() {
 void MultiSegmentReader::doClose() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	for (size_t i = 0; i < subReaders->length; i++){
-	  (*subReaders)[i]->decRef();
+	  if ( (*subReaders)[i] != NULL ){
+	    (*subReaders)[i]->close();
+	    _CLDELETE(subReaders->values[i]);
+	  }
 	}
-    // maybe close directory
-    DirectoryIndexReader::doClose();
+  // maybe close directory
+  DirectoryIndexReader::doClose();
 }
 
 void MultiSegmentReader::getFieldNames(FieldOption fieldNames, StringArrayWithDeletor& retarray, CL_NS(util)::ArrayBase<IndexReader*>* subReaders) {
@@ -804,17 +793,6 @@ bool MultiTermEnum::next(){
 	return true;
 }
 
-
-Term* MultiTermEnum::term() {
-//Func - Returns the current term of the set of enumerations
-//Pre  - pointer is true or false and indicates if the reference counter
-//       of term must be increased or not
-//       next() must have been called once!
-//Post - pointer = true -> term has been returned with an increased reference counter
-//       pointer = false -> term has been returned
-
-	return _CL_POINTER(_term);
-}
 
 Term* MultiTermEnum::term(bool pointer) {
   	if ( pointer )

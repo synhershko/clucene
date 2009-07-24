@@ -10,11 +10,8 @@
 CL_CLASS_DEF(util,StringBuffer)
 CL_CLASS_DEF(search,Weight)
 #include "Query.h"
-//#include "SearchHeader.h"
 #include "BooleanClause.h"
-//#include "BooleanScorer.h"
-//#include "Scorer.h"
-//#include "Similarity.h"
+#include "CLucene/util/VoidList.h"
 
 CL_NS_DEF(search)
 

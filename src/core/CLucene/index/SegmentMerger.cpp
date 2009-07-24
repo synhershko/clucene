@@ -209,7 +209,7 @@ void SegmentMerger::addIndexed(IndexReader* reader, FieldInfos* fieldInfos, Stri
 // in  merge mode, we use this FieldSelector
 class FieldSelectorMerge: public FieldSelector{
 public:
-  FieldSelectorResult accept(const TCHAR* fieldName) const{
+  FieldSelectorResult accept(const TCHAR* /*fieldName*/) const{
     return FieldSelector::LOAD_FOR_MERGE;
   }
 };
@@ -634,8 +634,7 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
   SegmentMergeInfo* smi = NULL;
 
   //Iterate through all SegmentMergeInfo instances in smis
-  int32_t i = 0;
-  while ( (smi=smis[i]) != NULL ){
+  for ( int32_t i=0;i<n;i++ ){
     //Get the i-th SegmentMergeInfo
     smi = smis[i];
 

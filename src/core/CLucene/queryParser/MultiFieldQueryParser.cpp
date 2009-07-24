@@ -10,6 +10,7 @@
 #include "CLucene/search/BooleanQuery.h"
 #include "CLucene/search/BooleanClause.h"
 #include "CLucene/search/PhraseQuery.h"
+#include "CLucene/search/MultiPhraseQuery.h"
 #include "CLucene/search/SearchHeader.h"
 #include "QueryParser.h"
 
@@ -42,13 +43,12 @@ Query* MultiFieldQueryParser::getFieldQuery(const TCHAR* field, TCHAR* queryText
 						q->setBoost(itr->second);
 					}
 				}
-				if (q->getObjectName() == PhraseQuery::getClassName()) {
+				if (q->instanceOf(PhraseQuery::getClassName())) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
-				// TODO:
-				//if (q instanceof MultiPhraseQuery) {
-				//	((MultiPhraseQuery) q).setSlop(slop);
-				//}
+        if (q->instanceOf(MultiPhraseQuery::getClassName())) {
+					((MultiPhraseQuery*) q)->setSlop(slop);
+				}
 				clauses.push_back(_CLNEW BooleanClause(q, true, BooleanClause::SHOULD));
 			}
 		}

@@ -8,6 +8,7 @@
 #define _lucene_store_IndexInput_
 
 #include "CLucene/LuceneThreads.h"
+#include "CLucene/util/Equators.h"
 
 CL_NS_DEF(store)
 
@@ -173,8 +174,8 @@ CL_NS_DEF(store)
 
 		void setBufferSize( int32_t newSize );
 
-		const char* getObjectName(){ return getClassName(); }
-		static const char* getClassName(){ return "BufferedIndexInput"; }
+		const char* getObjectName();
+		static const char* getClassName();
 
 	protected:
       /** Expert: implements buffer refill.  Reads bytes from the current position

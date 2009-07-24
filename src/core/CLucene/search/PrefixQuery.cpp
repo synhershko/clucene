@@ -196,6 +196,8 @@ public:
   PrefixGenerator(const Term* prefix){
     this->prefix = prefix;
   }
+  virtual ~PrefixGenerator(){
+  }
 
   virtual void handleDoc(int doc) = 0;
 
@@ -254,6 +256,8 @@ public:
     PrefixGenerator(prefix)
   {
     this->bts = bts;
+  }
+  virtual ~DefaultPrefixGenerator(){
   }
   void handleDoc(int doc) {
     bts->set(doc);

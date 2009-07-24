@@ -8,6 +8,8 @@
 #include "Query.h"
 #include "MatchAllDocsQuery.h"
 #include "Explanation.h"
+#include "SearchHeader.h"
+#include "Searchable.h"
 
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/StringBuffer.h"
@@ -21,7 +23,7 @@ MatchAllDocsQuery::MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _re
 	_score = w->getValue();
 }
 
-Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc) {
+Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t /*doc*/) {
 	// not called... see MatchAllDocsWeight::explain()
 	return NULL;
 }
@@ -53,7 +55,8 @@ TCHAR* MatchAllDocsQuery::MatchAllScorer::toString(){
 	return stringDuplicate(_T("MatchAllScorer"));
 }
 
-MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):parentQuery(enclosingInstance){
+MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):
+		parentQuery(enclosingInstance){
 	this->similarity = searcher->getSimilarity();
 }
 
@@ -91,7 +94,7 @@ Scorer* MatchAllDocsQuery::MatchAllDocsWeight::scorer(CL_NS(index)::IndexReader*
 	return _CLNEW MatchAllScorer(reader, similarity, this);
 }
 
-Explanation* MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc) {
+Explanation* MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* /*reader*/, int32_t /*doc*/) {
 	// explain query weight
 	Explanation* queryExpl = _CLNEW ComplexExplanation(true, getValue(), _T("MatchAllDocsQuery, product of:"));
 	if (parentQuery->getBoost() != 1.0f) {
@@ -115,14 +118,16 @@ const char* MatchAllDocsQuery::getObjectName() const{
 	return getClassName();
 }
 
-TCHAR* MatchAllDocsQuery::toString(const TCHAR* field) const{
+TCHAR* MatchAllDocsQuery::toString(const TCHAR* /*field*/) const{
 	CL_NS(util)::StringBuffer buffer(25);
     buffer.append(_T("MatchAllDocsQuery"));
     buffer.appendBoost(getBoost());
     return buffer.giveBuffer();
 }
 
-MatchAllDocsQuery::MatchAllDocsQuery(const MatchAllDocsQuery& clone){
+MatchAllDocsQuery::MatchAllDocsQuery(const MatchAllDocsQuery& clone):
+  Query(clone)
+{
 }
 
 Query* MatchAllDocsQuery::clone() const{
