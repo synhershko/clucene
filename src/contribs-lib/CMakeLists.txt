@@ -22,6 +22,7 @@ SOURCE_GROUP("snowball-impl" ./CLucene/snowball/src_c/*)
 SET(clucene_contribs_Files
     ./CLucene/util/gzipcompressstream.cpp
     ./CLucene/util/gzipinputstream.cpp
+    ./CLucene/util/byteinputstream.cpp
 
     ./CLucene/analysis/LanguageBasedAnalyzer.cpp
     ./CLucene/analysis/cjk/CJKAnalyzer.cpp
