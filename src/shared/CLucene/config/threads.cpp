@@ -62,6 +62,13 @@ CL_NS_DEF(util)
   	ExitThread(val);
   }
 
+  int32_t mutex_thread::atomic_increment(_LUCENE_ATOMIC_INT *theInteger, lucene::util::mutexGuard *theMutexGuard){
+    return _InterlockedIncrement(theInteger);
+  }
+  int32_t mutex_thread::atomic_decrement(_LUCENE_ATOMIC_INT *theInteger, lucene::util::mutexGuard *theMutexGuard){
+    return _InterlockedDecrement(theInteger);
+  }
+
 
 
 	class shared_condition::Internal{

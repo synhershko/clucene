@@ -58,7 +58,7 @@ CL_NS_USE(util)
 			int32_t fhandle;
 			int64_t _length;
 			int64_t _fpos;
-			DEFINE_MUTEX(*THIS_LOCK)
+			DEFINE_MUTEX(*SHARED_LOCK)
 			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
 			SharedHandle(const char* path);
 			~SharedHandle();
@@ -147,7 +147,7 @@ CL_NS_USE(util)
       	error.set(CL_ERR_IO, "Could not open file");
 	  }
 #ifndef _CL_DISABLE_MULTITHREADING
-    delete handle->THIS_LOCK;
+    delete handle->SHARED_LOCK;
 #endif
 	  _CLDECDELETE(handle);
 	  return false;
@@ -161,7 +161,7 @@ CL_NS_USE(util)
 	  if ( other.handle == NULL )
 		  _CLTHROWA(CL_ERR_NullPointer, "other handle is null");
 
-	  SCOPED_LOCK_MUTEX(*other.handle->THIS_LOCK)
+	  SCOPED_LOCK_MUTEX(*other.handle->SHARED_LOCK)
 	  handle = _CL_POINTER(other.handle);
 	  _pos = other.handle->_fpos; //note where we are currently...
   }
@@ -173,7 +173,7 @@ CL_NS_USE(util)
     strcpy(this->path,path);
 
 #ifndef _CL_DISABLE_MULTITHREADING
-	  THIS_LOCK = new _LUCENE_THREADMUTEX;
+	  SHARED_LOCK = new _LUCENE_THREADMUTEX;
 #endif
   }
   FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() {
@@ -207,7 +207,7 @@ CL_NS_USE(util)
 		//won't be able to unlock the mutex...
 
 		//take a reference of the lock object...
-		_LUCENE_THREADMUTEX* mutex = handle->THIS_LOCK;
+		_LUCENE_THREADMUTEX* mutex = handle->SHARED_LOCK;
 		//lock the mutex
 		mutex->lock();
 
@@ -238,7 +238,7 @@ CL_NS_USE(util)
 void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	CND_PRECONDITION(handle!=NULL,"shared file handle has closed");
 	CND_PRECONDITION(handle->fhandle>=0,"file is not open");
-	SCOPED_LOCK_MUTEX(*handle->THIS_LOCK)
+	SCOPED_LOCK_MUTEX(*handle->SHARED_LOCK)
 
 	if ( handle->_fpos != _pos ){
 		if ( fileSeek(handle->fhandle,_pos,SEEK_SET) != _pos ){

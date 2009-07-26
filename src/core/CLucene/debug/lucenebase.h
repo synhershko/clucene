@@ -7,28 +7,25 @@
 #ifndef _lucene_debug_lucenebase_
 #define _lucene_debug_lucenebase_
 
+#include "CLucene/LuceneThreads.h"
+
 CL_NS_DEF(debug)
 
 //Lucenebase is the superclass of all clucene objects. It provides
 //memory debugging tracking and/or reference counting
 class CLUCENE_EXPORT LuceneBase{
 public:
-	int __cl_refcount;
+	DEFINE_MUTEX(THIS_LOCK)
+	_LUCENE_ATOMIC_INT __cl_refcount;
 	LuceneBase(){
 		__cl_refcount=1;
 	}
 	inline int __cl_getref(){
 		return __cl_refcount;
 	}
-	inline int __cl_addref(){
-		__cl_refcount++;
-		return __cl_refcount;
-	}
-	inline int __cl_decref(){
-		__cl_refcount--;
-		return __cl_refcount;
-	}
-    virtual ~LuceneBase(){};
+  inline int __cl_addref(){ return _LUCENE_ATOMIC_INC(&__cl_refcount, THIS_LOCK); }
+  inline int __cl_decref(){ return _LUCENE_ATOMIC_DEC(&__cl_refcount, THIS_LOCK); }
+  virtual ~LuceneBase(){};
 };
 
 class CLUCENE_EXPORT LuceneVoidBase{
