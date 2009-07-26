@@ -217,7 +217,7 @@ IF ( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
 ENDIF( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
 SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_LIBS_INIT}" )
 
-#define if we have pthreads with recusrive capabilities
+#define if we have pthreads with recursive capabilities
 CHECK_PTHREAD_RECURSIVE(_CL_HAVE_PTHREAD _CL_HAVE_PTHREAD_MUTEX_RECURSIVE)
 
 #see if we can hide all symbols by default...
