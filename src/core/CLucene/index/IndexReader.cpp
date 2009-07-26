@@ -71,7 +71,6 @@ CL_NS_DEF(index)
       _this->hasChanges = false;
     }
     ~Internal(){
-      _CLDECDELETE(directory);
     }
   };
 
@@ -108,7 +107,6 @@ CL_NS_DEF(index)
   //Post - An IndexReader has been returned that reads tnhe index located at path
 
 	  CND_PRECONDITION(path != NULL, "path is NULL");
-
 	   Directory* dir = FSDirectory::getDirectory(path);
      IndexReader* reader = open(dir,closeDirectoryOnCleanup,deletionPolicy);
      //because fsdirectory will now have a refcount of 1 more than

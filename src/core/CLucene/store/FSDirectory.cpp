@@ -494,7 +494,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
 		{
 			SCOPED_LOCK_MUTEX(dir->THIS_LOCK)
-				dir->refCount++;
+			dir->refCount++;
 		}
 	}
 

@@ -63,7 +63,9 @@ class _ThreadLocal;
 */
 class ThreadLocals: private CL_NS ( util ) ::CLVector<_ThreadLocal*,
 		CL_NS ( util ) ::Deletor::ConstNullVal<_ThreadLocal*> >{
+  _LUCENE_THREADID_TYPE threadId;
 public:
+  ThreadLocals();
 	void UnregisterThread();
 	void add(_ThreadLocal* thread);
 };
@@ -220,9 +222,14 @@ void _ThreadLocal::_shutdown()
 }
 
 
-
+ThreadLocals::ThreadLocals(){
+  this->threadId = _LUCENE_CURRTHREADID;
+}
 void ThreadLocals::UnregisterThread()
 {
+  if ( threadId != _LUCENE_CURRTHREADID ){
+    fprintf(stderr,"xxxxxxxx\n");
+  }
 	//this should only be accessed from its own thread... if this changes, then this access has to be locked.
 	while ( !this->empty() )
 	{

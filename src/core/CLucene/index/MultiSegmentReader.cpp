@@ -559,7 +559,7 @@ void MultiTermDocs::seek( Term* tterm) {
 
 	//Get a pointer from tterm and increase its reference counter
 	Term *TempTerm = _CL_POINTER(tterm);
-
+//xx
 	//Finialize term to ensure we decrease the reference counter of the instance which term points to
 	_CLDECDELETE(term);
 

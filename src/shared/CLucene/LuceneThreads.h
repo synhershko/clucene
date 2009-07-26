@@ -27,9 +27,9 @@ class CLuceneThreadIdCompare;
 	#define _LUCENE_THREAD_JOIN(value) //nothing to do...
 	#define _LUCENE_THREADMUTEX void*
 
-  #define _LUCENE_ATOMIC_INC(theMutex, theInteger) CL_NS(util)::mutex_thread::atomic_increment(theMutex, theInteger)
-  #define _LUCENE_ATOMIC_DEC(theMutex, theInteger) CL_NS(util)::mutex_thread::atomic_decrement(theMutex, theInteger)
-  #define _LUCENE_ATOMIC_DECDELETE(theType, theMutex, theInteger, theObject) { if (--(theInteger) == 0) delete theObject;} 
+  #define _LUCENE_ATOMIC_INC(theInteger, theMutex) (++(*theInteger))
+  #define _LUCENE_ATOMIC_DEC(theInteger, theMutex) (--(*theInteger))
+  #define _LUCENE_ATOMIC_DECDELETE(theType, theMutex, theInteger, theObject) { if (--(*theInteger) == 0) delete theObject;} 
   #define _LUCENE_ATOMIC_INT int
 #else
 	#if defined(_LUCENE_DONTIMPLEMENT_THREADMUTEX)

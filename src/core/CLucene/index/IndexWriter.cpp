@@ -540,8 +540,10 @@ void IndexWriter::closeInternal(bool waitForMerges) {
       deleter->close();
     }
 
-    if (closeDir)
+    if (closeDir){
       directory->close();
+      _CLDELETE(directory);
+    }
 
     if (writeLock != NULL) {
       writeLock->release();                          // release write lock
