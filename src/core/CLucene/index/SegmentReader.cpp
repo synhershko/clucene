@@ -222,34 +222,17 @@ CL_NS_DEF(index)
     )
   }
 
-  SegmentReader* SegmentReader::get(SegmentInfo* si){
-    return get(si->dir, si, NULL, false, false, BufferedIndexInput::BUFFER_SIZE, true);
-  }
-
   SegmentReader* SegmentReader::get(SegmentInfo* si, bool doOpenStores) {
     return get(si->dir, si, NULL, false, false, BufferedIndexInput::BUFFER_SIZE, doOpenStores);
-  }
-
-  SegmentReader* SegmentReader::get(SegmentInfo* si, int32_t readBufferSize){
-    return get(si->dir, si, NULL, false, false, readBufferSize, true);
   }
 
   SegmentReader* SegmentReader::get(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores){
     return get(si->dir, si, NULL, false, false, readBufferSize, doOpenStores);
   }
-
   SegmentReader* SegmentReader::get(SegmentInfos* sis, SegmentInfo* si,
                                   bool closeDir) {
     return get(si->dir, si, sis, closeDir, true, BufferedIndexInput::BUFFER_SIZE, true);
   }
-
-  SegmentReader* SegmentReader::get(Directory* dir, SegmentInfo* si,
-                                  SegmentInfos* sis,
-                                  bool closeDir, bool ownDir,
-                                  int32_t readBufferSize) {
-    return get(dir, si, sis, closeDir, ownDir, readBufferSize, true);
-  }
-
   /**
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
@@ -261,7 +244,7 @@ CL_NS_DEF(index)
                                   bool doOpenStores){
     SegmentReader* instance = _CLNEW SegmentReader(); //todo: make this configurable...
     instance->init(dir, sis, closeDir);
-    instance->initialize(si, readBufferSize, doOpenStores, false);
+    instance->initialize(si, readBufferSize==-1 ? BufferedIndexInput::BUFFER_SIZE : readBufferSize, doOpenStores, false);
     return instance;
   }
 
