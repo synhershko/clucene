@@ -430,8 +430,10 @@ CL_NS_DEF(store)
       Directory* fsdir = FSDirectory::getDirectory(dir,false);
       try{
          _copyFromDir(fsdir,false);
-      }_CLFINALLY(fsdir->close();_CLDECDELETE(fsdir););
-
+      }_CLFINALLY(
+        fsdir->close();
+        _CLDECDELETE(fsdir);
+      );
    }
 
   bool RAMDirectory::fileExists(const char* name) const {

@@ -494,7 +494,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
 		{
 			SCOPED_LOCK_MUTEX(dir->THIS_LOCK)
-				dir->refCount++;
+			dir->refCount++;
 		}
 	}
 
@@ -575,7 +575,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   void FSDirectory::close(){
     SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
     {
-	    SCOPED_LOCK_MUTEX(THIS_LOCK)
+	    THIS_LOCK.lock();
 
 	    CND_PRECONDITION(directory[0]!=0,"directory is not open");
 
@@ -584,9 +584,11 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	        if(dir){
 	            DIRECTORIES.remove( getDirName() ); //this will be removed in ~FSDirectory
 	            _CLDECDELETE(dir);
+	            return;
 	        }
 	    }
-	}
+	    THIS_LOCK.unlock();  
+	  }
    }
 
    /**
