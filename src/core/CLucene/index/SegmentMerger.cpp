@@ -514,7 +514,7 @@ void SegmentMerger::mergeTermInfos(){
     }
 
 	  //Instantiate an array of SegmentMergeInfo instances called match
-    SegmentMergeInfo** match = _CL_NEWARRAY(SegmentMergeInfo*,readers.size()+1);
+    SegmentMergeInfo** match = _CL_NEWARRAY(SegmentMergeInfo*,readers.size());
 
     //Condition check to see if match points to a valid instance
     CND_CONDITION(match != NULL, "Memory allocation for match failed")	;
@@ -546,7 +546,6 @@ void SegmentMerger::mergeTermInfos(){
         //Get the next SegmentMergeInfo
         top = queue->top();
       }
-		  match[matchSize]=NULL;
       int32_t df = mergeTermInfo(match, matchSize);		  // add new TermInfo
       if (checkAbort != NULL)
         checkAbort->work(df/3.0);
