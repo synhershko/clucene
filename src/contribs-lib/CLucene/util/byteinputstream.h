@@ -7,22 +7,11 @@
 #ifndef CLUCENE_UTIL_BYTEINPUTSTREAM_H
 #define CLUCENE_UTIL_BYTEINPUTSTREAM_H
 
-#include "CLucene/_ApiHeader.h"
-#include "CLucene/util/CLStreams.h"
-#include "CLucene/util/Array.h"
+#include "arrayinputstream.h"
 
 CL_NS_DEF(util)
 
-class CLUCENE_CONTRIBS_EXPORT ByteInputStream : public CL_NS(util)::InputStream {
-public:
-	ByteInputStream(ArrayBase<signed char> const* data);
-	int32_t read(const signed char*& start, int32_t min, int32_t max);
-	int64_t skip(int64_t ntoskip);
-	int64_t position();
-	size_t size();
-private:
-	ArrayBase<signed char> const* data;
-	int64_t current_position;
-};
+typedef ArrayInputStream<signed char> ByteInputStream;
+
 CL_NS_END
 #endif
