@@ -687,7 +687,7 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
         freqOutput->writeVInt(freq);
       }
 
-      /** See {@link DocumentWriter#writePostings(Posting[], String) for
+      /** See {@link DocumentWriter#writePostings(Posting[], String)} for
       *  documentation about the encoding of positions and payloads
       */
       int32_t lastPosition = 0;
@@ -718,8 +718,6 @@ int32_t SegmentMerger::appendPostings(SegmentMergeInfo** smis, int32_t n){
         lastPosition = position;
       }
     }
-
-    i++;
   }
 
   //Return total number of documents across all segments where term was found
