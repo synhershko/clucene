@@ -25,6 +25,10 @@
 #include "CLucene/search/RangeQuery.h"
 #include "CLucene/search/MatchAllDocsQuery.h"
 #include "CLucene/search/MultiPhraseQuery.h"
+#include "CLucene/search/ConstantScoreQuery.h"
+
+#include "CLucene/document/DateField.h"
+#include "CLucene/document/DateTools.h"
 
 #include "CLucene/index/Term.h"
 #include "QueryToken.h"
@@ -427,54 +431,61 @@ Query* QueryParser::getRangeQuery(const TCHAR* _field, TCHAR* part1, TCHAR* part
     _tcslwr(part1);
     _tcslwr(part2);
   }
-  /*
-  // TODO: Complete porting of the code below
+
+  TCHAR* _part1 = part1, *_part2 = part2; // just in case anything go wrong...
   try {
-  DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-  df.setLenient(true);
-  Date d1 = df.parse(part1);
-  Date d2 = df.parse(part2);
-  if (inclusive) {
-  // The user can only specify the date, not the time, so make sure
-  // the time is set to the latest possible time of that date to really
-  // include all documents:
-  Calendar cal = Calendar.getInstance(locale);
-  cal.setTime(d2);
-  cal.set(Calendar.HOUR_OF_DAY, 23);
-  cal.set(Calendar.MINUTE, 59);
-  cal.set(Calendar.SECOND, 59);
-  cal.set(Calendar.MILLISECOND, 999);
-  d2 = cal.getTime();
-  }
-  CL_NS(document)::DateTools::Resolution resolution = getDateResolution(_field);
-  if (resolution == NULL) {
-  // no default or field specific date resolution has been set,
-  // use deprecated DateField to maintain compatibilty with
-  // pre-1.9 Lucene versions.
-  part1 = DateField.dateToString(d1);
-  part2 = DateField.dateToString(d2);
-  } else {
-  part1 = CL_NS(document)::DateTools::dateToString(d1, resolution);
-  part2 = CL_NS(document)::DateTools::dateToString(d2, resolution);
-  }
+      /*DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale); // SHORT means completely numeric
+      df.setLenient(true);
+      Date d1 = df.parse(part1);
+      Date d2 = df.parse(part2);
+      */
+      const int64_t d1 = CL_NS(document)::DateTools::stringToTime(part1);
+      int64_t d2 = CL_NS(document)::DateTools::stringToTime(part2);
+      if (inclusive) {
+          // The user can only specify the date, not the time, so make sure
+          // the time is set to the latest possible time of that date to really
+          // include all documents:
+          d2 = CL_NS(document)::DateTools::timeMakeInclusive(d2);
+      }
+
+      CL_NS(document)::DateTools::Resolution resolution = getDateResolution(_field);
+      if (resolution == CL_NS(document)::DateTools::NO_RESOLUTION) {
+          // no default or field specific date resolution has been set,
+          // use deprecated DateField to maintain compatibilty with
+          // pre-1.9 Lucene versions.
+          _part1 = CL_NS(document)::DateField::timeToString(d1);
+          _part2 = CL_NS(document)::DateField::timeToString(d2);
+      } else {
+          _part1 = CL_NS(document)::DateTools::timeToString(d1, resolution);
+          _part2 = CL_NS(document)::DateTools::timeToString(d2, resolution);
+      }
   }
   catch (...) { }
-  */
 
-  //if(useOldRangeQuery)
-  //{
-  Term* t1 = _CLNEW Term(_field,part1);
-  Term* t2 = _CLNEW Term(_field,part2);
-  Query* ret = _CLNEW RangeQuery(t1, t2, inclusive);
-  _CLDECDELETE(t1);
-  _CLDECDELETE(t2);
-  return ret;
-  /*}
+  if(useOldRangeQuery)
+  {
+      Term* t1 = _CLNEW Term(_field,part1);
+      Term* t2 = _CLNEW Term(_field,part2);
+      Query* ret = _CLNEW RangeQuery(t1, t2, inclusive);
+      _CLDECDELETE(t1);
+      _CLDECDELETE(t2);
+
+      // Make sure to delete the date strings we allocated only if we indeed allocated them
+      if (part1 != _part1) _CLDELETE_LCARRAY(_part1);
+      if (part2 != _part2) _CLDELETE_LCARRAY(_part2);
+      
+      return ret;
+  }
   else
   {
-  // TODO: Port ConstantScoreRangeQuery and enable this section
-  return _CLNEW ConstantScoreRangeQuery(_field,part1,part2,inclusive,inclusive);
-  }*/
+      Query* q = _CLNEW ConstantScoreRangeQuery(_field,part1,part2,inclusive,inclusive);
+      
+      // Make sure to delete the date strings we allocated only if we indeed allocated them
+      if (part1 != _part1) _CLDELETE_LCARRAY(_part1);
+      if (part2 != _part2) _CLDELETE_LCARRAY(_part2);
+      
+      return q;
+  }
 }
 
 Query* QueryParser::getBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord)
