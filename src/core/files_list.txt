@@ -54,7 +54,6 @@ DONE ISH	search\FilteredTermEnum.java		- Can we mend term(void) and term(bool) ?
 DONE ISH	search\FuzzyQuery.java			- See TODOs.
 DONE ISH	search\FuzzyTermEnum.java			- See TODOs. Also, Old similarity code is commented out and marked as "legacy". It looks like some optimizations were made there, but since Fuzzy queries weren't working as they should we had to revert to Java's implementation. Perhaps after tests are complete we could try and get the optimized version to work again.
 ?	search\Hit.java
-?	search\HitCollector.java
 ?	search\HitIterator.java
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
@@ -267,6 +266,7 @@ BEN DONE  search\Sort.java
 BEN DONE search\TermScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
+DONE ISH	search\HitCollector.java			- No changes, abstract class
 
 
 DONE ISH	analysis\WhitespaceAnalyzer.java
