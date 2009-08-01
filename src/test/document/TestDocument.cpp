@@ -114,6 +114,7 @@ public:
     CLUCENE_ASSERT( doc.getFields()->size() == 0);
   }
 
+  /*
   void TestDateTools(CuTest *tc) {
 	  TCHAR* t = CL_NS(document)::DateTools::timeToString( Misc::currentTimeMillis() , CL_NS(document)::DateTools::MILLISECOND_FORMAT);
 	  _CLDELETE_ARRAY(t);
@@ -128,6 +129,7 @@ public:
 	  }
 	  _CLDELETE_ARRAY(t);
   }
+  */
 
   void TestFieldSelectors(CuTest *tc){
     RAMDirectory dir;
@@ -295,6 +297,6 @@ CuSuite *testdocument(void)
   SUITE_ADD_TEST(suite, TestLazyBinaryDocument);
 	SUITE_ADD_TEST(suite, TestFieldSelectors);
 	SUITE_ADD_TEST(suite, TestFields);
-	SUITE_ADD_TEST(suite, TestDateTools);
+	//SUITE_ADD_TEST(suite, TestDateTools);
     return suite;
 }
