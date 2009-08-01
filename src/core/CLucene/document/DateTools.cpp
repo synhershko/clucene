@@ -6,28 +6,11 @@
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 
-#ifdef _CL_TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if defined(_CL_HAVE_SYS_TIME_H)
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#ifdef _CL_HAVE_SYS_TIMEB_H
-# include <sys/timeb.h>
-#endif
-
 #include "DateTools.h"
 #include "CLucene/util/Misc.h"
 
 CL_NS_USE(util)
 CL_NS_DEF(document)
-
-#define DATETOOLS_BUFFER_SIZE 30
 
 TCHAR* DateTools::timeToString(const int64_t time, Resolution resolution /*= MILLISECOND_FORMAT*/) {
 	TCHAR* buf = _CL_NEWARRAY(TCHAR, DATETOOLS_BUFFER_SIZE);
@@ -35,8 +18,11 @@ TCHAR* DateTools::timeToString(const int64_t time, Resolution resolution /*= MIL
 	return buf;
 }
 
-void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf, size_t bufLength) {
-	time_t secs = time / 1000;
+void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* buf, size_t bufLength)
+{
+    // Take into account TZ and DST differences which may appear when using gmtime below
+    const int64_t diff_secs = getDifferenceFromGMT();
+	time_t secs = time / 1000 + diff_secs;
 	tm *ptm = gmtime(&secs);
 
 	char abuf[DATETOOLS_BUFFER_SIZE];
@@ -62,9 +48,14 @@ void DateTools::timeToString(const int64_t time, Resolution resolution, TCHAR* b
 	STRCPY_AtoT(buf,abuf, bufLength);
 }
 
+tm* DateTools::stringToDate(const TCHAR* dateString){
+    const int64_t time = stringToTime(dateString);
+    time_t secs = time / 1000;
+	tm *ptm = gmtime(&secs);
+    return ptm;
+}
 
 int64_t DateTools::stringToTime(const TCHAR* dateString) {
-	int64_t ret = 0;
 	tm s_time;
 	memset(&s_time, 0, sizeof(s_time));
 	s_time.tm_mday=1;
@@ -168,12 +159,83 @@ int64_t DateTools::stringToTime(const TCHAR* dateString) {
 	}
 
 	time_t t = mktime(&s_time);
-	if (t == -1)
+    if (t == -1)
 		_CLTHROWA(CL_ERR_Parse, "Input is not valid date string");
 
-	ret = (static_cast<int64_t>(t) * 1000) + ms;
+    // Get TZ difference in seconds, and calc it in
+    const int64_t diff_secs = getDifferenceFromGMT();
 
-	return ret;
+	return (static_cast<int64_t>(t + diff_secs) * 1000) + ms;
+}
+
+int64_t DateTools::getDifferenceFromGMT()
+{
+    struct tm *tptr;
+    time_t secs, local_secs, gmt_secs;
+    time( &secs );  // Current time in GMT
+    tptr = localtime( &secs );
+    local_secs = mktime( tptr );
+    tptr = gmtime( &secs );
+    gmt_secs = mktime( tptr );
+    return int64_t(local_secs - gmt_secs);
+}
+
+int64_t DateTools::timeMakeInclusive(const int64_t time)
+{
+    time_t secs = time / 1000;
+    tm *ptm = localtime(&secs); // use localtime since mktime below will convert the time to GMT before returning
+    ptm->tm_hour = 23;
+    ptm->tm_min = 59;
+    ptm->tm_sec = 59;
+
+    time_t t = mktime(ptm);
+    if (t == -1)
+        _CLTHROWA(CL_ERR_Parse, "Input is not a valid date");
+
+    return (static_cast<int64_t>(t) * 1000) + 999;
+}
+
+int64_t DateTools::getTime(unsigned short year, uint8_t month, uint8_t mday, uint8_t hours,
+                uint8_t minutes, uint8_t seconds, unsigned short ms)
+{
+	struct tm* s_time;
+
+    // get current time, and then change it according to the parameters
+    time_t rawtime;
+    time ( &rawtime );
+    s_time = localtime ( &rawtime ); // use localtime, since mktime will take into account TZ differences
+    s_time->tm_isdst = 0; // since we are using gmtime all around, make sure DST is off
+
+    s_time->tm_year = year - 1900;
+    s_time->tm_mon = month - 1;
+    s_time->tm_mday = mday;
+    s_time->tm_hour = hours;
+    s_time->tm_min = minutes;
+    s_time->tm_sec = seconds;
+    
+    time_t t = mktime(s_time);
+    if (t == -1)
+        _CLTHROWA(CL_ERR_Parse, "Input is not a valid date");
+
+    return (static_cast<int64_t>(t) * 1000) + ms;
+}
+
+TCHAR* DateTools::getISOFormat(const int64_t time){
+    const time_t secs = time / 1000;
+    const int64_t ms = abs((int32_t)((secs * 1000) - time));
+    tm *ptm = gmtime(&secs);
+    return getISOFormat(ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min,
+        ptm->tm_sec, ms);
+}
+
+TCHAR* DateTools::getISOFormat(unsigned short year, uint8_t month, uint8_t mday, uint8_t hours,
+        uint8_t minutes, uint8_t seconds, unsigned short ms)
+{
+    TCHAR* ISOString = _CL_NEWARRAY(TCHAR, 24);
+    cl_stprintf(ISOString, 24, _T("%04d-%02d-%02d %02d:%02d:%02d:%03d"), year, month, mday,
+        hours, minutes, seconds, ms);
+    ISOString[23] = '\0';
+    return ISOString;
 }
 
 DateTools::~DateTools(){
