@@ -266,6 +266,7 @@ CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/_clucene-config.h.cmake ${cl
 SOURCE_GROUP("config" ./CLucene/config/*)
 SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
+SOURCE_GROUP("zlib" ./zlib/*)
 
 MACRO (GET_SHARED_FILES result)
     IF ( "" STREQUAL "${ARGV2}" )
@@ -290,18 +291,19 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/util/Misc.cpp
       ${rel}/CLucene/util/dirent.cpp
     )
+
     IF ( NOT ZLIB_FOUND )
       SET(${result} ${${result}}
-        ${rel}/CLucene/util/zlib/adler32.c
-        ${rel}/CLucene/util/zlib/compress.c
-        ${rel}/CLucene/util/zlib/crc32.c
-        ${rel}/CLucene/util/zlib/deflate.c
-        ${rel}/CLucene/util/zlib/gzio.c
-        ${rel}/CLucene/util/zlib/inffast.c
-        ${rel}/CLucene/util/zlib/inflate.c
-        ${rel}/CLucene/util/zlib/inftrees.c
-        ${rel}/CLucene/util/zlib/trees.c
-        ${rel}/CLucene/util/zlib/zutil.c
+        ${clucene-ext_SOURCE_DIR}/zlib/adler32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/compress.c
+        ${clucene-ext_SOURCE_DIR}/zlib/crc32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/deflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/gzio.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inffast.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inftrees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/trees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/zutil.c
       )
     ENDIF ( NOT ZLIB_FOUND )
 ENDMACRO (GET_SHARED_FILES)
