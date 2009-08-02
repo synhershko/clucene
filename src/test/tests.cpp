@@ -18,6 +18,7 @@ unittest tests[] = {
     {"indexwriter", testindexwriter},
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
+    {"datetools", testDateTools},
     {"queryparser", testQueryParser},
     {"mfqueryparser", testMultiFieldQueryParser},
     {"search", testsearch},
