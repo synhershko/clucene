@@ -148,7 +148,7 @@ Query* ConstantScoreQuery::rewrite(IndexReader* reader) {
     return this;
 }
 
-Weight* ConstantScoreQuery::createWeight(Searcher* searcher) {
+Weight* ConstantScoreQuery::_createWeight(Searcher* searcher) {
     return _CLNEW /*ConstantScoreQuery::*/ConstantWeight(this, searcher);
 }
 

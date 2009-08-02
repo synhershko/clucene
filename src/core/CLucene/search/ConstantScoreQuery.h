@@ -42,7 +42,7 @@ public:
     */
 
 protected:
-    Weight* createWeight(Searcher* searcher);
+    Weight* _createWeight(Searcher* searcher);
 
 public:
     /** Prints a user-readable version of this query. */
