@@ -119,7 +119,7 @@ void _testCJK(CuTest *tc, const char* astr, const char** results, bool ignoreSur
     TCHAR tres[LUCENE_MAX_WORD_LEN];
 
     while (results[pos] != NULL) {
-        CLUCENE_ASSERT(tokenizer->next(&tok) == true);
+        CLUCENE_ASSERT(tokenizer->next(&tok) != NULL);
 
         lucene_utf8towcs(tres, results[pos], LUCENE_MAX_WORD_LEN);
         CuAssertStrEquals(tc, _T("unexpected token value"), tres, tok.termBuffer());
@@ -157,9 +157,9 @@ void testLanguageBasedAnalyzer(CuTest* tc) {
     a.setStem(false);
     ts = a.tokenStream(_T("contents"), &reader);
 
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("he")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("abhorred")) == 0);
     _CLDELETE(ts);
 
@@ -169,11 +169,11 @@ void testLanguageBasedAnalyzer(CuTest* tc) {
     a.setStem(true);
     ts = a.tokenStream(_T("contents"), &reader);
 
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("he")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("abhorred")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("accentuer")) == 0);
     _CLDELETE(ts);
 }

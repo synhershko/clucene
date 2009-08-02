@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include <iostream>
+#include <CLucene/search/MatchAllDocsQuery.h>
 
 //checks if a merged index finds phrases correctly
 void testIWmergePhraseSegments(CuTest *tc){
@@ -248,6 +248,112 @@ void testHashingBug(CuTest *tc){
   _CL_DECREF(&dir);
 }
 
+class IWlargeScaleCorrectness_tester {
+public:
+	void invoke(Directory& storage, CuTest *tc);
+};
+
+void IWlargeScaleCorrectness_tester::invoke(
+	Directory& storage,
+	CuTest *tc
+){
+	SimpleAnalyzer a;
+
+	IndexWriter* ndx = _CLNEW IndexWriter(&storage,&a,true);
+
+	ndx->setUseCompoundFile(false);
+
+	const long documents = 200;
+	const long step = 23;
+	const long inverted_step = 113;
+	const long repetitions = 5;
+
+	CLUCENE_ASSERT(0 == (step * inverted_step + 1) % documents);
+
+	long value0;
+	long value1 = 0;
+
+	long block_size = 1;
+	long reopen = 1;
+
+	for (value0 = 0; value0 < documents * repetitions; value0++) {
+		if (reopen == value0) {
+			ndx->optimize();
+			ndx->close();
+			_CLDELETE(ndx);
+			ndx = _CLNEW IndexWriter(&storage,&a,false);
+			ndx->setUseCompoundFile(false);
+			reopen += block_size;
+			block_size++;
+		}
+
+		TCHAR* value0_string = NumberTools::longToString(value0 % documents);
+		TCHAR* value1_string = NumberTools::longToString(value1);
+
+		Document doc;
+		
+		doc.add (
+			*_CLNEW Field(
+				_T("field0"),
+				value0_string,
+				Field::STORE_YES | Field::INDEX_UNTOKENIZED
+			)
+		);
+		doc.add (
+			*_CLNEW Field(
+				_T("field1"),
+				value1_string,
+				Field::STORE_YES | Field::INDEX_UNTOKENIZED
+			)
+		);
+		ndx->addDocument(&doc);
+
+		_CLDELETE_ARRAY(value0_string);
+		_CLDELETE_ARRAY(value1_string);
+		value1 = (value1 + step) % documents;
+	}
+
+	ndx->optimize();
+	ndx->close();
+
+	IndexSearcher searcher(&storage);
+	Query* query0 = _CLNEW MatchAllDocsQuery;
+	Sort by_value1(
+		_CLNEW SortField(
+			_T("field1"),
+			SortField::STRING,
+			true
+		)
+	);
+	Hits* hits0 = searcher.search(query0, &by_value1);
+	long last = 0;
+	for (long i = 0; i < hits0->length(); i++) {
+		Document& retrieved = hits0->doc(i);
+		TCHAR const* value = retrieved.get(_T("field0"));
+		long current = NumberTools::stringToLong(value);
+		long delta = (current + documents - last) % documents;
+		if (0 == (i % repetitions)) {
+			CLUCENE_ASSERT(inverted_step == delta);
+		} else {
+			CLUCENE_ASSERT(0 == delta);
+		}
+		last = current;
+	}
+	_CLDELETE(query0);
+	_CLDELETE(hits0);
+	_CLDELETE(ndx);
+}
+
+void testIWlargeScaleCorrectness(CuTest *tc){
+	char fsdir[CL_MAX_PATH];
+	sprintf(fsdir,"%s/%s",cl_tempDir, "test.search");
+	RAMDirectory ram;
+	FSDirectory* disk = FSDirectory::getDirectory(fsdir, true);
+	IWlargeScaleCorrectness_tester().invoke(ram, tc);
+	IWlargeScaleCorrectness_tester().invoke(*disk, tc);
+	disk->close();
+	_CLDECDELETE(disk);
+}
 
 CuSuite *testindexwriter(void)
 {
@@ -257,6 +363,7 @@ CuSuite *testindexwriter(void)
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
   SUITE_ADD_TEST(suite, testIWmergeSegments2);
 	SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
+	SUITE_ADD_TEST(suite, testIWlargeScaleCorrectness);
 
   return suite;
 }
