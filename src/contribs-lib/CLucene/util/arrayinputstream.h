@@ -16,7 +16,7 @@ CL_NS_DEF(util)
 template<typename element>
 class CLUCENE_CONTRIBS_EXPORT ArrayInputStream : public CL_NS(util)::CLStream<element> {
 public:
-	ArrayInputStream(ArrayBase<element> const* data);
+	_CL_DEPRECATED(Use compressed field) ArrayInputStream(ArrayBase<element> const* data);
 	int32_t read(const element*& start, int32_t min, int32_t max);
 	int64_t skip(int64_t ntoskip);
 	int64_t position();

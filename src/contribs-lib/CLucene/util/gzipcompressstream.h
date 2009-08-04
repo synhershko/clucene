@@ -19,8 +19,8 @@ private:
 	 Internal* internal;
 public:
 	 LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_BUFFER_SIZE=4096);
-    explicit GZipCompressInputStream(InputStream* input, int level=-1);
-    virtual ~GZipCompressInputStream();
+   _CL_DEPRECATED(Use compressed field)  explicit GZipCompressInputStream(InputStream* input, int level=-1);
+   _CL_DEPRECATED(Use compressed field)  virtual ~GZipCompressInputStream();
 	
 	 int32_t read(const signed char*& start, int32_t min, int32_t max);
 	 int64_t position();
