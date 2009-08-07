@@ -42,6 +42,8 @@ find_package(ZLIB)
 IF ( ZLIB_FOUND )
   SET ( EXTRA_LIBS ${EXTRA_LIBS} ${ZLIB_LIBRARY} )
   INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ELSE ( ZLIB_FOUND )
+  INCLUDE_DIRECTORIES( ${clucene-ext_SOURCE_DIR}/zlib )
 ENDIF ( ZLIB_FOUND )
 
 ########################################################################
