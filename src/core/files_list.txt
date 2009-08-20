@@ -1,7 +1,7 @@
 Lucene 2.3.2 Files:
 ---------------
 
-WORKING ISH	analysis\Analyzer.java
+?	analysis\Analyzer.java
 ?	analysis\CachingTokenFilter.java
 ?	analysis\CharArraySet.java
 ?	analysis\CharTokenizer.java
