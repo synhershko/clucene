@@ -100,6 +100,69 @@ void testBooleanScorer(CuTest *tc) {
     }
 }
 
+/// TestBooleanPrefixQuery.java, ported 5/9/2009
+void testBooleanPrefixQuery(CuTest* tc) {
+    RAMDirectory directory;
+    WhitespaceAnalyzer a;
+
+    TCHAR* categories[] = {_T("food"), _T("foodanddrink"),
+        _T("foodanddrinkandgoodtimes"), _T("food and drink"), NULL};
+
+    Query* rw1 = NULL;
+    Query* rw2 = NULL;
+    try {
+        IndexWriter* writer = _CLNEW IndexWriter(&directory, &a, true);
+        for (size_t i = 0; categories[i]!=NULL; i++) {
+            Document* doc = new Document();
+            doc->add(*_CLNEW Field(_T("category"), categories[i], Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+            writer->addDocument(doc);
+            _CLLDELETE(doc);
+        }
+        writer->close();
+        _CLLDELETE(writer);
+
+        IndexReader* reader = IndexReader::open(&directory);
+        Term* t = _CLNEW Term(_T("category"), _T("foo"));
+        PrefixQuery* query = _CLNEW PrefixQuery(t);
+        _CLDECDELETE(t);
+
+        rw1 = query->rewrite(reader);
+
+        BooleanQuery* bq = _CLNEW BooleanQuery();
+        bq->add(query, true, BooleanClause::MUST);
+
+        rw2 = bq->rewrite(reader);
+
+        reader->close(); // TODO: check necessity (_CLLDELETE(reader) alone will not do the same cleanup)
+
+        _CLLDELETE(reader);
+        _CLLDELETE(bq);
+    } catch (CLuceneError& e) {
+        CuFail(tc, e.twhat());
+    }
+
+    BooleanQuery* bq1 = NULL;
+    if (rw1->instanceOf(BooleanQuery::getClassName())) {
+        bq1 = (BooleanQuery*) rw1;
+    }
+
+    BooleanQuery* bq2 = NULL;
+    if (rw2->instanceOf(BooleanQuery::getClassName())) {
+        bq2 = (BooleanQuery*) rw2;
+    } else {
+        CuFail(tc, _T("Rewrite"));
+    }
+
+    bool bClausesMatch = bq1->getClauseCount() == bq2->getClauseCount();
+
+    _CLLDELETE(rw1);
+    _CLLDELETE(rw2);
+
+    if (!bClausesMatch) {
+        CuFail(tc, _T("Number of Clauses Mismatch"));
+    }
+}
+
 CuSuite *testBoolean(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Boolean Tests"));
@@ -109,7 +172,9 @@ CuSuite *testBoolean(void)
 
     SUITE_ADD_TEST(suite, testBooleanScorer);
 
-    //_CrtSetBreakAlloc(1266);
+    SUITE_ADD_TEST(suite, testBooleanPrefixQuery);
+
+    //_CrtSetBreakAlloc(1179);
 
 	return suite; 
 }
