@@ -21,6 +21,7 @@ unittest tests[] = {
     {"datetools", testDateTools},
     {"queryparser", testQueryParser},
     {"mfqueryparser", testMultiFieldQueryParser},
+    {"boolean", testBoolean},
     {"search", testsearch},
     {"queries", testqueries},
     {"termvector",testtermvector},

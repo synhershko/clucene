@@ -58,6 +58,7 @@ CuSuite *testreuters(void);
 CuSuite *testdocument(void);
 CuSuite *testNumberTools(void);
 CuSuite *testDateTools(void);
+CuSuite *testBoolean(void);
 
 class English{
 public:
