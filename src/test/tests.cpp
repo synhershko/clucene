@@ -20,6 +20,7 @@ unittest tests[] = {
     {"priorityqueue", testpriorityqueue},
     {"queryparser", testQueryParser},
     {"mfqueryparser", testMultiFieldQueryParser},
+    {"boolean", testBoolean},
     {"search", testsearch},
     {"queries", testqueries},
     {"termvector",testtermvector},
