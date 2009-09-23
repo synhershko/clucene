@@ -275,17 +275,9 @@ void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _t
 	termArrays->push_back(terms);
 	positions->push_back(position);
 }
-void MultiPhraseQuery::getTermArrays(CL_NS(util)::RefCountArray<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>& result) {
-  result.resize(termArrays->size(),false);
-  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator itr;
-  itr = termArrays->begin();
-  int i = 0;
-  while ( itr != termArrays->end() ){
-      result[i++] = *itr;
-      itr++;
-  }
+const CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* MultiPhraseQuery::getTermArrays() {
+  return termArrays;
 }
-
 void MultiPhraseQuery::extractTerms(CL_NS(util)::RefCountArray<Term*>& terms){
   CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator itr;
   itr = termArrays->begin();

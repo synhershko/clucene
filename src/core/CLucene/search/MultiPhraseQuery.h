@@ -78,7 +78,7 @@ public:
 	* Returns a ArrayBase<Term[]> of the terms in the multiphrase.
 	* Do not modify the List or its contents.
 	*/
-	void getTermArrays(CL_NS(util)::RefCountArray<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>& result);
+	const CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* getTermArrays();
 
 
 	/**
