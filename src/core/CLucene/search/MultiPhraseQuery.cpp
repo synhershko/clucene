@@ -275,6 +275,39 @@ void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _t
 	termArrays->push_back(terms);
 	positions->push_back(position);
 }
+void MultiPhraseQuery::getTermArrays(CL_NS(util)::RefCountArray<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>& result) {
+  result.resize(termArrays->size(),false);
+  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator itr;
+  itr = termArrays->begin();
+  int i = 0;
+  while ( itr != termArrays->end() ){
+      result[i++] = *itr;
+      itr++;
+  }
+}
+
+void MultiPhraseQuery::extractTerms(CL_NS(util)::RefCountArray<Term*>& terms){
+  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator itr;
+  itr = termArrays->begin();
+  CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* arr;
+  vector<Term*> v;
+  while ( itr != termArrays->end() ){
+      arr = *itr;
+      for (size_t i=0; i<arr->length; i++) {
+          v.push_back(_CL_POINTER(arr->values[i]));
+      }
+
+      itr++;
+  }
+
+  vector<Term*>::iterator itr2 = v.begin();
+  terms.resize(v.size(), false);
+  int i=0;
+  while ( itr2 != v.end() ){
+    terms[i++] = *itr2;
+    itr2++;
+  }
+}
 
 void MultiPhraseQuery::getPositions(ValueArray<int32_t>& result) const {
 	result.length = positions->size();
