@@ -62,13 +62,13 @@ public:
 	* @see IndexInput#readString()
 	*/
 	void writeString(const TCHAR* s, const int32_t length);
+    void writeString(const std::string& s);
 	
 	#ifdef _UCS2
 	/** Writes an ascii string. converts to TCHAR* before writing
 	* @see IndexInput#readString()
 	*/
 	void writeString(const char* s, const int32_t length);
-  void writeString(const std::string& s);
 	#endif
 
 	/** Writes a sequence of UTF-8 encoded characters from a string.

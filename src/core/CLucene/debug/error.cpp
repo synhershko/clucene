@@ -17,70 +17,23 @@ CL_NS_USE(util)
 	 #warning "==================Lucene exceptions are disabled=================="
 	#endif
 #else
-	CLuceneError::CLuceneError(){
-		error_number = 0;
+    CLuceneError::CLuceneError():error_number(0),_twhat(NULL){
+#ifndef _ASCII
 		_awhat = NULL;
-		_twhat = NULL;
+#endif
 	}
-	CLuceneError::CLuceneError(int num, const char* str, bool ownstr)
+    CLuceneError::CLuceneError(int num, const char* str, bool ownstr):error_number(num)
 	{
-		error_number = num;
-		_awhat=STRDUP_AtoA(str);
+#ifdef _ASCII
+        _twhat=STRDUP_AtoA(str);
+
+#else
+        _awhat=STRDUP_AtoA(str);
 		_twhat=NULL;
+#endif
 		if ( ownstr )
-			_CLDELETE_LCaARRAY( (char*)str);
+			_CLDELETE_LCaARRAY( const_cast<char*>(str));
     }
-	
-	CLuceneError::CLuceneError(const CLuceneError& clone)
-	{
-		this->error_number = clone.error_number;
-		this->_awhat = NULL;
-		this->_twhat = NULL;
-
-		if ( clone._awhat != NULL )
-			this->_awhat = STRDUP_AtoA(clone._awhat);
-		if ( clone._twhat != NULL )
-			this->_twhat = STRDUP_TtoT(clone._twhat);
-	}
-	CLuceneError::~CLuceneError() throw(){
-		_CLDELETE_LCARRAY(_twhat);
-		_CLDELETE_LCaARRAY(_awhat);
-	}
-	char* CLuceneError::what(){
-#ifdef _ASCII
-		if ( _twhat != NULL )
-			return _twhat;
-#endif
-		if ( _awhat == NULL )
-			_awhat = STRDUP_TtoA(_twhat);
-		return _awhat;
-	}
-	TCHAR* CLuceneError::twhat(){
-#ifdef _ASCII
-		if ( _awhat != NULL )
-			return _awhat;
-#endif
-		if ( _twhat == NULL )
-			_twhat = STRDUP_AtoT(_awhat);
-		return _twhat;
-	}
-
-	void CLuceneError::set(int num, const char* str, bool ownstr){
-		_CLDELETE_CARRAY(_twhat);
-		_CLDELETE_CaARRAY(_awhat);
-		_awhat=STRDUP_AtoA(str);
-		error_number = num;
-		if ( ownstr )
-			_CLDELETE_LCaARRAY( (char*)str);
-	}
-	void CLuceneError::set(int num, const TCHAR* str, bool ownstr){
-		_CLDELETE_CARRAY(_twhat);
-		_CLDELETE_CaARRAY(_awhat);
-		_twhat=STRDUP_TtoT(str);
-		error_number = num;
-		if ( ownstr )
-			_CLDELETE_LCARRAY((TCHAR*)str);
-	}
 
 #ifndef _ASCII
 	CLuceneError::CLuceneError(int num, const TCHAR* str, bool ownstr)
@@ -92,5 +45,64 @@ CL_NS_USE(util)
 			_CLDELETE_LCARRAY((TCHAR*)str);
     }
 #endif
+	
+	CLuceneError::CLuceneError(const CLuceneError& clone)
+	{
+		this->error_number = clone.error_number;
+#ifndef _ASCII
+		this->_awhat = NULL;
+		if ( clone._awhat != NULL )
+			this->_awhat = STRDUP_AtoA(clone._awhat);
+#endif
+		this->_twhat = NULL;
+		if ( clone._twhat != NULL )
+			this->_twhat = STRDUP_TtoT(clone._twhat);
+	}
+	CLuceneError::~CLuceneError() throw(){
+		_CLDELETE_LCARRAY(_twhat);
+#ifndef _ASCII
+		_CLDELETE_LCaARRAY(_awhat);
+#endif
+	}
+	char* CLuceneError::what(){
+#ifdef _ASCII
+        return _twhat;
+#else
+		if ( _awhat == NULL )
+			_awhat = STRDUP_TtoA(_twhat);
+		return _awhat;
+#endif
+	}
+	TCHAR* CLuceneError::twhat(){
+#ifdef _ASCII
+        return _twhat;
+#else
+		if ( _twhat == NULL )
+			_twhat = STRDUP_AtoT(_awhat);
+		return _twhat;
+#endif
+	}
+
+#ifndef _ASCII
+	void CLuceneError::set(int num, const char* str, bool ownstr){
+		_CLDELETE_CARRAY(_twhat);
+		_CLDELETE_CaARRAY(_awhat);
+		_awhat=STRDUP_AtoA(str);
+		error_number = num;
+		if ( ownstr )
+			_CLDELETE_LCaARRAY( const_cast<char*>(str));
+	}
+#endif
+
+	void CLuceneError::set(int num, const TCHAR* str, bool ownstr){
+#ifndef _ASCII
+        _CLDELETE_CaARRAY(_awhat);
+#endif
+		_CLDELETE_CARRAY(_twhat);
+		_twhat=STRDUP_TtoT(str);
+		error_number = num;
+		if ( ownstr )
+			_CLDELETE_LCARRAY(const_cast<TCHAR*>(str));
+	}
 
 #endif //_LUCENE_DISABLE_EXCEPTIONS
