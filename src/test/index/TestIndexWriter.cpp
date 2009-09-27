@@ -6,17 +6,15 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 #include <iostream>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 //checks if a merged index finds phrases correctly
 void testIWmergePhraseSegments(CuTest *tc){
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
-	mkdir(fsdir, 0777);
 	SimpleAnalyzer a;
+  Directory* dir = FSDirectory::getDirectory(fsdir, true);
 
-	IndexWriter ndx2(fsdir,&a,true);
+	IndexWriter ndx2(dir,&a,true);
 	ndx2.setUseCompoundFile(false);
 	Document doc0;
 	doc0.add(
@@ -64,6 +62,7 @@ void testIWmergePhraseSegments(CuTest *tc){
 	_CLDELETE(query1);
 	_CLDELETE(hits0);
 	_CLDELETE(hits1);
+	_CLDECDELETE(dir);
 }
 
 //checks that adding more than the min_merge value goes ok...
@@ -109,10 +108,10 @@ void testIWmergeSegments1(CuTest *tc){
 void testIWmergeSegments2(CuTest *tc){
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
-	mkdir(fsdir, 0777);
 	SimpleAnalyzer a;
+  Directory* dir = FSDirectory::getDirectory(fsdir, true);
 
-	IndexWriter ndx2(fsdir,&a,true);
+	IndexWriter ndx2(dir,&a,true);
 	ndx2.setUseCompoundFile(false);
 	Document doc0;
 	doc0.add(
@@ -156,6 +155,7 @@ void testIWmergeSegments2(CuTest *tc){
   _CLDELETE(hits1);
 	_CLDECDELETE(term0);
 	_CLDECDELETE(term1);
+	_CLDECDELETE(dir);
 }
 
 void testAddIndexes(CuTest *tc){

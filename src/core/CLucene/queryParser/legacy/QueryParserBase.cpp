@@ -148,29 +148,27 @@ Query* QueryParserBase::GetFieldQuery(const TCHAR* field, TCHAR* queryText){
 
   StringArrayWithDeletor v;
 
-  Token* t = NULL;
+  Token t;
   int positionCount = 0;
   bool severalTokensAtSamePosition = false;
 
   //Get the tokens from the source
   try{
-    while (source->next(t)){
-      v.push_back(STRDUP_TtoT(t->termBuffer()));
+    while (source->next(&t)){
+      v.push_back(STRDUP_TtoT(t.termBuffer()));
 
-      if (t->getPositionIncrement() != 0)
-        positionCount += t->getPositionIncrement();
+      if (t.getPositionIncrement() != 0)
+        positionCount += t.getPositionIncrement();
       else
         severalTokensAtSamePosition = true;
     }
   }catch(CLuceneError& err){
     if ( err.number() != CL_ERR_IO ) {
-      _CLDELETE(t);
       _CLLDELETE(source);
       throw err;
     }
   }
   _CLDELETE(source);
-  _CLDELETE(t);
 
   //Check if there are any tokens retrieved
   if (v.size() == 0){
@@ -240,13 +238,13 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
 
   TCHAR* terms[2];
   terms[0]=NULL;terms[1]=NULL;
-  Token* t = NULL;
+  Token t;
   bool tret=false;
   bool from=true;
   while(tret)
   {
     try{
-      tret = (source->next(t) != NULL);
+      tret = (source->next(&t) != NULL);
     }catch (CLuceneError& err){
       if ( err.number() == CL_ERR_IO )
         tret=false;
@@ -255,11 +253,11 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
     }
     if (tret)
     {
-      if ( !from && _tcscmp(t->termBuffer(),_T("TO"))==0 )
+      if ( !from && _tcscmp(t.termBuffer(),_T("TO"))==0 )
         continue;
 
 
-      TCHAR* tmp = STRDUP_TtoT(t->termBuffer());
+      TCHAR* tmp = STRDUP_TtoT(t.termBuffer());
       discardEscapeChar(tmp);
       terms[from? 0 : 1] = tmp;
 
@@ -276,7 +274,6 @@ Query* QueryParserBase::ParseRangeQuery(const TCHAR* field, TCHAR* queryText, bo
   _CLDELETE_CARRAY(terms[0]);
   _CLDELETE_CARRAY(terms[1]);
   _CLDELETE(source);
-  _CLDELETE(t);
 
   return ret;
 }

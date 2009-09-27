@@ -80,8 +80,7 @@ CL_NS_DEF(search)
 		int32_t prohibitedMask;
 		float_t* coordFactors;
 
-    	BooleanScorer(Similarity* similarity);
-    	BooleanScorer( Similarity* similarity, int32_t minNrShouldMatch );
+    	BooleanScorer( Similarity* similarity, int32_t minNrShouldMatch = 1 );
 		virtual ~BooleanScorer();
 		void add(Scorer* scorer, const bool required, const bool prohibited);
 		int32_t doc() const { return current->doc; }

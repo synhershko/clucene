@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_util_StringBuffer_
@@ -13,8 +13,8 @@ CL_NS_DEF(util)
    ///Constructor. Allocates a buffer with the default length.
    StringBuffer();
    ///Constructor. Allocates a buffer of length initSize + 1
-   StringBuffer(const size_t initSize, const bool consumeBuffer = true);
-   ///Constructor. Creates an instance of Stringbuffer containing a copy of 
+   StringBuffer(const size_t initSize);
+   ///Constructor. Creates an instance of Stringbuffer containing a copy of
    ///the string value
    StringBuffer(const TCHAR* value);
    ///Constructs a StringBuffer using another buffer. The StringBuffer can
@@ -24,10 +24,10 @@ CL_NS_DEF(util)
    virtual ~StringBuffer();
    ///Clears the Stringbuffer and resets it to it default empty state
    void clear();
-   
-   ///Appends a single character 
+
+   ///Appends a single character
    void appendChar(const TCHAR chr);
-   ///Appends a copy of the string value 
+   ///Appends a copy of the string value
    void append(const TCHAR* value);
    ///Appends a copy of the string value
    void append(const TCHAR* value, size_t appendedLength);
@@ -41,19 +41,23 @@ CL_NS_DEF(util)
    void prepend(const TCHAR* value);
    ///Puts a copy of the string value in front of the current string in the StringBuffer
    void prepend(const TCHAR* value, size_t prependedLength);
-   
+
    ///Contains the length of string in the StringBuffer
    ///Public so that analyzers can edit the length directly
    size_t len;
    ///Returns the length of the string in the StringBuffer
    size_t length() const;
    ///Returns a copy of the current string in the StringBuffer
-   TCHAR* toString(); 
+   TCHAR* toString();
    ///Returns a null terminated reference to the StringBuffer's text
-   TCHAR* getBuffer(); 
+   TCHAR* getBuffer();
+   /** Returns a null terminated reference to the StringBuffer's text
+   * the StringBuffer's buffer is released so that the text doesn't need to be copied
+   */
+   TCHAR* giveBuffer();
 
 
-   ///reserve a minimum amount of data for the buffer. 
+   ///reserve a minimum amount of data for the buffer.
    ///no change made if the buffer is already longer than length
    void reserve(const size_t length);
   private:
@@ -62,7 +66,7 @@ CL_NS_DEF(util)
    ///The length of the buffer
    size_t bufferLength;
    bool bufferOwner;
-   
+
    ///Has the buffer grown to a minimum length of minLength or bigger
    void growBuffer(const size_t minLength);
    ///Has the buffer grown to a minimum length of minLength or bigger and shifts the
