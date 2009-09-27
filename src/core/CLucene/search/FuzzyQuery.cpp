@@ -28,7 +28,7 @@ CL_NS_DEF(search)
 
 
 	FuzzyTermEnum::FuzzyTermEnum(IndexReader* reader, Term* term, float_t minSimilarity, size_t _prefixLength):
-		FilteredTermEnum(),d(NULL),dWidth(0),dHeight(0),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
+		FilteredTermEnum(),d(NULL),_similarity(0),_endEnum(false),searchTerm(_CL_POINTER(term)),
 		text(NULL),textLen(0),prefix(NULL)/* ISH: was STRDUP_TtoT(LUCENE_BLANK_STRING)*/,prefixLength(_prefixLength),
 		minimumSimilarity(minSimilarity)
 	{
@@ -58,8 +58,6 @@ CL_NS_DEF(search)
 		prefix[realPrefixLength]='\0';
 
 		initializeMaxDistances();
-		dWidth = LUCENE_TYPICAL_LONGEST_WORD_IN_INDEX; // default length of the d array
-		dHeight = textLen + 1;
 
 		Term* trm = _CLNEW Term(searchTerm->field(), prefix); // _CLNEW Term(term, prefix); -- not intern'd?
 		setEnum(reader->terms(trm));
@@ -134,13 +132,6 @@ CL_NS_DEF(search)
 				const size_t targetLen = termTextLen-prefixLength;
 				_similarity = similarity(target, targetLen);
 				return (_similarity > minimumSimilarity);
-
-				/* LEGACY:
-				//Calculate the Levenshtein distance
-				int32_t dist = editDistance(text, target, textLen, targetLen);
-				distance = 1 - ((float_t)dist / (float_t)cl_min(textLen, targetLen));
-				return (distance > minimumSimilarity);
-				*/
 		}
 		_endEnum = true;
 		return false;
@@ -177,21 +168,18 @@ CL_NS_DEF(search)
 
 		//let's make sure we have enough room in our array to do the distance calculations.
 		//Check if the array must be reallocated because it is too small or does not exist
-
-		// TODO:	realloc should be able to allocate memory for NULL pointers; if thats the case the NULL
-		//			check here is redundant
-		if (d == NULL){
-			dWidth  = cl_max(dWidth, n+1);
-			dHeight = cl_max(dHeight, m+1);
-			d = reinterpret_cast<int32_t*>(malloc(sizeof(int32_t)*dWidth*dHeight));
-		} else if (dWidth <= n || dHeight <= m) {
-			//growDistanceArray
-			dWidth  = cl_max(dWidth, n+1);
-			dHeight = cl_max(dHeight, m+1);
-			d = reinterpret_cast<int32_t*>(realloc(d, sizeof(int32_t)*dWidth*dHeight));
+		size_t dWidth  = n+1;
+		size_t dHeight = m+1;
+    if (d == NULL){
+      dLen = dWidth*dHeight;
+			d = (int32_t*)(malloc(sizeof(int32_t)*dLen));
+		} else if (dLen < dWidth*dHeight) {
+      dLen = dWidth*dHeight;
+			d = (int32_t*)(realloc(d, sizeof(int32_t)*dLen));
 		}
+    memset(d,0,dLen);
 
-		size_t i;     // iterates through the source string
+  	size_t i;     // iterates through the source string
 		size_t j;     // iterates through the target string
 
 		// init matrix d
@@ -253,72 +241,6 @@ CL_NS_DEF(search)
 	int32_t FuzzyTermEnum::calculateMaxDistance(const size_t m) const {
 		return (int32_t) ((1-minimumSimilarity) * (cl_min(textLen, m) + prefixLength));
 	}
-
-	/* LEGACY:
-	int32_t FuzzyTermEnum::editDistance(const TCHAR* s, const TCHAR* t, const int32_t n, const int32_t m) {
-		//Func - Calculates the Levenshtein distance also known as edit distance is a measure of similiarity
-		//       between two strings where the distance is measured as the number of character
-		//       deletions, insertions or substitutions required to transform one string to
-		//       the other string.
-		//Pre  - s != NULL and contains the source string
-		//       t != NULL and contains the target string
-		//       n >= 0 and contains the length of the source string
-		//       m >= 0 and containts the length of the target string
-		//Post - The distance has been returned
-
-		CND_PRECONDITION(s != NULL, "s is NULL");
-		CND_PRECONDITION(t != NULL, "t is NULL");
-		CND_PRECONDITION(n >= 0," n is a negative number");
-		CND_PRECONDITION(n >= 0," n is a negative number");
-
-		int32_t i;     // iterates through s
-		int32_t j;     // iterates through t
-		TCHAR s_i; // ith character of s
-
-		if (n == 0)
-			return m;
-		if (m == 0)
-			return n;
-
-		//Check if the array must be reallocated because it is too small or does not exist
-		if (e == NULL || eWidth <= n || eHeight <= m) {
-			//Delete e if possible
-			_CLDELETE_ARRAY(e);
-			//resize e
-			eWidth  = cl_max(eWidth, n+1);
-			eHeight = cl_max(eHeight, m+1);
-			e = _CL_NEWARRAY(int32_t,eWidth*eHeight);
-		}
-
-		CND_CONDITION(e != NULL,"e is NULL");
-
-		// init matrix e
-		for (i = 0; i <= n; i++){
-			e[i + (0*eWidth)] = i;
-		}
-		for (j = 0; j <= m; j++){
-			e[0 + (j*eWidth)] = j;
-		}
-
-		int32_t __t; //temporary variable for min3
-
-		// start computing edit distance
-		for (i = 1; i <= n; i++) {
-			s_i = s[i - 1];
-			for (j = 1; j <= m; j++) {
-				if (s_i != t[j-1]){
-					min3(e[i + (j*eWidth) - 1], e[i + ((j-1)*eWidth)], e[i + ((j-1)*eWidth)-1]);
-					e[i + (j*eWidth)] = __t+1;
-				}else{
-					min3(e[i + (j*eWidth) -1]+1, e[i + ((j-1)*eWidth)]+1, e[i + ((j-1)*eWidth)-1]);
-					e[i + (j*eWidth)] = __t;
-				}
-			}
-		}
-
-		// we got the result!
-		return e[n + ((m)*eWidth)];
-	}*/
 
   class FuzzyQuery::ScoreTerm {
   public:
