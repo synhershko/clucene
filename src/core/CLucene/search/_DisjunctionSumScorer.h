@@ -18,13 +18,6 @@ class DisjunctionSumScorer : public Scorer {
 private:
 	typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
 
-	/** The number of subscorers. */ 
-	int32_t nrScorers;
-protected:
-	/** The subscorers. */
-	DisjunctionSumScorer::ScorersType subScorers;
-
-private:
 	/** The minimum number of scorers that should match. */
 	int32_t minimumNrMatchers;
 	
@@ -47,9 +40,50 @@ private:
 	int32_t currentDoc;
 	float_t currentScore;
 	
+	/** Called the first time next() or skipTo() is called to
+	* initialize <code>scorerDocQueue</code>.
+	*/
+	void initScorerDocQueue();
+	
 protected:
+	/** The number of subscorers. */ 
+	int32_t nrScorers;
+
+	/** The subscorers. */
+	DisjunctionSumScorer::ScorersType subScorers;
+
 	/** The number of subscorers that provide the current match. */
 	int32_t _nrMatchers;
+	
+	/** Expert: Collects matching documents in a range.  Hook for optimization.
+	* Note that {@link #next()} must be called once before this method is called
+	* for the first time.
+	* @param hc The collector to which all matching documents are passed through
+	* {@link HitCollector#collect(int, float)}.
+	* @param max Do not score documents past this.
+	* @return true if more matching documents may remain.
+	*/
+	bool score( HitCollector* hc, const int32_t max );
+
+	/** Advance all subscorers after the current document determined by the
+	* top of the <code>scorerDocQueue</code>.
+	* Repeat until at least the minimum number of subscorers match on the same
+	* document and all subscorers are after that document or are exhausted.
+	* <br>On entry the <code>scorerDocQueue</code> has at least <code>minimumNrMatchers</code>
+	* available. At least the scorer with the minimum document number will be advanced.
+	* @return true iff there is a match.
+	* <br>In case there is a match, </code>currentDoc</code>, </code>currentSumScore</code>,
+	* and </code>nrMatchers</code> describe the match.
+	*
+	* @todo Investigate whether it is possible to use skipTo() when
+	* the minimum number of matchers is bigger than one, ie. try and use the
+	* character of ConjunctionScorer for the minimum number of matchers.
+	* Also delay calling score() on the sub scorers until the minimum number of
+	* matchers is reached.
+	* <br>For this, a Scorer array with minimumNrMatchers elements might
+	* hold Scorers at currentDoc that are temporarily popped from scorerQueue.
+	*/
+	bool advanceAfterCurrent();
 	
 public:
 	/** Construct a <code>DisjunctionScorer</code>, using one as the minimum number
@@ -66,13 +100,6 @@ public:
 	DisjunctionSumScorer( CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> >* _subScorers, const int32_t _minimumNrMatchers = 1);
 	virtual ~DisjunctionSumScorer();
 
-private:
-	/** Called the first time next() or skipTo() is called to
-	* initialize <code>scorerDocQueue</code>.
-	*/
-	void initScorerDocQueue();
-	
-public:
 	/** Scores and collects all matching documents.
 	* @param hc The collector to which all matching documents are passed through
 	* {@link HitCollector#collect(int, float)}.
@@ -106,38 +133,6 @@ public:
 
 	/** @return An explanation for the score of a given document. */
 	Explanation* explain( int32_t doc );
-	
-protected:
-	/** Expert: Collects matching documents in a range.  Hook for optimization.
-	* Note that {@link #next()} must be called once before this method is called
-	* for the first time.
-	* @param hc The collector to which all matching documents are passed through
-	* {@link HitCollector#collect(int, float)}.
-	* @param max Do not score documents past this.
-	* @return true if more matching documents may remain.
-	*/
-	bool score( HitCollector* hc, const int32_t max );
-
-	/** Advance all subscorers after the current document determined by the
-	* top of the <code>scorerDocQueue</code>.
-	* Repeat until at least the minimum number of subscorers match on the same
-	* document and all subscorers are after that document or are exhausted.
-	* <br>On entry the <code>scorerDocQueue</code> has at least <code>minimumNrMatchers</code>
-	* available. At least the scorer with the minimum document number will be advanced.
-	* @return true iff there is a match.
-	* <br>In case there is a match, </code>currentDoc</code>, </code>currentSumScore</code>,
-	* and </code>nrMatchers</code> describe the match.
-	*
-	* @todo Investigate whether it is possible to use skipTo() when
-	* the minimum number of matchers is bigger than one, ie. try and use the
-	* character of ConjunctionScorer for the minimum number of matchers.
-	* Also delay calling score() on the sub scorers until the minimum number of
-	* matchers is reached.
-	* <br>For this, a Scorer array with minimumNrMatchers elements might
-	* hold Scorers at currentDoc that are temporarily popped from scorerQueue.
-	*/
-	bool advanceAfterCurrent();
-	
 };
 
 CL_NS_END

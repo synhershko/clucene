@@ -69,7 +69,7 @@ Query* Query::rewrite(CL_NS(index)::IndexReader* reader){
 
 Query* Query::combine(CL_NS(util)::ArrayBase<Query*>* queries){
   std::vector<Query*> uniques;
-  for (int i = 0; i < queries->length; i++) {
+  for (size_t i = 0; i < queries->length; i++) {
     Query* query = queries->values[i];
     CL_NS(util)::ValueArray<BooleanClause*> clauses;
     // check if we can split the query into clauses
@@ -79,12 +79,12 @@ Query* Query::combine(CL_NS(util)::ArrayBase<Query*>* queries){
       splittable = bq->isCoordDisabled();
       clauses.resize(bq->getClauseCount());
       bq->getClauses(clauses.values);
-      for (int32_t j = 0; splittable && j < clauses.length; j++) {
+      for (size_t j = 0; splittable && j < clauses.length; j++) {
         splittable = (clauses[j]->getOccur() == BooleanClause::SHOULD);
       }
     }
     if(splittable){
-      for (int j = 0; j < clauses.length; j++) {
+      for (size_t j = 0; j < clauses.length; j++) {
         uniques.push_back(clauses[j]->getQuery());
       }
     } else {

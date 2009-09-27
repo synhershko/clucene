@@ -8,7 +8,7 @@
 
   static void print_tHits( CuTest *tc, Hits* hits ) {
     CuMessageA(tc,"%d total results\n\n", hits->length());
-    for (int32_t i = 0 ; i < hits->length(); i++) {
+    for (size_t i = 0 ; i < hits->length(); i++) {
       if ( i < 10 || (i > 94 && i < 105) ) {
         const Document& d = hits->doc(i);
 	      CuMessage(tc, _T("%d %s\n"), i, d.get(_T("id")) );
@@ -65,7 +65,7 @@
 		//printf("Building result map...\n");
 		std::map<int32_t, int32_t> resMap;
 		int32_t id;
-		for (int32_t j = 0; j < result->length(); j++) {
+		for (size_t j = 0; j < result->length(); j++) {
 			doc = &result->doc(j);
 
 			id = _ttoi(doc->get(_T("id")));

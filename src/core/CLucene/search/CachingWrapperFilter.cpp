@@ -46,30 +46,30 @@ struct AbstractCachingFilter::Internal{
 };
 
 AbstractCachingFilter::AbstractCachingFilter():
-	internal(new Internal)
+	_internal(new Internal)
 {
 }
 AbstractCachingFilter::AbstractCachingFilter(const AbstractCachingFilter& copy):
-	internal(new Internal)
+	_internal(new Internal)
 {
 }
 AbstractCachingFilter::~AbstractCachingFilter(){
-	delete internal;
+	delete _internal;
 }
 
 BitSet* AbstractCachingFilter::bits(IndexReader* reader){
-	SCOPED_LOCK_MUTEX(internal->cache_LOCK)
-	BitSetHolder* cached = internal->cache.get(reader);
+	SCOPED_LOCK_MUTEX(_internal->cache_LOCK)
+	BitSetHolder* cached = _internal->cache.get(reader);
 	if ( cached != NULL )
 		return cached->bits;
 	BitSet* bs = doBits(reader);
 	BitSetHolder* bsh = _CLNEW BitSetHolder(bs, doShouldDeleteBitSet(bs));
-	internal->cache.put(reader,bsh);
+	_internal->cache.put(reader,bsh);
 	return bs;
 }
 void AbstractCachingFilter::closeCallback(CL_NS(index)::IndexReader* reader, void*){
-	SCOPED_LOCK_MUTEX(internal->cache_LOCK)
-	internal->cache.remove(reader);
+	SCOPED_LOCK_MUTEX(_internal->cache_LOCK)
+	_internal->cache.remove(reader);
 }
 
 

@@ -56,7 +56,6 @@ CL_NS_DEF(util)
    */
    TCHAR* giveBuffer();
 
-
    ///reserve a minimum amount of data for the buffer.
    ///no change made if the buffer is already longer than length
    void reserve(const size_t length);
@@ -67,11 +66,9 @@ CL_NS_DEF(util)
    size_t bufferLength;
    bool bufferOwner;
 
-   ///Has the buffer grown to a minimum length of minLength or bigger
-   void growBuffer(const size_t minLength);
    ///Has the buffer grown to a minimum length of minLength or bigger and shifts the
    ///current string in buffer by skippingNInitialChars forward
-   void growBuffer(const size_t minLength, const size_t skippingNInitialChars);
+   void growBuffer(const size_t minLength, const size_t skippingNInitialChars=0);
 
   };
 CL_NS_END

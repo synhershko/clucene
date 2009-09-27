@@ -279,7 +279,7 @@ int32_t SegmentMerger::mergeFields() {
 	    tmp.clear(); reader->getFieldNames(IndexReader::UNINDEXED, tmp);
 	    if ( tmp.size() > 0 ){
 		    TCHAR** arr = _CL_NEWARRAY(TCHAR*,tmp.size()+1);
-		    tmp.toArray(arr);
+		    tmp.toArray(arr, true);
 		    fieldInfos->add((const TCHAR**)arr, false);
 		    _CLDELETE_ARRAY(arr); //no need to delete the contents, since tmp is responsible for it
 	    }

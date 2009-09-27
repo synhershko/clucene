@@ -8,6 +8,7 @@
 #define _lucene_index_MultipleTermPositions_
 
 #include "Terms.h"
+#include "CLucene/util/Array.h"
 
 CL_NS_DEF(index)
 
@@ -30,7 +31,7 @@ public:
 	* 
 	* @exception IOException
 	*/ 
-	MultipleTermPositions(IndexReader* indexReader, Term** terms);
+  MultipleTermPositions(IndexReader* indexReader, const CL_NS(util)::ArrayBase<Term*>* terms);
 	virtual ~MultipleTermPositions(){}
 
 	bool next();

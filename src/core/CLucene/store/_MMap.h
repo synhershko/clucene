@@ -13,7 +13,7 @@ CL_NS_DEF(store)
 
 	class MMapIndexInput: public IndexInput{
 		class Internal;
-		Internal* internal;
+		Internal* _internal;
 
 		MMapIndexInput(const MMapIndexInput& clone);
 	public:

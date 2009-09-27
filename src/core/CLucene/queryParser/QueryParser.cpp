@@ -347,46 +347,36 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
           _CLDECDELETE(tm);
         }
         return q;
+      }else {
+		    MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
+		    mpq->setSlop(phraseSlop);
+		    CLArrayList<Term*> multiTerms;
+		    int32_t position = -1;
+		    for (size_t i = 0; i < v.size(); i++) {
+			    t = v.at(i);
+			    if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
+            ValueArray<Term*> termsArray(multiTerms.size());
+            multiTerms.toArray(termsArray.values, false);
+				    if (enablePositionIncrements) {
+					    mpq->add(&termsArray,position);
+				    } else {
+					    mpq->add(&termsArray);
+				    }
+				    multiTerms.clear();
+			    }
+			    position += t->getPositionIncrement();
+			    multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
+		    }
+        ValueArray<Term*> termsArray(multiTerms.size());
+        multiTerms.toArray(termsArray.values, false);
+		    if (enablePositionIncrements) {
+			    mpq->add(&termsArray,position);
+		    } else {
+			    mpq->add(&termsArray);
+		    }
+		    return mpq;
       }
-	  else {
-		  MultiPhraseQuery* mpq = _CLNEW MultiPhraseQuery();
-		  mpq->setSlop(phraseSlop);
-		  CLArrayList<Term*> multiTerms;
-		  int32_t position = -1;
-		  for (size_t i = 0; i < v.size(); i++) {
-			  t = v.at(i);
-			  if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
-				  if (enablePositionIncrements) {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray,position);
-					  _CLDELETE_LARRAY(termsArray);
-				  } else {
-					  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-					  multiTerms.toArray(termsArray);
-					  mpq->add(termsArray);
-					  _CLDELETE_LARRAY(termsArray);
-				  }
-				  multiTerms.clear();
-			  }
-			  position += t->getPositionIncrement();
-			  multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
-		  }
-		  if (enablePositionIncrements) {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray,position);
-			  _CLDELETE_LARRAY(termsArray);
-		  } else {
-			  Term** termsArray = _CL_NEWARRAY(Term*,multiTerms.size()+1);
-			  multiTerms.toArray(termsArray);
-			  mpq->add(termsArray);
-			  _CLDELETE_LARRAY(termsArray);
-		  }
-		  return mpq;
-      }
-    }
-    else {
+    }else {
       PhraseQuery* pq = _CLNEW PhraseQuery();
       pq->setSlop(phraseSlop);
       int32_t position = -1;
@@ -620,8 +610,8 @@ int32_t QueryParser::hexToInt(TCHAR c) {
   } else if (_T('A') <= c && c <= _T('F')) {
     return c - _T('A') + 10;
   } else {
-    TCHAR err[48];
-    cl_stprintf(err,48,_T("None-hex character in unicode escape sequence: %c"));
+    TCHAR err[50];
+    cl_stprintf(err,50, _T("Non-hex character in unicode escape sequence: %c"), c);
     _CLTHROWT(CL_ERR_Parse,err);
   }
 }
@@ -1459,9 +1449,9 @@ TCHAR* QueryParser::getParseExceptionMessage(QueryToken* currentToken,
       break;
     }
     if (tok->image){
-      const TCHAR* buf = addEscapes(tok->image);
+      TCHAR* buf = addEscapes(tok->image);
       retval.append(buf);
-      _CLLDELETE(buf);
+      _CLDELETE_CARRAY(buf);
     }
     tok = tok->next;
   }

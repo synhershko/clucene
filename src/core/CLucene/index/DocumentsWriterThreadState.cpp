@@ -230,8 +230,7 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
       if (numAllFieldData == allFieldDataArray.length) {
         allFieldDataArray.resize( (int32_t) (allFieldDataArray.length*1.5) );
 
-        fieldDataHash.resize( fieldDataHash.length*2 );
-        ValueArray<FieldData*>& newHashArray = fieldDataHash;
+        ValueArray<FieldData*> newHashArray(fieldDataHash.length*2);
 
         // Rehash
         fieldDataHashMask = allFieldDataArray.length-1;
@@ -246,6 +245,8 @@ void DocumentsWriter::ThreadState::init(Document* doc, int32_t docID) {
             fp0 = nextFP0;
           }
         }
+        fieldDataHash.resize( newHashArray.length );
+        memcpy(fieldDataHash.values, newHashArray.values, newHashArray.length * sizeof(FieldData*));
       }
       allFieldDataArray.values[numAllFieldData++] = fp;
     } else {

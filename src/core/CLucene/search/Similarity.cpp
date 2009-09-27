@@ -199,7 +199,7 @@ CL_NS_DEF(search)
 
 
 
-   DefaultSimilarity::DefaultSimilarity(){
+  DefaultSimilarity::DefaultSimilarity(){
 	}
 	DefaultSimilarity::~DefaultSimilarity(){
 	}
@@ -214,8 +214,7 @@ CL_NS_DEF(search)
   float_t DefaultSimilarity::queryNorm(float_t sumOfSquaredWeights) {
     if ( sumOfSquaredWeights == 0 ) //prevent div by zero
         return 0.0f;
-	float_t ret = (float_t)(1.0 / sqrt(sumOfSquaredWeights));
-	return ret;
+	  return (float_t)(1.0 / sqrt(sumOfSquaredWeights));
   }
 
   float_t DefaultSimilarity::tf(float_t freq) {

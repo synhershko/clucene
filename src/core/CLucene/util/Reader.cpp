@@ -240,32 +240,32 @@ FileInputStream::FileInputStream ( const char* path, int32_t buflen  )
 {
 	if ( buflen == -1 )
 		buflen = DEFAULT_BUFFER_SIZE;
-	internal = new Internal(path, buflen);
+	_internal = new Internal(path, buflen);
 }
 
 size_t FileInputStream::size(){
-	return internal->jsbuffer->size();
+	return _internal->jsbuffer->size();
 }
 
 FileInputStream::~FileInputStream ()
 {
-	delete internal;
+	delete _internal;
 }
 
 int32_t FileInputStream::read(const signed char*& start, int32_t min, int32_t max){
-	return internal->jsbuffer->read(start,min,max);
+	return _internal->jsbuffer->read(start,min,max);
 }
 int64_t FileInputStream::position(){
-	return internal->jsbuffer->position();
+	return _internal->jsbuffer->position();
 }
 int64_t FileInputStream::reset(int64_t to){
-	return internal->jsbuffer->reset(to);
+	return _internal->jsbuffer->reset(to);
 }
 int64_t FileInputStream::skip(int64_t ntoskip){
-	return internal->jsbuffer->skip(ntoskip);
+	return _internal->jsbuffer->skip(ntoskip);
 }
 void FileInputStream::setMinBufSize(int32_t minbufsize){
-	internal->jsbuffer->_setMinBufSize(minbufsize);
+	_internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 
 
@@ -393,35 +393,35 @@ public:
 };
 
 SimpleInputStreamReader::SimpleInputStreamReader(){
-	internal = NULL;
+	_internal = NULL;
 }
 SimpleInputStreamReader::SimpleInputStreamReader(InputStream *i, int encoding){
-	internal = new Internal(i, encoding);
+	_internal = new Internal(i, encoding);
 }
 void SimpleInputStreamReader::init(InputStream *i, int encoding){
-	internal = new Internal(i, encoding);
+	_internal = new Internal(i, encoding);
 }
 SimpleInputStreamReader::~SimpleInputStreamReader(){
-	delete internal;
+	delete _internal;
 }
 
 int32_t SimpleInputStreamReader::read(const TCHAR*& start, int32_t min, int32_t max){
-	return internal->jsbuffer->read(start, min, max);
+	return _internal->jsbuffer->read(start, min, max);
 }
 int64_t SimpleInputStreamReader::position(){
-	return internal->jsbuffer->position();
+	return _internal->jsbuffer->position();
 }
 int64_t SimpleInputStreamReader::reset(int64_t to){
-	return internal->jsbuffer->reset(to);
+	return _internal->jsbuffer->reset(to);
 }
 int64_t SimpleInputStreamReader::skip(int64_t ntoskip){
-	return internal->jsbuffer->skip(ntoskip);
+	return _internal->jsbuffer->skip(ntoskip);
 }
 size_t SimpleInputStreamReader::size(){
-	return internal->jsbuffer->size();
+	return _internal->jsbuffer->size();
 }
 void SimpleInputStreamReader::setMinBufSize(int32_t minbufsize){
-	internal->jsbuffer->_setMinBufSize(minbufsize);
+	_internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 
 class FilteredBufferedReader::Internal{
@@ -460,28 +460,28 @@ public:
 	}
 };
 FilteredBufferedReader::FilteredBufferedReader(Reader* reader, bool deleteReader){
-	internal = new Internal(reader, deleteReader);
+	_internal = new Internal(reader, deleteReader);
 }
 FilteredBufferedReader::~FilteredBufferedReader(){
-	delete internal;
+	delete _internal;
 }
 int32_t FilteredBufferedReader::read(const TCHAR*& start, int32_t min, int32_t max){
-	return internal->jsbuffer->read(start,min,max);
+	return _internal->jsbuffer->read(start,min,max);
 }
 int64_t FilteredBufferedReader::position(){
-	return internal->jsbuffer->position();
+	return _internal->jsbuffer->position();
 }
 int64_t FilteredBufferedReader::reset(int64_t p){
-	return internal->jsbuffer->reset(p);
+	return _internal->jsbuffer->reset(p);
 }
 int64_t FilteredBufferedReader::skip(int64_t ntoskip){
-	return internal->jsbuffer->skip(ntoskip);
+	return _internal->jsbuffer->skip(ntoskip);
 }
 size_t FilteredBufferedReader::size(){
-	return internal->jsbuffer->size();
+	return _internal->jsbuffer->size();
 }
 void FilteredBufferedReader::setMinBufSize(int32_t minbufsize){
-	return internal->jsbuffer->_setMinBufSize(minbufsize);
+	return _internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 
 
@@ -523,28 +523,28 @@ public:
 	}
 };
 FilteredBufferedInputStream::FilteredBufferedInputStream(InputStream* input, bool deleteInput){
-	internal = new Internal(input, deleteInput);
+	_internal = new Internal(input, deleteInput);
 }
 FilteredBufferedInputStream::~FilteredBufferedInputStream(){
-	delete internal;
+	delete _internal;
 }
 int32_t FilteredBufferedInputStream::read(const signed char*& start, int32_t min, int32_t max){
-	return internal->jsbuffer->read(start,min,max);
+	return _internal->jsbuffer->read(start,min,max);
 }
 int64_t FilteredBufferedInputStream::position(){
-	return internal->jsbuffer->position();
+	return _internal->jsbuffer->position();
 }
 int64_t FilteredBufferedInputStream::reset(int64_t p){
-	return internal->jsbuffer->reset(p);
+	return _internal->jsbuffer->reset(p);
 }
 int64_t FilteredBufferedInputStream::skip(int64_t ntoskip){
-	return internal->jsbuffer->skip(ntoskip);
+	return _internal->jsbuffer->skip(ntoskip);
 }
 size_t FilteredBufferedInputStream::size(){
-	return internal->jsbuffer->size();
+	return _internal->jsbuffer->size();
 }
 void FilteredBufferedInputStream::setMinBufSize(int32_t minbufsize){
-	return internal->jsbuffer->_setMinBufSize(minbufsize);
+	return _internal->jsbuffer->_setMinBufSize(minbufsize);
 }
 
 CL_NS_END

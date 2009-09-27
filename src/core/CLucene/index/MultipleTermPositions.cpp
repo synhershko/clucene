@@ -41,6 +41,9 @@ public:
 		}
 };
 
+int IntQueue_sort(const void* a, const void* b){
+  return ( *(int*)a - *(int*)b );
+}
 class MultipleTermPositions::IntQueue {
 private:
 	ValueArray<int32_t>* _array;
@@ -66,7 +69,8 @@ public:
 	}
 
 	void sort() {
-		//TODO: Arrays.sort(_array, _index, _lastIndex);
+    int len = _lastIndex - _index;
+    qsort(_array->values+_index, len, sizeof(int32_t), IntQueue_sort);
 	}
 
 	void clear() {
@@ -79,18 +83,16 @@ public:
 	}
 };
 
-MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, Term** terms) : _posList(_CLNEW IntQueue()){
+MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, const CL_NS(util)::ArrayBase<Term*>* terms) : _posList(_CLNEW IntQueue()){
 	CLLinkedList<TermPositions*> termPositions;
-	size_t i = 0;
-	while (terms[i] != NULL) {
-		termPositions.push_back(indexReader->termPositions(terms[i]));
-		++i;
+  for ( size_t i=0;i<terms->length;i++){
+    termPositions.push_back( indexReader->termPositions(terms->values[i]));
 	}
 
-	TermPositions** tps = _CL_NEWARRAY(TermPositions*, i+1); // i == tpsSize
-	termPositions.toArray(tps);
+	TermPositions** tps = _CL_NEWARRAY(TermPositions*, terms->length+1); // i == tpsSize
+	termPositions.toArray(tps, true);
 
-	_termPositionsQueue = _CLNEW TermPositionsQueue(tps,i);
+	_termPositionsQueue = _CLNEW TermPositionsQueue(tps,terms->length);
 }
 
 bool MultipleTermPositions::next() {

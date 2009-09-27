@@ -15,7 +15,7 @@ CL_NS_DEF(search)
 	class BooleanScorer2: public Scorer {
 	private:
 	    class Internal;
-		friend class Internal;
+		  friend class Internal;
 	    Internal* _internal;
 	    
 	    class Coordinator;
@@ -29,7 +29,7 @@ CL_NS_DEF(search)
 		bool score( HitCollector* hc, const int32_t max );
 	public:
 
-		BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch, bool allowDocsOutOfOrder );
+		BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch = 0, bool allowDocsOutOfOrder = false );
 		virtual ~BooleanScorer2();
 		
 		void add( Scorer* scorer, bool required, bool prohibited );

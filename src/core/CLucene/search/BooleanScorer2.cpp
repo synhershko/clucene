@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -22,58 +22,43 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-class BooleanScorer2::Internal{
-public:
-    typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
-        
-	ScorersType requiredScorers;
-	ScorersType optionalScorers;
-	ScorersType prohibitedScorers;
-	
-	BooleanScorer2::Coordinator *coordinator;
-	Scorer* countingSumScorer;
-	
-	size_t minNrShouldMatch;
-	bool allowDocsOutOfOrder;
-	
-	
-	void initCountingSumScorer();
-	
-	Scorer* countingDisjunctionSumScorer( ScorersType* scorers, int32_t minNrShouldMatch );
-	Scorer* countingConjunctionSumScorer( ScorersType* requiredScorers );
-	Scorer* dualConjunctionSumScorer( Scorer* req1, Scorer* req2 );
-	
-	Scorer* makeCountingSumScorer();
-	Scorer* makeCountingSumScorerNoReq();
-	Scorer* makeCountingSumScorerSomeReq();
-	
-	Scorer* addProhibitedScorers( Scorer* requiredCountingSumScorer );
-	
-	Internal( BooleanScorer2* parent, int32_t minNrShouldMatch, bool allowDocsOutOfOrder );
-	~Internal();
-};
-
-
-
 class BooleanScorer2::Coordinator {
 public:
 	int32_t maxCoord;
-	int32_t nrMatchers;
+	int32_t nrMatchers; // to be increased by score() of match counting scorers.
 	float_t* coordFactors;
 	Scorer* parentScorer;
 
-	Coordinator( Scorer* parent );
-	virtual ~Coordinator();
-	
-	void init();
-	
-	void initDoc() {
-	nrMatchers = 0;
+	Coordinator( Scorer* parent ):
+		maxCoord(0),
+		nrMatchers(0),
+		coordFactors(NULL),
+		parentScorer(parent)
+	{
 	}
-	
+
+	virtual ~Coordinator()
+	{
+		_CLDELETE_ARRAY(coordFactors);
+	}
+
+	void init()
+	{
+		coordFactors = _CL_NEWARRAY( float_t, maxCoord+1 );
+		Similarity* sim = parentScorer->getSimilarity();
+		for ( int32_t i = 0; i <= maxCoord; i++ ) {
+			coordFactors[i] = sim->coord(i, maxCoord);
+		}
+	}
+
+
+	void initDoc() {
+		nrMatchers = 0;
+	}
+
 	float_t coordFactor() {
 		return coordFactors[nrMatchers];
-	}			
+	}
 };
 
 class BooleanScorer2::SingleMatchScorer: public Scorer {
@@ -81,41 +66,58 @@ public:
 	Scorer* scorer;
 	Coordinator* coordinator;
 	int32_t lastScoredDoc;
-	
-	SingleMatchScorer( Scorer* scorer, Coordinator* coordinator );
-	virtual ~SingleMatchScorer();
-	
-	float_t score();
-	
+
+	SingleMatchScorer( Scorer* _scorer, Coordinator* _coordinator ) :
+    Scorer( _scorer->getSimilarity() ), scorer(_scorer), coordinator(_coordinator), lastScoredDoc(-1)
+	{
+	}
+
+	virtual ~SingleMatchScorer()
+	{
+		_CLDELETE( scorer );
+	}
+
+	float_t score()
+	{
+		if ( doc() >= lastScoredDoc ) {
+			lastScoredDoc = this->doc();
+			coordinator->nrMatchers++;
+		}
+		return scorer->score();
+	}
+
 	int32_t doc() const {
 		return scorer->doc();
 	}
-	
+
 	bool next() {
 		return scorer->next();
 	}
-	
+
 	bool skipTo( int32_t docNr ) {
 		return scorer->skipTo( docNr );
 	}
-	
+
 	virtual TCHAR* toString() {
 		return scorer->toString();
 	}
-	
+
 	Explanation* explain(int32_t doc) {
 		return scorer->explain( doc );
 	}
-	
+
 };
 
 /** A scorer that matches no document at all. */
 class BooleanScorer2::NonMatchingScorer: public Scorer {
 public:
-	
-	NonMatchingScorer();
+
+	NonMatchingScorer() :
+		Scorer( NULL )
+	{
+	}
 	virtual ~NonMatchingScorer() {};
-	
+
 	int32_t doc() const {
 		_CLTHROWA(CL_ERR_UnsupportedOperation, "UnsupportedOperationException: BooleanScorer2::NonMatchingScorer::doc");
 		return 0;
@@ -133,7 +135,7 @@ public:
 		e->setDescription(_T("No document matches."));
 		return e;
 	}
-	
+
 };
 
 /** A Scorer for queries with a required part and an optional part.
@@ -149,31 +151,67 @@ private:
 	Scorer* reqScorer;
 	Scorer* optScorer;
 	bool firstTimeOptScorer;
-	
+
 public:
 	/** Construct a <code>ReqOptScorer</code>.
 	* @param reqScorer The required scorer. This must match.
 	* @param optScorer The optional scorer. This is used for scoring only.
 	*/
-	ReqOptSumScorer( Scorer* reqScorer, Scorer* optScorer );
-	virtual ~ReqOptSumScorer();
-	
+	ReqOptSumScorer( Scorer* _reqScorer, Scorer* _optScorer ) :
+      Scorer( NULL ), reqScorer(_reqScorer), optScorer(_optScorer), firstTimeOptScorer(true)
+	{
+	}
+
+	virtual ~ReqOptSumScorer()
+	{
+		_CLDELETE( reqScorer );
+		_CLDELETE( optScorer );
+	}
+
+	/** Returns the score of the current document matching the query.
+	* Initially invalid, until {@link #next()} is called the first time.
+	* @return The score of the required scorer, eventually increased by the score
+	* of the optional scorer when it also matches the current document.
+	*/
+	float_t score()
+	{
+		int32_t curDoc = reqScorer->doc();
+		float_t reqScore = reqScorer->score();
+
+		if ( firstTimeOptScorer ) {
+			firstTimeOptScorer = false;
+			if ( !optScorer->skipTo( curDoc ) ) {
+				_CLDELETE(optScorer);
+				return reqScore;
+			}
+		} else if ( optScorer == NULL ) {
+			return reqScore;
+		} else if (( optScorer->doc() < curDoc ) && ( !optScorer->skipTo( curDoc ))) {
+			_CLDELETE(optScorer);
+			return reqScore;
+		}
+
+		return ( optScorer->doc() == curDoc )
+			? reqScore + optScorer->score()
+			: reqScore;
+	}
+
 	int32_t doc() const {
 		return reqScorer->doc();
 	}
-	
+
 	bool next() {
 		return reqScorer->next();
 	}
-	
+
 	bool skipTo( int32_t target ) {
 		return reqScorer->skipTo( target );
 	}
-	
+
 	virtual TCHAR* toString() {
 		return stringDuplicate(_T("ReqOptSumScorer"));
 	}
-	
+
 	/** Explain the score of a document.
 	* @todo Also show the total score.
 	* See BooleanScorer.explain() on how to do this.
@@ -185,13 +223,6 @@ public:
 		res->addDetail(optScorer->explain(doc));
 		return res;
 	}
-
-	/** Returns the score of the current document matching the query.
-	* Initially invalid, until {@link #next()} is called the first time.
-	* @return The score of the required scorer, eventually increased by the score
-	* of the optional scorer when it also matches the current document.
-	*/
-	float_t score();
 };
 
 
@@ -205,19 +236,27 @@ private:
 	Scorer* reqScorer;
 	Scorer* exclScorer;
 	bool firstTime;
-	
+
 public:
 	/** Construct a <code>ReqExclScorer</code>.
 	* @param reqScorer The scorer that must match, except where
 	* @param exclScorer indicates exclusion.
 	*/
-	ReqExclScorer( Scorer* reqScorer, Scorer* exclScorer );
-	virtual ~ReqExclScorer();
-	
+	ReqExclScorer( Scorer* _reqScorer, Scorer* _exclScorer ) :
+      Scorer( NULL ), reqScorer(_reqScorer), exclScorer(_exclScorer), firstTime(true)
+	{
+	}
+
+	virtual ~ReqExclScorer()
+	{
+		_CLDELETE( reqScorer );
+		_CLDELETE( exclScorer );
+	}
+
 	int32_t doc() const {
 		return reqScorer->doc();
 	}
-	
+
 	/** Returns the score of the current document matching the query.
 	* Initially invalid, until {@link #next()} is called the first time.
 	* @return The score of the required scorer.
@@ -225,11 +264,11 @@ public:
 	float_t score() {
 		return reqScorer->score();
 	}
-	
+
 	virtual TCHAR* toString() {
 		return stringDuplicate(_T("ReqExclScorer"));
 	}
-	
+
 	Explanation* explain( int32_t doc ) {
 		Explanation* res = _CLNEW Explanation();
 		if (exclScorer->skipTo(doc) && (exclScorer->doc() == doc)) {
@@ -240,8 +279,29 @@ public:
 		}
 		return res;
 	}
-	
-	bool next();
+
+
+	bool next()
+	{
+		if ( firstTime ) {
+			if ( !exclScorer->next() ) {
+				_CLDELETE( exclScorer );
+			}
+			firstTime = false;
+		}
+		if ( reqScorer == NULL ) {
+			return false;
+		}
+		if ( !reqScorer->next() ) {
+			_CLDELETE( reqScorer ); // exhausted, nothing left
+			return false;
+		}
+		if ( exclScorer == NULL ) {
+			return true;// reqScorer.next() already returned true
+		}
+		return toNonExcluded();
+	}
+
 
 	/** Skips to the first match beyond the current whose document number is
 	* greater than or equal to a given target.
@@ -249,8 +309,28 @@ public:
 	* @param target The target document number.
 	* @return true iff there is such a match.
 	*/
-	bool skipTo( int32_t target );
-	
+	bool skipTo( int32_t target )
+	{
+		if ( firstTime ) {
+			firstTime = false;
+			if ( !exclScorer->skipTo( target )) {
+				_CLDELETE( exclScorer ); // exhausted
+			}
+		}
+		if ( reqScorer == NULL ) {
+			return false;
+		}
+		if ( exclScorer == NULL ) {
+			return reqScorer->skipTo( target );
+		}
+		if ( !reqScorer->skipTo( target )) {
+			_CLDELETE( reqScorer );
+			return false;
+		}
+		return toNonExcluded();
+	}
+
+
 private:
 	/** Advance to non excluded doc.
 	* <br>On entry:
@@ -263,8 +343,30 @@ private:
 	* Advances reqScorer a non excluded required doc, if any.
 	* @return true iff there is a non excluded required doc.
 	*/
-	bool toNonExcluded();
-	
+	bool toNonExcluded()
+	{
+		int32_t exclDoc = exclScorer->doc();
+
+		do {
+			int32_t reqDoc = reqScorer->doc();
+			if ( reqDoc < exclDoc ) {
+				return true; // reqScorer advanced to before exclScorer, ie. not excluded
+			} else if ( reqDoc > exclDoc ) {
+				if (! exclScorer->skipTo(reqDoc)) {
+					_CLDELETE( exclScorer ); // exhausted, no more exclusions
+					return true;
+				}
+			  exclDoc = exclScorer->doc();
+			  if ( exclDoc > reqDoc ) {
+				  return true; // not excluded
+			  }
+			}
+		} while ( reqScorer->next() );
+
+		_CLDELETE( reqScorer ); // exhausted, nothing left
+		return false;
+	}
+
 };
 
 class BooleanScorer2::BSConjunctionScorer: public CL_NS(search)::ConjunctionScorer {
@@ -272,10 +374,26 @@ private:
 	CL_NS(search)::BooleanScorer2::Coordinator* coordinator;
 	int32_t lastScoredDoc;
 	int32_t requiredNrMatchers;
+  typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
 public:
-	BSConjunctionScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, int32_t requiredNrMatchers );
-	virtual ~BSConjunctionScorer();
-	float_t score();
+	BSConjunctionScorer( CL_NS(search)::BooleanScorer2::Coordinator* _coordinator, ScorersType* _requiredScorers, int32_t _requiredNrMatchers ):
+		ConjunctionScorer( Similarity::getDefault(), _requiredScorers ),
+		coordinator(_coordinator),
+		lastScoredDoc(-1),
+		requiredNrMatchers(_requiredNrMatchers)
+	{
+	}
+
+	virtual ~BSConjunctionScorer(){
+	}
+	float_t score()
+	{
+		if ( this->doc() >= lastScoredDoc ) {
+			lastScoredDoc = this->doc();
+			coordinator->nrMatchers += requiredNrMatchers;
+		}
+		return ConjunctionScorer::score();
+	}
 	virtual TCHAR* toString() {return stringDuplicate(_T("BSConjunctionScorer"));}
 };
 
@@ -283,235 +401,179 @@ class BooleanScorer2::BSDisjunctionSumScorer: public CL_NS(search)::DisjunctionS
 private:
 	CL_NS(search)::BooleanScorer2::Coordinator* coordinator;
 	int32_t lastScoredDoc;
+  typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
 public:
-	BSDisjunctionSumScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, BooleanScorer2::Internal::ScorersType* subScorers, int32_t minimumNrMatchers );
-	virtual ~BSDisjunctionSumScorer(){}
-	float_t score();
+	BSDisjunctionSumScorer(
+		CL_NS(search)::BooleanScorer2::Coordinator* _coordinator,
+		ScorersType* subScorers,
+		int32_t minimumNrMatchers ):
+			DisjunctionSumScorer( subScorers, minimumNrMatchers ),
+			coordinator(_coordinator),
+			lastScoredDoc(-1)
+	{
+	}
+
+	float_t score() {
+		if ( this->doc() >= lastScoredDoc ) {
+			lastScoredDoc = this->doc();
+			coordinator->nrMatchers += _nrMatchers;
+		}
+		return DisjunctionSumScorer::score();
+	}
+
+	virtual ~BSDisjunctionSumScorer(){
+	}
 	virtual TCHAR* toString() {return stringDuplicate(_T("BSDisjunctionSumScorer"));}
 };
 
+class BooleanScorer2::Internal{
+public:
+  typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
 
-	
+	ScorersType requiredScorers;
+	ScorersType optionalScorers;
+	ScorersType prohibitedScorers;
 
-BooleanScorer2::Coordinator::Coordinator( Scorer* parent ):
-maxCoord(0),
-nrMatchers(0),
-coordFactors(NULL),
-parentScorer(parent)
-{
-}
+	BooleanScorer2::Coordinator *coordinator;
+	Scorer* countingSumScorer;
 
-BooleanScorer2::Coordinator::~Coordinator()
-{
-	_CLDELETE_ARRAY(coordFactors);
-}
+	size_t minNrShouldMatch;
+	bool allowDocsOutOfOrder;
 
-void BooleanScorer2::Coordinator::init()
-{
-	coordFactors = _CL_NEWARRAY( float_t, maxCoord+1 );
-	Similarity* sim = parentScorer->getSimilarity();
-	for ( int32_t i = 0; i <= maxCoord; i++ ) {
-		coordFactors[i] = sim->coord(i, maxCoord);
-	}
-}
 
-BooleanScorer2::SingleMatchScorer::SingleMatchScorer( Scorer* scorer, Coordinator* coordinator ) : Scorer( scorer->getSimilarity() ), scorer(scorer), coordinator(coordinator), lastScoredDoc(-1)
-{
-}
-
-BooleanScorer2::SingleMatchScorer::~SingleMatchScorer()
-{
-	_CLDELETE( scorer );
-}
-
-float_t BooleanScorer2::SingleMatchScorer::score()
-{
-	if ( doc() >= lastScoredDoc ) {
-		lastScoredDoc = this->doc();
-		coordinator->nrMatchers++;
-	}
-	return scorer->score();
-}
-
-BooleanScorer2::NonMatchingScorer::NonMatchingScorer() : Scorer( NULL )
-{
-}
-
-BooleanScorer2::ReqOptSumScorer::ReqOptSumScorer( Scorer* reqScorer, Scorer* optScorer ) : Scorer( NULL ), reqScorer(reqScorer), optScorer(optScorer), firstTimeOptScorer(true)
-{	
-}
-
-BooleanScorer2::ReqOptSumScorer::~ReqOptSumScorer()
-{
-	_CLDELETE( reqScorer );
-	_CLDELETE( optScorer );
-}
-
-float_t BooleanScorer2::ReqOptSumScorer::score()
-{
-	int32_t curDoc = reqScorer->doc();
-	float_t reqScore = reqScorer->score();
-
-	if ( firstTimeOptScorer ) {
-		firstTimeOptScorer = false;
-		if ( !optScorer->skipTo( curDoc ) ) {
-			optScorer = NULL;
-			return reqScore;
-		}
-	} else if ( optScorer == NULL ) {
-		return reqScore;
-	} else if (( optScorer->doc() < curDoc ) && ( !optScorer->skipTo( curDoc ))) {
-		optScorer = NULL;
-		return reqScore;
+	void initCountingSumScorer()
+	{
+		coordinator->init();
+		countingSumScorer = makeCountingSumScorer();
 	}
 
-	return ( optScorer->doc() == curDoc )
-		? reqScore + optScorer->score()
-		: reqScore;		
-}
-
-BooleanScorer2::ReqExclScorer::ReqExclScorer( Scorer* reqScorer, Scorer* exclScorer ) : Scorer( NULL ), reqScorer(reqScorer), exclScorer(exclScorer), firstTime(true)
-{	
-}
-
-BooleanScorer2::ReqExclScorer::~ReqExclScorer()
-{
-	_CLDELETE( reqScorer );
-	_CLDELETE( exclScorer );
-}
-
-bool BooleanScorer2::ReqExclScorer::next()
-{
-	if ( firstTime ) {
-		if ( !exclScorer->next() ) {
-			_CLDELETE( exclScorer );
-			exclScorer = NULL;
-		}
-		firstTime = false;
-	}	
-	if ( reqScorer == NULL ) {
-		return false;
-	}	
-	if ( !reqScorer->next() ) {
-		_CLDELETE( reqScorer );
-		reqScorer = NULL;
-		return false;
+	Scorer* countingDisjunctionSumScorer( ScorersType* scorers, int32_t minNrShouldMatch )
+	{
+		return _CLNEW BSDisjunctionSumScorer( coordinator, scorers, minNrShouldMatch );
 	}
-	if ( exclScorer == NULL ) {
-		return true;
-	}
-	return toNonExcluded();
-}
 
-bool BooleanScorer2::ReqExclScorer::skipTo( int32_t target )
-{
-	if ( firstTime ) {
-		firstTime = false;
-		if ( !exclScorer->skipTo( target )) {
-			_CLDELETE( exclScorer );
-			exclScorer = NULL;
+	Scorer* countingConjunctionSumScorer( ScorersType* requiredScorers )
+	{
+		return _CLNEW BSConjunctionScorer( coordinator, requiredScorers, requiredScorers->size() );
+	}
+
+	Scorer* dualConjunctionSumScorer( Scorer* req1, Scorer* req2 )
+	{
+    ValueArray<Scorer*> scorers(2);
+    scorers[0] = req1;
+    scorers[1] = req2;
+		return _CLNEW CL_NS(search)::ConjunctionScorer( Similarity::getDefault(), &scorers );
+
+	}
+
+	Scorer* makeCountingSumScorer()
+	{
+		return ( requiredScorers.size() == 0 ) ?
+      makeCountingSumScorerNoReq() :
+      makeCountingSumScorerSomeReq();
+	}
+
+	Scorer* makeCountingSumScorerNoReq()
+	{
+		if ( optionalScorers.size() == 0 ) {
+			optionalScorers.setDoDelete(true);
+			return _CLNEW NonMatchingScorer();
+		} else {
+			size_t nrOptRequired = ( minNrShouldMatch < 1 ) ? 1 : minNrShouldMatch;
+			if ( optionalScorers.size() < nrOptRequired ) {
+				optionalScorers.setDoDelete(true);
+				return _CLNEW NonMatchingScorer();
+			} else {
+				Scorer* requiredCountingSumScorer =
+					( optionalScorers.size() > nrOptRequired )
+					? countingDisjunctionSumScorer( &optionalScorers, nrOptRequired )
+					:
+					( optionalScorers.size() == 1 )
+					? _CLNEW SingleMatchScorer((Scorer*) optionalScorers[0], coordinator)
+					: countingConjunctionSumScorer( &optionalScorers );
+				return addProhibitedScorers( requiredCountingSumScorer );
+			}
 		}
 	}
-	if ( reqScorer == NULL ) {
-		return false;
-	}
-	if ( exclScorer == NULL ) {
-		return reqScorer->skipTo( target );
-	}
-	if ( !reqScorer->skipTo( target )) {
-		_CLDELETE( reqScorer );
-		reqScorer = NULL;
-		return false;
-	}
-	return toNonExcluded();
-}
 
-bool BooleanScorer2::ReqExclScorer::toNonExcluded()
-{
-	int32_t exclDoc = exclScorer->doc();
-
-	do {
-		int32_t reqDoc = reqScorer->doc();
-		if ( reqDoc < exclDoc ) {
-			return true;
-		} else if ( reqDoc > exclDoc ) {
-			_CLDELETE( exclScorer );
-			exclScorer = NULL;
-			return true;
+	Scorer* makeCountingSumScorerSomeReq()
+	{
+		if ( optionalScorers.size() < minNrShouldMatch ) {
+			requiredScorers.setDoDelete(true);
+			optionalScorers.setDoDelete(true);
+			return _CLNEW NonMatchingScorer();
+		} else if ( optionalScorers.size() == minNrShouldMatch ) {
+			Internal::ScorersType allReq( false );
+			for ( Internal::ScorersType::iterator it = requiredScorers.begin(); it != requiredScorers.end(); it++ ) {
+				allReq.push_back( *it );
+			}
+			for ( Internal::ScorersType::iterator it2 = optionalScorers.begin(); it2 != optionalScorers.end(); it2++ ) {
+				allReq.push_back( *it2 );
+			}
+			return addProhibitedScorers( countingConjunctionSumScorer( &allReq ));
+		} else {
+			Scorer* requiredCountingSumScorer =
+				( requiredScorers.size() == 1 )
+				? _CLNEW SingleMatchScorer( (Scorer*)requiredScorers[0], coordinator )
+				: countingConjunctionSumScorer( &requiredScorers );
+			if ( minNrShouldMatch > 0 ) {
+				return addProhibitedScorers(
+					dualConjunctionSumScorer(
+							requiredCountingSumScorer,
+							countingDisjunctionSumScorer(
+								&optionalScorers,
+								minNrShouldMatch )));
+			} else {
+				return _CLNEW ReqOptSumScorer(
+						addProhibitedScorers( requiredCountingSumScorer ),
+						(( optionalScorers.size() == 1 )
+								? _CLNEW SingleMatchScorer( (Scorer*)optionalScorers[0], coordinator )
+								: countingDisjunctionSumScorer( &optionalScorers, 1 )));
+			}
 		}
-		exclDoc = exclScorer->doc();
-		if ( exclDoc > reqDoc ) {
-			return true;
+	}
+
+	Scorer* addProhibitedScorers( Scorer* requiredCountingSumScorer )
+	{
+		return ( prohibitedScorers.size() == 0 )
+			? requiredCountingSumScorer
+			: _CLNEW ReqExclScorer( requiredCountingSumScorer,
+									(( prohibitedScorers.size() == 1 )
+											? (Scorer*)prohibitedScorers[0]
+											: _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers )));
+	}
+
+
+	Internal( BooleanScorer2* parent, int32_t _minNrShouldMatch, bool _allowDocsOutOfOrder ):
+		requiredScorers(false),
+		optionalScorers(false),
+		prohibitedScorers(false),
+	  countingSumScorer(NULL),
+		minNrShouldMatch(_minNrShouldMatch),
+		allowDocsOutOfOrder(_allowDocsOutOfOrder)
+	{
+		if ( minNrShouldMatch < 0 ) {
+      _CLTHROWA(CL_ERR_IllegalArgument, "Minimum number of optional scorers should not be negative");
 		}
-	} while ( reqScorer->next() );
 
-	_CLDELETE( reqScorer );
-	reqScorer = NULL;
+		this->coordinator = _CLNEW Coordinator( parent );
 
-	return false;	
-}
-
-BooleanScorer2::BSConjunctionScorer::BSConjunctionScorer( CL_NS(search)::BooleanScorer2::Coordinator* coordinator, int32_t requiredNrMatchers ):
-	ConjunctionScorer( Similarity::getDefault() ),
-	coordinator(coordinator),
-	lastScoredDoc(-1),
-	requiredNrMatchers(requiredNrMatchers)
-{
-}
-BooleanScorer2::BSConjunctionScorer::~BSConjunctionScorer(){
-}
-
-float_t BooleanScorer2::BSConjunctionScorer::score()
-{
-	if ( this->doc() >= lastScoredDoc ) {
-		lastScoredDoc = this->doc();
-		coordinator->nrMatchers += requiredNrMatchers;
 	}
-	return ConjunctionScorer::score();	
-}
-
-BooleanScorer2::BSDisjunctionSumScorer::BSDisjunctionSumScorer( 
-	CL_NS(search)::BooleanScorer2::Coordinator* _coordinator, 
-	CL_NS(search)::BooleanScorer2::Internal::ScorersType* subScorers, 
-	int32_t minimumNrMatchers ):
-		DisjunctionSumScorer( subScorers, minimumNrMatchers ),
-		coordinator(_coordinator),
-		lastScoredDoc(-1)
-{	
-}
-
-float_t BooleanScorer2::BSDisjunctionSumScorer::score() {
-	if ( this->doc() >= lastScoredDoc ) {
-		lastScoredDoc = this->doc();
-		coordinator->nrMatchers += _nrMatchers;
-	}
-	return DisjunctionSumScorer::score();
-}
-
-BooleanScorer2::Internal::Internal( BooleanScorer2* parent, int32_t minNrShouldMatch, bool allowDocsOutOfOrder ):
-	requiredScorers(false),
-	optionalScorers(false),
-	prohibitedScorers(false),
-    countingSumScorer(NULL),
-	minNrShouldMatch(minNrShouldMatch),
-	allowDocsOutOfOrder(allowDocsOutOfOrder)
-{
-	if ( minNrShouldMatch < 0 ) {
-		// todO: throw some sort of exception
+	~Internal(){
+		_CLDELETE( coordinator );
+		_CLDELETE( countingSumScorer );
 	}
 
-	this->coordinator = _CLNEW Coordinator( parent );
-	
-}
-BooleanScorer2::Internal::~Internal(){
-	_CLDELETE( coordinator );
-	_CLDELETE( countingSumScorer );
-}
+};
+
+
+
+
 
 BooleanScorer2::BooleanScorer2( Similarity* similarity, int32_t minNrShouldMatch, bool allowDocsOutOfOrder ):
 	Scorer( similarity )
 {
-	_internal = new Internal(this, minNrShouldMatch,allowDocsOutOfOrder);
+	_internal = new Internal(this, minNrShouldMatch, allowDocsOutOfOrder);
 }
 
 BooleanScorer2::~BooleanScorer2()
@@ -527,11 +589,11 @@ void BooleanScorer2::add( Scorer* scorer, bool required, bool prohibited )
 
 	if ( required ) {
 		if ( prohibited ) {
-			// throw some sort of exception
+			_CLTHROWA(CL_ERR_IllegalArgument, "scorer cannot be required and prohibited");
 		}
 		_internal->requiredScorers.push_back( scorer );
 	} else if ( prohibited ) {
-		_internal->prohibitedScorers.push_back( scorer );		
+		_internal->prohibitedScorers.push_back( scorer );
 	} else {
 		_internal->optionalScorers.push_back( scorer );
 	}
@@ -543,14 +605,14 @@ void BooleanScorer2::score( HitCollector* hc )
 	if ( _internal->allowDocsOutOfOrder && _internal->requiredScorers.size() == 0 && _internal->prohibitedScorers.size() < 32 ) {
 
 		BooleanScorer* bs = _CLNEW BooleanScorer( getSimilarity(), _internal->minNrShouldMatch );
-		Internal::ScorersType::iterator si = _internal->optionalScorers.begin();		
+		Internal::ScorersType::iterator si = _internal->optionalScorers.begin();
 		while ( si != _internal->optionalScorers.end() ) {
-			bs->add( (*si), false, false );
+			bs->add( (*si), false /* required */, false /* prohibited */ );
 			si++;
 		}
 		si = _internal->prohibitedScorers.begin();
 		while ( si != _internal->prohibitedScorers.begin() ) {
-			bs->add( (*si), false, true );
+			bs->add( (*si), false /* required */, true /* prohibited */ );
 		}
 		bs->score( hc );
 	} else {
@@ -601,7 +663,7 @@ Explanation* BooleanScorer2::explain( int32_t doc )
 	_CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: BooleanScorer2::explain");
 	/* How to explain the coordination factor?
 	initCountingSumScorer();
-	return countingSumScorer.explain(doc); // misses coord factor. 
+	return countingSumScorer.explain(doc); // misses coord factor.
 	*/
 }
 
@@ -617,108 +679,4 @@ bool BooleanScorer2::score( HitCollector* hc, int32_t max )
 	}
 	return true;
 }
-
-void BooleanScorer2::Internal::initCountingSumScorer()
-{
-	Internal::coordinator->init();
-	countingSumScorer = Internal::makeCountingSumScorer();
-}
-
-Scorer* BooleanScorer2::Internal::countingDisjunctionSumScorer( BooleanScorer2::Internal::ScorersType* scorers, int32_t minNrShouldMatch )
-{
-	return _CLNEW BSDisjunctionSumScorer( coordinator, scorers, minNrShouldMatch );
-}
-
-Scorer* BooleanScorer2::Internal::countingConjunctionSumScorer( BooleanScorer2::Internal::ScorersType* requiredScorers )
-{
-	BSConjunctionScorer *cs = _CLNEW BSConjunctionScorer( coordinator, requiredScorers->size() );
-	for ( Internal::ScorersType::iterator rsi = requiredScorers->begin(); rsi != requiredScorers->end(); rsi++ ) {
-		cs->add( *rsi );
-	}
-	return cs;
-}
-
-Scorer* BooleanScorer2::Internal::dualConjunctionSumScorer( Scorer* req1, Scorer* req2 )
-{
-	CL_NS(search)::ConjunctionScorer* cs = _CLNEW CL_NS(search)::ConjunctionScorer( Similarity::getDefault() );
-	cs->add( req1 );
-	cs->add( req2 );
-	return cs;
-}
-
-Scorer* BooleanScorer2::Internal::makeCountingSumScorer()
-{
-	return ( requiredScorers.size() == 0 ) ? makeCountingSumScorerNoReq() : makeCountingSumScorerSomeReq();
-}
-
-Scorer* BooleanScorer2::Internal::makeCountingSumScorerNoReq()
-{
-	if ( optionalScorers.size() == 0 ) {
-		optionalScorers.setDoDelete(true);
-		return _CLNEW NonMatchingScorer();
-	} else {
-		size_t nrOptRequired = ( minNrShouldMatch < 1 ) ? 1 : minNrShouldMatch;
-		if ( optionalScorers.size() < nrOptRequired ) {
-			optionalScorers.setDoDelete(true);
-			return _CLNEW NonMatchingScorer();
-		} else {
-			Scorer* requiredCountingSumScorer = 
-				( optionalScorers.size() > nrOptRequired )
-				? countingDisjunctionSumScorer( &optionalScorers, nrOptRequired )
-				:
-				( optionalScorers.size() == 1 )
-				? _CLNEW SingleMatchScorer((Scorer*) optionalScorers[0], coordinator)
-				: countingConjunctionSumScorer( &optionalScorers );
-			return addProhibitedScorers( requiredCountingSumScorer );
-		}
-	}
-}
-
-Scorer* BooleanScorer2::Internal::makeCountingSumScorerSomeReq()
-{
-	if ( optionalScorers.size() < minNrShouldMatch ) {
-		requiredScorers.setDoDelete(true);
-		optionalScorers.setDoDelete(true);
-		return _CLNEW NonMatchingScorer();
-	} else if ( optionalScorers.size() == minNrShouldMatch ) {
-		Internal::ScorersType allReq( false );
-		for ( Internal::ScorersType::iterator it = requiredScorers.begin(); it != requiredScorers.end(); it++ ) {
-			allReq.push_back( *it );
-		}
-		for ( Internal::ScorersType::iterator it2 = optionalScorers.begin(); it2 != optionalScorers.end(); it2++ ) {
-			allReq.push_back( *it2 );
-		}		
-		return addProhibitedScorers( countingConjunctionSumScorer( &allReq ));
-	} else {
-		Scorer* requiredCountingSumScorer =
-			( requiredScorers.size() == 1 )
-			? _CLNEW SingleMatchScorer( (Scorer*)requiredScorers[0], coordinator )
-			: countingConjunctionSumScorer( &requiredScorers );
-		if ( minNrShouldMatch > 0 ) {
-			return addProhibitedScorers(
-				dualConjunctionSumScorer(
-						requiredCountingSumScorer,
-						countingDisjunctionSumScorer(
-							&optionalScorers,
-							minNrShouldMatch )));
-		} else {
-			return _CLNEW ReqOptSumScorer(
-					addProhibitedScorers( requiredCountingSumScorer ),
-					(( optionalScorers.size() == 1 )
-							? _CLNEW SingleMatchScorer( (Scorer*)optionalScorers[0], coordinator )
-							: countingDisjunctionSumScorer( &optionalScorers, 1 )));
-		}
-	}
-}
-
-Scorer* BooleanScorer2::Internal::addProhibitedScorers( Scorer* requiredCountingSumScorer )
-{
-	return ( prohibitedScorers.size() == 0 )
-		? requiredCountingSumScorer
-		: _CLNEW ReqExclScorer( requiredCountingSumScorer,
-								(( prohibitedScorers.size() == 1 )
-										? (Scorer*)prohibitedScorers[0]
-										: _CLNEW CL_NS(search)::DisjunctionSumScorer( &prohibitedScorers )));
-}
-
 CL_NS_END

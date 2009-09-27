@@ -42,13 +42,14 @@ void testPrefixQuery(CuTest *tc){
 
 #ifndef NO_FUZZY_QUERY
 
+/// Java FuzzyQuery test, 2009-06-02
 class TestFuzzyQuery {
 private:
 	CuTest *tc;
 
 	void addDoc(const TCHAR* text, IndexWriter* writer) {
 		Document* doc = _CLNEW Document();
-		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES, Field::INDEX_TOKENIZED));
+		doc->add(*_CLNEW Field(_T("field"), text, Field::STORE_YES | Field::INDEX_TOKENIZED));
 		writer->addDocument(doc);
 		_CLLDELETE(doc);
 	}
@@ -154,7 +155,6 @@ public:
 
 		hits = searchQuery(&searcher, _T("field"), _T("aaaac"), FuzzyQuery::defaultMinSimilarity, 5);
 		CLUCENE_ASSERT( hits->length() == 0);
-		CuAssertStrEquals(tc, NULL, _T("aaaaa"), hits->doc(0).get(_T("field")));
 		_CLLDELETE(hits);
 
 

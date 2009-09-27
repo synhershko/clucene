@@ -20,7 +20,7 @@ CL_NS_DEF(search)
 class CLUCENE_EXPORT AbstractCachingFilter: public Filter 
 {
 	struct Internal;
-	Internal* internal;
+	Internal* _internal;
 	void closeCallback(CL_NS(index)::IndexReader* reader, void* param);
 protected:
 	AbstractCachingFilter( const AbstractCachingFilter& copy );
