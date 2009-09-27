@@ -8,7 +8,7 @@
 #define _lucene_search_Query_h
 
 
-//#include "CLucene/index/IndexReader.h"
+#include "CLucene/util/Array.h"
 CL_CLASS_DEF(index,IndexReader)
 //#include "Filter.h"
 //#include "Sort.h"
@@ -67,20 +67,26 @@ CL_NS_DEF(search)
 
     /** Expert: called to re-write queries into primitive queries. */
     virtual Query* rewrite(CL_NS(index)::IndexReader* reader);
-    
+      
     /** Expert: called when re-writing queries under MultiSearcher.
      *
-     * <p>Only implemented by derived queries, with no
-     * {@link #_createWeight(Searcher)} implementatation.
-     */
-     virtual Query* combine(Query** queries);
+     * Create a single query suitable for use by all subsearchers (in 1-1
+     * correspondence with queries). This is an optimization of the OR of
+     * all queries. We handle the common optimization cases of equal
+     * queries and overlapping clauses of boolean OR queries (as generated
+     * by MultiTermQuery.rewrite() and RangeQuery.rewrite()).
+     * Be careful overriding this method as queries[0] determines which
+     * method will be called and is not necessarily of the same type as
+     * the other queries.
+    */
+    virtual Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
 
     /** Expert: merges the clauses of a set of BooleanQuery's into a single
      * BooleanQuery.
      *
      *<p>A utility for use by {@link #combine(Query[])} implementations.
    */
-    static Query* mergeBooleanQueries(Query** queries);
+    static Query* mergeBooleanQueries(CL_NS(util)::ArrayBase<Query*>* queries);
 
     /** Expert: Returns the Similarity implementation to be used for this query.
     * Subclasses may override this method to specify their own Similarity

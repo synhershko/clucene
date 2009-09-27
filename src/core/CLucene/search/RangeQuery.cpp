@@ -82,7 +82,7 @@ CL_NS_DEF(search)
 		return "RangeQuery";
 	}
 
-	Query* RangeQuery::combine(Query** queries) {
+	Query* RangeQuery::combine(CL_NS(util)::ArrayBase<Query*>* queries) {
 		return Query::mergeBooleanQueries(queries);
 	}
 	

@@ -151,7 +151,7 @@ CL_NS_DEF(search)
     return query;
   }
 
-  Query* PrefixQuery::combine(Query** queries) {
+  Query* PrefixQuery::combine(CL_NS(util)::ArrayBase<Query*>* queries) {
 	  return Query::mergeBooleanQueries(queries);
   }
 

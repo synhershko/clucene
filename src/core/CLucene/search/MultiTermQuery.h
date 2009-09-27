@@ -43,20 +43,20 @@ CL_NS_DEF(search)
 		/** Construct the enumeration to be used, expanding the pattern term. */
 		virtual FilteredTermEnum* getEnum(CL_NS(index)::IndexReader* reader) = 0;
     public:
-        /** Constructs a query for terms matching <code>term</code>. */
-        MultiTermQuery(CL_NS(index)::Term* t);
+      /** Constructs a query for terms matching <code>term</code>. */
+      MultiTermQuery(CL_NS(index)::Term* t);
 
-        virtual ~MultiTermQuery();
+      virtual ~MultiTermQuery();
 
-		/** Returns the pattern term. */
-		CL_NS(index)::Term* getTerm(bool pointer=true) const;
+		  /** Returns the pattern term. */
+		  CL_NS(index)::Term* getTerm(bool pointer=true) const;
 
-		Query* combine(Query** queries);
+		  Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
 
-        /** Prints a user-readable version of this query. */
-        TCHAR* toString(const TCHAR* field) const;
+      /** Prints a user-readable version of this query. */
+      TCHAR* toString(const TCHAR* field) const;
 
-		virtual Query* rewrite(CL_NS(index)::IndexReader* reader);
+		  virtual Query* rewrite(CL_NS(index)::IndexReader* reader);
     };
 CL_NS_END
 #endif
