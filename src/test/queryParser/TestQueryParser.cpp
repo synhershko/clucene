@@ -832,6 +832,28 @@ void testMatchAllDocs(CuTest *tc) {
 	_CLLDELETE(qp);
 }
 
+// Tracker Bug ID 2870826 by Veit Jahns
+void testDefaultField(CuTest* tc){
+    WhitespaceAnalyzer a;
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+    Query* bq = qp->parse(_T("term1 author:term2 term3"));
+    CLUCENE_ASSERT( bq != NULL );
+    TCHAR* s = bq->toString(_T("field"));
+    _CLLDELETE(bq);
+    if ( _tcscmp(s,_T("term1 author:term2 term3")) != 0 )
+        CuFail(tc, _T("FAILED Query /term1 author:term2 term3/ yielded /%s/, expecting term1 author:term2 term3\n"), s);
+    _CLDELETE_LCARRAY(s);
+
+    bq = qp->parse(_T("term1 *:term2 term3"));
+    s = bq->toString(_T("field"));
+    if ( _tcscmp(s,_T("term1 *:term2 term3")) != 0 )
+        CuFail(tc, _T("FAILED Query /term1 *:term2 term3/ yielded /%s/, expecting term1 *:term2 term3\n"), s);
+
+    _CLDELETE_LCARRAY(s);
+    _CLLDELETE(bq);
+
+    _CLLDELETE(qp);
+}
 
 CuSuite *testQueryParser(void)
 {
@@ -853,6 +875,8 @@ CuSuite *testQueryParser(void)
 	SUITE_ADD_TEST(suite, testBoost);
 
 	SUITE_ADD_TEST(suite, testMatchAllDocs);
+
+    SUITE_ADD_TEST(suite, testDefaultField);
 
 	return suite;
 }

@@ -726,15 +726,13 @@ Query* QueryParser::TopLevelQuery(TCHAR* _field) {
     q = fQuery(_field);
 	jj_consume_token(0);
   } catch (CLuceneError& e) {
-    if (_field!=field)_CLDELETE_LCARRAY(_field);
 	_CLLDELETE(q);
     throw e;
   }
-  if (_field!=field)_CLDELETE_LCARRAY(_field);
   return q;
 }
 
-Query* QueryParser::fQuery(TCHAR*& _field) {
+Query* QueryParser::fQuery(TCHAR* _field) {
   CLVector<CL_NS(search)::BooleanClause*, Deletor::Object<CL_NS(search)::BooleanClause> > clauses;
   Query *q, *firstQuery=NULL;
   int32_t conj, mods;
@@ -782,9 +780,10 @@ label_1_brk:
   }
 }
 
-Query* QueryParser::fClause(TCHAR*& _field) {
+Query* QueryParser::fClause(TCHAR* _field) {
   Query* q=NULL;
   QueryToken *fieldToken=NULL, *boost=NULL;
+  TCHAR* tmpField=NULL;
   if (jj_2_1(2)) {
     switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
     {
@@ -793,15 +792,15 @@ Query* QueryParser::fClause(TCHAR*& _field) {
         fieldToken = jj_consume_token(TERM);
         jj_consume_token(COLON);
         // make sure to delete _field only if it's not contained already by the QP
-        if (_field != field) _CLDELETE_LARRAY(_field);
-        _field=discardEscapeChar(fieldToken->image);
+        tmpField=discardEscapeChar(fieldToken->image);
         break;
       }
     case STAR:
       jj_consume_token(STAR);
       jj_consume_token(COLON);
-      _field[0]=_T('*');
-	  _field[1]=0;
+      tmpField=_CL_NEWARRAY(TCHAR,2);
+      tmpField[0]=_T('*');
+	  tmpField[1]=0;
       break;
     default:
       jj_la1[5] = jj_gen;
@@ -809,6 +808,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
       _CLTHROWT(CL_ERR_Parse,_T(""));
     }
   }
+  
   switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
   {
   case STAR:
@@ -820,13 +820,13 @@ Query* QueryParser::fClause(TCHAR*& _field) {
   case RANGEEX_START:
   case NUMBER:
     {
-      q = fTerm(_field);
+      q = fTerm( tmpField==NULL ? _field : tmpField );
       break;
     }
   case LPAREN:
     {
       jj_consume_token(LPAREN);
-      q = fQuery(_field);
+      q = fQuery( tmpField==NULL ? _field : tmpField );
       jj_consume_token(RPAREN);
       if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
       {
@@ -841,9 +841,11 @@ Query* QueryParser::fClause(TCHAR*& _field) {
     {
       jj_la1[7] = jj_gen;
       jj_consume_token(-1);
+      _CLDELETE_LCARRAY(tmpField);
       _CLTHROWT(CL_ERR_Parse,_T(""));
     }
   }
+  _CLDELETE_LCARRAY(tmpField);
   if (q && boost != NULL) {
     float_t f = 1.0;
     try {
