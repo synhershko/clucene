@@ -7,14 +7,14 @@
 #include "test.h"
 
 unittest tests[] = {
-    {"threads", testatomicupdates},
+    //{"threads", testatomicupdates},
     {"indexreader", testindexreader},
     {"reuters", testreuters},
+    {"analysis", testanalysis},
     {"analyzers", testanalyzers},
     {"document", testdocument},
     {"numbertools", testNumberTools},
     {"debug", testdebug},
-    {"analysis", testanalysis},
     {"indexwriter", testindexwriter},
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
