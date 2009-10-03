@@ -80,13 +80,12 @@ CL_NS_DEF(search)
   int ConjunctionScorer_sort(const void* _elem1, const void* _elem2){
     const Scorer* elem1 = *(const Scorer**)_elem1;
     const Scorer* elem2 = *(const Scorer**)_elem2;
-	  return elem1->doc() - elem1->doc();
+	  return elem1->doc() - elem2->doc();
   }
 
   bool ConjunctionScorer::init(int32_t target)  {
     firstTime = false;
     more = scorers->length>1;
-
     
     for (size_t i=0; i<scorers->length; i++) {
       more = target==0 ? scorers->values[i]->next() : scorers->values[i]->skipTo(target);
