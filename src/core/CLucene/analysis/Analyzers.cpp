@@ -281,8 +281,8 @@ PerFieldAnalyzerWrapper::PerFieldAnalyzerWrapper(Analyzer* defaultAnalyzer):
 }
 PerFieldAnalyzerWrapper::~PerFieldAnalyzerWrapper(){
     analyzerMap->clear();
-    _CLDELETE(analyzerMap);
-    _CLDELETE(defaultAnalyzer);
+    _CLLDELETE(analyzerMap);
+    _CLLDELETE(defaultAnalyzer);
 }
 
 void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* analyzer) {
@@ -511,22 +511,20 @@ Token* KeywordTokenizer::next(Token* token){
   if (!done) {
     done = true;
     int32_t upto = 0;
-    int32_t rd;
     token->clear();
-    TCHAR* termBuffer=token->termBuffer();
-    const TCHAR* readBuffer=NULL;
-	assert(false);//test me
+    if (token->termBuffer() == NULL)
+        token->growBuffer(10); // todo
+    const TCHAR* termBuffer=token->termBuffer();
+	//assert(false);//test me;
     while (true) {
-      rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
-      if (rd == -1) 
-		    break;
+      int32_t length = input->read(termBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
+      if (length == -1) break;
+      upto += length;
       if ( upto == token->bufferLength() ){
-        termBuffer = token->resizeTermBuffer(token->bufferLength() + 8);
+        termBuffer = token->resizeTermBuffer(token->bufferLength() + 8); // todo: compare to JL
       }
-	    _tcsncpy(termBuffer + upto, readBuffer, rd);
-      upto += rd;
     }
-    termBuffer[upto]=0;
+    token->termBuffer()[upto]=0;
     token->setTermLength(upto);
     return token;
   }

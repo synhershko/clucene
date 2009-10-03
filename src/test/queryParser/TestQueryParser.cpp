@@ -249,9 +249,8 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,tmp1, &a, tmp1);
 #endif
 
-	// TODO: Those 2 fail, related probably to the escape function
-	//assertQueryEquals(tc, _T("\"\""), &b, _T(""));
-	//assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
+	assertQueryEquals(tc, _T("\"\""), &b, _T(""));
+	assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
@@ -583,8 +582,6 @@ TCHAR* getLocalizedDate(int32_t year, int32_t month, int32_t day, bool extendLas
 
 void testDateRange(CuTest* tc) {
 
-    return; 
-
     TCHAR* startDate = getLocalizedDate(2002, 1, 1, false);
     TCHAR* endDate = getLocalizedDate(2002, 1, 4, false);
     const int64_t endDateExpected = CL_NS(document)::DateTools::getTime(2002,1,4,23,59,59,999);
@@ -867,7 +864,7 @@ CuSuite *testQueryParser(void)
 	SUITE_ADD_TEST(suite, testLeadingWildcardType);
 	SUITE_ADD_TEST(suite, testQPA);
 	SUITE_ADD_TEST(suite, testRange);
-    SUITE_ADD_TEST(suite, testDateRange);
+    //SUITE_ADD_TEST(suite, testDateRange);
 	SUITE_ADD_TEST(suite, testEscaped);
 	SUITE_ADD_TEST(suite, testQueryStringEscaping);
 	SUITE_ADD_TEST(suite, testTabNewlineCarriageReturn);
