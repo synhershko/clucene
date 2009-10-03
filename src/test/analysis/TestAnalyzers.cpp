@@ -236,6 +236,32 @@
 	  _tcscpy(testString, _T(" t est "));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("t"));
   }
+
+  void testMutipleDocument(CuTest *tc) {
+      RAMDirectory dir;
+      KeywordAnalyzer a;
+      IndexWriter* writer = _CLNEW IndexWriter(&dir,&a, true);
+      Document* doc = _CLNEW Document();
+      doc->add(*_CLNEW Field(_T("partnum"), _T("Q36"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+      writer->addDocument(doc);
+      doc = _CLNEW Document();
+      doc->add(*_CLNEW Field(_T("partnum"), _T("Q37"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+      writer->addDocument(doc);
+      writer->close();
+      _CLLDELETE(writer);
+
+      IndexReader* reader = IndexReader::open(&dir);
+      Term* t = _CLNEW Term(_T("partnum"), _T("Q36"));
+      TermDocs* td = reader->termDocs(t);
+      _CLDECDELETE(t);
+      CLUCENE_ASSERT(td->next());
+      t = _CLNEW Term(_T("partnum"), _T("Q37"));
+      td = reader->termDocs(t);
+      _CLDECDELETE(t);
+      reader->close();
+      CLUCENE_ASSERT(td->next());
+      _CLLDELETE(reader);
+  }
   
 CuSuite *testanalyzers(void)
 {
@@ -247,6 +273,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
     SUITE_ADD_TEST(suite, testWordlistLoader);
+    //SUITE_ADD_TEST(suite, testMutipleDocument);
     return suite; 
 }
 // EOF

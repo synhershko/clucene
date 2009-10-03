@@ -7,10 +7,24 @@
 #ifndef _lucene_document_DateTools_
 #define _lucene_document_DateTools_
 
+#ifdef _CL_TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if defined(_CL_HAVE_SYS_TIME_H)
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
+#ifdef _CL_HAVE_SYS_TIMEB_H
+# include <sys/timeb.h>
+#endif
+
 CL_NS_DEF(document)
 
-
-class CLUCENE_EXPORT DateTools :LUCENE_BASE {
+class CLUCENE_EXPORT DateTools {
 public:
 
 	enum Resolution {
@@ -48,7 +62,32 @@ public:
 	*/
 	static int64_t stringToTime(const TCHAR* dateString);
 
-	~DateTools();
+    static tm* stringToDate(const TCHAR* dateString);
+
+    /****
+
+    *   CLucene specific methods
+
+    *****/
+
+    /**
+    * Returns a 64bit time value based on the parameters passed
+    */
+    static int64_t getTime(unsigned short year, uint8_t month, uint8_t mday, uint8_t hours = 0,
+        uint8_t minutes = 0, uint8_t seconds = 0, unsigned short ms = 0);
+
+    /**
+    * Returns a 64bit time value which is inclusive of the whole last day.
+    */
+    static int64_t timeMakeInclusive(const int64_t time);
+
+    inline static int64_t getDifferenceFromGMT();
+
+    static TCHAR* getISOFormat(const int64_t time);
+    static TCHAR* getISOFormat(unsigned short year, uint8_t month, uint8_t mday, uint8_t hours = 0,
+        uint8_t minutes = 0, uint8_t seconds = 0, unsigned short ms = 0);
+
+	virtual ~DateTools();
 	
 };
 CL_NS_END

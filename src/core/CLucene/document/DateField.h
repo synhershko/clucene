@@ -14,8 +14,6 @@ CL_NS_DEF(document)
 //make date strings long enough to last a millenium
 #define DATEFIELD_DATE_MAX _ILONGLONG(31536000000000) //1000L*365*24*60*60*1000
 
-#define DATEFIELD_DATE_LEN 9 ////Long.toString(DATEFIELD_DATE_MAX, Character.MAX_RADIX).length()
-
 /**
 * Provides support for converting dates to strings and vice-versa.
 * The strings are structured so that lexicographic sorting orders by date,
@@ -35,9 +33,9 @@ CL_NS_DEF(document)
 * @deprecated If you build a new index, use {@link lucene::document::DateTools} instead. 
 * This class is included for use with existing indices and will be removed in a future release.
 */
-class CLUCENE_EXPORT DateField :LUCENE_BASE {
+class CLUCENE_EXPORT DateField {
 public:
-	~DateField();
+	virtual ~DateField();
 	
 	/**
 	* Converts a millisecond time to a string suitable for indexing.

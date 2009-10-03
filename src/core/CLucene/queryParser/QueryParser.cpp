@@ -25,6 +25,10 @@
 #include "CLucene/search/RangeQuery.h"
 #include "CLucene/search/MatchAllDocsQuery.h"
 #include "CLucene/search/MultiPhraseQuery.h"
+#include "CLucene/search/ConstantScoreQuery.h"
+
+#include "CLucene/document/DateField.h"
+#include "CLucene/document/DateTools.h"
 
 #include "CLucene/index/Term.h"
 #include "QueryToken.h"
@@ -77,6 +81,17 @@ const TCHAR* QueryParserConstants::tokenImage[] = {
 
 const int32_t QueryParser::jj_la1_0[] = {0x180,0x180,0xe00,0xe00,0x1f69f80,0x48000,0x10000,0x1f69000,0x1348000,0x80000,0x80000,0x10000,0x18000000,0x2000000,0x18000000,0x10000,0x80000000,0x20000000,0x80000000,0x10000,0x80000,0x10000,0x1f68000};
 const int32_t QueryParser::jj_la1_1[] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x0,0x0,0x0,0x0};
+
+struct QueryParser::JJCalls {
+public:
+    int32_t gen;
+    QueryToken* first;
+    int32_t arg;
+    JJCalls* next;
+
+    JJCalls();
+    ~JJCalls();
+};
 
 QueryParser::QueryParser(const TCHAR* f, Analyzer* a) : _operator(OR_OPERATOR),
   lowercaseExpandedTerms(true),useOldRangeQuery(false),allowLeadingWildcard(false),enablePositionIncrements(false),
@@ -235,7 +250,7 @@ CL_NS(document)::DateTools::Resolution QueryParser::getDateResolution(const TCHA
   }
 
   CL_NS(document)::DateTools::Resolution resolution = fieldToDateResolution->get(fieldName);
-  if (resolution == NULL) {
+  if (resolution == CL_NS(document)::DateTools::NO_RESOLUTION) {
     // no date resolutions set for the given field; return default date resolution instead
     resolution = dateResolution;
   }
@@ -416,54 +431,61 @@ Query* QueryParser::getRangeQuery(const TCHAR* _field, TCHAR* part1, TCHAR* part
     _tcslwr(part1);
     _tcslwr(part2);
   }
-  /*
-  // TODO: Complete porting of the code below
+
+  TCHAR* _part1 = part1, *_part2 = part2; // just in case anything go wrong...
   try {
-  DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-  df.setLenient(true);
-  Date d1 = df.parse(part1);
-  Date d2 = df.parse(part2);
-  if (inclusive) {
-  // The user can only specify the date, not the time, so make sure
-  // the time is set to the latest possible time of that date to really
-  // include all documents:
-  Calendar cal = Calendar.getInstance(locale);
-  cal.setTime(d2);
-  cal.set(Calendar.HOUR_OF_DAY, 23);
-  cal.set(Calendar.MINUTE, 59);
-  cal.set(Calendar.SECOND, 59);
-  cal.set(Calendar.MILLISECOND, 999);
-  d2 = cal.getTime();
-  }
-  CL_NS(document)::DateTools::Resolution resolution = getDateResolution(_field);
-  if (resolution == NULL) {
-  // no default or field specific date resolution has been set,
-  // use deprecated DateField to maintain compatibilty with
-  // pre-1.9 Lucene versions.
-  part1 = DateField.dateToString(d1);
-  part2 = DateField.dateToString(d2);
-  } else {
-  part1 = CL_NS(document)::DateTools::dateToString(d1, resolution);
-  part2 = CL_NS(document)::DateTools::dateToString(d2, resolution);
-  }
+      /*DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale); // SHORT means completely numeric
+      df.setLenient(true);
+      Date d1 = df.parse(part1);
+      Date d2 = df.parse(part2);
+      */
+      const int64_t d1 = CL_NS(document)::DateTools::stringToTime(part1);
+      int64_t d2 = CL_NS(document)::DateTools::stringToTime(part2);
+      if (inclusive) {
+          // The user can only specify the date, not the time, so make sure
+          // the time is set to the latest possible time of that date to really
+          // include all documents:
+          d2 = CL_NS(document)::DateTools::timeMakeInclusive(d2);
+      }
+
+      CL_NS(document)::DateTools::Resolution resolution = getDateResolution(_field);
+      if (resolution == CL_NS(document)::DateTools::NO_RESOLUTION) {
+          // no default or field specific date resolution has been set,
+          // use deprecated DateField to maintain compatibilty with
+          // pre-1.9 Lucene versions.
+          _part1 = CL_NS(document)::DateField::timeToString(d1);
+          _part2 = CL_NS(document)::DateField::timeToString(d2);
+      } else {
+          _part1 = CL_NS(document)::DateTools::timeToString(d1, resolution);
+          _part2 = CL_NS(document)::DateTools::timeToString(d2, resolution);
+      }
   }
   catch (...) { }
-  */
 
-  //if(useOldRangeQuery)
-  //{
-  Term* t1 = _CLNEW Term(_field,part1);
-  Term* t2 = _CLNEW Term(_field,part2);
-  Query* ret = _CLNEW RangeQuery(t1, t2, inclusive);
-  _CLDECDELETE(t1);
-  _CLDECDELETE(t2);
-  return ret;
-  /*}
+  if(useOldRangeQuery)
+  {
+      Term* t1 = _CLNEW Term(_field,part1);
+      Term* t2 = _CLNEW Term(_field,part2);
+      Query* ret = _CLNEW RangeQuery(t1, t2, inclusive);
+      _CLDECDELETE(t1);
+      _CLDECDELETE(t2);
+
+      // Make sure to delete the date strings we allocated only if we indeed allocated them
+      if (part1 != _part1) _CLDELETE_LCARRAY(_part1);
+      if (part2 != _part2) _CLDELETE_LCARRAY(_part2);
+      
+      return ret;
+  }
   else
   {
-  // TODO: Port ConstantScoreRangeQuery and enable this section
-  return _CLNEW ConstantScoreRangeQuery(_field,part1,part2,inclusive,inclusive);
-  }*/
+      Query* q = _CLNEW ConstantScoreRangeQuery(_field,part1,part2,inclusive,inclusive);
+      
+      // Make sure to delete the date strings we allocated only if we indeed allocated them
+      if (part1 != _part1) _CLDELETE_LCARRAY(_part1);
+      if (part2 != _part2) _CLDELETE_LCARRAY(_part2);
+      
+      return q;
+  }
 }
 
 Query* QueryParser::getBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses, bool disableCoord)
@@ -704,15 +726,13 @@ Query* QueryParser::TopLevelQuery(TCHAR* _field) {
     q = fQuery(_field);
 	jj_consume_token(0);
   } catch (CLuceneError& e) {
-    if (_field!=field)_CLDELETE_LCARRAY(_field);
 	_CLLDELETE(q);
     throw e;
   }
-  if (_field!=field)_CLDELETE_LCARRAY(_field);
   return q;
 }
 
-Query* QueryParser::fQuery(TCHAR*& _field) {
+Query* QueryParser::fQuery(TCHAR* _field) {
   CLVector<CL_NS(search)::BooleanClause*, Deletor::Object<CL_NS(search)::BooleanClause> > clauses;
   Query *q, *firstQuery=NULL;
   int32_t conj, mods;
@@ -760,9 +780,10 @@ label_1_brk:
   }
 }
 
-Query* QueryParser::fClause(TCHAR*& _field) {
+Query* QueryParser::fClause(TCHAR* _field) {
   Query* q=NULL;
   QueryToken *fieldToken=NULL, *boost=NULL;
+  TCHAR* tmpField=NULL;
   if (jj_2_1(2)) {
     switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
     {
@@ -771,15 +792,15 @@ Query* QueryParser::fClause(TCHAR*& _field) {
         fieldToken = jj_consume_token(TERM);
         jj_consume_token(COLON);
         // make sure to delete _field only if it's not contained already by the QP
-        if (_field != field) _CLDELETE_LARRAY(_field);
-        _field=discardEscapeChar(fieldToken->image);
+        tmpField=discardEscapeChar(fieldToken->image);
         break;
       }
     case STAR:
       jj_consume_token(STAR);
       jj_consume_token(COLON);
-      _field[0]=_T('*');
-	  _field[1]=0;
+      tmpField=_CL_NEWARRAY(TCHAR,2);
+      tmpField[0]=_T('*');
+	  tmpField[1]=0;
       break;
     default:
       jj_la1[5] = jj_gen;
@@ -787,6 +808,7 @@ Query* QueryParser::fClause(TCHAR*& _field) {
       _CLTHROWT(CL_ERR_Parse,_T(""));
     }
   }
+  
   switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
   {
   case STAR:
@@ -798,13 +820,13 @@ Query* QueryParser::fClause(TCHAR*& _field) {
   case RANGEEX_START:
   case NUMBER:
     {
-      q = fTerm(_field);
+      q = fTerm( tmpField==NULL ? _field : tmpField );
       break;
     }
   case LPAREN:
     {
       jj_consume_token(LPAREN);
-      q = fQuery(_field);
+      q = fQuery( tmpField==NULL ? _field : tmpField );
       jj_consume_token(RPAREN);
       if (((jj_ntk==-1)?f_jj_ntk():jj_ntk) == CARAT)
       {
@@ -819,9 +841,11 @@ Query* QueryParser::fClause(TCHAR*& _field) {
     {
       jj_la1[7] = jj_gen;
       jj_consume_token(-1);
+      _CLDELETE_LCARRAY(tmpField);
       _CLTHROWT(CL_ERR_Parse,_T(""));
     }
   }
+  _CLDELETE_LCARRAY(tmpField);
   if (q && boost != NULL) {
     float_t f = 1.0;
     try {
@@ -837,7 +861,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
   bool prefix = false;
   bool wildcard = false;
   bool fuzzy = false;
-  bool rangein = false;
+  //bool rangein = false;
   Query* q = NULL;
   switch ((jj_ntk==-1)?f_jj_ntk():jj_ntk)
   {
@@ -969,11 +993,11 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
 	  // TODO: Allow analysis::Term to accept ownership on a TCHAR* and save on extra dup's
       if (goop1->kind == RANGEIN_QUOTED) {
         _tcscpy(goop1->image, goop1->image+1);
-		goop1->image[_tcslen(goop1->image)-1]=NULL;
+		goop1->image[_tcslen(goop1->image)-1]='\0';
       }
       if (goop2->kind == RANGEIN_QUOTED) {
         _tcscpy(goop2->image, goop2->image+1);
-		goop2->image[_tcslen(goop2->image)-1]=NULL;
+		goop2->image[_tcslen(goop2->image)-1]='\0';
       }
       TCHAR* t1 = discardEscapeChar(goop1->image);
       TCHAR* t2 = discardEscapeChar(goop2->image);
@@ -1065,7 +1089,7 @@ Query* QueryParser::fTerm(const TCHAR* _field) {
       }
 	  // TODO: Make sure this hack, save an extra dup, is legal and not harmful
 	  const size_t st = _tcslen(term->image);
-	  term->image[st-1]=NULL;
+	  term->image[st-1]='\0';
       TCHAR* tmp = discardEscapeChar(term->image+1);
       q = getFieldQuery(_field, tmp, s);
       _CLDELETE_LCARRAY(tmp);
@@ -1355,7 +1379,7 @@ void QueryParser::jj_rescan_token() {
   jj_rescan = false;
 }
 
-void QueryParser::jj_save(const int32_t index, int32_t xla) {
+void QueryParser::jj_save(const int32_t /*index*/, int32_t xla) {
   JJCalls* p = jj_2_rtns;
   while (p->gen > jj_gen) {
     if (p->next == NULL) { p = p->next = new JJCalls(); break; }
