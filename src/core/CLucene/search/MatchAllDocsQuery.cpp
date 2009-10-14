@@ -14,23 +14,73 @@
 
 CL_NS_DEF(search)
 
-MatchAllDocsQuery::MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _reader, Similarity* similarity, Weight* w)
+// TODO: Make MatchAllDocsWeight and MatchAllScorer reside under MatchAllDocsQuery
+class MatchAllDocsWeight : public Weight {
+private:
+    Similarity* similarity;
+    float_t queryWeight;
+    float_t queryNorm;
+    MatchAllDocsQuery* parentQuery;
+
+public:
+    MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher);
+    virtual ~MatchAllDocsWeight(){}
+
+    virtual TCHAR* toString();
+
+    Query* getQuery();
+
+    float_t getValue();
+
+    float_t sumOfSquaredWeights();
+
+    void normalize(float_t _queryNorm);
+
+    Scorer* scorer(CL_NS(index)::IndexReader* reader);
+
+    Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
+};
+
+class MatchAllScorer : public Scorer {
+    CL_NS(index)::IndexReader* reader;
+    int32_t id;
+    int32_t maxId;
+    float_t _score;
+
+public:
+    MatchAllScorer(CL_NS(index)::IndexReader* _reader, Similarity* similarity, Weight* w);
+    virtual ~MatchAllScorer(){}
+
+    Explanation* explain(int32_t doc);
+
+    int32_t doc() const;
+
+    bool next();
+
+    float_t score();
+
+    bool skipTo(int32_t target);
+
+    virtual TCHAR* toString();
+};
+
+MatchAllScorer::MatchAllScorer(CL_NS(index)::IndexReader* _reader, Similarity* similarity, Weight* w)
 			:Scorer(similarity),reader(_reader),id(-1)
 {
 	maxId = reader->maxDoc() - 1;
 	_score = w->getValue();
 }
 
-Explanation* MatchAllDocsQuery::MatchAllScorer::explain(int32_t doc) {
+Explanation* MatchAllScorer::explain(int32_t doc) {
 	// not called... see MatchAllDocsWeight::explain()
 	return NULL;
 }
 
-int32_t MatchAllDocsQuery::MatchAllScorer::doc() const {
+int32_t MatchAllScorer::doc() const {
 	return id;
 }
 
-bool MatchAllDocsQuery::MatchAllScorer::next() {
+bool MatchAllScorer::next() {
 	while (id < maxId) {
 		id++;
 		if (!reader->isDeleted(id)) {
@@ -40,24 +90,24 @@ bool MatchAllDocsQuery::MatchAllScorer::next() {
 	return false;
 }
 
-float_t MatchAllDocsQuery::MatchAllScorer::score() {
+float_t MatchAllScorer::score() {
 	return _score;
 }
 
-bool MatchAllDocsQuery::MatchAllScorer::skipTo(int32_t target) {
+bool MatchAllScorer::skipTo(int32_t target) {
 	id = target - 1;
 	return next();
 }
 
-TCHAR* MatchAllDocsQuery::MatchAllScorer::toString(){
+TCHAR* MatchAllScorer::toString(){
 	return stringDuplicate(_T("MatchAllScorer"));
 }
 
-MatchAllDocsQuery::MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):parentQuery(enclosingInstance){
+MatchAllDocsWeight::MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher):parentQuery(enclosingInstance){
 	this->similarity = searcher->getSimilarity();
 }
 
-TCHAR* MatchAllDocsQuery::MatchAllDocsWeight::toString() {
+TCHAR* MatchAllDocsWeight::toString() {
 	CL_NS(util)::StringBuffer buf(50);
 	buf.append(_T("weight("));
 
@@ -69,29 +119,29 @@ TCHAR* MatchAllDocsQuery::MatchAllDocsWeight::toString() {
 	return buf.giveBuffer();
 }
 
-Query* MatchAllDocsQuery::MatchAllDocsWeight::getQuery() {
+Query* MatchAllDocsWeight::getQuery() {
 	return parentQuery;
 }
 
-float_t MatchAllDocsQuery::MatchAllDocsWeight::getValue() {
+float_t MatchAllDocsWeight::getValue() {
 	return queryWeight;
 }
 
-float_t MatchAllDocsQuery::MatchAllDocsWeight::sumOfSquaredWeights() {
+float_t MatchAllDocsWeight::sumOfSquaredWeights() {
 	queryWeight = parentQuery->getBoost();
 	return queryWeight * queryWeight;
 }
 
-void MatchAllDocsQuery::MatchAllDocsWeight::normalize(float_t _queryNorm) {
+void MatchAllDocsWeight::normalize(float_t _queryNorm) {
 	this->queryNorm = _queryNorm;
 	queryWeight *= this->queryNorm;
 }
 
-Scorer* MatchAllDocsQuery::MatchAllDocsWeight::scorer(CL_NS(index)::IndexReader* reader) {
+Scorer* MatchAllDocsWeight::scorer(CL_NS(index)::IndexReader* reader) {
 	return _CLNEW MatchAllScorer(reader, similarity, this);
 }
 
-Explanation* MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc) {
+Explanation* MatchAllDocsWeight::explain(CL_NS(index)::IndexReader* reader, int32_t doc) {
 	// explain query weight
 	Explanation* queryExpl = _CLNEW ComplexExplanation(true, getValue(), _T("MatchAllDocsQuery, product of:"));
 	if (parentQuery->getBoost() != 1.0f) {
@@ -101,7 +151,9 @@ Explanation* MatchAllDocsQuery::MatchAllDocsWeight::explain(CL_NS(index)::IndexR
 	return queryExpl;
 }
 
-MatchAllDocsQuery::MatchAllDocsQuery(){}
+MatchAllDocsQuery::MatchAllDocsQuery(){
+}
+
 MatchAllDocsQuery::~MatchAllDocsQuery(){}
 
 Weight* MatchAllDocsQuery::_createWeight(Searcher* searcher){

@@ -180,4 +180,20 @@ BitSet* BitSet::clone() const {
     if ((_size >> 3) < (1<<28)) return factor * (4 + (8+32)*count()) < size();
     return                            factor * (4 + (8+40)*count()) < size();
   }
+
+  int32_t BitSet::nextSetBit(int32_t fromIndex) const {
+      if (fromIndex < 0)
+          _CLTHROWT(CL_ERR_IndexOutOfBounds, _T("fromIndex < 0"));
+
+      if (fromIndex >= _size)
+          return -1;
+
+      while (true) {
+          if (bits[fromIndex >> 3] & (1 << (fromIndex & 7)) != 0)
+              return fromIndex;
+          if (++fromIndex == _size)
+              return -1;
+      }
+  }
+
 CL_NS_END

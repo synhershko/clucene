@@ -153,7 +153,7 @@ CL_NS_DEF(search)
 			return prefixLength == 0 ? 0.0f : 1.0f - ((float_t) n / prefixLength);
 		}
 
-		const int32_t maxDistance = getMaxDistance(m);
+		const uint32_t maxDistance = getMaxDistance(m);
 
 		if (maxDistance < abs((int32_t)(m-n))) {
 			//just adding the characters of m to n or vice-versa results in
@@ -195,7 +195,7 @@ CL_NS_DEF(search)
 		// start computing edit distance
 		TCHAR s_i; // ith character of s
 		for (i = 1; i <= n; i++) {
-			int32_t bestPossibleEditDistance = m;
+			size_t bestPossibleEditDistance = m;
 			s_i = text[i - 1];
 			for (j = 1; j <= m; j++) {
 				if (s_i != target[j-1]) {
@@ -242,7 +242,8 @@ CL_NS_DEF(search)
 		return (int32_t) ((1-minimumSimilarity) * (cl_min(textLen, m) + prefixLength));
 	}
 
-  class FuzzyQuery::ScoreTerm {
+  // TODO: Make ScoreTerm and ScoreTermQueue reside under FuzzyQuery
+  class ScoreTerm {
   public:
 	  Term* term;
 	  float_t score;
@@ -254,7 +255,7 @@ CL_NS_DEF(search)
 	  }
   };
 
-  class FuzzyQuery::ScoreTermQueue : public PriorityQueue<ScoreTerm*, CL_NS(util)::Deletor::Object<ScoreTerm> > {
+  class ScoreTermQueue : public PriorityQueue<ScoreTerm*, CL_NS(util)::Deletor::Object<ScoreTerm> > {
   public:
 	  ScoreTermQueue(int32_t size){
 		  initialize(size, true);
