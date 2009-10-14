@@ -281,8 +281,8 @@ PerFieldAnalyzerWrapper::PerFieldAnalyzerWrapper(Analyzer* defaultAnalyzer):
 }
 PerFieldAnalyzerWrapper::~PerFieldAnalyzerWrapper(){
     analyzerMap->clear();
-    _CLDELETE(analyzerMap);
-    _CLDELETE(defaultAnalyzer);
+    _CLLDELETE(analyzerMap);
+    _CLLDELETE(defaultAnalyzer);
 }
 
 void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* analyzer) {
@@ -501,7 +501,7 @@ KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 	Tokenizer(input)
 {
   this->done = false;
-	if ( bufferSize < 0 )
+	if ( bufferSize < 1 )
 	this->bufferSize = DEFAULT_BUFFER_SIZE;
 }
 KeywordTokenizer::~KeywordTokenizer(){
@@ -515,7 +515,6 @@ Token* KeywordTokenizer::next(Token* token){
     token->clear();
     TCHAR* termBuffer=token->termBuffer();
     const TCHAR* readBuffer=NULL;
-	assert(false);//test me
     while (true) {
       rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
       if (rd == -1)
@@ -523,7 +522,7 @@ Token* KeywordTokenizer::next(Token* token){
       if ( upto == token->bufferLength() ){
         termBuffer = token->resizeTermBuffer(token->bufferLength() + 8);
       }
-	    _tcsncpy(termBuffer + upto, readBuffer, rd);
+	  _tcsncpy(termBuffer + upto, readBuffer, rd);
       upto += rd;
     }
     termBuffer[upto]=0;

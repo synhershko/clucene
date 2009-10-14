@@ -17,11 +17,8 @@ CL_NS_DEF(search)
 /** Implements the fuzzy search query. The similiarity measurement
 * is based on the Levenshtein (edit distance) algorithm.
 */
-class CLUCENE_EXPORT FuzzyQuery: public MultiTermQuery {
+class CLUCENE_EXPORT FuzzyQuery : public MultiTermQuery {
 private:
-	class ScoreTerm;
-	class ScoreTermQueue; 
-
 	float_t minimumSimilarity;
 	size_t prefixLength;
 protected:

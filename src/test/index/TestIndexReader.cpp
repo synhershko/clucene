@@ -82,7 +82,7 @@ void assertReaderClosed(CuTest* tc, IndexReader* reader, bool checkSubReaders, b
 
     if (reader != NULL && reader->instanceOf(MultiReader::getClassName())) {
       const CL_NS(util)::ArrayBase<IndexReader*>& subReaders = *((MultiReader*) reader)->getSubReaders();
-      for (int i = 0; i < subReaders.length; i++) {
+      for (size_t i = 0; i < subReaders.length; i++) {
         assertReaderClosed(tc, subReaders[i], checkSubReaders, checkNormsClosed);
       }
     }

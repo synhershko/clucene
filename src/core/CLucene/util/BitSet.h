@@ -53,12 +53,33 @@ public:
 	
 	///get the value of the specified bit
 	///get the value of the specified bit
-	inline bool get(const int32_t bit) const{
-		if (bit >= _size) {
-		_CLTHROWA(CL_ERR_IndexOutOfBounds, "bit out of range");
-		}
-		return (bits[bit >> 3] & (1 << (bit & 7))) != 0;
-	}
+    inline bool get(const int32_t bit) const{
+        if (bit >= _size) {
+            _CLTHROWA(CL_ERR_IndexOutOfBounds, "bit out of range");
+        }
+        return (bits[bit >> 3] & (1 << (bit & 7))) != 0;
+    }
+
+    /**
+    * Returns the index of the first bit that is set to {@code true}
+    * that occurs on or after the specified starting index. If no such
+    * bit exists then {@code -1} is returned.
+    *
+    * <p>To iterate over the {@code true} bits in a {@code BitSet},
+    * use the following loop:
+    *
+    *  <pre> {@code
+    * for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+    *     // operate on index i here
+    * }}</pre>
+    *
+    * @param  fromIndex the index to start checking from (inclusive)
+    * @return the index of the next set bit, or {@code -1} if there
+    *         is no such bit
+    * @throws IndexOutOfBounds if the specified index is negative
+    *
+    */
+    int32_t nextSetBit(int32_t fromIndex) const;
 	
 	///set the value of the specified bit
 	void set(const int32_t bit, bool val=true);

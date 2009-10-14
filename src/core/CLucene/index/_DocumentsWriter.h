@@ -962,7 +962,7 @@ public:
 
 };
 
-#define CLUCENE_END_OF_WORD 0x0
+#define CLUCENE_END_OF_WORD 0xffff
 
 CL_NS_END
 #endif

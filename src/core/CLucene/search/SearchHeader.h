@@ -63,8 +63,11 @@ CL_NS_DEF(search)
 		//float_t maxScore;
 	};
 
-    // Lower-level search API.
-    // @see Searcher#search(Query,HitCollector)
+    /** Lower-level search API.
+    * <br>HitCollectors are primarily meant to be used to implement queries,
+    * sorting and filtering.
+    * @see Searcher#search(Query,HitCollector)
+    */
 	class CLUCENE_EXPORT HitCollector: LUCENE_BASE {
     public:
       /** Called once for every non-zero scoring document, with the document number
@@ -92,7 +95,7 @@ CL_NS_DEF(search)
       * between 0 and 1.
       */
       virtual void collect(const int32_t doc, const float_t score) = 0;
-		virtual ~HitCollector(){}
+      virtual ~HitCollector(){}
     };
 
    /** Expert: Calculate query weights and build query scorers.

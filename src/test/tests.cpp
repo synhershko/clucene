@@ -7,18 +7,19 @@
 #include "test.h"
 
 unittest tests[] = {
-    {"threads", testatomicupdates},
+    //{"threads", testatomicupdates},
     {"indexreader", testindexreader},
     {"reuters", testreuters},
+    {"analysis", testanalysis},
     {"analyzers", testanalyzers},
     {"document", testdocument},
     {"numbertools", testNumberTools},
     {"debug", testdebug},
-    {"analysis", testanalysis},
     {"indexwriter", testindexwriter},
     {"indexmodifier", testindexmodifier},
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
+    {"datetools", testDateTools},
     {"queryparser", testQueryParser},
     {"mfqueryparser", testMultiFieldQueryParser},
     {"boolean", testBoolean},

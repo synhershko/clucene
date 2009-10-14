@@ -146,9 +146,12 @@ CL_NS_DEF(index)
 
     CND_PRECONDITION(compareToLastTerm(fieldNumber, termText, termTextLength) < 0 ||
       (isIndex && termTextLength == 0 && lastTermTextLength == 0),
-      (string("Terms are out of order: field=")  + Misc::toString(fieldInfos->fieldName(fieldNumber)) + " (number " + Misc::toString(fieldNumber) + ")" +
-      " lastField=" + Misc::toString(fieldInfos->fieldName(lastFieldNumber)) + " (number " + Misc::toString(lastFieldNumber) + ")" +
-      " text=" + Misc::toString(termText, termTextLength) + " lastText=" + Misc::toString(lastTermText.values, lastTermTextLength)
+      (string("Terms are out of order: field=") + Misc::toString(fieldInfos->fieldName(fieldNumber)) +
+      " (number " + Misc::toString(fieldNumber) + ")" +
+      " lastField=" + Misc::toString(fieldInfos->fieldName(lastFieldNumber)) +
+      " (number " + Misc::toString(lastFieldNumber) + ")" +
+      " text=" + Misc::toString(termText, termTextLength) +
+      " lastText=" + Misc::toString(lastTermText.values, lastTermTextLength)
       ).c_str() );
 
     CND_PRECONDITION(ti->freqPointer >= lastTi->freqPointer, ("freqPointer out of order (" + Misc::toString(ti->freqPointer) + " < " + Misc::toString(lastTi->freqPointer) + ")").c_str());

@@ -116,6 +116,21 @@ Query* getQuery(CuTest *tc,const TCHAR* query, Analyzer* a, int ignoreCLError=0)
 	}
 }
 
+void assertQueryEquals(CuTest* tc, QueryParser* qp, const TCHAR* field, const TCHAR* query, const TCHAR* result) {
+    Query* q = qp->parse(query);
+    TCHAR* s = q->toString(field);
+    _CLLDELETE(q);
+    if (_tcscmp(s,result)!=0){
+        TCHAR str[CL_MAX_PATH];
+        _tcscpy(str,s);
+        _CLDELETE_LCARRAY(s);
+        _CLLDELETE(qp);
+        CuFail(tc, _T("Query /%s/ yielded /%s/, expecting /%s/\n"), query, str, result);
+        return;
+    }
+    _CLDELETE_LCARRAY(s);
+}
+
 void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* result)  {
 
 	Query* q = getQuery(tc,query, a);
@@ -130,7 +145,7 @@ void assertQueryEquals(CuTest *tc,const TCHAR* query, Analyzer* a, const TCHAR* 
 	if ( ret != 0 ) {
 		TCHAR str[CL_MAX_PATH];
 		_tcscpy(str,s);
-		_CLDELETE_CARRAY(s);
+		_CLDELETE_LCARRAY(s);
 		CuFail(tc, _T("FAILED Query /%s/ yielded /%s/, expecting /%s/\n"), query, str, result);
 	}
 	_CLDELETE_CARRAY(s);
@@ -234,9 +249,8 @@ void testSimple(CuTest *tc) {
 	assertQueryEquals(tc,tmp1, &a, tmp1);
 #endif
 
-	// TODO: Those 2 fail, related probably to the escape function
-	//assertQueryEquals(tc, _T("\"\""), &b, _T(""));
-	//assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
+	assertQueryEquals(tc, _T("\"\""), &b, _T(""));
+	assertQueryEquals(tc, _T("foo:\"\""), &b, _T("foo:"));
 
 	assertQueryEquals(tc,_T("a AND b"), NULL, _T("+a +b"));
 	assertQueryEquals(tc,_T("(a AND b)"), NULL, _T("+a +b"));
@@ -459,14 +473,15 @@ void testRange(CuTest *tc) {
 	StandardAnalyzer a;
 
     assertQueryEquals(tc, _T("[ a TO z]"), NULL, _T("[a TO z]"));
-	/*
-	TODO: Complete RangeQuery portion in QP and enable this
-    assertTrue(getQuery("[ a TO z]", null) instanceof ConstantScoreRangeQuery);
+    assertTrue(tc, _T("[ a TO z]"), NULL, "ConstantScoreRangeQuery", _T("[a TO z]"));
 
-    QueryParser qp = new QueryParser("field", new SimpleAnalyzer());
-	qp.setUseOldRangeQuery(true);
-    assertTrue(qp.parse("[ a TO z]") instanceof RangeQuery);
-    */
+    QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+	qp->setUseOldRangeQuery(true);
+    Query* q = qp->parse(_T("[ a TO z]"));
+    _CLLDELETE(qp);
+    CLUCENE_ASSERT(q->instanceOf("RangeQuery"));
+    _CLLDELETE(q);
+
 	assertQueryEquals(tc, _T("[ a TO z ]"), NULL, _T("[a TO z]"));
 	assertQueryEquals(tc, _T("{ a TO z}"), NULL, _T("{a TO z}"));
 	assertQueryEquals(tc, _T("{ a TO z }"), NULL, _T("{a TO z}"));
@@ -476,10 +491,9 @@ void testRange(CuTest *tc) {
 	assertQueryEquals(tc, _T("( bar blar { a TO z}) "), NULL, _T("bar blar {a TO z}"));
 	assertQueryEquals(tc, _T("gack ( bar blar { a TO z}) "), NULL, _T("gack (bar blar {a TO z})"));
 
-
 	// Old CLucene tests - check this is working without TO as well
 	assertQueryEquals(tc,_T("[ a z]"), NULL, _T("[a TO z]"));
-	assertTrue(tc, _T("[ a z]"), NULL, "RangeQuery", _T("[ a z]") );
+	assertTrue(tc, _T("[ a z]"), NULL, "ConstantScoreRangeQuery", _T("[ a z]") );
 	assertQueryEquals(tc,_T("[ a z ]"), NULL, _T("[a TO z]"));
 	assertQueryEquals(tc,_T("{ a z}"), NULL, _T("{a TO z}"));
 	assertQueryEquals(tc,_T("{ a z }"), NULL, _T("{a TO z}"));
@@ -492,6 +506,123 @@ void testRange(CuTest *tc) {
 	// ### Incompatiable with new QP, and does not appear in the Java tests; use the format below instead
 	// assertQueryEquals(tc,_T("[050-070]"), &a, _T("[050 TO -070]"));
 	assertQueryEquals(tc,_T("[050 -070]"), &a, _T("[050 TO -070]"));
+}
+
+/// TODO: Complete missing date tests here
+
+/** for testing DateTools support */
+TCHAR* getDate(int64_t d, DateTools::Resolution resolution) {
+    if (resolution == DateTools::NO_RESOLUTION) {
+        return DateField::timeToString(d);
+    } else {
+        return DateTools::timeToString(d, resolution);
+    }
+}
+
+/** for testing DateTools support */
+TCHAR* getDate(const TCHAR* s, DateTools::Resolution resolution) {
+    return getDate(DateTools::stringToTime(s), resolution);      
+}
+
+void assertDateRangeQueryEquals(CuTest* tc, QueryParser* qp, const TCHAR* field,
+                                const TCHAR* startDate, const TCHAR* endDate, 
+                                int64_t endDateInclusive, DateTools::Resolution resolution)
+{
+    StringBuffer query;
+    query.append(field);
+    query.append(_T(":["));
+    query.append(startDate);
+    query.append(_T(" TO "));
+    query.append(endDate);
+    query.appendChar(_T(']'));
+
+    StringBuffer result;
+    result.appendChar(_T('['));
+    TCHAR* tmp = getDate(startDate, resolution);
+    result.append(tmp);
+    _CLDELETE_LCARRAY(tmp);
+    result.append(_T(" TO "));
+    tmp = getDate(endDateInclusive, resolution);
+    result.append(tmp);
+    _CLDELETE_LCARRAY(tmp);
+    result.appendChar(_T(']'));
+
+    assertQueryEquals(tc, qp, field, query.getBuffer(), result.getBuffer());
+
+    query.clear();
+    result.clear();
+
+    query.append(field);
+    query.append(_T(":{"));
+    query.append(startDate);
+    query.append(_T(" TO "));
+    query.append(endDate);
+    query.appendChar(_T('}'));
+
+    result.appendChar(_T('{'));
+    tmp = getDate(startDate, resolution);
+    result.append(tmp);
+    _CLDELETE_LCARRAY(tmp);
+    result.append(_T(" TO "));
+    tmp = getDate(endDate, resolution);
+    result.append(tmp);
+    _CLDELETE_LCARRAY(tmp);
+    result.appendChar(_T('}'));
+
+    assertQueryEquals(tc, qp, field, query.getBuffer(), result.getBuffer());
+}
+
+TCHAR* getLocalizedDate(int32_t year, int32_t month, int32_t day, bool extendLastDate) {
+    if (extendLastDate)
+        return CL_NS(document)::DateTools::getISOFormat(year, month, day, 11, 59, 59, 999);
+    else
+        return CL_NS(document)::DateTools::getISOFormat(year, month, day);
+    
+}
+
+void testDateRange(CuTest* tc) {
+
+    TCHAR* startDate = getLocalizedDate(2002, 1, 1, false);
+    TCHAR* endDate = getLocalizedDate(2002, 1, 4, false);
+    const int64_t endDateExpected = CL_NS(document)::DateTools::getTime(2002,1,4,23,59,59,999);
+    const TCHAR* defaultField = _T("default");
+    const TCHAR* monthField = _T("month");
+    const TCHAR* hourField = _T("hour");
+    
+    SimpleAnalyzer a;
+    QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+
+    // Don't set any date resolution and verify if DateField is used
+    assertDateRangeQueryEquals(tc, qp, defaultField, startDate, endDate, 
+        endDateExpected, DateTools::NO_RESOLUTION);
+
+    // set a field specific date resolution
+    qp->setDateResolution(monthField, DateTools::MONTH_FORMAT);
+
+    // DateField should still be used for defaultField
+    assertDateRangeQueryEquals(tc, qp, defaultField, startDate, endDate, 
+        endDateExpected, DateTools::NO_RESOLUTION);
+
+    // set default date resolution to MILLISECOND 
+    qp->setDateResolution(DateTools::MILLISECOND_FORMAT);
+
+    // set second field specific date resolution    
+    qp->setDateResolution(hourField, DateTools::HOUR_FORMAT);
+
+    // for this field no field specific date resolution has been set,
+    // so verify if the default resolution is used
+    assertDateRangeQueryEquals(tc, qp, defaultField, startDate, endDate, 
+        endDateExpected, DateTools::MILLISECOND_FORMAT);
+
+    // verify if field specific date resolutions are used for these two fields
+    assertDateRangeQueryEquals(tc, qp, monthField, startDate, endDate, 
+        endDateExpected, DateTools::MONTH_FORMAT);
+
+    assertDateRangeQueryEquals(tc, qp, hourField, startDate, endDate, 
+        endDateExpected, DateTools::HOUR_FORMAT);
+
+    _CLDELETE_LCARRAY(startDate);
+    _CLDELETE_LCARRAY(endDate);
 }
 
 void testEscaped(CuTest *tc) {
@@ -563,8 +694,6 @@ void testEscaped(CuTest *tc) {
 
     assertParseException(tc,_T("\\")); // a backslash must always be escaped
 }
-
-// TODO: testLegacyDateRange, testDateRange
 
 void testQueryStringEscaping(CuTest *tc) {
 	WhitespaceAnalyzer a;
@@ -682,6 +811,8 @@ void testBoost(CuTest *tc){
 	_CLLDELETE(qp2);
 }
 
+/// TODO: Port tests starting from assertParseException
+
 void testMatchAllDocs(CuTest *tc) {
 	WhitespaceAnalyzer a;
 	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
@@ -698,6 +829,28 @@ void testMatchAllDocs(CuTest *tc) {
 	_CLLDELETE(qp);
 }
 
+// Tracker Bug ID 2870826 by Veit Jahns
+void testDefaultField(CuTest* tc){
+    WhitespaceAnalyzer a;
+	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
+    Query* bq = qp->parse(_T("term1 author:term2 term3"));
+    CLUCENE_ASSERT( bq != NULL );
+    TCHAR* s = bq->toString(_T("field"));
+    _CLLDELETE(bq);
+    if ( _tcscmp(s,_T("term1 author:term2 term3")) != 0 )
+        CuFail(tc, _T("FAILED Query /term1 author:term2 term3/ yielded /%s/, expecting term1 author:term2 term3\n"), s);
+    _CLDELETE_LCARRAY(s);
+
+    bq = qp->parse(_T("term1 *:term2 term3"));
+    s = bq->toString(_T("field"));
+    if ( _tcscmp(s,_T("term1 *:term2 term3")) != 0 )
+        CuFail(tc, _T("FAILED Query /term1 *:term2 term3/ yielded /%s/, expecting term1 *:term2 term3\n"), s);
+
+    _CLDELETE_LCARRAY(s);
+    _CLLDELETE(bq);
+
+    _CLLDELETE(qp);
+}
 
 CuSuite *testQueryParser(void)
 {
@@ -711,6 +864,7 @@ CuSuite *testQueryParser(void)
 	SUITE_ADD_TEST(suite, testLeadingWildcardType);
 	SUITE_ADD_TEST(suite, testQPA);
 	SUITE_ADD_TEST(suite, testRange);
+    //SUITE_ADD_TEST(suite, testDateRange);
 	SUITE_ADD_TEST(suite, testEscaped);
 	SUITE_ADD_TEST(suite, testQueryStringEscaping);
 	SUITE_ADD_TEST(suite, testTabNewlineCarriageReturn);
@@ -718,6 +872,8 @@ CuSuite *testQueryParser(void)
 	SUITE_ADD_TEST(suite, testBoost);
 
 	SUITE_ADD_TEST(suite, testMatchAllDocs);
+
+    SUITE_ADD_TEST(suite, testDefaultField);
 
 	return suite;
 }

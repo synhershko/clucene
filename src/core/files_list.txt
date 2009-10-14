@@ -1,7 +1,7 @@
 Lucene 2.3.2 Files:
 ---------------
 
-WORKING ISH	analysis\Analyzer.java
+?	analysis\Analyzer.java
 ?	analysis\CachingTokenFilter.java
 ?	analysis\CharArraySet.java
 ?	analysis\CharTokenizer.java
@@ -25,16 +25,14 @@ DONE ISH	analysis\StopAnalyzer.java				- reusableTokenStream and StopAnalyzer(Se
 
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
-DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery), ConstantScoreRangeQuery, and some tests. _tcstod.
+DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery) and some tests. _tcstod.
 IRRELEVANT	queryParser\QueryParser.jj
 DONE ISH	queryParser\QueryParserConstants.java
 DONE ISH	queryParser\QueryParserTokenManager.java	- PrintStream implementation is missing (if at all necessary)
 DONE ISH	queryParser\Token.java			- If LUCENE_TOKEN_WORD_LENGTH is still necessary, it needs to be implemented in the new code, and have tests written to make sure it works flawlessly with the new QP. Currently it's half implemented.
 DONE ISH	queryParser\TokenMgrError.java		- Integrated within QueryParserTokenManager as functions
 
-WORKING ISH	search\BooleanScorer.java
-WORKING ISH	search\ConstantScoreQuery.java - new file, not ported yet
-WORKING ISH	search\ConstantScoreRangeQuery.java - new file, not ported yet
+?	search\BooleanScorer.java
 ?	search\DisjunctionMaxQuery.java - new file, not ported yet
 ?	search\ExtendedFieldCache.java
 ?	search\ExtendedFieldCacheImpl.java
@@ -49,7 +47,6 @@ DONE ISH	search\FilteredTermEnum.java		- Can we mend term(void) and term(bool) ?
 DONE ISH	search\FuzzyQuery.java			- See TODOs.
 DONE ISH	search\FuzzyTermEnum.java			- See TODOs. Also, Old similarity code is commented out and marked as "legacy". It looks like some optimizations were made there, but since Fuzzy queries weren't working as they should we had to revert to Java's implementation. Perhaps after tests are complete we could try and get the optimized version to work again.
 ?	search\Hit.java
-?	search\HitCollector.java
 ?	search\HitIterator.java
 DONE ISH	search\Hits.java				- Needs rethinking of why Query* is used instead of Weight*
 PARTIAL	search\IndexSearcher.java			- Almost no difference. See todo and complete comparison between JL and CL.
@@ -73,7 +70,8 @@ PARTIAL JW	store\SimpleFSLockFactory.java - 1 class implemented as FSLockFactory
 ?	util\ScorerDocQueue.java
 
 Pending: waiting on other things...
-DONE ISH	search\Filter.java				- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL
+DONE ISH	search\Filter.java				- Remove virtual toString once CachingWrapperFilter and ChainedFilter (does not exist in JL?) conform to JL. Missing equals() and hashCode() virtual functions, hence all derived miss this as well.
+PARTIAL ISH 	search\RangeFilter.java			- Missing hashCode() and equals() -- see comment on Filter. Needs testing for bits() and toString().
 
 Finished except a few functions:
 DONE ISH	search\PhraseQuery.java			- extractTerms(Set) was never ported (probably not needed). Inconsitency in return value of getPositions getTerms.
@@ -82,7 +80,8 @@ DONE ISH	search\MultiTermQuery.java			- hashcode and equals were never ported
 DONE ISH	search\MatchAllDocsQuery.java	- MatchAllDocsWeight::explain needs to support ComplexExplanation in order to set "match", plus we might want to reconsider returning void instead of Explanation* in Weight::explain an derived
 DONE ISH	search\MultiPhraseQuery.java	- Complete TODOs (2 unported functions, test hashCode(), clone(), and decide on memory contract for rewrite)
 DONE ISH	index\SegmentTermPositions.java			- getPayload is still incomplete
-
+DONE ISH	search\ConstantScoreQuery.java		- See TODOs
+DONE ISH	search\ConstantScoreRangeQuery.java	- See TODOs
 
 CMake:
 Check todos in (_)clucene-config.h.cmake. Some checks arent being done yet.
@@ -260,13 +259,13 @@ DONE BEN	search\TopFieldDocs.java			- no changes
 DONE BEN	search\WildcardQuery.java
 DONE BEN	search\WildcardTermEnum.java		- no changes
 DONE ISH	search\BooleanClause.java			- Should we change the flags in Occur to be named with an OCCUR_ prefix, since they're being used as BooleanClause::SHOULD all throughout the code?
-DONE BEN  search\RangeFilter.java   - no changes
 BEN DONE  search\PrefixFilter.java      - all done
 BEN DONE  search\SortField.java
 BEN DONE  search\Sort.java
 BEN DONE search\TermScorer.java
 DONE ISH	search\Explanation.java			- Why can't we use TCHAR* for description?
 DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for it, we don't.
+DONE ISH	search\HitCollector.java			- No changes, abstract class
 
 
 IRRELEVANT	analysis\PorterStemFilter.java  - deprecated

@@ -46,6 +46,22 @@
     _CLDELETE(a);
   }
   
+  
+   void testKeywordAnalyzer(CuTest *tc){
+    Analyzer* a = _CLNEW KeywordAnalyzer();
+    
+    assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo bar FOO BAR;") );
+    assertAnalyzersTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo      bar .  FOO <> BAR;"));
+    assertAnalyzersTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo.bar.FOO.BAR;"));
+    assertAnalyzersTo(tc,a, _T("U.S.A."), _T("U.S.A.;") );
+    assertAnalyzersTo(tc,a, _T("C++"), _T("C++;") );
+    assertAnalyzersTo(tc,a, _T("B2B"), _T("B2B;"));
+    assertAnalyzersTo(tc,a, _T("2B"), _T("2B;"));
+    assertAnalyzersTo(tc,a, _T("\"QUOTED\" word"), _T("\"QUOTED\" word;"));
+    
+    _CLDELETE(a);
+   }
+
    void testStandardAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW StandardAnalyzer();
     
@@ -236,17 +252,45 @@
 	  _tcscpy(testString, _T(" t est "));
 	  CuAssertStrEquals(tc, _T("stringTrim compare"), CL_NS(util)::Misc::wordTrim(testString), _T("t"));
   }
+
+  void testMutipleDocument(CuTest *tc) {
+      RAMDirectory dir;
+      KeywordAnalyzer a;
+      IndexWriter* writer = _CLNEW IndexWriter(&dir,&a, true);
+      Document* doc = _CLNEW Document();
+      doc->add(*_CLNEW Field(_T("partnum"), _T("Q36"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+      writer->addDocument(doc);
+      doc = _CLNEW Document();
+      doc->add(*_CLNEW Field(_T("partnum"), _T("Q37"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+      writer->addDocument(doc);
+      writer->close();
+      _CLLDELETE(writer);
+
+      IndexReader* reader = IndexReader::open(&dir);
+      Term* t = _CLNEW Term(_T("partnum"), _T("Q36"));
+      TermDocs* td = reader->termDocs(t);
+      _CLDECDELETE(t);
+      CLUCENE_ASSERT(td->next());
+      t = _CLNEW Term(_T("partnum"), _T("Q37"));
+      td = reader->termDocs(t);
+      _CLDECDELETE(t);
+      reader->close();
+      CLUCENE_ASSERT(td->next());
+      _CLLDELETE(reader);
+  }
   
 CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
 
+    SUITE_ADD_TEST(suite, testKeywordAnalyzer);
     SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
     SUITE_ADD_TEST(suite, testStopAnalyzer);
     SUITE_ADD_TEST(suite, testNullAnalyzer);
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
     SUITE_ADD_TEST(suite, testWordlistLoader);
+    //SUITE_ADD_TEST(suite, testMutipleDocument);
     return suite; 
 }
 // EOF

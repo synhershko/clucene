@@ -450,9 +450,9 @@ public:
   // This makes sure that there is no garbage after the query string
   CL_NS(search)::Query* TopLevelQuery(TCHAR* _field);
 
-  CL_NS(search)::Query* fQuery(TCHAR*& _field);
+  CL_NS(search)::Query* fQuery(TCHAR* _field);
 
-  CL_NS(search)::Query* fClause(TCHAR*& _field);
+  CL_NS(search)::Query* fClause(TCHAR* _field);
 
 public:
   CL_NS(search)::Query* fTerm(const TCHAR* _field);

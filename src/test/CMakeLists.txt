@@ -26,6 +26,7 @@ SET(test_files ./tests.cpp
 ./analysis/TestAnalysis.cpp
 ./analysis/TestAnalyzers.cpp
 ./debug/TestError.cpp
+./document/TestDateTools.cpp
 ./document/TestDocument.cpp
 ./document/TestNumberTools.cpp
 ./store/TestStore.cpp
