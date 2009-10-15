@@ -25,6 +25,9 @@ protected:
     Filter* filter;
 
 public:
+    /** 
+    * @memory this object consumes _filter
+    */
     ConstantScoreQuery(Filter* _filter);
     virtual ~ConstantScoreQuery();
 

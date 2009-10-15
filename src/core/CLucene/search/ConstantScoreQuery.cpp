@@ -29,7 +29,9 @@ public:
         bits(filter->bits(reader)), theScore(w->getValue()), _doc(-1)
     {
     }
-    virtual ~ConstantScorer(){}
+    virtual ~ConstantScorer(){
+      _CLDELETE(bits);
+    }
 
     bool next() {
         _doc = bits->nextSetBit(_doc+1);
@@ -99,6 +101,7 @@ public:
     Explanation* explain(IndexReader* reader, int32_t doc) {
         ConstantScorer* cs = (ConstantScorer*)scorer(reader);
         bool exists = cs->bits->get(doc);
+        _CLDELETE(cs);
 
         ComplexExplanation* result = _CLNEW ComplexExplanation();
 
@@ -108,7 +111,7 @@ public:
             
             TCHAR* tmp = parentQuery->filter->toString();
             buf.append(tmp);
-            _CLLDELETE(tmp);
+            _CLDELETE_LCARRAY(tmp);
 
             buf.append(_T("), product of:"));
 
@@ -138,7 +141,9 @@ public:
 
 ConstantScoreQuery::ConstantScoreQuery(Filter* _filter) : filter(_filter) {
 }
-ConstantScoreQuery::~ConstantScoreQuery(){}
+ConstantScoreQuery::~ConstantScoreQuery(){
+  _CLDELETE(filter);
+}
 
 Filter* ConstantScoreQuery::getFilter() const {
     return filter;

@@ -4,6 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
+#include <assert.h>
 #include "test.h"
 #include <stdio.h>
 
@@ -292,14 +293,17 @@ void SearchTest(CuTest *tc, bool bram) {
   //test MultiPositionQuery...
   {
     MultiPhraseQuery* query = _CLNEW MultiPhraseQuery();
-    ValueArray<Term*> terms(3);
+    RefCountArray<Term*> terms(3);
     Term* termE = _CLNEW Term(_T("contents"), _T("e"));
     terms[0] = _CLNEW Term(_T("contents"), _T("asdf"));
     terms[1] = _CLNEW Term(_T("contents"), _T("asdg"));
     terms[2] = _CLNEW Term(_T("contents"), _T("asef"));
 
     query->add(termE);
+		_CLDECDELETE(termE);
+    
     query->add(&terms);
+    terms.deleteValues();
 
 		TCHAR* qryInfo = query->toString(_T("contents"));
 		hits = searcher.search(query);
@@ -391,7 +395,7 @@ void testSrchManyHits(CuTest *tc) {
 }
 
 void testSrchMulti(CuTest *tc) {
-    SimpleAnalyzer analyzer;
+  SimpleAnalyzer analyzer;
 	RAMDirectory ram0;
 	IndexWriter writer0( &ram0, &analyzer, true);
 
@@ -433,11 +437,12 @@ void testSrchMulti(CuTest *tc) {
 
 	MultiSearcher searcher(searchers);
 
-	RangeQuery query(
-		_CLNEW Term(_T("contents"), _T("a")),
-		_CLNEW Term(_T("contents"), _T("c")),
-		true
-	);
+  Term* termA = _CLNEW Term(_T("contents"), _T("a"));
+  Term* termC = _CLNEW Term(_T("contents"), _T("c"));
+	RangeQuery query(termA, termC, true);
+  _CLDECDELETE(termA);
+  _CLDECDELETE(termC);
+
 	Query* rewritten = searcher.rewrite(&query);
 	Hits* hits = searcher.search(rewritten);
 	for ( size_t x=0;x<hits->length();x++ ){
