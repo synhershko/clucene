@@ -35,6 +35,7 @@ CL_CLASS_DEF(util,StringBuffer)
 		friend class FSDirectory::FSIndexOutput;
 		friend class FSDirectory::FSIndexInput;
 
+    int filemode;
 	protected:
 		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
 	private:
@@ -105,17 +106,17 @@ CL_CLASS_DEF(util,StringBuffer)
 		/// Renames an existing file in the directory.
 		void renameFile(const char* from, const char* to);
 
-      	/** Set the modified time of an existing file to now. */
-      	void touchFile(const char* name);
+    /** Set the modified time of an existing file to now. */
+    void touchFile(const char* name);
 
 		/// Creates a new, empty file in the directory with the given name.
 		///	Returns a stream writing this file.
 		IndexOutput* createOutput(const char* name);
-
-		  ///Decrease the ref-count to the directory by one. If
-		  ///the object is no longer needed, then the object is
-		  ///removed from the directory pool.
-      void close();
+  
+    ///Decrease the ref-count to the directory by one. If
+    ///the object is no longer needed, then the object is
+    ///removed from the directory pool.
+    void close();
 
 	  /**
 	  * If MMap is available, this can disable use of
@@ -145,6 +146,17 @@ CL_CLASS_DEF(util,StringBuffer)
 	  */
 	  static bool getDisableLocks();
 
+    /**
+    * Sets the file mode for new files. This is passed to new output streams
+    * and to the lock factory. The mode should be a valid mode for the 3rd
+    * parameter of the file open function (such as 0644)
+    */
+    void setFileMode(int mode);
+    
+    /**
+    * Gets the file mode for new files
+    */
+    int getFileMode();
   };
 
 CL_NS_END

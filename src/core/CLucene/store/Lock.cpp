@@ -110,9 +110,14 @@ CL_NS_DEF(store)
    }
 
 
-   FSLock::FSLock( const char* _lockDir, const char* name )
+   FSLock::FSLock( const char* _lockDir, const char* name, int filemode )
    {
-	  this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
+      if ( filemode <= 0 )
+        this->filemode = _S_IREAD | _S_IWRITE; //must do this or file will be created Read only
+      else
+        this->filemode = filemode;
+      
+      this->lockFile = _CL_NEWARRAY(char,CL_MAX_PATH);
    	  this->lockDir = STRDUP_AtoA(_lockDir);
    	  strcpy(lockFile,_lockDir);
    	  strcat(lockFile,PATH_DELIMITERA);
@@ -135,15 +140,14 @@ CL_NS_DEF(store)
    bool FSLock::obtain()
    {
 	   	if ( !Misc::dir_Exists(lockDir) ){
-	         if ( _mkdir(lockDir) == -1 ){
+	      if ( _mkdir(lockDir) == -1 ){
 	   		  char* err = _CL_NEWARRAY(char,34+strlen(lockDir)+1); //34: len of "Couldn't create lock directory: "
 	   		  strcpy(err,"Couldn't create lock directory: ");
 	   		  strcat(err,lockDir);
 	   		  _CLTHROWA_DEL(CL_ERR_IO, err );
-	         }
-	       }
-	       int32_t r = _cl_open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL,
-	       	_S_IREAD | _S_IWRITE); //must do this or file will be created Read only
+	      }
+	    }
+	       int32_t r = _cl_open(lockFile,  O_RDWR | O_CREAT | _O_RANDOM | O_EXCL, this->filemode); 
 	   	if ( r < 0 ) {
 	   	  return false;
 	   	} else {

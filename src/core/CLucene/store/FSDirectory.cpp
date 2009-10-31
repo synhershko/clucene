@@ -98,7 +98,7 @@ CL_NS_USE(util)
 		// output methods:
 		void flushBuffer(const uint8_t* b, const int32_t size);
 	public:
-		FSIndexOutput(const char* path);
+		FSIndexOutput(const char* path, int filemode);
 		~FSIndexOutput();
 
 		// output methods:
@@ -261,15 +261,18 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	handle->_fpos=_pos;
 }
 
-  FSDirectory::FSIndexOutput::FSIndexOutput(const char* path){
+  FSDirectory::FSIndexOutput::FSIndexOutput(const char* path, int filemode){
 	//O_BINARY - Opens file in binary (untranslated) mode
 	//O_CREAT - Creates and opens new file for writing. Has no effect if file specified by filename exists
 	//O_RANDOM - Specifies that caching is optimized for, but not restricted to, random access from disk.
 	//O_WRONLY - Opens file for writing only;
+    if ( filemode <= 0 ){
+      filemode = _S_IWRITE | _S_IREAD;
+    }
 	  if ( Misc::dir_Exists(path) )
-	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
+	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, filemode);
 	  else // added by JBP
-	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
+	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, filemode);
 
 	  if ( fhandle < 0 ){
       int err = errno;
@@ -355,7 +358,8 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   FSDirectory::FSDirectory(const char* _path, const bool createDir, LockFactory* lockFactory):
    Directory(),
    refCount(0),
-   useMMap(LUCENE_USE_MMAP)
+   useMMap(LUCENE_USE_MMAP),
+   filemode(_S_IWRITE | _S_IREAD) //default to user (only) writable index
   {
     directory = _path;
     bool doClearLockID = false;
@@ -364,7 +368,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     	if ( disableLocks ) {
     		lockFactory = NoLockFactory::getNoLockFactory();
     	} else {
-    		lockFactory = _CLNEW FSLockFactory( directory.c_str() );
+    		lockFactory = _CLNEW FSLockFactory( directory.c_str(), this->filemode );
     		doClearLockID = true;
     	}
     }
@@ -435,18 +439,23 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	  _CLDELETE( lockFactory );
   }
 
+  void FSDirectory::setFileMode(int mode){
+    this->filemode = mode;
+  }
+  int FSDirectory::getFileMode(){
+    return this->filemode;
+  }
+  void FSDirectory::setUseMMap(bool value){ useMMap = value; }
+  bool FSDirectory::getUseMMap() const{ return useMMap; }
+  const char* FSDirectory::getClassName(){
+    return "FSDirectory";
+  }
+  const char* FSDirectory::getObjectName() const{
+    return getClassName();
+  }
 
-    void FSDirectory::setUseMMap(bool value){ useMMap = value; }
-    bool FSDirectory::getUseMMap() const{ return useMMap; }
-    const char* FSDirectory::getClassName(){
-      return "FSDirectory";
-    }
-    const char* FSDirectory::getObjectName() const{
-      return getClassName();
-    }
-
-    void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
-    bool FSDirectory::getDisableLocks() { return disableLocks; }
+  void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
+  bool FSDirectory::getDisableLocks() { return disableLocks; }
 
 
   bool FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
@@ -526,10 +535,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     char buffer[CL_MAX_DIR];
     _snprintf(buffer,CL_MAX_DIR,"%s%s%s",directory.c_str(),PATH_DELIMITERA,name);
 
-    int32_t r = _cl_open(buffer, O_RDWR, _S_IWRITE);
-	if ( r < 0 )
-		_CLTHROWA(CL_ERR_IO,"IO Error while touching file");
-	::_close(r);
+    int32_t r = _cl_open(buffer, O_RDWR, this->filemode);
+    if ( r < 0 )
+      _CLTHROWA(CL_ERR_IO,"IO Error while touching file");
+    ::_close(r);
   }
 
   int64_t FSDirectory::fileLength(const char* name) const {
@@ -686,7 +695,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 			  _CLTHROWA(CL_ERR_IO, tmp);
 		  }
 	  }
-    return _CLNEW FSIndexOutput( fl );
+    return _CLNEW FSIndexOutput( fl, this->filemode );
   }
 
   string FSDirectory::toString() const{

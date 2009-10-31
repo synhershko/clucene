@@ -58,9 +58,10 @@ public:
 class CLUCENE_EXPORT FSLockFactory: public LockFactory {
 private:
   std::string lockDir;
-	
+	int filemode;
 public:
-	FSLockFactory( const char* lockDir=NULL );
+  /** Constructs a FS Lock factory. The default file mode is user writable */
+	FSLockFactory( const char* lockDir=NULL, int filemode=-1 );
 	~FSLockFactory();
 		
 	void setLockDir( const char* lockDir );
