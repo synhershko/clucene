@@ -374,7 +374,7 @@ public:
 			this->encoding = encoding;
 		   setMinBufSize(1024);
 		}
-		~JStreamsBuffer(){
+		virtual ~JStreamsBuffer(){
 			_CLDELETE(input);
 		}
 		void _setMinBufSize(int32_t min){

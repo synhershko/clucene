@@ -294,6 +294,7 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
         uncompress(*b, data);
       }_CLFINALLY( _CLDELETE(b) )
 
+#ifndef _ASCII
       //convert to utf8
       TCHAR* result = _CL_NEWARRAY(TCHAR, data.length);
       size_t l = lucene_utf8towcs(result, (const char*)data.values, data.length);
@@ -303,12 +304,17 @@ void FieldsReader::addField(CL_NS(document)::Document& doc, const FieldInfo* fi,
       if ( l < data.length/2 ){
         TCHAR* tmp = result;
         result = STRDUP_TtoT(result);
-        _CLDELETE_ARRAY(tmp);
+        _CLDELETE_LCARRAY(tmp);
       }
 
       f = _CLNEW Field(fi->name,      // field name
         result, // uncompress the value and add as string
         bits, false);
+#else
+      f = _CLNEW Field(fi->name,      // field name
+        reinterpret_cast<char*>(data.values), // uncompress the value and add as string
+        bits, false);
+#endif
       f->setOmitNorms(fi->omitNorms);
 		} else {
 			bits |= Field::STORE_YES;
@@ -445,6 +451,7 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
 			_resetValue();
       uncompress(b, uncompressed); //no need to catch error, memory all in frame
 
+#ifndef _ASCII
       TCHAR* str = _CL_NEWARRAY(TCHAR, uncompressed.length);
       size_t l = lucene_utf8towcs(str, (const char*)uncompressed.values, uncompressed.length);
       str[l] = 0;
@@ -452,11 +459,14 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
       if ( l < uncompressed.length/2 ){
         //too pesimistic with size...
         fieldsData = STRDUP_TtoT(str);
-        _CLDELETE_ARRAY(str);
+        _CLDELETE_LCARRAY(str);
       }else{
         fieldsData = str;
       }
-		} else {
+#else
+      fieldsData = uncompressed.values;
+#endif
+        } else {
 			//read in chars b/c we already know the length we need to read
 			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead+1);
 			localFieldsStream->readChars(chars, 0, toRead);

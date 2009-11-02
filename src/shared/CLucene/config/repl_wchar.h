@@ -25,7 +25,11 @@ CLUCENE_SHARED_EXPORT size_t lucene_utf8towc  (wchar_t& ret, const char *s);
 CLUCENE_SHARED_EXPORT size_t lucene_utf8towcs(wchar_t *, const char *,  size_t maxslen);
 CLUCENE_SHARED_EXPORT size_t lucene_wctoutf8  (char * ret, const wchar_t  str);
 CLUCENE_SHARED_EXPORT size_t lucene_wcstoutf8 (char *,  const wchar_t *, size_t maxslen);
+#ifdef _ASCII
+#define lucene_wcstoutf8string(str,strlen) str
+#else
 CLUCENE_SHARED_EXPORT std::string lucene_wcstoutf8string(const wchar_t* str, size_t strlen);
+#endif
 CLUCENE_SHARED_EXPORT size_t lucene_utf8charlen(const unsigned char p); //< the number of characters that this first utf8 character will expect
 
 //string function replacements
