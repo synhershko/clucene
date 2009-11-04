@@ -271,7 +271,7 @@ public:
 	SegmentInfos* segmentInfos;
 
 	// Release the write lock, if needed.
-	~IndexWriter();
+	virtual ~IndexWriter();
 
 	/**
 	*  The Java implementation of Lucene silently truncates any tokenized

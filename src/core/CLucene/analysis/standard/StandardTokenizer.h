@@ -57,7 +57,7 @@ CL_NS_DEF2(analysis,standard)
     // Constructs a tokenizer for this Reader.
     StandardTokenizer(CL_NS(util)::BufferedReader* reader, bool deleteReader=false);
 
-    ~StandardTokenizer();
+    virtual ~StandardTokenizer();
 
     /** Returns the next token in the stream, or false at end-of-stream.
     * The returned token's type is set to an element of

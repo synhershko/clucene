@@ -22,7 +22,7 @@ CL_NS_DEF2(analysis,standard)
 		// Construct filtering <i>in</i>. 
 		StandardFilter(TokenStream* in, bool deleteTokenStream);
 
-		~StandardFilter();
+		virtual ~StandardFilter();
 
 		
 	  /** Returns the next token in the stream, or NULL at EOS.

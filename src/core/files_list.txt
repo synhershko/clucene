@@ -24,7 +24,7 @@ DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or sim
 ?	analysis\Token.java
 ?	analysis\TokenFilter.java
 DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
-?	analysis\WhitespaceTokenizer.java
+DONE ISH	analysis\WhitespaceTokenizer.java
 DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
 DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
 
@@ -270,7 +270,7 @@ DONE ISH	search\HitCollector.java			- No changes, abstract class
 
 
 DONE ISH	analysis\WhitespaceAnalyzer.java
-DONE ISH	analysis\PerFieldAnalyzerWrapper.java
+DONE ISH	analysis\PerFieldAnalyzerWrapper.java		- toString() not yet implemented
 DONE ISH	analysis\LengthFilter.java
 DONE ISH	analysis\KeywordAnalyzer.java
 DONE ISH	analysis\SimpleAnalyzer.java

@@ -89,8 +89,7 @@ public:
 	WhitespaceTokenizer(CL_NS(util)::Reader* in);
 	virtual ~WhitespaceTokenizer();
 protected:
-	/** Collects only characters which do not satisfy _istspace.
-	*/
+	/** Collects only characters which do not satisfy _istspace.*/
 	bool isTokenChar(const TCHAR c) const;
 };
 
@@ -237,6 +236,7 @@ public:
 /** Filters LetterTokenizer with LowerCaseFilter and StopFilter. */
 class CLUCENE_EXPORT StopAnalyzer: public Analyzer {
 	CLTCSetList* stopTable;
+    class SavedStreams;
 
 public:
     /** Builds an analyzer which removes words in ENGLISH_STOP_WORDS. */
@@ -258,7 +258,8 @@ public:
 
     /** Filters LowerCaseTokenizer with StopFilter. */
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-	
+    TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+
 	/** An array containing some common English words that are not usually useful
     for searching. */
     static const TCHAR* ENGLISH_STOP_WORDS[];
@@ -312,10 +313,10 @@ public:
     void addAnalyzer(const TCHAR* fieldName, Analyzer* analyzer);
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 
-	TokenStream* reusableTokenStream(TCHAR* fieldName, CL_NS(util)::Reader* reader);
+	TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 
 	/** Return the positionIncrementGap from the analyzer assigned to fieldName */
-	int32_t getPositionIncrementGap(TCHAR* fieldName);
+	int32_t getPositionIncrementGap(const TCHAR* fieldName);
 };
 
 

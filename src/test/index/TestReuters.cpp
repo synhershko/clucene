@@ -42,7 +42,7 @@ CL_NS_USE(util)
 		 TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
 			return _CLNEW ReutersTokenizer(reader);
 		 }
-	  ~ReutersAnalyzer(){}
+         virtual ~ReutersAnalyzer(){}
   };
 
   bool stringLowercaseCompare( const string &left, const string &right ){
