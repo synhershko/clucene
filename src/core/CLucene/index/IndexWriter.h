@@ -236,6 +236,7 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
 
 	// where this index resides
 	CL_NS(store)::Directory* directory;
+    bool bOwnsDirectory;
 
 
 	int32_t getSegmentsCounter();

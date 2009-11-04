@@ -432,7 +432,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   }
 
   FSDirectory::~FSDirectory(){
-	  _CLDELETE( lockFactory );
+	  _CLLDELETE( lockFactory );
   }
 
 
