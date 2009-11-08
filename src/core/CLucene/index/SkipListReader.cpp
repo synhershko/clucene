@@ -121,7 +121,7 @@ void MultiLevelSkipListReader::close() {
 	for (int32_t i = 1; i < maxNumberOfSkipLevels; i++) {
 		if (skipStream[i] != NULL) {
 			//skipStream[i]->close();
-			_CLLDELETE(skipStream[i]);
+			_CLDELETE(skipStream[i]); // ISH: We actually do need to nullify pointer here
 		}
 	}
 }
