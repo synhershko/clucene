@@ -122,6 +122,25 @@
        }
    }
 
+   void testEmptyStopList(CuTest *tc)
+   {
+       StandardAnalyzer a((const TCHAR**)_T("\0"));
+       RAMDirectory ram;
+       IndexWriter writer(&ram, &a, true);
+       
+       Document doc;
+       doc.add(*(_CLNEW lucene::document::Field(
+           _T("First"), _T("Blah blah blah"), Field::STORE_YES | Field::INDEX_TOKENIZED)));
+       writer.addDocument(&doc);
+       writer.close();
+
+       IndexSearcher searcher(&ram);
+       Query* q = QueryParser::parse(_T("blah"), _T("First"), &a);
+       Hits* h = searcher.search(q);
+       _CLLDELETE(h);
+       _CLLDELETE(q);
+   }
+
   void testNullAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW WhitespaceAnalyzer();
     assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;FOO;BAR;"));
@@ -318,6 +337,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper2);
     SUITE_ADD_TEST(suite, testWordlistLoader);
     //SUITE_ADD_TEST(suite, testMutipleDocument);
+    SUITE_ADD_TEST(suite, testEmptyStopList);
 
     return suite; 
 }
