@@ -80,6 +80,8 @@ CL_NS_DEF2(analysis,standard)
     
     // Reads CJK characters
     Token* ReadCJK(const TCHAR prev, Token* t);
+
+    virtual void reset(CL_NS(util)::Reader* _input);
   };
 
 CL_NS_END2
