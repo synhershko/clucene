@@ -13,7 +13,7 @@ CL_CLASS_DEF(util,BufferedReader)
 CL_NS_DEF(util)
 
 	/** Ported implementation of the FastCharStream class. */
-	class FastCharStream:LUCENE_BASE
+	class FastCharStream
 	{
 		static const int32_t maxRewindSize;
 		int32_t pos;
@@ -28,7 +28,7 @@ CL_NS_DEF(util)
 
 		/// Initializes a new instance of the FastCharStream class LUCENE_EXPORT.
 		FastCharStream(BufferedReader* reader);
-		~FastCharStream();
+		virtual ~FastCharStream();
 		
 		/// Returns the next TCHAR from the stream.
 		int GetNext();
