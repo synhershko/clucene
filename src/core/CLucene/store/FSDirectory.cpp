@@ -498,7 +498,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		}
 	}
 
-    return _CL_POINTER(dir);
+    return _CL_POINTER(dir); // TODO: Isn't this a double ref increment?
   }
 
   int64_t FSDirectory::fileModified(const char* name) const {

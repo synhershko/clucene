@@ -42,6 +42,16 @@ CL_NS_USE(util)
 		 TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
 			return _CLNEW ReutersTokenizer(reader);
 		 }
+         TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+         {
+             Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
+             if (tokenizer == NULL) {
+                 tokenizer = _CLNEW ReutersTokenizer(reader);
+                 setPreviousTokenStream(tokenizer);
+             } else
+                 tokenizer->reset(reader);
+             return tokenizer;
+         }
          virtual ~ReutersAnalyzer(){}
   };
 
@@ -242,6 +252,7 @@ CuSuite *testreuters(void)
 
     //we still do this, but it'll be slow because the 'threads' will be run serially.
     SUITE_ADD_TEST(suite, testThreaded);
+
     return suite;
 }
 // EOF
