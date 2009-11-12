@@ -261,12 +261,12 @@ void testHashingBug(CuTest *tc){
 
 CuSuite *testindexwriter(void)
 {
-	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
-	//SUITE_ADD_TEST(suite, testHashingBug);
-	SUITE_ADD_TEST(suite, testAddIndexes);
-	//SUITE_ADD_TEST(suite, testIWmergeSegments1);
-    //SUITE_ADD_TEST(suite, testIWmergeSegments2);
-	//SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
+    CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
+    SUITE_ADD_TEST(suite, testHashingBug);
+    SUITE_ADD_TEST(suite, testAddIndexes);
+    SUITE_ADD_TEST(suite, testIWmergeSegments1);
+    SUITE_ADD_TEST(suite, testIWmergeSegments2);
+    SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
 
   return suite;
 }
