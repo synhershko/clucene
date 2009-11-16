@@ -181,7 +181,7 @@ StopFilter::StopFilter(TokenStream* in, bool deleteTokenStream, const TCHAR** _s
 
 StopFilter::~StopFilter(){
 	if (deleteStopTable)
-		_CLDELETE(stopWords);
+		_CLLDELETE(stopWords);
 }
 //static
 bool StopFilter::getEnablePositionIncrementsDefault() {
@@ -252,9 +252,16 @@ StopAnalyzer::StopAnalyzer():
 {
 	StopFilter::fillStopTable(stopTable,ENGLISH_STOP_WORDS);
 }
+class StopAnalyzer::SavedStreams {
+public:
+    Tokenizer* source;
+    TokenStream* result;
+};
 StopAnalyzer::~StopAnalyzer()
 {
-_CLDELETE(stopTable);
+    SavedStreams* t = reinterpret_cast<SavedStreams*>(this->getPreviousTokenStream());
+    if (t) _CLDELETE(t->result);
+    _CLDELETE(stopTable);
 }
 StopAnalyzer::StopAnalyzer( const TCHAR** stopWords):
 	stopTable(_CLNEW CLTCSetList(true))
@@ -265,7 +272,20 @@ TokenStream* StopAnalyzer::tokenStream(const TCHAR* /*fieldName*/, Reader* reade
 	return _CLNEW StopFilter(_CLNEW LowerCaseTokenizer(reader),true, stopTable);
 }
 
-const TCHAR* StopAnalyzer::ENGLISH_STOP_WORDS[]  =
+/** Filters LowerCaseTokenizer with StopFilter. */
+TokenStream* StopAnalyzer::reusableTokenStream(const TCHAR* fieldName, Reader* reader) {
+    SavedStreams* streams = reinterpret_cast<SavedStreams*>(getPreviousTokenStream());
+    if (streams == NULL) {
+        streams = _CLNEW SavedStreams();
+        streams->source = _CLNEW LowerCaseTokenizer(reader);
+        streams->result = _CLNEW StopFilter(streams->source, true, stopTable);
+        setPreviousTokenStream(streams);
+    } else
+        streams->source->reset(reader);
+    return streams->result;
+}
+
+const TCHAR* StopAnalyzer::ENGLISH_STOP_WORDS[]  = 
 {
 	_T("a"), _T("an"), _T("and"), _T("are"), _T("as"), _T("at"), _T("be"), _T("but"), _T("by"),
 	_T("for"), _T("if"), _T("in"), _T("into"), _T("is"), _T("it"),
@@ -290,7 +310,7 @@ void PerFieldAnalyzerWrapper::addAnalyzer(const TCHAR* fieldName, Analyzer* anal
 }
 
 TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader* reader) {
-    Analyzer* analyzer = (fieldName==NULL?defaultAnalyzer:analyzerMap->get((TCHAR*)fieldName));
+    Analyzer* analyzer = analyzerMap->get(const_cast<TCHAR*>(fieldName));
     if (analyzer == NULL) {
       analyzer = defaultAnalyzer;
     }
@@ -298,16 +318,17 @@ TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader
     return analyzer->tokenStream(fieldName, reader);
 }
 
-TokenStream* PerFieldAnalyzerWrapper::reusableTokenStream(TCHAR* fieldName, CL_NS(util)::Reader* reader) {
-	Analyzer* analyzer = analyzerMap->get(fieldName);
-	if (analyzer == NULL)
+TokenStream* PerFieldAnalyzerWrapper::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
+	Analyzer* analyzer = analyzerMap->get(const_cast<TCHAR*>(fieldName));
+    if (analyzer == NULL){
 		analyzer = defaultAnalyzer;
+    }
 
 	return analyzer->reusableTokenStream(fieldName, reader);
 }
 
-int32_t PerFieldAnalyzerWrapper::getPositionIncrementGap(TCHAR* fieldName) {
-	Analyzer* analyzer = analyzerMap->get(fieldName);
+int32_t PerFieldAnalyzerWrapper::getPositionIncrementGap(const TCHAR* fieldName) {
+	Analyzer* analyzer = analyzerMap->get(const_cast<TCHAR*>(fieldName));
 	if (analyzer == NULL)
 		analyzer = defaultAnalyzer;
 	return analyzer->getPositionIncrementGap(fieldName);
@@ -502,7 +523,7 @@ KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 {
   this->done = false;
 	if ( bufferSize < 1 )
-	this->bufferSize = DEFAULT_BUFFER_SIZE;
+	  this->bufferSize = DEFAULT_BUFFER_SIZE;
 }
 KeywordTokenizer::~KeywordTokenizer(){
 }
@@ -512,6 +533,7 @@ Token* KeywordTokenizer::next(Token* token){
     done = true;
     int32_t upto = 0;
     int32_t rd;
+
     token->clear();
     TCHAR* termBuffer=token->termBuffer();
     const TCHAR* readBuffer=NULL;
@@ -522,8 +544,11 @@ Token* KeywordTokenizer::next(Token* token){
       if ( upto == token->bufferLength() ){
         termBuffer = token->resizeTermBuffer(token->bufferLength() + 8);
       }
-	  _tcsncpy(termBuffer + upto, readBuffer, rd);
+	    _tcsncpy(termBuffer + upto, readBuffer, rd);
       upto += rd;
+    }
+    if ( termBuffer == NULL ){
+      termBuffer=token->resizeTermBuffer(token->bufferLength() + 8);
     }
     termBuffer[upto]=0;
     token->setTermLength(upto);

@@ -427,7 +427,7 @@ CL_NS_DEF(store)
       Directory(),files( _CLNEW FileMap(true,true) )
    {
       this->sizeInBytes = 0;
-      Directory* fsdir = FSDirectory::getDirectory(dir,false);
+      Directory* fsdir = FSDirectory::getDirectory(dir);
       try{
          _copyFromDir(fsdir,false);
       }_CLFINALLY(

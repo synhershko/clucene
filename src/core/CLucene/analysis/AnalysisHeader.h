@@ -189,7 +189,7 @@ whose input is another TokenStream.
 NOTE: subclasses must override at least one of {@link
 #next()} or {@link #next(Token)}.
 */
-class CLUCENE_EXPORT TokenStream:LUCENE_BASE {
+class CLUCENE_EXPORT TokenStream {
 public:
 	/** Returns the next token in the stream, or null at EOS.
 	*  When possible, the input Token should be used as the
@@ -247,7 +247,7 @@ public:
  *  WARNING: You must override one of the methods defined by this class in your
  *  subclass or the Analyzer will enter an infinite loop.
  */
-class CLUCENE_EXPORT Analyzer:LUCENE_BASE{
+class CLUCENE_EXPORT Analyzer{
 public:
 	Analyzer();
 
@@ -275,12 +275,12 @@ protected:
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to retrieve previously saved TokenStreams for re-use
 	*  by the same thread. */
-	TokenStream* getPreviousTokenStream();
+	void* getPreviousTokenStream();
 
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to save a TokenStream for later re-use by the same
 	*  thread. */
-	void setPreviousTokenStream(TokenStream* obj);
+	void setPreviousTokenStream(void* obj);
 public:
 	/**
 	* Invoked before indexing a Field instance if

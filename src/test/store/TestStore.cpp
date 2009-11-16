@@ -19,7 +19,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.store");
-	Directory* store = (ram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir, true) );
+	Directory* store = (ram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir) );
 	int32_t LENGTH_MASK = 0xFFF;
 	char name[260];
 
@@ -42,7 +42,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 	if (!ram){
 		store->close();
 		_CLDECDELETE(store);
-		store = (Directory*)FSDirectory::getDirectory(fsdir, false);
+		store = (Directory*)FSDirectory::getDirectory(fsdir);
   }else{
     CuMessageA(tc, "Memory used at end: %l", ((RAMDirectory*)store)->sizeInBytes);
   }

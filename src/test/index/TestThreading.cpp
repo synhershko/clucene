@@ -142,7 +142,7 @@ void testFSThreading(CuTest *tc){
   strcat(tmpfsdirectory,"/threading-index");
 
   // Second in an FSDirectory:
-  Directory* directory = FSDirectory::getDirectory(tmpfsdirectory, true);
+  Directory* directory = FSDirectory::getDirectory(tmpfsdirectory);
   runThreadingTests(tc,*directory);
   directory->close();
   _CLDECDELETE(directory);

@@ -95,6 +95,68 @@
         _CLDELETE(tokenStream);
    }
 
+#define USE_PER_FIELD_ANALYZER
+//#define SUB_ANALYZER_TYPE lucene::analysis::WhitespaceAnalyzer
+#define SUB_ANALYZER_TYPE lucene::analysis::standard::StandardAnalyzer
+
+   void testPerFieldAnalzyerWrapper2(CuTest *tc){
+       try {
+#ifdef USE_PER_FIELD_ANALYZER
+           lucene::analysis::PerFieldAnalyzerWrapper analyzer(
+               _CLNEW lucene::analysis::standard::StandardAnalyzer());
+           analyzer.addAnalyzer(_T("First"), _CLNEW SUB_ANALYZER_TYPE());
+           analyzer.addAnalyzer(_T("Second"), _CLNEW SUB_ANALYZER_TYPE());
+           analyzer.addAnalyzer(_T("Third"), _CLNEW SUB_ANALYZER_TYPE());
+           analyzer.addAnalyzer(_T("Fourth"), _CLNEW SUB_ANALYZER_TYPE());
+           analyzer.addAnalyzer(_T("Fifth"), _CLNEW SUB_ANALYZER_TYPE());
+#else
+           lucene::analysis::WhitespaceAnalyzer analyzer;
+#endif
+           char INDEX_PATH[CL_MAX_PATH];
+           sprintf(INDEX_PATH,"%s/%s",cl_tempDir, "test.analyzers");
+           lucene::index::IndexWriter writer(INDEX_PATH, &analyzer, true);
+           lucene::document::Document doc;
+           int flags = lucene::document::Field::STORE_YES
+               | lucene::document::Field::INDEX_TOKENIZED;
+           for (int i = 0; i < 100/*00000*/; i++) {
+               doc.clear();
+               doc.add(*(_CLNEW lucene::document::Field(
+                   _T("First"), _T("Blah blah blah"), flags)));
+               doc.add(*(_CLNEW lucene::document::Field(
+                   _T("Second"), _T("Blah blah-- blah"), flags)));
+               doc.add(*(_CLNEW lucene::document::Field(
+                   _T("Fifth"), _T("Blah blah__ blah"), flags)));
+               doc.add(*(_CLNEW lucene::document::Field(
+                   _T("Eigth"), _T("Blah blah blah++"), flags)));
+               doc.add(*(_CLNEW lucene::document::Field(
+                   _T("Ninth"), _T("Blah123 blah blah"), flags)));
+               writer.addDocument(&doc);
+           }
+           writer.close();
+       } catch (CLuceneError err) {
+           printf("CLuceneError: %s", err.what());
+       }
+   }
+
+   void testEmptyStopList(CuTest *tc)
+   {
+       StandardAnalyzer a((const TCHAR**)_T("\0"));
+       RAMDirectory ram;
+       IndexWriter writer(&ram, &a, true);
+       
+       Document doc;
+       doc.add(*(_CLNEW lucene::document::Field(
+           _T("First"), _T("Blah blah blah"), Field::STORE_YES | Field::INDEX_TOKENIZED)));
+       writer.addDocument(&doc);
+       writer.close();
+
+       IndexSearcher searcher(&ram);
+       Query* q = QueryParser::parse(_T("blah"), _T("First"), &a);
+       Hits* h = searcher.search(q);
+       _CLLDELETE(h);
+       _CLLDELETE(q);
+   }
+
   void testNullAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW WhitespaceAnalyzer();
     assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;FOO;BAR;"));
@@ -289,8 +351,11 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testNullAnalyzer);
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
+    SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper2);
     SUITE_ADD_TEST(suite, testWordlistLoader);
     //SUITE_ADD_TEST(suite, testMutipleDocument);
+    SUITE_ADD_TEST(suite, testEmptyStopList);
+
     return suite; 
 }
 // EOF

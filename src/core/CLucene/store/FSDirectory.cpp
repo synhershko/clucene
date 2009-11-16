@@ -355,11 +355,16 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		return LOCK_DIR;
 	}
 
-  FSDirectory::FSDirectory(const char* _path, const bool createDir, LockFactory* lockFactory):
+  FSDirectory::FSDirectory():
    Directory(),
    refCount(0),
    useMMap(LUCENE_USE_MMAP),
    filemode(_S_IWRITE | _S_IREAD) //default to user (only) writable index
+  {
+    this->lockFactory = NULL;
+  }
+
+  void FSDirectory::init(const char* _path, LockFactory* lockFactory)
   {
     directory = _path;
     bool doClearLockID = false;
@@ -379,38 +384,17 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     	lockFactory->setLockPrefix(NULL);
     }
 
-    if (createDir) {
-      create();
-    }
-
     if (!Misc::dir_Exists(directory.c_str())){
       char* err = _CL_NEWARRAY(char,19+directory.length()+1); //19: len of " is not a directory"
       strcpy(err,directory.c_str());
       strcat(err," is not a directory");
       _CLTHROWA_DEL(CL_ERR_IO, err );
     }
-
   }
 
 
   void FSDirectory::create(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-    struct cl_stat_t fstat;
-    if ( fileStat(directory.c_str(),&fstat) != 0 ) {
-	  	//todo: should construct directory using _mkdirs... have to write replacement
-      if ( _mkdir(directory.c_str()) == -1 ){
-			  char* err = _CL_NEWARRAY(char,27+directory.length()+1); //27: len of "Couldn't create directory: "
-			  strcpy(err,"Couldn't create directory: ");
-			  strcat(err,directory.c_str());
-			  _CLTHROWA_DEL(CL_ERR_IO, err );
-      }
-		}
-
-		if ( fileStat(directory.c_str(),&fstat) != 0 || !(fstat.st_mode & S_IFDIR) ){
-	      char tmp[1024];
-	      _snprintf(tmp,1024,"%s not a directory", directory.c_str());
-	      _CLTHROWA(CL_ERR_IO,tmp);
-		}
 
 	  //clear old files
 	  vector<string> files;
@@ -436,7 +420,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   }
 
   FSDirectory::~FSDirectory(){
-	  _CLDELETE( lockFactory );
+	  _CLLDELETE( lockFactory );
   }
 
   void FSDirectory::setFileMode(int mode){
@@ -474,27 +458,54 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     return directory.c_str();
   }
 
+  FSDirectory* FSDirectory::getDirectory(const char* file, bool create, LockFactory* lockFactory){
+    FSDirectory* dir = getDirectory(file, (LockFactory*)NULL);
+
+    // This is now deprecated (creation should only be done
+    // by IndexWriter):
+    if (create) {
+      dir->create();
+    }
+
+    return dir;
+  }
   //static
-  FSDirectory* FSDirectory::getDirectory(const char* file, const bool _create, LockFactory* lockFactory){
+  FSDirectory* FSDirectory::getDirectory(const char* _file, LockFactory* lockFactory){
     FSDirectory* dir = NULL;
 	{
-		if ( !file || !*file )
+		if ( !_file || !*_file )
 			_CLTHROWA(CL_ERR_IO,"Invalid directory");
-
+    
     char buf[CL_MAX_PATH];
-  	char* tmpdirectory = _realpath(file,buf);//set a realpath so that if we change directory, we can still function
-  	if ( !tmpdirectory || !*tmpdirectory ){
+  	char* file = _realpath(_file,buf);//set a realpath so that if we change directory, we can still function
+  	if ( !file || !*file ){
   		strncpy(buf,file, CL_MAX_PATH);
-      tmpdirectory = buf;
+      file = buf;
   	}
+    
+    struct cl_stat_t fstat;
+		if ( fileStat(file,&fstat) != 0 && !(fstat.st_mode & S_IFDIR) ){
+	      char tmp[1024];
+	      _snprintf(tmp,1024,"%s not a directory", file);
+	      _CLTHROWA(CL_ERR_IO,tmp);
+		}
+
+    if ( fileStat(file,&fstat) != 0 ) {
+	  	//todo: should construct directory using _mkdirs... have to write replacement
+      if ( _mkdir(file) == -1 ){
+        string err = "Couldn't create directory: ";
+        err += string(file);
+			  _CLTHROWA(CL_ERR_IO, err.c_str() );
+      }
+		}
+
 
 		SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
-		dir = DIRECTORIES.get(tmpdirectory);
+		dir = DIRECTORIES.get(file);
 		if ( dir == NULL  ){
-			dir = _CLNEW FSDirectory(tmpdirectory,_create,lockFactory);
+			dir = _CLNEW FSDirectory();
+      dir->init(file,lockFactory);
 			DIRECTORIES.put( dir->directory.c_str(), dir);
-		} else if ( _create ) {
-	    	dir->create();
 		} else {
 			if ( lockFactory != NULL && lockFactory != dir->getLockFactory() ) {
 				_CLTHROWA(CL_ERR_IO,"Directory was previously created with a different LockFactory instance, please pass NULL as the lockFactory instance and use setLockFactory to change it");
@@ -507,7 +518,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		}
 	}
 
-    return _CL_POINTER(dir);
+    return _CL_POINTER(dir); // TODO: Isn't this a double ref increment?
   }
 
   int64_t FSDirectory::fileModified(const char* name) const {

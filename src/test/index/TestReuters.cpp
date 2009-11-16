@@ -8,6 +8,8 @@
 #include "CLucene/util/dirent.h"
 #include "CLucene/util/CLStreams.h"
 #include "CLucene/LuceneThreads.h"
+#include "CLucene/search/Explanation.h"
+CL_NS_USE(search)
 
 #ifdef _CL_HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -18,49 +20,60 @@ using namespace std;
 
 CL_NS_USE(util)
 
-//an extremelly simple analyser. this eliminates differences
-//caused by differences in character classifications functions
-class ReutersTokenizer:public CharTokenizer {
-public:
-  // Construct a new LetterTokenizer.
-  ReutersTokenizer(CL_NS(util)::Reader* in):
-    CharTokenizer(in) {}
+	//an extremelly simple analyser. this eliminates differences
+	//caused by differences in character classifications functions
+	class ReutersTokenizer:public CharTokenizer {
+	public:
+		// Construct a new LetterTokenizer.
+		ReutersTokenizer(CL_NS(util)::Reader* in):
+		  CharTokenizer(in) {}
 
-  ~ReutersTokenizer(){}
-protected:
-  bool isTokenChar(const TCHAR c) const{
-    if ( c == ' ' || c == '\t' ||
-        c == '-' || c == '.' ||
-        c == '\n' || c == '\r' ||
-        c == ',' || c == '<' ||
-        c == '>' || c<=9){
-      return false;
-    }else
+	    ~ReutersTokenizer(){}
+	protected:
+		bool isTokenChar(const TCHAR c) const{
+			if ( c == ' ' || c == '\t' ||
+    		 c == '-' || c == '.' ||
+    		 c == '\n' || c == '\r' ||
+    		 c == ',' || c == '<' ||
+    		 c == '>' || c<=9){
+    			return false;
+			}else
+    			return true;
+		}
+		TCHAR normalize(const TCHAR c) const{
+			return c;
+		}
+	};
+
+	class ReutersAnalyzer: public Analyzer {
+     public:
+		 TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
+			return _CLNEW ReutersTokenizer(reader);
+		 }
+         TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+         {
+             Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
+             if (tokenizer == NULL) {
+                 tokenizer = _CLNEW ReutersTokenizer(reader);
+                 setPreviousTokenStream(tokenizer);
+             } else
+                 tokenizer->reset(reader);
+             return tokenizer;
+         }
+         virtual ~ReutersAnalyzer(){}
+  };
+
+  bool stringLowercaseCompare( const string &left, const string &right ){
+   for( string::const_iterator lit = left.begin(), rit = right.begin(); lit != left.end() && rit != right.end(); ++lit, ++rit )
+      if( tolower( *lit ) < tolower( *rit ) )
+         return true;
+      else if( tolower( *lit ) > tolower( *rit ) )
+         return false;
+   if( left.size() < right.size() )
       return true;
+   return false;
   }
-  TCHAR normalize(const TCHAR c) const{
-    return c;
-  }
-};
 
-class ReutersAnalyzer: public Analyzer {
-public:
-  TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader){
-    return _CLNEW ReutersTokenizer(reader);
-  }
-  ~ReutersAnalyzer(){}
-};
-
-bool stringLowercaseCompare( const string &left, const string &right ){
-  for( string::const_iterator lit = left.begin(), rit = right.begin(); lit != left.end() && rit != right.end(); ++lit, ++rit )
-    if( tolower( *lit ) < tolower( *rit ) )
-      return true;
-    else if( tolower( *lit ) > tolower( *rit ) )
-      return false;
-  if( left.size() < right.size() )
-    return true;
-  return false;
-}
 
 
 
@@ -80,7 +93,7 @@ void testReuters(CuTest *tc) {
   strcat(reuters_origdirectory, "/reuters-21578-index");
   CuAssert(tc,_T("Index does not exist"),Misc::dir_Exists(reuters_origdirectory));
 
-  FSDirectory* fsdir = FSDirectory::getDirectory(reuters_fsdirectory,true);
+  FSDirectory* fsdir = FSDirectory::getDirectory(reuters_fsdirectory);
   ReutersAnalyzer a;
 
   IndexWriter writer(fsdir,&a,true);
@@ -152,12 +165,12 @@ void threadSearch(IndexSearcher* searcher, const TCHAR* qry){
 
       if ( h->length() > 0 ){
         //check for explanation memory leaks...
-        Explanation expl1;
+        CL_NS(search)::Explanation expl1;
         searcher->explain(q, h->id(0), &expl1);
         TCHAR* tmp = expl1.toString();
         _CLDELETE_CARRAY(tmp);
         if ( h->length() > 1 ){ //do a second one just in case
-          Explanation expl2;
+          CL_NS(search)::Explanation expl2;
           searcher->explain(q, h->id(1), &expl2);
           tmp = expl2.toString();
           _CLDELETE_CARRAY(tmp);
@@ -209,8 +222,6 @@ CuSuite *testreuters(void)
 
   SUITE_ADD_TEST(suite, testReuters);
   SUITE_ADD_TEST(suite, testBySection);
-
-  //we still do this, but it'll be slow because the 'threads' will be run serially.
   SUITE_ADD_TEST(suite, testThreaded);
   return suite;
 }

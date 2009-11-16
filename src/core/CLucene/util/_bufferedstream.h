@@ -80,7 +80,7 @@ public:
 typedef BufferedStreamImpl<signed char> BufferedInputStreamImpl;
 
 /** Abstract class for a buffered stream of Unicode characters */
-typedef BufferedStreamImpl<wchar_t> BufferedReaderImpl;
+typedef BufferedStreamImpl<TCHAR> BufferedReaderImpl;
 
 
 template <class T>

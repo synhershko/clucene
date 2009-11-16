@@ -57,7 +57,7 @@ CL_NS_DEF2(analysis,standard)
     // Constructs a tokenizer for this Reader.
     StandardTokenizer(CL_NS(util)::BufferedReader* reader, bool deleteReader=false);
 
-    ~StandardTokenizer();
+    virtual ~StandardTokenizer();
 
     /** Returns the next token in the stream, or false at end-of-stream.
     * The returned token's type is set to an element of
@@ -80,6 +80,8 @@ CL_NS_DEF2(analysis,standard)
     
     // Reads CJK characters
     Token* ReadCJK(const TCHAR prev, Token* t);
+
+    virtual void reset(CL_NS(util)::Reader* _input);
   };
 
 CL_NS_END2

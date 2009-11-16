@@ -37,7 +37,8 @@ CL_CLASS_DEF(util,StringBuffer)
 
     int filemode;
 	protected:
-		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
+    FSDirectory();
+		void init(const char* path, LockFactory* lockFactory=NULL);
 	private:
     std::string directory;
 		int refCount;
@@ -72,6 +73,13 @@ CL_CLASS_DEF(util,StringBuffer)
 
 
     /**
+    * Deprecated, see getDirectory(file, lockFactory)
+    * Use IndexWriter's create flag, instead, to
+    * create a new index.
+    */
+		static _CL_DEPRECATED( getDirectory(file,lockFactory) )FSDirectory* getDirectory(const char* file, const bool create, LockFactory* lockFactory=NULL);
+
+    /**
     Returns the directory instance for the named location.
 
     Do not delete this instance, only use close, otherwise other instances
@@ -85,7 +93,7 @@ CL_CLASS_DEF(util,StringBuffer)
     @param create if true, create, or erase any existing contents.
     @return the FSDirectory for the named file.
     */
-		static FSDirectory* getDirectory(const char* file, const bool create=false, LockFactory* lockFactory=NULL);
+		static FSDirectory* getDirectory(const char* file, LockFactory* lockFactory=NULL);
 
 		/// Returns the time the named file was last modified.
 		int64_t fileModified(const char* name) const;

@@ -275,6 +275,7 @@ PrefixFilter::~PrefixFilter()
 }
 
 PrefixFilter::PrefixFilter( const PrefixFilter& copy ) : 
+	Filter(),
 	prefix( _CL_POINTER(copy.prefix) )
 {
 }

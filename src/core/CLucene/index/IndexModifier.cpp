@@ -29,7 +29,7 @@ IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer, bool crea
 }
 
 IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool create) {
-	Directory* dir = FSDirectory::getDirectory(dirName, create);
+	Directory* dir = FSDirectory::getDirectory(dirName);
 	init(dir, analyzer, create);
 }
 
