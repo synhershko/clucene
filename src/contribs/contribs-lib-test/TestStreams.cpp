@@ -7,6 +7,8 @@
 #include "test.h"
 #include "CLucene/util/gzipcompressstream.h"
 #include "CLucene/util/gzipinputstream.h"
+#include "CLucene/util/byteinputstream.h"
+#include "CLucene/util/streamarray.h"
 //#include "CLucene/util/_streambase.h"
 
 CL_NS_USE(store);
@@ -32,7 +34,8 @@ void testDocument(CuTest* tc) {
         GZipCompressInputStream* zipStream;
         zipStream = new GZipCompressInputStream(&stringReader2);
 
-        doc2.add(*new Field(_T("test"), zipStream, Field::STORE_YES));
+        ValueArray<signed char> stored = streamArray(zipStream);
+        doc2.add(*new Field(_T("test"), reinterpret_cast<ValueArray<uint8_t>*>(&stored), Field::STORE_YES));
         writer.addDocument(&doc2);
 
         //done
@@ -43,8 +46,8 @@ void testDocument(CuTest* tc) {
     IndexReader* reader = IndexReader::open(&ram);
     Document doc2;
     CLUCENE_ASSERT(reader->document(0, doc2));
-    InputStream* sb2 = doc2.getField(_T("test"))->streamValue();
-    GZipInputStream zip2(sb2, GZipInputStream::ZLIBFORMAT);
+    ByteInputStream sb2(reinterpret_cast<ValueArray<signed char> const*>(doc2.getField(_T("test"))->binaryValue()));
+    GZipInputStream zip2(&sb2, GZipInputStream::ZLIBFORMAT);
 
     int rd = zip2.read(tmp, 100000, 0);
     std::string str((const char*) tmp, rd);

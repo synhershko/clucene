@@ -24,8 +24,8 @@ DisjunctionSumScorer::DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* _
     scorerDocQueue(NULL),
     queueSize(-1),
     currentDoc(-1),
-    nrScorers(0),
     currentScore(-1.0f),
+    nrScorers(0),
     _nrMatchers(-1)
 {
 	if ( minimumNrMatchers <= 0 ) {

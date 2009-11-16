@@ -26,9 +26,11 @@ SET(test_files ./tests.cpp
 ./analysis/TestAnalysis.cpp
 ./analysis/TestAnalyzers.cpp
 ./debug/TestError.cpp
+./document/TestDateTools.cpp
 ./document/TestDocument.cpp
 ./document/TestNumberTools.cpp
 ./store/TestStore.cpp
+./search/TestBoolean.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
 ./search/TestQueries.cpp
@@ -37,6 +39,7 @@ SET(test_files ./tests.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
 ./index/TestIndexWriter.cpp
+./index/TestIndexModifier.cpp
 ./index/TestIndexReader.cpp
 ./index/TestThreading.cpp
 ./index/TestUtf8.cpp

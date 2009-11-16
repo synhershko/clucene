@@ -250,13 +250,13 @@ public:
         CLUCENE_ASSERT( getHitsLength(&searcher, _T("field"), _T("student"), 0.6f, 0) == 0);
 
         try {
-            Query* q = new FuzzyQuery(_CLNEW Term(_T("field"), _T("student")), 1.1f);
+            new FuzzyQuery(_CLNEW Term(_T("field"), _T("student")), 1.1f);
             CuFail(tc, _T("Expected IllegalArgumentException"));
         } catch (CLuceneError& /*e*/) {
             // expecting exception
         }
         try {
-            Query* q = new FuzzyQuery(_CLNEW Term(_T("field"), _T("student")), -0.1f);
+            new FuzzyQuery(_CLNEW Term(_T("field"), _T("student")), -0.1f);
             CuFail(tc, _T("Expected IllegalArgumentException"));
         } catch (CLuceneError& /*e*/) {
             // expecting exception

@@ -35,8 +35,10 @@ CL_CLASS_DEF(util,StringBuffer)
 		friend class FSDirectory::FSIndexOutput;
 		friend class FSDirectory::FSIndexInput;
 
+    int filemode;
 	protected:
-		FSDirectory(const char* path, const bool createDir, LockFactory* lockFactory=NULL);
+    FSDirectory();
+		void init(const char* path, LockFactory* lockFactory=NULL);
 	private:
     std::string directory;
 		int refCount;
@@ -71,6 +73,13 @@ CL_CLASS_DEF(util,StringBuffer)
 
 
     /**
+    * Deprecated, see getDirectory(file, lockFactory)
+    * Use IndexWriter's create flag, instead, to
+    * create a new index.
+    */
+		static _CL_DEPRECATED( getDirectory(file,lockFactory) )FSDirectory* getDirectory(const char* file, const bool create, LockFactory* lockFactory=NULL);
+
+    /**
     Returns the directory instance for the named location.
 
     Do not delete this instance, only use close, otherwise other instances
@@ -84,7 +93,7 @@ CL_CLASS_DEF(util,StringBuffer)
     @param create if true, create, or erase any existing contents.
     @return the FSDirectory for the named file.
     */
-		static FSDirectory* getDirectory(const char* file, const bool create=false, LockFactory* lockFactory=NULL);
+		static FSDirectory* getDirectory(const char* file, LockFactory* lockFactory=NULL);
 
 		/// Returns the time the named file was last modified.
 		int64_t fileModified(const char* name) const;
@@ -105,17 +114,17 @@ CL_CLASS_DEF(util,StringBuffer)
 		/// Renames an existing file in the directory.
 		void renameFile(const char* from, const char* to);
 
-      	/** Set the modified time of an existing file to now. */
-      	void touchFile(const char* name);
+    /** Set the modified time of an existing file to now. */
+    void touchFile(const char* name);
 
 		/// Creates a new, empty file in the directory with the given name.
 		///	Returns a stream writing this file.
 		IndexOutput* createOutput(const char* name);
-
-		  ///Decrease the ref-count to the directory by one. If
-		  ///the object is no longer needed, then the object is
-		  ///removed from the directory pool.
-      void close();
+  
+    ///Decrease the ref-count to the directory by one. If
+    ///the object is no longer needed, then the object is
+    ///removed from the directory pool.
+    void close();
 
 	  /**
 	  * If MMap is available, this can disable use of
@@ -145,6 +154,17 @@ CL_CLASS_DEF(util,StringBuffer)
 	  */
 	  static bool getDisableLocks();
 
+    /**
+    * Sets the file mode for new files. This is passed to new output streams
+    * and to the lock factory. The mode should be a valid mode for the 3rd
+    * parameter of the file open function (such as 0644)
+    */
+    void setFileMode(int mode);
+    
+    /**
+    * Gets the file mode for new files
+    */
+    int getFileMode();
   };
 
 CL_NS_END

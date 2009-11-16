@@ -28,56 +28,9 @@ CL_NS_DEF(search)
 	public:
 		MatchAllDocsQuery();
 		virtual ~MatchAllDocsQuery();
-	private:
 
-		class MatchAllScorer : public Scorer {
-			CL_NS(index)::IndexReader* reader;
-			int32_t id;
-			int32_t maxId;
-			float_t _score;
-
-		public:
-			MatchAllScorer(CL_NS(index)::IndexReader* _reader, Similarity* similarity, Weight* w);
-			virtual ~MatchAllScorer(){}
-
-			Explanation* explain(int32_t doc);
-
-			int32_t doc() const;
-
-			bool next();
-
-			float_t score();
-
-			bool skipTo(int32_t target);
-
-			virtual TCHAR* toString();
-		};
-
-
-		class MatchAllDocsWeight : public Weight {
-		private:
-			Similarity* similarity;
-			float_t queryWeight;
-			float_t queryNorm;
-			MatchAllDocsQuery* parentQuery;
-
-		public:
-			MatchAllDocsWeight(MatchAllDocsQuery* enclosingInstance, Searcher* searcher);
-
-			virtual TCHAR* toString();
-
-			Query* getQuery();
-
-			float_t getValue();
-
-			float_t sumOfSquaredWeights();
-
-			void normalize(float_t _queryNorm);
-
-			Scorer* scorer(CL_NS(index)::IndexReader* reader);
-
-			Explanation* explain(CL_NS(index)::IndexReader* reader, int32_t doc);
-		};
+		class MatchAllScorer;
+		class MatchAllDocsWeight;
 
 		/** Prints a query to a string, with <code>field</code> assumed to be the 
 		* default field and omitted.

@@ -265,6 +265,12 @@ protected:
   // can return null if norms aren't stored
   uint8_t* getNorms(const TCHAR* field);
 
+  /**
+   * Decrements the RC of the norms this reader is using
+   */
+  void decRefNorms();
+
+
   DirectoryIndexReader* doReopen(SegmentInfos* infos);
 
 public:
@@ -272,51 +278,30 @@ public:
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  static SegmentReader* get(SegmentInfo* si);
+  static SegmentReader* get(SegmentInfo* si, bool doOpenStores=true);
 
   /**
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  static SegmentReader* get(SegmentInfo* si, bool doOpenStores);
+  static SegmentReader* get(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores=true);
 
   /**
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  static SegmentReader* get(SegmentInfo* si, int32_t readBufferSize);
+  static SegmentReader* get(SegmentInfos* sis, SegmentInfo* si, bool closeDir);
 
   /**
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
-   */
-  static SegmentReader* get(SegmentInfo* si, int32_t readBufferSize, bool doOpenStores);
-
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
-  static SegmentReader* get(SegmentInfos* sis, SegmentInfo* si,
-      bool closeDir);
-
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
+   * @param readBufferSize defaults to BufferedIndexInput::BUFFER_SIZE
    */
   static SegmentReader* get(CL_NS(store)::Directory* dir, SegmentInfo* si,
       SegmentInfos* sis,
       bool closeDir, bool ownDir,
-      int32_t readBufferSize);
-
-  /**
-   * @throws CorruptIndexException if the index is corrupt
-   * @throws IOException if there is a low-level IO error
-   */
-  static SegmentReader* get(CL_NS(store)::Directory* dir, SegmentInfo* si,
-      SegmentInfos* sis,
-      bool closeDir, bool ownDir,
-      int32_t readBufferSize,
-      bool doOpenStores);
+      int32_t readBufferSize=-1,
+      bool doOpenStores=true);
 
 
 

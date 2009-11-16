@@ -27,7 +27,7 @@ const char* _LUCENE_BLANK_ASTRING="";
 
 wchar_t* lucene_wcsdup( const wchar_t* str ){
 	size_t len = wcslen(str);
-	wchar_t* ret = _CL_NEWARRAY( wchar_t, len + 1 );
+	wchar_t* ret = (wchar_t*)malloc( (len + 1) * sizeof(wchar_t) );
 	wcscpy(ret, str);
 	return ret;
 }

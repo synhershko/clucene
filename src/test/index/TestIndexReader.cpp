@@ -82,7 +82,7 @@ void assertReaderClosed(CuTest* tc, IndexReader* reader, bool checkSubReaders, b
 
     if (reader != NULL && reader->instanceOf(MultiReader::getClassName())) {
       const CL_NS(util)::ArrayBase<IndexReader*>& subReaders = *((MultiReader*) reader)->getSubReaders();
-      for (int i = 0; i < subReaders.length; i++) {
+      for (size_t i = 0; i < subReaders.length; i++) {
         assertReaderClosed(tc, subReaders[i], checkSubReaders, checkNormsClosed);
       }
     }
@@ -259,6 +259,7 @@ void testIndexReaderReopen(CuTest *tc){
   performDefaultIRTests(tc, index1, index2, index2B, defaultModifyIndexTest);
   defaultModifyIndexTestDir1 = NULL;
 
+  index1->close();
   _CLDELETE(index1);
   //_CLDELETE(index2);this one gets deleted...
   //_CLDELETE(index2B);

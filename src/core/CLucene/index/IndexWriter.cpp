@@ -73,18 +73,19 @@ public:
 IndexWriter::~IndexWriter(){
   if (writeLock != NULL) {
     writeLock->release();                        // release write lock
-    _CLDELETE(writeLock);
+    _CLLDELETE(writeLock);
   }
-  _CLDELETE(segmentInfos);
-  _CLDELETE(mergingSegments);
-  _CLDELETE(pendingMerges);
-  _CLDELETE(runningMerges);
-  _CLDELETE(mergeExceptions);
-  _CLDELETE(segmentsToOptimize);
-  _CLDELETE(mergeScheduler);
-  _CLDELETE(mergePolicy);
-  _CLDELETE(deleter);
-  _CLDELETE(docWriter);
+  _CLLDELETE(segmentInfos);
+  _CLLDELETE(mergingSegments);
+  _CLLDELETE(pendingMerges);
+  _CLLDELETE(runningMerges);
+  _CLLDELETE(mergeExceptions);
+  _CLLDELETE(segmentsToOptimize);
+  _CLLDELETE(mergeScheduler);
+  _CLLDELETE(mergePolicy);
+  _CLLDELETE(deleter);
+  _CLLDELETE(docWriter);
+  if (bOwnsDirectory) _CLLDECDELETE(directory);
   delete _internal;
 }
 
@@ -148,19 +149,19 @@ int32_t IndexWriter::getTermIndexInterval() {
   return termIndexInterval;
 }
 
-IndexWriter::IndexWriter(const char* path, Analyzer* a, bool create){
-  init(FSDirectory::getDirectory(path), a, create, true, (IndexDeletionPolicy*)NULL, true);
+IndexWriter::IndexWriter(const char* path, Analyzer* a, bool create):bOwnsDirectory(true){
+    init(FSDirectory::getDirectory(path), a, create, true, (IndexDeletionPolicy*)NULL, true);
 }
 
-IndexWriter::IndexWriter(Directory* d, Analyzer* a, bool create, bool closeDir){
+IndexWriter::IndexWriter(Directory* d, Analyzer* a, bool create, bool closeDir):bOwnsDirectory(false){
   init(d, a, create, closeDir, NULL, true);
 }
 
-IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown){
+IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown):bOwnsDirectory(false){
   init(d, a, closeDirOnShutdown, deletionPolicy, autoCommit);
 }
 
-IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown){
+IndexWriter::IndexWriter(Directory* d, bool autoCommit, Analyzer* a, bool create, IndexDeletionPolicy* deletionPolicy, bool closeDirOnShutdown):bOwnsDirectory(false){
   init(d, a, create, closeDirOnShutdown, deletionPolicy, autoCommit);
 }
 
@@ -172,7 +173,8 @@ void IndexWriter::init(Directory* d, Analyzer* a, bool closeDir, IndexDeletionPo
   }
 }
 
-void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool closeDir, IndexDeletionPolicy* deletionPolicy, const bool autoCommit){
+void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool closeDir,
+                       IndexDeletionPolicy* deletionPolicy, const bool autoCommit){
   this->_internal = new Internal(this);
 
   this->termIndexInterval = IndexWriter::DEFAULT_TERM_INDEX_INTERVAL;
@@ -192,7 +194,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool 
   this->commitLockTimeout =0;
   this->closeDir = closeDir;
   this->commitPending = this->closed = this->closing = false;
-  directory = d;
+  directory = _CL_POINTER(d);
   analyzer = a;
   this->infoStream = defaultInfoStream;
   setMessageID();
@@ -542,9 +544,8 @@ void IndexWriter::closeInternal(bool waitForMerges) {
 
     if (closeDir){
       directory->close();
-      _CLDELETE(directory);
+ 	  _CLDECDELETE(directory);
     }
-
     if (writeLock != NULL) {
       writeLock->release();                          // release write lock
       _CLDELETE(writeLock);

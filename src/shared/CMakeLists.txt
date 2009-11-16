@@ -42,6 +42,8 @@ find_package(ZLIB)
 IF ( ZLIB_FOUND )
   SET ( EXTRA_LIBS ${EXTRA_LIBS} ${ZLIB_LIBRARY} )
   INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ELSE ( ZLIB_FOUND )
+  INCLUDE_DIRECTORIES( ${clucene-ext_SOURCE_DIR}/zlib )
 ENDIF ( ZLIB_FOUND )
 
 ########################################################################
@@ -217,7 +219,7 @@ IF ( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
 ENDIF( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
 SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_LIBS_INIT}" )
 
-#define if we have pthreads with recusrive capabilities
+#define if we have pthreads with recursive capabilities
 CHECK_PTHREAD_RECURSIVE(_CL_HAVE_PTHREAD _CL_HAVE_PTHREAD_MUTEX_RECURSIVE)
 
 #see if we can hide all symbols by default...
@@ -256,7 +258,12 @@ ENDIF ( CMAKE_ANSI_FOR_SCOPE )
 #check that all these definitions are set, or fail...
 MUSTDEFINE_VAR("HAVE_TYPE_INT8_T;HAVE_TYPE_UINT8_T;HAVE_TYPE_INT16_T;HAVE_TYPE_UINT16_T;HAVE_TYPE_UINT16_T;" )
 MUSTDEFINE_VAR("HAVE_TYPE_INT32_T;HAVE_TYPE_UINT32_T;HAVE_TYPE_INT64_T;HAVE_TYPE_UINT64_T;HAVE_TYPE_SIZE_T;HAVE_TYPE_CL_STAT_T")
-MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS;HAVE_TYPE__TIMEB")
+MUSTDEFINE_VAR("_CL_HAVE_TRY_BLOCKS")
+
+#must have timeb OR GETTIMEOFDAY
+IF ( NOT HAVE_TYPE__TIMEB AND NOT _CL_HAVE_FUNCTION_GETTIMEOFDAY )
+        MESSAGE( FATAL_ERROR "timeb or gettimeofday must be available." )
+ENDIF ( NOT HAVE_TYPE__TIMEB AND NOT _CL_HAVE_FUNCTION_GETTIMEOFDAY )
 
 #now write out our configuration....
 CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/clucene-config.h.cmake ${clucene-shared_BINARY_DIR}/CLucene/clucene-config.h)
@@ -266,6 +273,7 @@ CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/_clucene-config.h.cmake ${cl
 SOURCE_GROUP("config" ./CLucene/config/*)
 SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
+SOURCE_GROUP("zlib" ./zlib/*)
 
 MACRO (GET_SHARED_FILES result)
     IF ( "" STREQUAL "${ARGV2}" )
@@ -290,18 +298,19 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/util/Misc.cpp
       ${rel}/CLucene/util/dirent.cpp
     )
+
     IF ( NOT ZLIB_FOUND )
       SET(${result} ${${result}}
-        ${rel}/CLucene/util/zlib/adler32.c
-        ${rel}/CLucene/util/zlib/compress.c
-        ${rel}/CLucene/util/zlib/crc32.c
-        ${rel}/CLucene/util/zlib/deflate.c
-        ${rel}/CLucene/util/zlib/gzio.c
-        ${rel}/CLucene/util/zlib/inffast.c
-        ${rel}/CLucene/util/zlib/inflate.c
-        ${rel}/CLucene/util/zlib/inftrees.c
-        ${rel}/CLucene/util/zlib/trees.c
-        ${rel}/CLucene/util/zlib/zutil.c
+        ${clucene-ext_SOURCE_DIR}/zlib/adler32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/compress.c
+        ${clucene-ext_SOURCE_DIR}/zlib/crc32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/deflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/gzio.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inffast.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inftrees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/trees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/zutil.c
       )
     ENDIF ( NOT ZLIB_FOUND )
 ENDMACRO (GET_SHARED_FILES)

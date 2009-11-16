@@ -126,6 +126,8 @@ CL_NS_DEF(store)
   void IndexOutput::writeString(const string& s ) {
     writeString(s.c_str(),s.length());
   }
+
+#ifdef _UCS2
   void IndexOutput::writeString(const char* s, const int32_t length ) {
   	TCHAR* buf = _CL_NEWARRAY(TCHAR,length+1);
   	STRCPY_AtoT(buf,s,length);
@@ -133,7 +135,8 @@ CL_NS_DEF(store)
   		writeString(buf,length);
   	}_CLFINALLY ( _CLDELETE_CARRAY(buf); )
   }
-  
+#endif
+
   void IndexOutput::writeString(const TCHAR* s, const int32_t length ) {
     writeVInt(length);
     writeChars(s, length);

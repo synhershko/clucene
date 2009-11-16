@@ -14,22 +14,22 @@ CL_NS_USE(util)
 CL_NS_DEF(analysis)
 
 struct Analyzer::Internal{
-	CL_NS(util)::ThreadLocal<TokenStream*,
-		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
+	CL_NS(util)::ThreadLocal<void*,
+		CL_NS(util)::Deletor::Object<void> >* tokenStreams;
 };
 Analyzer::Analyzer(){
 	_internal = new Internal;
-	_internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
-		CL_NS(util)::Deletor::Object<TokenStream> >;
+	_internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<void*,
+		CL_NS(util)::Deletor::Object<void> >;
 }
 Analyzer::~Analyzer(){
-	_CLDELETE(_internal->tokenStreams);
+	_CLLDELETE(_internal->tokenStreams);
 	delete _internal;
 }
-TokenStream* Analyzer::getPreviousTokenStream() {
+void* Analyzer::getPreviousTokenStream() {
 	return _internal->tokenStreams->get();
 }
-void Analyzer::setPreviousTokenStream(TokenStream* obj) {
+void Analyzer::setPreviousTokenStream(void* obj) {
 	_internal->tokenStreams->set(obj);
 }
 TokenStream* Analyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
@@ -257,17 +257,17 @@ TokenFilter::TokenFilter(TokenStream* in, bool deleteTS):
 {
 }
 TokenFilter::~TokenFilter(){
-	close();
+    if ( deleteTokenStream && input!=NULL ) {input->close();_CLLDELETE( input );}
+    //close(); -- ISH 04/11/09
 }
 
 // Close the input TokenStream.
 void TokenFilter::close() {
     if ( input != NULL ){
 		input->close();
-        if ( deleteTokenStream )
-			_CLDELETE( input );
+        //if ( deleteTokenStream ) _CLDELETE( input ); -- ISH 04/11/09
     }
-    input = NULL;
+    //input = NULL; -- ISH 04/11/09
 }
 
 

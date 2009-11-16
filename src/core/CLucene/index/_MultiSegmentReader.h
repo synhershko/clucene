@@ -180,8 +180,7 @@ public:
   bool next();
 
   //Returns a pointer to the current term of the set of enumerations
-  Term* term();
-  Term* term(bool pointer);
+  Term* term(bool pointer=true);
 
   //Returns the document frequency of the current term in the set
   int32_t docFreq() const;

@@ -29,7 +29,7 @@ IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer, bool crea
 }
 
 IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool create) {
-	Directory* dir = FSDirectory::getDirectory(dirName, create);
+	Directory* dir = FSDirectory::getDirectory(dirName);
 	init(dir, analyzer, create);
 }
 
@@ -45,7 +45,11 @@ void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) 
 	this->mergeFactor = IndexWriter::DEFAULT_MERGE_FACTOR;
 
 	this->directory = _CL_POINTER(directory);
-	createIndexReader();
+	if (create) {
+		createIndexWriter(create);
+	} else {
+		createIndexReader();
+	}
 	open = true;
 }
 
@@ -59,13 +63,13 @@ void IndexModifier::assureOpen() const{
 	}
 }
 
-void IndexModifier::createIndexWriter() {
+void IndexModifier::createIndexWriter(bool create) {
 	if (indexWriter == NULL) {
 		if (indexReader != NULL) {
 			indexReader->close();
 			_CLDELETE(indexReader);
 		}
-		indexWriter = _CLNEW IndexWriter(directory, analyzer, false);
+		indexWriter = _CLNEW IndexWriter(directory, analyzer, create);
 		indexWriter->setUseCompoundFile(useCompoundFile);
 		//indexWriter->setMaxBufferedDocs(maxBufferedDocs);
 		indexWriter->setMaxFieldLength(maxFieldLength);

@@ -234,8 +234,9 @@ class CLUCENE_EXPORT IndexWriter:LUCENE_BASE {
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
   void init(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, bool create, bool closeDir, IndexDeletionPolicy* deletionPolicy, bool autoCommit);
 
-  // where this index resides
-  CL_NS(store)::Directory* directory;
+	// where this index resides
+	CL_NS(store)::Directory* directory;
+  bool bOwnsDirectory;
 
 
   int32_t getSegmentsCounter();
@@ -266,27 +267,27 @@ public:
   DEFINE_MUTEX(THIS_LOCK)
   DEFINE_CONDITION(THIS_WAIT_CONDITION)
 
-  // Release the write lock, if needed.
-  SegmentInfos* segmentInfos;
+	// Release the write lock, if needed.
+	SegmentInfos* segmentInfos;
 
-  // Release the write lock, if needed.
-  ~IndexWriter();
+	// Release the write lock, if needed.
+	virtual ~IndexWriter();
 
-  /**
-   *  The Java implementation of Lucene silently truncates any tokenized
-   *  field if the number of tokens exceeds a certain threshold.  Although
-   *  that threshold is adjustable, it is easy for the client programmer
-   *  to be unaware that such a threshold exists, and to become its
-   *  unwitting victim.
-   *  CLucene implements a less insidious truncation policy.  Up to
-   *  DEFAULT_MAX_FIELD_LENGTH tokens, CLucene behaves just as JLucene
-   *  does.  If the number of tokens exceeds that threshold without any
-   *  indication of a truncation preference by the client programmer,
-   *  CLucene raises an exception, prompting the client programmer to
-   *  explicitly set a truncation policy by adjusting maxFieldLength.
-   */
-  LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_MAX_FIELD_LENGTH = 10000);
-  LUCENE_STATIC_CONSTANT(int32_t, FIELD_TRUNC_POLICY__WARN = -1);
+	/**
+	*  The Java implementation of Lucene silently truncates any tokenized
+	*  field if the number of tokens exceeds a certain threshold.  Although
+	*  that threshold is adjustable, it is easy for the client programmer
+	*  to be unaware that such a threshold exists, and to become its
+	*  unwitting victim.
+	*  CLucene implements a less insidious truncation policy.  Up to
+	*  DEFAULT_MAX_FIELD_LENGTH tokens, CLucene behaves just as JLucene
+	*  does.  If the number of tokens exceeds that threshold without any
+	*  indication of a truncation preference by the client programmer,
+	*  CLucene raises an exception, prompting the client programmer to
+	*  explicitly set a truncation policy by adjusting maxFieldLength.
+	*/
+	LUCENE_STATIC_CONSTANT(int32_t, DEFAULT_MAX_FIELD_LENGTH = 10000);
+	LUCENE_STATIC_CONSTANT(int32_t, FIELD_TRUNC_POLICY__WARN = -1);
 
   /**
    * Returns the maximum number of terms that will be

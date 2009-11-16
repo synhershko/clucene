@@ -46,7 +46,7 @@ CL_NS_DEF ( util )
 	ret = true;
 
     //the function that is called when the thread shutsdown
-    void pthread_threadlocal_destructor(void* _holder){
+    void pthread_threadlocal_destructor(void* /*_holder*/){
         _ThreadLocal::UnregisterCurrentThread();
     }
     //the key initialiser function

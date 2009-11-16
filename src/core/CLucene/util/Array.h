@@ -288,6 +288,27 @@ public:
 	}
 };
 
+/** An array that uses _CLDECDELETE for deletion */
+template<typename T>
+class CLUCENE_INLINE_EXPORT RefCountArray: public ArrayBase<T>{
+public:
+  RefCountArray():ArrayBase<T>(){}
+  RefCountArray(T* values, size_t length):ArrayBase<T>(values,length){}
+  RefCountArray(size_t length):ArrayBase<T>(length){}
+
+  void deleteValues(){
+    if ( this->values == NULL )
+        return;
+    this->deleteArray();
+    }
+  void deleteValue(T v){
+    _CLDECDELETE(v);
+  } //nothing to do...
+  virtual ~RefCountArray(){
+    deleteValues();
+  }
+};
+
 
 CL_NS_END
 #endif

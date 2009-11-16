@@ -48,7 +48,7 @@ CL_NS_DEF(search)
      static size_t getMaxClauseCount();
 
      /** Set the maximum number of clauses permitted. */
-     static void setMaxClauseCount(size_t maxClauseCount);
+     static void setMaxClauseCount(const size_t maxClauseCount);
 
 		 /** Adds a clause to a boolean query.  Clauses may be:
 		 * <ul>

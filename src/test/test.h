@@ -36,6 +36,7 @@ CL_NS_USE2(analysis,standard)
 
 CuSuite *testatomicupdates(void);
 CuSuite *testindexwriter(void);
+CuSuite *testindexmodifier(void);
 CuSuite *testindexreader(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
@@ -57,6 +58,8 @@ CuSuite *testutf8(void);
 CuSuite *testreuters(void);
 CuSuite *testdocument(void);
 CuSuite *testNumberTools(void);
+CuSuite *testDateTools(void);
+CuSuite *testBoolean(void);
 
 class English{
 public:

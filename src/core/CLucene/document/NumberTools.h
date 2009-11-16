@@ -66,7 +66,7 @@ public:
      *             if the input does not parse (it was not a String returned by
      *             longToString()).
      */
-    static int64_t stringToLong(TCHAR* str);
+    static int64_t stringToLong(const TCHAR* str);
 
 	~NumberTools();
 

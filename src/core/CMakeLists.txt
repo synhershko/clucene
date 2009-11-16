@@ -84,14 +84,14 @@ SET(clucene_core_Files
 	./CLucene/index/SkipListWriter.cpp
 	./CLucene/index/IndexFileDeleter.cpp
 	./CLucene/index/SegmentReader.cpp
-  ./CLucene/index/DirectoryIndexReader.cpp
+	./CLucene/index/DirectoryIndexReader.cpp
 	./CLucene/index/TermVectorWriter.cpp
 	./CLucene/index/IndexReader.cpp
 	./CLucene/index/SegmentTermPositions.cpp
 	./CLucene/index/SegmentMerger.cpp
 	./CLucene/index/IndexWriter.cpp
-  ./CLucene/index/MultiReader.cpp
-  ./CLucene/index/MultiSegmentReader.cpp
+	./CLucene/index/MultiReader.cpp
+	./CLucene/index/MultiSegmentReader.cpp
 	./CLucene/index/Payload.cpp
 	./CLucene/index/SegmentTermEnum.cpp
 	./CLucene/index/TermInfo.cpp
@@ -141,6 +141,7 @@ SET(clucene_core_Files
 	./CLucene/search/DateFilter.cpp
 	./CLucene/search/MatchAllDocsQuery.cpp
 	./CLucene/search/MultiPhraseQuery.cpp
+	./CLucene/search/ConstantScoreQuery.cpp
 )
 
 #if USE_SHARED_OBJECT_FILES then we link directly to the object files (means rebuilding them for the core)

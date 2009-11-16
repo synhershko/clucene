@@ -17,45 +17,42 @@ CL_NS_USE(util)
 CL_NS_USE(document)
 
 
-RangeFilter::RangeFilter( const TCHAR* fieldName, const TCHAR* lowerTerm, const TCHAR* upperTerm, bool includeLower, bool includeUpper )
+RangeFilter::RangeFilter( const TCHAR* fieldName, const TCHAR* lowerTerm, const TCHAR* upperTerm,
+                         bool includeLower, bool includeUpper ) : field(NULL), lowerValue(NULL), upperValue(NULL)
 {
+    if (NULL == lowerTerm && NULL == upperTerm) {
+        _CLTHROWT(CL_ERR_IllegalArgument, _T("At least one value must be non-null"));
+    }
+    if (includeLower && NULL == lowerTerm) {
+        _CLTHROWT(CL_ERR_IllegalArgument, _T("The lower bound must be non-null to be inclusive"));
+    }
+    if (includeUpper && NULL == upperTerm) {
+        _CLTHROWT(CL_ERR_IllegalArgument, _T("The upper bound must be non-null to be inclusive"));
+    }
+
 	this->field = STRDUP_TtoT(fieldName);
 	if ( lowerTerm != NULL )
 		this->lowerValue = STRDUP_TtoT(lowerTerm);
-	else
-		this->lowerValue = NULL;
 	if ( upperTerm != NULL )
 		this->upperValue = STRDUP_TtoT(upperTerm);
-	else
-		this->upperValue = NULL;
 	this->includeLower = includeLower;
 	this->includeUpper = includeUpper;
 }
 
-
-/**
- * Constructs a filter for field <code>fieldName</code> matching
- * less than or equal to <code>upperTerm</code>.
- */
-RangeFilter* RangeFilter::Less( TCHAR* fieldName, TCHAR* upperTerm ) {
-	return new RangeFilter( fieldName, NULL, upperTerm, false, true );
+RangeFilter* RangeFilter::Less( const TCHAR* fieldName, const TCHAR* upperTerm ) {
+	return _CLNEW RangeFilter( fieldName, NULL, upperTerm, false, true );
 }
 
-
-/**
-* Constructs a filter for field <code>fieldName</code> matching
-* more than or equal to <code>lowerTerm</code>.
-*/
-RangeFilter* RangeFilter::More( TCHAR* fieldName, TCHAR* lowerTerm ) {
-	return new RangeFilter( fieldName, lowerTerm, NULL, true, false );
+RangeFilter* RangeFilter::More( const TCHAR* fieldName, const TCHAR* lowerTerm ) {
+	return _CLNEW RangeFilter( fieldName, lowerTerm, NULL, true, false );
 }
 
 
 RangeFilter::~RangeFilter()
 {
-	_CLDELETE_CARRAY( lowerValue );
-	_CLDELETE_CARRAY( field );
-	_CLDELETE_CARRAY( upperValue );
+    _CLDELETE_LCARRAY( field );
+	_CLDELETE_LCARRAY( lowerValue );
+	_CLDELETE_LCARRAY( upperValue );
 }
 
 
@@ -72,18 +69,6 @@ RangeFilter::RangeFilter( const RangeFilter& copy ) :
 Filter* RangeFilter::clone() const {
 	return _CLNEW RangeFilter(*this );
 }
-
-
-TCHAR* RangeFilter::toString()
-{
-	size_t len = (field ? _tcslen(field) : 0) + (lowerValue ? _tcslen(lowerValue) : 0) + (upperValue ? _tcslen(upperValue) : 0) + 8;
-	TCHAR* ret = _CL_NEWARRAY( TCHAR, len );
-	ret[0] = 0;
-	_sntprintf( ret, len, _T("%s: [%s-%s]"), field, (lowerValue?lowerValue:_T("")), (upperValue?upperValue:_T("")) );
-	
-	return ret;
-}
-
 
 /** Returns a BitSet with true for documents which should be permitted in
 search results, and false for those that should not. */
@@ -107,6 +92,13 @@ BitSet* RangeFilter::bits( IndexReader* reader )
 	
 	TermDocs* termDocs = reader->termDocs();
 	
+  #define CLEANUP \
+    _CLDECDELETE( term ); \
+    termDocs->close(); \
+    _CLVDELETE( termDocs ); \
+    enumerator->close(); \
+    _CLDELETE( enumerator )
+    
 	try
 	{
 		do
@@ -138,17 +130,24 @@ BitSet* RangeFilter::bits( IndexReader* reader )
 			_CLDECDELETE( term );
 		}
 		while( enumerator->next() );
-	}
-	_CLFINALLY
-	(
-		_CLDECDELETE( term );
-		termDocs->close();
-		_CLVDELETE( termDocs );
-		enumerator->close();
-		_CLDELETE( enumerator );
-	);
+	}catch(CLuceneError& err){
+    _CLDELETE(bts);
+    CLEANUP;
+    throw err;
+  }
+  CLEANUP;
 	
 	return bts;
+}
+
+TCHAR* RangeFilter::toString()
+{
+	size_t len = (field ? _tcslen(field) : 0) + (lowerValue ? _tcslen(lowerValue) : 0) + (upperValue ? _tcslen(upperValue) : 0) + 8;
+	TCHAR* ret = _CL_NEWARRAY( TCHAR, len );
+	ret[0] = 0;
+	_sntprintf( ret, len, _T("%s: [%s-%s]"), field, (lowerValue?lowerValue:_T("")), (upperValue?upperValue:_T("")) );
+	
+	return ret;
 }
 
 CL_NS_END

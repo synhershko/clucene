@@ -30,11 +30,6 @@ public:
 
 class CLUCENE_EXPORT LuceneVoidBase{
 	public:
-	#ifdef _DEBUG
-		//a compile time check to make sure that _CLDELETE and _CLDECDELETE is being
-		//used correctly.
-		int dummy__see_mem_h_for_details; 
-	#endif
         virtual ~LuceneVoidBase(){};
 };
 

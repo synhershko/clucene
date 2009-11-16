@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-#include "_zutil.h"
+#include "zutil.h"
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
 #  define NO_GZCOMPRESS

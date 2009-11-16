@@ -33,7 +33,7 @@
 #include "CLucene/util/dirent.h" //if we have dirent, then the native one will be used
 
 //for zlib...
-#include "zlib/_zlib.h"
+#include "zlib.h"
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #  include <fcntl.h>
 #  include <io.h>

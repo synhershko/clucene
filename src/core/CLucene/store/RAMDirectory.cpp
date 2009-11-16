@@ -427,11 +427,13 @@ CL_NS_DEF(store)
       Directory(),files( _CLNEW FileMap(true,true) )
    {
       this->sizeInBytes = 0;
-      Directory* fsdir = FSDirectory::getDirectory(dir,false);
+      Directory* fsdir = FSDirectory::getDirectory(dir);
       try{
          _copyFromDir(fsdir,false);
-      }_CLFINALLY(fsdir->close();_CLDECDELETE(fsdir););
-
+      }_CLFINALLY(
+        fsdir->close();
+        _CLDECDELETE(fsdir);
+      );
    }
 
   bool RAMDirectory::fileExists(const char* name) const {
@@ -452,7 +454,7 @@ CL_NS_DEF(store)
   }
 
 
-  bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t bufferSize) {
+  bool RAMDirectory::openInput(const char* name, IndexInput*& ret, CLuceneError& error, int32_t /*bufferSize*/) {
     SCOPED_LOCK_MUTEX(files_mutex);
     RAMFile* file = files->get((char*)name);
     if (file == NULL) {
@@ -460,7 +462,7 @@ CL_NS_DEF(store)
 		  return false;
     }
     ret = _CLNEW RAMInputStream( file );
-	return true;
+	  return true;
   }
 
   void RAMDirectory::close(){

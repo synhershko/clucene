@@ -109,7 +109,9 @@ CL_NS_DEF(search)
       return maxClauseCount;
    }
 
-   void BooleanQuery::setMaxClauseCount(size_t maxClauseCount){
+   void BooleanQuery::setMaxClauseCount(const size_t maxClauseCount){
+       if (maxClauseCount < 1)
+           _CLTHROWA(CL_ERR_IllegalArgument, "maxClauseCount must be >= 1");
 	   BooleanQuery::maxClauseCount = maxClauseCount;
    }
 
@@ -340,8 +342,10 @@ CL_NS_DEF(search)
         Scorer* subScorer = w->scorer(reader);
         if (subScorer != NULL)
           result->add(subScorer, c->isRequired(), c->isProhibited());
-        else if (c->isRequired())
+        else if (c->isRequired()){
+          _CLDELETE(result);
           return NULL;
+        }
       }
 
       return result;
@@ -367,7 +371,6 @@ CL_NS_DEF(search)
 					sumExpl->addDetail(e);
 					sum += e->getValue();
 					coord++;
-					e = NULL; //prevent e from being deleted
 				} else {
 					StringBuffer buf(100);
 					buf.append(_T("match on prohibited clause ("));
@@ -395,6 +398,8 @@ CL_NS_DEF(search)
 				r->addDetail(e);
 				sumExpl->addDetail(r);
 				fail = true;
+			}else{
+			  _CLDELETE(e);
 			}
 		}
 		if (fail) {

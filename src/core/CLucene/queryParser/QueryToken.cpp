@@ -12,11 +12,11 @@ CL_NS_DEF(queryParser)
 
 QueryToken::QueryToken() :
     kind(0),
-    image(NULL),
     beginLine(0),
     beginColumn(0),
     endLine(0),
     endColumn(0),
+    image(NULL),
     next(NULL),
     specialToken(NULL)
 {
