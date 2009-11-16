@@ -101,7 +101,6 @@ void runThreadingTests(CuTest* tc, Directory& directory){
   }
   writer.flush();
 
-
   //read using multiple threads...
   atomicSearchThreads = _CL_NEWARRAY(_LUCENE_THREADID_TYPE, 4);
   atomicSearchThreads[0] = _LUCENE_THREAD_CREATE(&atomicIndexTest, &writer);
