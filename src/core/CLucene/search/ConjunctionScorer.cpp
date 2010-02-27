@@ -23,7 +23,7 @@ CL_NS_DEF(search)
 		lastDoc(-1)
 	{
     this->scorers = _CLNEW CL_NS(util)::ObjectArray<Scorer>(_scorers->size());
-    _scorers->toArray(this->scorers->values, false);
+    _scorers->toArray(this->scorers->values);
     coord = getSimilarity()->coord(this->scorers->length, this->scorers->length);
   }
   ConjunctionScorer::ConjunctionScorer(Similarity* similarity, const CL_NS(util)::ArrayBase<Scorer*>* _scorers):

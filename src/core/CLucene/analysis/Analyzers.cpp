@@ -537,6 +537,7 @@ Token* KeywordTokenizer::next(Token* token){
     token->clear();
     TCHAR* termBuffer=token->termBuffer();
     const TCHAR* readBuffer=NULL;
+
     while (true) {
       rd = input->read(readBuffer, 1, cl_min(bufferSize, token->bufferLength()-upto) );
       if (rd == -1)

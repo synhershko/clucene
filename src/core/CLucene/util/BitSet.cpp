@@ -189,7 +189,7 @@ BitSet* BitSet::clone() const {
           return -1;
 
       while (true) {
-          if ( (bits[fromIndex >> 3]) & (1 << (fromIndex & 7)) != 0)
+          if ( (bits[fromIndex >> 3] & (1 << (fromIndex & 7))) != 0)
               return fromIndex;
           if (++fromIndex == _size)
               return -1;
