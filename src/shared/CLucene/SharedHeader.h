@@ -171,8 +171,6 @@
 
 
 //todo: put this logic in cmake
-//TODO: allow to deprecate functions for external use only (and not warning when used internally for backward
-//      compatiability)
 #if defined(_MSC_VER)
 	#if _MSC_FULL_VER >= 140050320
 	    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated(_Text))
