@@ -95,7 +95,7 @@ CL_NS_DEF(search)
 			HitDoc* oldLast = last;
 			remove(last);				  // flush last
 
-			_CLDELETE( oldLast->doc );
+			_CLLDELETE( oldLast->doc );
 			oldLast->doc = NULL;
 		}
 
