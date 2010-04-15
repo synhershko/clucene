@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 #include <CLucene/search/MatchAllDocsQuery.h>
+#include <stdio.h>
 
 //checks if a merged index finds phrases correctly
 void testIWmergePhraseSegments(CuTest *tc){

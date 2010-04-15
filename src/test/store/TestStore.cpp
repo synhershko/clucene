@@ -8,6 +8,7 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 
 void StoreTest(CuTest *tc,int32_t count, bool ram){

@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include <stdio.h>
 
   void assertAnalyzersTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
    Reader* reader = _CLNEW StringReader(input);

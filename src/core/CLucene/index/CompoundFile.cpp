@@ -122,11 +122,9 @@ void CSIndexInput::close(){
 
 
 CompoundFileReader::CompoundFileReader(Directory* dir, const char* name, int32_t _readBufferSize):
-	entries(_CLNEW EntriesType(true,true))
+	readBufferSize(_readBufferSize), directory(dir), stream(NULL), entries(_CLNEW EntriesType(true,true))
 {
-   directory = dir;
    fileName = STRDUP_AtoA(name);
-   readBufferSize = _readBufferSize;
 
    bool success = false;
 

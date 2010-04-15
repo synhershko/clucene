@@ -26,7 +26,8 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, int32_t _readBufferSize, int32_t _docStoreOffset, int32_t size):
-	cloneableFieldsStream(NULL), fieldsStream(NULL), indexStream(NULL), fieldInfos(fn), closed(false)
+	fieldInfos(fn), cloneableFieldsStream(NULL), fieldsStream(NULL), indexStream(NULL),
+        numTotalDocs(0),_size(0), closed(false),docStoreOffset(0)
 {
 //Func - Constructor
 //Pre  - d contains a valid reference to a Directory
