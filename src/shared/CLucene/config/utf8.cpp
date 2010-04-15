@@ -236,7 +236,7 @@ size_t lucene_utf8charlen(const unsigned char c)
 #ifndef _ASCII
 //convert unicode string to a utf8 string
 std::string lucene_wcstoutf8string(const wchar_t* str, size_t strlen){
-  int i = 0;
+  size_t i = 0;
   std::string result;
   char p[6];
 
