@@ -150,7 +150,7 @@ int32_t IndexWriter::getTermIndexInterval() {
 }
 
 IndexWriter::IndexWriter(const char* path, Analyzer* a, bool create):bOwnsDirectory(true){
-    init(FSDirectory::getDirectory(path), a, create, true, (IndexDeletionPolicy*)NULL, true);
+    init(FSDirectory::getDirectory(path, create), a, create, true, (IndexDeletionPolicy*)NULL, true);
 }
 
 IndexWriter::IndexWriter(Directory* d, Analyzer* a, bool create, bool closeDir):bOwnsDirectory(false){
