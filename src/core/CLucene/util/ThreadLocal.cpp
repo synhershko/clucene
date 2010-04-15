@@ -124,6 +124,8 @@ _ThreadLocal::_ThreadLocal ( CL_NS ( util ) ::AbstractDeletor* _deletor ) :
 
 _ThreadLocal::~_ThreadLocal()
 {
+	setNull();
+	UnregisterCurrentThread();
 	delete _internal;
 }
 
