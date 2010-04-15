@@ -9,6 +9,7 @@
 #include "CLucene/index/_SegmentHeader.h"
 #include "CLucene/index/_MultiSegmentReader.h"
 #include "CLucene/index/MultiReader.h"
+#include <stdio.h>
 
 
 _LUCENE_THREADID_TYPE* atomicSearchThreads = NULL;

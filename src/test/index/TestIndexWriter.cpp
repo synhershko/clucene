@@ -5,7 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include <iostream>
+#include <stdio.h>
 
 //checks if a merged index finds phrases correctly
 void testIWmergePhraseSegments(CuTest *tc){

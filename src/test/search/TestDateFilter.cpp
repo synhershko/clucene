@@ -5,6 +5,7 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include <stdio.h>
 
 	void testBefore(CuTest *tc) {
 	// create an index
