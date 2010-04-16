@@ -5,12 +5,11 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include <stdio.h>
 
 	void testBefore(CuTest *tc) {
 	// create an index
 		char fsdir[CL_MAX_PATH];
-		sprintf(fsdir,"%s/%s",cl_tempDir, "dfindex");
+		_snprintf(fsdir,CL_MAX_PATH,"%s/%s",cl_tempDir, "dfindex");
 		
 		FSDirectory* indexStore = FSDirectory::getDirectory( fsdir);
 		Analyzer* a = _CLNEW SimpleAnalyzer();

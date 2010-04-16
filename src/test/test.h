@@ -19,6 +19,7 @@
 #include "CLucene/index/TermVector.h"
 #include "CLucene/queryParser/MultiFieldQueryParser.h"
 #include <string.h>
+#include <stdio.h>
 
 #define LUCENE_INT64_MAX_SHOULDBE _ILONGLONG(0x7FFFFFFFFFFFFFFF)
 #define LUCENE_INT64_MIN_SHOULDBE (-LUCENE_INT64_MAX_SHOULDBE - _ILONGLONG(1) )
