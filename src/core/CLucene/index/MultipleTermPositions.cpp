@@ -120,7 +120,7 @@ MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, const CL_
 	}
 
 	TermPositions** tps = _CL_NEWARRAY(TermPositions*, terms->length+1); // i == tpsSize
-	termPositions.toArray(tps, true);
+	termPositions.toArray_nullTerminated(tps);
 
 	_termPositionsQueue = _CLNEW TermPositionsQueue(tps,terms->length);
 }
