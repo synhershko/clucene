@@ -15,22 +15,21 @@ CL_NS_DEF(debug)
 //memory debugging tracking and/or reference counting
 class CLUCENE_EXPORT LuceneBase{
 public:
-	DEFINE_MUTEX(THIS_LOCK)
 	_LUCENE_ATOMIC_INT __cl_refcount;
 	LuceneBase(){
-		__cl_refcount=1;
+		_LUCENE_ATOMIC_INT_SET(__cl_refcount,1);
 	}
 	inline int __cl_getref(){
-		return __cl_refcount;
+		return _LUCENE_ATOMIC_INT_GET(__cl_refcount);
 	}
-  inline int __cl_addref(){ return _LUCENE_ATOMIC_INC(&__cl_refcount, THIS_LOCK); }
-  inline int __cl_decref(){ return _LUCENE_ATOMIC_DEC(&__cl_refcount, THIS_LOCK); }
+  inline int __cl_addref(){ return _LUCENE_ATOMIC_INC(&__cl_refcount); }
+  inline int __cl_decref(){ return _LUCENE_ATOMIC_DEC(&__cl_refcount); }
   virtual ~LuceneBase(){};
 };
 
 class CLUCENE_EXPORT LuceneVoidBase{
 	public:
-        virtual ~LuceneVoidBase(){};
+    virtual ~LuceneVoidBase(){};
 };
 
 #if defined(LUCENE_ENABLE_REFCOUNT)

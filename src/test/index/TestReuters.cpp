@@ -154,12 +154,11 @@ void testBySection(CuTest* tc){
 
 #define threadsCount 10
 
-StandardAnalyzer threadAnalyzer;
-void threadSearch(IndexSearcher* searcher, const TCHAR* qry){
+void threadSearch(IndexSearcher* searcher, const TCHAR* qry, StandardAnalyzer* threadAnalyzer){
   Query* q = NULL;
   Hits* h = NULL;
   try{
-    q = QueryParser::parse(qry , _T("contents"), &threadAnalyzer);
+    q = QueryParser::parse(qry , _T("contents"), threadAnalyzer);
     if ( q != NULL ){
       h = searcher->search( q );
 
@@ -183,12 +182,13 @@ void threadSearch(IndexSearcher* searcher, const TCHAR* qry){
   );
 }
 _LUCENE_THREAD_FUNC(threadedSearcherTest, arg){
-  IndexSearcher* searcher = (IndexSearcher*)arg;
+  IndexSearcher* searcher = (IndexSearcher*)(((void**)arg)[0]);
+  StandardAnalyzer* threadAnalyzer = (StandardAnalyzer*)(((void**)arg)[1]);
 
   for ( int i=0;i<100;i++ ){
-    threadSearch(searcher, _T("test") );
-    threadSearch(searcher, _T("reuters") );
-    threadSearch(searcher, _T("data") );
+    threadSearch(searcher, _T("test"), threadAnalyzer );
+    threadSearch(searcher, _T("reuters"), threadAnalyzer );
+    threadSearch(searcher, _T("data"), threadAnalyzer );
   }
   _LUCENE_THREAD_FUNC_RETURN(0);
 }
@@ -201,8 +201,14 @@ void testThreaded(CuTest* tc){
   _LUCENE_THREADID_TYPE threads[threadsCount];
 
   int i;
-  for ( i=0;i<threadsCount;i++ )
-    threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, &searcher);
+  StandardAnalyzer threadAnalyzer;
+  void* args[2];
+  args[0] = &searcher;
+  args[1] = &threadAnalyzer;
+
+  for ( i=0;i<threadsCount;i++ ){
+    threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, args);
+  }
 
   CL_NS(util)::Misc::sleep(3000);
 

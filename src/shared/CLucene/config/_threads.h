@@ -34,8 +34,8 @@
 
     	    __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
 
-          __declspec(dllimport) long __cdecl _InterlockedIncrement(long volatile*);
-          __declspec(dllimport) long __cdecl _InterlockedDecrement(long volatile*);
+          __declspec(dllimport) long __stdcall InterlockedIncrement(long volatile*);
+          __declspec(dllimport) long __stdcall InterlockedDecrement(long volatile*);
     	  
     	    typedef struct  _SECURITY_ATTRIBUTES
           {

@@ -23,7 +23,7 @@ CL_NS_DEF(index)
   * <p/>
 	* It uses &lt;segment&gt;.fdt and &lt;segment&gt;.fdx; files.
 	*/
-	class FieldsReader {
+	class FieldsReader :LUCENE_BASE{
 	private:
 		const FieldInfos* fieldInfos;
 
