@@ -169,8 +169,7 @@ CL_NS_DEF(index)
 		//delete the previous enumerated term
 		Term* tmp=NULL;
 		if ( prev != NULL ){
-			int32_t usage = prev->__cl_refcount;
-			if ( usage > 1 ){
+			if ( _LUCENE_ATOMIC_INT_GET(prev->__cl_refcount) > 1 ){
 				_CLDECDELETE(prev); //todo: tune other places try and delete its term 
 			}else
 				tmp = prev; //we are going to re-use this term
@@ -258,7 +257,7 @@ CL_NS_DEF(index)
 		position = p;
 
 		//finalize the current term
-		if ( _term == NULL || _term->__cl_refcount > 1 ){
+		if ( _term == NULL || _LUCENE_ATOMIC_INT_GET(_term->__cl_refcount) > 1 ){
 			_CLDECDELETE(_term);
 			//Get a pointer from t and increase the reference counter of t
 			_term = _CLNEW Term; //cannot use reference, because TermInfosReader uses non ref-counted array

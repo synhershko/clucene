@@ -212,7 +212,7 @@ CL_NS_USE(util)
 		mutex->lock();
 
 		//determine if we are about to delete the handle...
-		bool dounlock = ( handle->__cl_refcount > 1 );
+		bool dounlock = ( _LUCENE_ATOMIC_INT_GET(handle->__cl_refcount) > 1 );
 
     //decdelete (deletes if refcount is down to 0
 		_CLDECDELETE(handle);
