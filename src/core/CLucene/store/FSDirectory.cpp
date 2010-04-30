@@ -479,7 +479,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     char buf[CL_MAX_PATH];
   	char* file = _realpath(_file,buf);//set a realpath so that if we change directory, we can still function
   	if ( !file || !*file ){
-  		strncpy(buf,file, CL_MAX_PATH);
+  		strncpy(buf, _file, CL_MAX_PATH);
       file = buf;
   	}
     
