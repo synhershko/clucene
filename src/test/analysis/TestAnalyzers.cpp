@@ -1,4 +1,4 @@
-/*------------------------------------------------------------------------------
+﻿/*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
 * 
 * Distributable under the terms of either the Apache License (Version 2.0) or 
@@ -125,7 +125,8 @@
 
    void testEmptyStopList(CuTest *tc)
    {
-       StandardAnalyzer a((const TCHAR**)_T("\0"));
+       const TCHAR* stopWords = { NULL };
+       StandardAnalyzer a(&stopWords);
        RAMDirectory ram;
        IndexWriter writer(&ram, &a, true);
        
