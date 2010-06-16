@@ -40,16 +40,28 @@ int main( int32_t argc, char** argv ){
 	uint64_t str = Misc::currentTimeMillis();
 	try{
 
-		const char* ndx = "d:/git_lucene232/testindex";
-    IndexFiles("d:\\git_lucene232\\lucene2_3_2\\src\\test\\data\\reuters-21578", ndx, true);
-		//getStats(ndx);
-		SearchFiles(ndx);
+    	printf("Location of text files to be indexed: ");
+    	char files[250];
+		char* tmp = fgets(files,250,stdin);
+		if ( tmp == NULL ) return 1;
+		files[strlen(files)-1] = 0;
+		
+		printf("Location to store the clucene index: ");
+		char ndx[250];
+		tmp = fgets(ndx,250,stdin);
+		if ( tmp == NULL ) return 1;
+		ndx[strlen(ndx)-1] = 0;
 
-	}catch(CLuceneError& err){
-		printf("Error: %s\n", err.what());
-  }catch(...){
-		printf("Unknown error\n");
-	}
+		IndexFiles(files,ndx,true);
+        getStats(ndx);
+        SearchFiles(ndx);
+        //DeleteFiles(ndx);
+
+    }catch(CLuceneError& err){
+        printf("Error: %s\n", err.what());
+    }catch(...){
+        printf("Unknown error\n");
+    }
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug

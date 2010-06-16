@@ -31,10 +31,9 @@ void SearchFiles(const char* index){
   IndexReader* reader = IndexReader::open(index);
   while (true) {
 		printf("Enter query string: ");
-		//char* tmp = fgets(line,80,stdin);
-		//if ( tmp == NULL ) continue;
-		//line[strlen(line)-1]=0;
-    strcpy(line,"test");
+		char* tmp = fgets(line,80,stdin);
+		if ( tmp == NULL ) continue;
+		line[strlen(line)-1]=0;
 
     IndexReader* newreader = reader->reopen();
     if ( newreader != reader ){
@@ -71,7 +70,6 @@ void SearchFiles(const char* index){
 		_CLDELETE(q);
 
 	  s.close();
-break;
 	}
   _CLDELETE(reader);
 	//delete line;
