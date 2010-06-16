@@ -191,13 +191,13 @@ int32_t IndexModifier::getMergeFactor() {
 }
 
 void IndexModifier::close() {
-    if (!open)
-        return;
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+    if (!open)
+        _CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	if (indexWriter != NULL) {
 		indexWriter->close();
 		_CLDELETE(indexWriter);
-	} else {
+	} else if (indexReader != NULL) {
 		indexReader->close();
 		_CLDELETE(indexReader);
 	}
