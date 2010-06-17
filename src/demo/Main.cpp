@@ -4,7 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "stdafx.h"
+#include "CLucene/StdHeader.h"
+#include "CLucene/_clucene-config.h"
+
 #include "CLucene.h"
 #include "CLucene/util/Misc.h"
 
@@ -17,13 +19,14 @@
 #endif
 #endif
 
+#include <stdio.h>
 #include <iostream>
 #include <string.h>
 
 using namespace std;
 using namespace lucene::util;
 
-void DeleteFiles(const char* dir);
+//void DeleteFiles(const char* dir);
 void IndexFiles(const char* path, const char* target, const bool clearIndex);
 void SearchFiles(const char* index);
 void getStats(const char* directory);
@@ -66,8 +69,7 @@ int main( int32_t argc, char** argv ){
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug
 
-
-	//Debuggin techniques:
+	//Debugging techniques:
 	//For msvc, use this for breaking on memory leaks: 
 	//	_crtBreakAlloc
 	//for linux, use valgrind
