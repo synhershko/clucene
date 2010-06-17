@@ -16,6 +16,7 @@ unittest tests[] = {
     {"numbertools", testNumberTools},
     {"debug", testdebug},
     {"indexwriter", testindexwriter},
+    {"indexmodifier", testIndexModifier},
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
     {"datetools", testDateTools},

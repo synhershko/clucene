@@ -18,7 +18,10 @@
 #include "CLucene/store/Lock.h"
 #include "CLucene/index/TermVector.h"
 #include "CLucene/queryParser/MultiFieldQueryParser.h"
+
+#include <iostream>
 #include <string.h>
+using namespace std;
 
 #define LUCENE_INT64_MAX_SHOULDBE _ILONGLONG(0x7FFFFFFFFFFFFFFF)
 #define LUCENE_INT64_MIN_SHOULDBE (-LUCENE_INT64_MAX_SHOULDBE - _ILONGLONG(1) )
@@ -36,6 +39,7 @@ CL_NS_USE2(analysis,standard)
 
 CuSuite *testatomicupdates(void);
 CuSuite *testindexwriter(void);
+CuSuite *testIndexModifier(void);
 CuSuite *testindexreader(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);

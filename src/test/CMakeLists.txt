@@ -38,6 +38,7 @@ SET(test_files ./tests.cpp
 ./search/TestSort.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
+./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
 ./index/TestThreading.cpp
