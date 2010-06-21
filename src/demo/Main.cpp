@@ -4,7 +4,9 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-#include "stdafx.h"
+#include "CLucene/StdHeader.h"
+#include "CLucene/_clucene-config.h"
+
 #include "CLucene.h"
 #include "CLucene/util/Misc.h"
 
@@ -17,13 +19,14 @@
 #endif
 #endif
 
+#include <stdio.h>
 #include <iostream>
 #include <string.h>
 
 using namespace std;
 using namespace lucene::util;
 
-void DeleteFiles(const char* dir);
+//void DeleteFiles(const char* dir);
 void IndexFiles(const char* path, const char* target, const bool clearIndex);
 void SearchFiles(const char* index);
 void getStats(const char* directory);
@@ -40,22 +43,33 @@ int main( int32_t argc, char** argv ){
 	uint64_t str = Misc::currentTimeMillis();
 	try{
 
-		const char* ndx = "d:/git_lucene232/testindex";
-    IndexFiles("d:\\git_lucene232\\lucene2_3_2\\src\\test\\data\\reuters-21578", ndx, true);
-		//getStats(ndx);
-		SearchFiles(ndx);
+    	printf("Location of text files to be indexed: ");
+    	char files[250];
+		char* tmp = fgets(files,250,stdin);
+		if ( tmp == NULL ) return 1;
+		files[strlen(files)-1] = 0;
+		
+		printf("Location to store the clucene index: ");
+		char ndx[250];
+		tmp = fgets(ndx,250,stdin);
+		if ( tmp == NULL ) return 1;
+		ndx[strlen(ndx)-1] = 0;
 
-	}catch(CLuceneError& err){
-		printf("Error: %s\n", err.what());
-  }catch(...){
-		printf("Unknown error\n");
-	}
+		IndexFiles(files,ndx,true);
+        getStats(ndx);
+        SearchFiles(ndx);
+        //DeleteFiles(ndx);
+
+    }catch(CLuceneError& err){
+        printf("Error: %s\n", err.what());
+    }catch(...){
+        printf("Unknown error\n");
+    }
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug
 
-
-	//Debuggin techniques:
+	//Debugging techniques:
 	//For msvc, use this for breaking on memory leaks: 
 	//	_crtBreakAlloc
 	//for linux, use valgrind

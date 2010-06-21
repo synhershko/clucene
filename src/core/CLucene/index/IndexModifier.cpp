@@ -11,6 +11,7 @@
 #include "IndexReader.h"
 #include "CLucene/store/FSDirectory.h"
 #include "CLucene/document/Document.h"
+#include "MergeScheduler.h"
 
 CL_NS_DEF(index)
 CL_NS_USE(util)
@@ -28,19 +29,21 @@ IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool creat
 }
 
 void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) {
-	indexWriter = NULL;
+    indexWriter = NULL;
 	indexReader = NULL;
-	this->analyzer = analyzer;
 	open = false;
+    infoStream = NULL;
 
 	useCompoundFile = true;
 	this->maxBufferedDocs = IndexWriter::DEFAULT_MAX_BUFFERED_DOCS;
 	this->maxFieldLength = IndexWriter::DEFAULT_MAX_FIELD_LENGTH;
 	this->mergeFactor = IndexWriter::DEFAULT_MERGE_FACTOR;
 
-	this->directory = _CL_POINTER(directory);
-	createIndexReader();
-	open = true;
+    this->directory = _CL_POINTER(directory);
+    SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+    this->analyzer = analyzer;
+	indexWriter = _CLNEW IndexWriter(directory, analyzer, create);
+    open = true;
 }
 
 IndexModifier::~IndexModifier(){
@@ -60,10 +63,16 @@ void IndexModifier::createIndexWriter() {
 			_CLDELETE(indexReader);
 		}
 		indexWriter = _CLNEW IndexWriter(directory, analyzer, false);
+        // IndexModifier cannot use ConcurrentMergeScheduler
+        // because it synchronizes on the directory which can
+        // cause deadlock
+        indexWriter->setMergeScheduler(_CLNEW SerialMergeScheduler());
+        indexWriter->setInfoStream(infoStream);
 		indexWriter->setUseCompoundFile(useCompoundFile);
-		//indexWriter->setMaxBufferedDocs(maxBufferedDocs);
+        if (maxBufferedDocs != IndexWriter::DISABLE_AUTO_FLUSH)
+            indexWriter->setMaxBufferedDocs(maxBufferedDocs);
 		indexWriter->setMaxFieldLength(maxFieldLength);
-		//indexWriter->setMergeFactor(mergeFactor);
+		indexWriter->setMergeFactor(mergeFactor);
 	}
 }
 
@@ -191,13 +200,13 @@ int32_t IndexModifier::getMergeFactor() {
 }
 
 void IndexModifier::close() {
-    if (!open)
-        return;
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+    if (!open)
+        _CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	if (indexWriter != NULL) {
 		indexWriter->close();
 		_CLDELETE(indexWriter);
-	} else {
+	} else if (indexReader != NULL) {
 		indexReader->close();
 		_CLDELETE(indexReader);
 	}

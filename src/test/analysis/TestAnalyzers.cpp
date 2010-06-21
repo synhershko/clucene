@@ -167,18 +167,18 @@
 
   void testISOLatin1AccentFilter(CuTest *tc){
 	  TCHAR str[200];
-	  _tcscpy(str, _T("Des mot cl\xe9s \xc0 LA CHA\xceNE \xc0 \xc1 \xc2 ") //Des mot cl�s � LA CHA�NE � � � 
-						_T("\xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf") //� � � � � � � � � � � � � 
-						_T(" \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd8 \xde \xd9 \xda \xdb") //� � � � � � � � � � � � � 
-						_T(" \xdc \xdd \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 ") //� � � � � � � � � � � 
-						_T("\xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 ") //� � � � � � � � � � � � � 
-						_T("\xf8 \xdf \xfe \xf9 \xfa \xfb \xfc \xfd \xff") //� � � � � � � � �
+	  _tcscpy(str, _T("Des mot cl\xe9s \xc0 LA CHA\xceNE \xc0 \xc1 \xc2 ") //Des mot cl?s ? LA CHA?NE ? ? ? 
+						_T("\xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf") //? ? ? ? ? ? ? ? ? ? ? ? ? 
+						_T(" \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd8 \xde \xd9 \xda \xdb") //? ? ? ? ? ? ? ? ? ? ? ? ? 
+						_T(" \xdc \xdd \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 ") //? ? ? ? ? ? ? ? ? ? ? 
+						_T("\xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 ") //? ? ? ? ? ? ? ? ? ? ? ? ? 
+						_T("\xf8 \xdf \xfe \xf9 \xfa \xfb \xfc \xfd \xff") //? ? ? ? ? ? ? ? ?
 						_T("      ") ); //room for extra latin stuff
 	#ifdef _UCS2
 		int p = _tcslen(str)-6;
-		str[p+1] = 0x152;// �
-		str[p+3] = 0x153;// � 
-		str[p+5] = 0x178;//� 
+		str[p+1] = 0x152;// ?
+		str[p+3] = 0x153;// ? 
+		str[p+5] = 0x178;//? 
 	#endif
 	
 	StringReader reader(str);

@@ -412,6 +412,7 @@ std::ostream* IndexWriter::getDefaultInfoStream() {
   return IndexWriter::defaultInfoStream;
 }
 
+//TODO: infoStream - unicode
 void IndexWriter::setInfoStream(std::ostream* infoStream) {
   ensureOpen();
   this->infoStream = infoStream;
