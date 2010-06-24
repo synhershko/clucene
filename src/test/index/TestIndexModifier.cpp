@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
-#include "CLucene\index\IndexModifier.h"
+#include "CLucene/index/IndexModifier.h"
 
 CL_NS_USE(store)
 CL_NS_USE(index)
@@ -80,3 +80,4 @@ CuSuite *testIndexModifier(void)
 
   return suite;
 }
+
