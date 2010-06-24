@@ -258,15 +258,84 @@ void testHashingBug(CuTest *tc){
   _CL_DECREF(&dir);
 }
 
+void testExceptionFromTokenStream(CuTest *tc) {
+
+    class TokenFilterWithException : public TokenFilter
+    {
+    private:
+        int count;
+
+    public:
+        TokenFilterWithException(TokenStream * in) : 
+          TokenFilter(in, true), count(0) {};
+
+          Token* next(Token * pToken) {
+              if (count++ == 5) {
+                  _CLTHROWA(CL_ERR_IO, "TokenFilterWithException testing IO exception");         
+              }
+              return input->next(pToken);
+          };
+    };
+
+    class AnalyzerWithException : public Analyzer
+    {
+    public:
+        TokenStream* tokenStream(const TCHAR * fieldName, Reader * reader) {
+            return _CLNEW TokenFilterWithException(_CLNEW WhitespaceTokenizer(reader));
+        };
+    };
+
+    RAMDirectory * dir = _CLNEW RAMDirectory();
+    AnalyzerWithException a;
+    IndexWriter * writer = _CLNEW IndexWriter(dir, &a, true);
+
+    Document* doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd ee ff gg hh ii"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    try {
+        writer->addDocument(doc);
+        CuFail(tc, _T("did not hit expected exception"));
+    } catch (CLuceneError& e) {
+    }
+    _CLLDELETE(doc);
+
+    // Make sure we can add another normal document
+    doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    // Make sure we can add another normal document
+    doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+
+    writer->close();
+    _CLLDELETE(writer);
+    _CLLDELETE(doc);
+
+    /*
+    TODO:
+    IndexReader reader = IndexReader.open(dir);
+    assertEquals(reader.docFreq(new Term("content", "aa")), 3);
+    assertEquals(reader.docFreq(new Term("content", "gg")), 0);
+    reader.close();
+    */
+
+    dir->close();
+    _CLLDELETE(dir);
+}
 
 CuSuite *testindexwriter(void)
 {
     CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
+
     SUITE_ADD_TEST(suite, testHashingBug);
     SUITE_ADD_TEST(suite, testAddIndexes);
     SUITE_ADD_TEST(suite, testIWmergeSegments1);
     SUITE_ADD_TEST(suite, testIWmergeSegments2);
     SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
+
+    SUITE_ADD_TEST(suite, testExceptionFromTokenStream);    // JIRA issue 1072
 
   return suite;
 }
