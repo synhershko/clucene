@@ -102,7 +102,7 @@ private:
 public:
 	///\param Parent must be a segment reader
 	SegmentTermPositions(const SegmentReader* Parent);
-	~SegmentTermPositions();
+	virtual ~SegmentTermPositions();
 
 private:
 	void seek(const TermInfo* ti, Term* term);
@@ -126,7 +126,7 @@ protected:
 	void skipProx(const int64_t proxPointer, const int32_t _payloadLength);
 
 private:
-	void skipPositions( int32_t n );
+	void skipPositions( const int32_t n );
 	void skipPayload();
 
 	// It is not always neccessary to move the prox pointer

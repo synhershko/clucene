@@ -51,11 +51,7 @@ void SegmentTermPositions::close() {
 }
 
 int32_t SegmentTermPositions::nextPosition() {
-    /* todo: DSR:CL_BUG: Should raise exception if proxCount == 0 at the
-    ** beginning of this method, as in
-    **   if (--proxCount == 0) throw ...;
-    ** The JavaDocs for TermPositions.nextPosition declare this constraint,
-    ** but CLucene doesn't enforce it. */
+    // perform lazy skips if neccessary
 	lazySkip();
     proxCount--;
     return position += readDeltaPosition();
@@ -107,7 +103,7 @@ void SegmentTermPositions::skipProx(const int64_t proxPointer, const int32_t _pa
     needToLoadPayload = false;
 }
 
-void SegmentTermPositions::skipPositions(int32_t n) {
+void SegmentTermPositions::skipPositions(const int32_t n) {
 	for ( int32_t f = n; f > 0; f-- ) {		// skip unread positions
 		readDeltaPosition();
 		skipPayload();
