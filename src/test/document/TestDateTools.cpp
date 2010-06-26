@@ -6,7 +6,7 @@
 ------------------------------------------------------------------------------*/
 #include "test.h"
 
-void assertEquals(CuTest* tc, const TCHAR* isoFormat, int64_t d){
+void assertDateTimeEquals(CuTest* tc, const TCHAR* isoFormat, int64_t d){
     TCHAR* tmp = DateTools::getISOFormat(d);
     int res = _tcscmp(isoFormat, tmp);
     _CLDELETE_LCARRAY(tmp);
@@ -15,13 +15,13 @@ void assertEquals(CuTest* tc, const TCHAR* isoFormat, int64_t d){
 
 void testStringToDate(CuTest *tc) {
     int64_t d = DateTools::stringToTime(_T("2004"));
-    assertEquals(tc, _T("2004-01-01 00:00:00:000"), d);
+    assertDateTimeEquals(tc, _T("2004-01-01 00:00:00:000"), d);
     d = DateTools::stringToTime(_T("20040705"));
-    assertEquals(tc, _T("2004-07-05 00:00:00:000"), d);
+    assertDateTimeEquals(tc, _T("2004-07-05 00:00:00:000"), d);
     d = DateTools::stringToTime(_T("200407050910"));
-    assertEquals(tc, _T("2004-07-05 09:10:00:000"), d);
+    assertDateTimeEquals(tc, _T("2004-07-05 09:10:00:000"), d);
     d = DateTools::stringToTime(_T("20040705091055990"));
-    assertEquals(tc, _T("2004-07-05 09:10:55:990"), d);
+    assertDateTimeEquals(tc, _T("2004-07-05 09:10:55:990"), d);
 
     try {
         d = DateTools::stringToTime(_T("97"));    // no date
@@ -45,37 +45,37 @@ void testDateAndTimetoString(CuTest* tc) {
 
     dateString = DateTools::timeToString(cal, DateTools::YEAR_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("2004"), dateString) == 0 );
-    assertEquals(tc, _T("2004-01-01 00:00:00:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-01-01 00:00:00:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::MONTH_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("200402"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-01 00:00:00:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-01 00:00:00:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::DAY_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("20040203"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-03 00:00:00:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-03 00:00:00:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::HOUR_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("2004020322"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-03 22:00:00:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-03 22:00:00:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::MINUTE_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("200402032208"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-03 22:08:00:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-03 22:08:00:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::SECOND_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("20040203220856"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-03 22:08:56:000"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-03 22:08:56:000"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     dateString = DateTools::timeToString(cal, DateTools::MILLISECOND_FORMAT);
     CLUCENE_ASSERT( _tcscmp(_T("20040203220856333"), dateString) == 0 );
-    assertEquals(tc, _T("2004-02-03 22:08:56:333"), DateTools::stringToTime(dateString));
+    assertDateTimeEquals(tc, _T("2004-02-03 22:08:56:333"), DateTools::stringToTime(dateString));
     _CLDELETE_LCARRAY(dateString);
 
     /*
@@ -86,12 +86,12 @@ void testDateAndTimetoString(CuTest* tc) {
         23, 9, 51);       // hour, minute, second
     cal.set(Calendar.MILLISECOND, 444);
     dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.MILLISECOND);
-    assertEquals("19610305230951444", dateString);
-    assertEquals("1961-03-05 23:09:51:444", isoFormat(DateTools.stringToDate(dateString)));
+    assertDateTimeEquals("19610305230951444", dateString);
+    assertDateTimeEquals("1961-03-05 23:09:51:444", isoFormat(DateTools.stringToDate(dateString)));
 
     dateString = DateTools.dateToString(cal.getTime(), DateTools.Resolution.HOUR);
-    assertEquals("1961030523", dateString);
-    assertEquals("1961-03-05 23:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
+    assertDateTimeEquals("1961030523", dateString);
+    assertDateTimeEquals("1961-03-05 23:00:00:000", isoFormat(DateTools.stringToDate(dateString)));
 
     // timeToString:
     cal.set(1970, 0, 1, // year=1970, month=january, day=1
@@ -99,14 +99,14 @@ void testDateAndTimetoString(CuTest* tc) {
     cal.set(Calendar.MILLISECOND, 0);
     dateString = DateTools.timeToString(cal.getTime().getTime(),
         DateTools.Resolution.MILLISECOND);
-    assertEquals("19700101000000000", dateString);
+    assertDateTimeEquals("19700101000000000", dateString);
 
     cal.set(1970, 0, 1, // year=1970, month=january, day=1
         1, 2, 3); // hour, minute, second
     cal.set(Calendar.MILLISECOND, 0);
     dateString = DateTools.timeToString(cal.getTime().getTime(),
         DateTools.Resolution.MILLISECOND);
-    assertEquals("19700101010203000", dateString);
+    assertDateTimeEquals("19700101010203000", dateString);
     */
 } 
 

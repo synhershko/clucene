@@ -57,7 +57,7 @@ public:
 	}
 };
 
-void assertEquals(CuTest *tc,const TCHAR* result, Query* q) {
+void assertQueryEquals(CuTest *tc,const TCHAR* result, Query* q) {
 	if ( q == NULL )
 		return;
 
@@ -82,11 +82,11 @@ void assertStopQueryEquals(CuTest *tc, const TCHAR* qtxt, const TCHAR* expectedR
 	MultiFieldQueryParser mfqp(fields, a);
 
 	Query *q = mfqp.parse(qtxt);
-	assertEquals(tc, expectedRes, q);
+	assertQueryEquals(tc, expectedRes, q);
 
 	q = MultiFieldQueryParser::parse(qtxt, reinterpret_cast<const TCHAR**>(&fields),
 		reinterpret_cast<const uint8_t*>(&occur), a);
-	assertEquals(tc, expectedRes, q);
+	assertQueryEquals(tc, expectedRes, q);
 	_CLDELETE(a);
 }
 
@@ -108,54 +108,54 @@ void testMFQPSimple(CuTest *tc) {
 	MultiFieldQueryParser mfqp(fields, a);
 
 	Query *q = mfqp.parse(_T("one"));
-	assertEquals(tc, _T("b:one t:one"), q);
+	assertQueryEquals(tc, _T("b:one t:one"), q);
 
 	q = mfqp.parse(_T("one two"));
-	assertEquals(tc, _T("(b:one t:one) (b:two t:two)"),q);
+	assertQueryEquals(tc, _T("(b:one t:one) (b:two t:two)"),q);
 
 	q = mfqp.parse(_T("+one +two"));
-	assertEquals(tc, _T("+(b:one t:one) +(b:two t:two)"), q);
+	assertQueryEquals(tc, _T("+(b:one t:one) +(b:two t:two)"), q);
 
 	q = mfqp.parse(_T("+one -two -three"));
-	assertEquals(tc, _T("+(b:one t:one) -(b:two t:two) -(b:three t:three)"), q);
+	assertQueryEquals(tc, _T("+(b:one t:one) -(b:two t:two) -(b:three t:three)"), q);
 
 	q = mfqp.parse(_T("one^2 two"));
-	assertEquals(tc, _T("((b:one t:one)^2.0) (b:two t:two)"), q);
+	assertQueryEquals(tc, _T("((b:one t:one)^2.0) (b:two t:two)"), q);
 
 	q = mfqp.parse(_T("one~ two"));
-	assertEquals(tc, _T("(b:one~0.5 t:one~0.5) (b:two t:two)"), q);
+	assertQueryEquals(tc, _T("(b:one~0.5 t:one~0.5) (b:two t:two)"), q);
 
 	q = mfqp.parse(_T("one~0.8 two^2"));
-	assertEquals(tc, _T("(b:one~0.8 t:one~0.8) ((b:two t:two)^2.0)"), q);
+	assertQueryEquals(tc, _T("(b:one~0.8 t:one~0.8) ((b:two t:two)^2.0)"), q);
 
 	q = mfqp.parse(_T("one* two*"));
-	assertEquals(tc, _T("(b:one* t:one*) (b:two* t:two*)"), q);
+	assertQueryEquals(tc, _T("(b:one* t:one*) (b:two* t:two*)"), q);
 
 	q = mfqp.parse(_T("[a TO c] two"));
-	assertEquals(tc, _T("(b:[a TO c] t:[a TO c]) (b:two t:two)"), q);
+	assertQueryEquals(tc, _T("(b:[a TO c] t:[a TO c]) (b:two t:two)"), q);
 
 	q = mfqp.parse(_T("w?ldcard"));
-	assertEquals(tc, _T("b:w?ldcard t:w?ldcard"), q);
+	assertQueryEquals(tc, _T("b:w?ldcard t:w?ldcard"), q);
 
 	q = mfqp.parse(_T("\"foo bar\""));
-	assertEquals(tc, _T("b:\"foo bar\" t:\"foo bar\""), q);
+	assertQueryEquals(tc, _T("b:\"foo bar\" t:\"foo bar\""), q);
 
 	q = mfqp.parse(_T("\"aa bb cc\" \"dd ee\""));
-	assertEquals(tc, _T("(b:\"aa bb cc\" t:\"aa bb cc\") (b:\"dd ee\" t:\"dd ee\")"), q);
+	assertQueryEquals(tc, _T("(b:\"aa bb cc\" t:\"aa bb cc\") (b:\"dd ee\" t:\"dd ee\")"), q);
 
 	q = mfqp.parse(_T("\"foo bar\"~4"));
-	assertEquals(tc, _T("b:\"foo bar\"~4 t:\"foo bar\"~4"), q);
+	assertQueryEquals(tc, _T("b:\"foo bar\"~4 t:\"foo bar\"~4"), q);
 
 	// make sure that terms which have a field are not touched:
 	q = mfqp.parse(_T("one f:two"));
-	assertEquals(tc, _T("(b:one t:one) f:two"), q);
+	assertQueryEquals(tc, _T("(b:one t:one) f:two"), q);
 
 	// AND mode:
 	mfqp.setDefaultOperator(QueryParser::AND_OPERATOR);
 	q = mfqp.parse(_T("one two"));
-	assertEquals(tc, _T("+(b:one t:one) +(b:two t:two)"), q);
+	assertQueryEquals(tc, _T("+(b:one t:one) +(b:two t:two)"), q);
 	q = mfqp.parse(_T("\"aa bb cc\" \"dd ee\""));
-	assertEquals(tc, _T("+(b:\"aa bb cc\" t:\"aa bb cc\") +(b:\"dd ee\" t:\"dd ee\")"), q);
+	assertQueryEquals(tc, _T("+(b:\"aa bb cc\" t:\"aa bb cc\") +(b:\"dd ee\" t:\"dd ee\")"), q);
 
 	_CLDELETE(a);
 }

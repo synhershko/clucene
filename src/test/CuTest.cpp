@@ -253,6 +253,11 @@ void CuAssertTrue(CuTest* tc, int condition)
 	CuFail(tc, _T("assert failed"));
 }
 
+void CuAssertEquals(CuTest* tc, const int32_t expected, const int32_t actual, TCHAR* msg)
+{
+    CuAssertIntEquals(tc, msg, expected, actual);
+}
+
 void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, TCHAR* actual, bool bDelActual){
   CuString* message;
   if (_tcscmp(expected, actual) == 0) {
@@ -295,10 +300,14 @@ void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expecte
 
 void CuAssertIntEquals(CuTest* tc, const TCHAR* preMessage, int expected, int actual)
 {
-	TCHAR buf[STRING_MAX];
-	if (expected == actual) return;
-	_sntprintf(buf, STRING_MAX, _T("%s : expected <%d> but was <%d>"), preMessage, expected, actual);
-	CuFail(tc, buf);
+    if (expected == actual) return;
+    TCHAR buf[STRING_MAX];
+    if (preMessage != NULL){
+        _sntprintf(buf, STRING_MAX, _T("%s : expected <%d> but was <%d>"), preMessage, expected, actual);
+    } else {
+        _sntprintf(buf, STRING_MAX, _T("Assert failed : expected <%d> but was <%d>"), expected, actual);
+    }
+    CuFail(tc, buf);
 }
 
 void CuAssertPtrEquals(CuTest* tc, const TCHAR* preMessage, const void* expected, const void* actual)

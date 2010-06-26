@@ -170,14 +170,14 @@ void assertWildcardQueryEquals(CuTest *tc, const TCHAR* query, bool lowercase, c
 	_CLDELETE_CARRAY(s);
 }
 
-void assertTrue(CuTest *tc,const TCHAR* query, Analyzer* a, const char* inst, const TCHAR* msg){
+void assertCorrectQuery(CuTest *tc,const TCHAR* query, Analyzer* a, const char* inst, const TCHAR* msg){
 	Query* q = getQuery(tc,query,a);
 	bool success = q->instanceOf(inst);
 	_CLDELETE(q);
 	CuAssert(tc,msg,success);
 }
 
-void assertTrue(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false){
+void assertCorrectQuery(CuTest *tc,Query* q, const char* inst, bool bDeleteQuery = false){
 	bool ret = q->instanceOf(inst);
 	if (bDeleteQuery) _CLLDELETE(q);
 	CuAssertTrue(tc,ret);
@@ -274,9 +274,9 @@ void testSimple(CuTest *tc) {
 					_T("+term +\"phrase phrase\"") );
 	assertQueryEquals(tc,_T("\"hello there\""), NULL, _T("\"hello there\"") );
 
-	assertTrue(tc, _T("a AND b"), NULL,"BooleanQuery",_T("a AND b") );
-	assertTrue(tc, _T("hello"), NULL,"TermQuery", _T("hello"));
-	assertTrue(tc, _T("\"hello there\""), NULL,"PhraseQuery", _T("\"hello there\""));
+	assertCorrectQuery(tc, _T("a AND b"), NULL,"BooleanQuery",_T("a AND b") );
+	assertCorrectQuery(tc, _T("hello"), NULL,"TermQuery", _T("hello"));
+	assertCorrectQuery(tc, _T("\"hello there\""), NULL,"PhraseQuery", _T("\"hello there\""));
 
 	assertQueryEquals(tc,_T("germ term^2.0"), NULL, _T("germ term^2.0"));
     assertQueryEquals(tc,_T("(term)^2.0"), NULL, _T("term^2.0"));
@@ -363,11 +363,11 @@ void testWildcard(CuTest *tc)
 	assertQueryEquals(tc,_T("term*germ"), NULL, _T("term*germ"));
 	assertQueryEquals(tc,_T("term*germ^3"), NULL, _T("term*germ^3.0"));
 
-	assertTrue(tc, _T("term*"), NULL,"PrefixQuery", _T("term*"));
-	assertTrue(tc, _T("term*^2"), NULL,"PrefixQuery", _T("term*^2.0"));
-	assertTrue(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
-	assertTrue(tc, _T("term~0.7"), NULL,"FuzzyQuery", _T("term~0.7"));
-	assertTrue(tc, _T("t*"), NULL,"PrefixQuery", _T("t*"));
+	assertCorrectQuery(tc, _T("term*"), NULL,"PrefixQuery", _T("term*"));
+	assertCorrectQuery(tc, _T("term*^2"), NULL,"PrefixQuery", _T("term*^2.0"));
+	assertCorrectQuery(tc, _T("term~"), NULL,"FuzzyQuery", _T("term~0.5"));
+	assertCorrectQuery(tc, _T("term~0.7"), NULL,"FuzzyQuery", _T("term~0.7"));
+	assertCorrectQuery(tc, _T("t*"), NULL,"PrefixQuery", _T("t*"));
 
 	FuzzyQuery* fq = (FuzzyQuery*)getQuery(tc,_T("term~0.7"), NULL);
 	CuAssertTrue(tc, 0.7 == fq->getMinSimilarity()/*, 0.1*/);
@@ -380,7 +380,7 @@ void testWildcard(CuTest *tc)
 
 	assertParseException(tc,_T("term~1.1"));	// value > 1, throws exception
 
-	assertTrue(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
+	assertCorrectQuery(tc, _T("term*germ"), NULL,"WildcardQuery", _T("term*germ"));
 
 	/* Tests to see that wild card terms are (or are not) properly
 	* lower-cased with propery parser configuration
@@ -433,9 +433,9 @@ void testLeadingWildcardType(CuTest *tc) {
 	SimpleAnalyzer a;
 	QueryParser* qp = getParser(&a);
 	qp->setAllowLeadingWildcard(true);
-	assertTrue(tc, qp->parse(_T("t*erm*")), WildcardQuery::getClassName(), true);
-	assertTrue(tc, qp->parse(_T("?t*erm*")), WildcardQuery::getClassName(), true); // should not throw an exception
-	assertTrue(tc, qp->parse(_T("*t*erm*")), WildcardQuery::getClassName(), true);
+	assertCorrectQuery(tc, qp->parse(_T("t*erm*")), WildcardQuery::getClassName(), true);
+	assertCorrectQuery(tc, qp->parse(_T("?t*erm*")), WildcardQuery::getClassName(), true); // should not throw an exception
+	assertCorrectQuery(tc, qp->parse(_T("*t*erm*")), WildcardQuery::getClassName(), true);
 	_CLLDELETE(qp);
 }
 
@@ -465,15 +465,15 @@ void testQPA(CuTest *tc) {
 	assertQueryEquals(tc,_T("((stop)^3)"), &qpAnalyzer, _T("") );
 	assertQueryEquals(tc,_T("(stop)"), &qpAnalyzer, _T("") );
 	assertQueryEquals(tc,_T("((stop))"), &qpAnalyzer, _T("") );
-	assertTrue(tc, _T("term term term"), &qpAnalyzer,"BooleanQuery", _T("term term term"));
-	assertTrue(tc, _T("term +stop"), &qpAnalyzer,"TermQuery", _T("term +stop"));
+	assertCorrectQuery(tc, _T("term term term"), &qpAnalyzer,"BooleanQuery", _T("term term term"));
+	assertCorrectQuery(tc, _T("term +stop"), &qpAnalyzer,"TermQuery", _T("term +stop"));
 }
 
 void testRange(CuTest *tc) {
 	StandardAnalyzer a;
 
     assertQueryEquals(tc, _T("[ a TO z]"), NULL, _T("[a TO z]"));
-    assertTrue(tc, _T("[ a TO z]"), NULL, "ConstantScoreRangeQuery", _T("[a TO z]"));
+    assertCorrectQuery(tc, _T("[ a TO z]"), NULL, "ConstantScoreRangeQuery", _T("[a TO z]"));
 
     QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
 	qp->setUseOldRangeQuery(true);
@@ -493,7 +493,7 @@ void testRange(CuTest *tc) {
 
 	// Old CLucene tests - check this is working without TO as well
 	assertQueryEquals(tc,_T("[ a z]"), NULL, _T("[a TO z]"));
-	assertTrue(tc, _T("[ a z]"), NULL, "ConstantScoreRangeQuery", _T("[ a z]") );
+	assertCorrectQuery(tc, _T("[ a z]"), NULL, "ConstantScoreRangeQuery", _T("[ a z]") );
 	assertQueryEquals(tc,_T("[ a z ]"), NULL, _T("[a TO z]"));
 	assertQueryEquals(tc,_T("{ a z}"), NULL, _T("{a TO z}"));
 	assertQueryEquals(tc,_T("{ a z }"), NULL, _T("{a TO z}"));
@@ -816,14 +816,14 @@ void testBoost(CuTest *tc){
 void testMatchAllDocs(CuTest *tc) {
 	WhitespaceAnalyzer a;
 	QueryParser* qp = _CLNEW QueryParser(_T("field"), &a);
-	assertTrue(tc,qp->parse(_T("*:*")),"MatchAllDocsQuery",true);
-	assertTrue(tc,qp->parse(_T("(*:*)")),"MatchAllDocsQuery",true);
+	assertCorrectQuery(tc,qp->parse(_T("*:*")),"MatchAllDocsQuery",true);
+	assertCorrectQuery(tc,qp->parse(_T("(*:*)")),"MatchAllDocsQuery",true);
 
 	BooleanQuery* bq = (BooleanQuery*)qp->parse(_T("+*:* -*:*"));
 	BooleanClause** clauses = _CL_NEWARRAY(BooleanClause*, bq->getClauseCount() + 1);
 	bq->getClauses(clauses);
-	assertTrue(tc, clauses[0]->getQuery(), "MatchAllDocsQuery");
-	assertTrue(tc, clauses[1]->getQuery(), "MatchAllDocsQuery");
+	assertCorrectQuery(tc, clauses[0]->getQuery(), "MatchAllDocsQuery");
+	assertCorrectQuery(tc, clauses[1]->getQuery(), "MatchAllDocsQuery");
 	_CLDELETE_LARRAY(clauses);
 	_CLLDELETE(bq);
 	_CLLDELETE(qp);
