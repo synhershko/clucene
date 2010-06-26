@@ -78,7 +78,7 @@ public:
 	static const TCHAR* getDefaultType();
 
 	Token();
-	~Token();
+	virtual ~Token();
 
 	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);

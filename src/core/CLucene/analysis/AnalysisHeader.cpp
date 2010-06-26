@@ -272,8 +272,8 @@ void TokenFilter::close() {
 
 
 
-Tokenizer::Tokenizer() {
-	input = NULL;
+Tokenizer::Tokenizer() : input(NULL)
+{
 }
 
 Tokenizer::Tokenizer(CL_NS(util)::Reader* _input):
