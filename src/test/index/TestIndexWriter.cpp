@@ -290,7 +290,8 @@ void testExceptionFromTokenStream(CuTest *tc) {
     IndexWriter * writer = _CLNEW IndexWriter(dir, &a, true);
 
     Document* doc = _CLNEW Document();
-    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd ee ff gg hh ii"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd ee ff gg hh ii"),
+        Field::STORE_NO | Field::INDEX_TOKENIZED));
     try {
         writer->addDocument(doc);
         CuFail(tc, _T("did not hit expected exception"));
@@ -308,21 +309,34 @@ void testExceptionFromTokenStream(CuTest *tc) {
     doc = _CLNEW Document();
     doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd"), Field::STORE_NO | Field::INDEX_TOKENIZED));
     writer->addDocument(doc);
+    _CLLDELETE(doc);
 
     writer->close();
     _CLLDELETE(writer);
-    _CLLDELETE(doc);
 
-    /*
-    TODO:
-    IndexReader reader = IndexReader.open(dir);
-    assertEquals(reader.docFreq(new Term("content", "aa")), 3);
-    assertEquals(reader.docFreq(new Term("content", "gg")), 0);
-    reader.close();
-    */
+    IndexReader* reader = IndexReader::open(dir);
+    Term* t = _CLNEW Term(_T("content"), _T("aa"));
+    assertEquals(reader->docFreq(t), 3);
+    
+    // Make sure the doc that hit the exception was marked
+    // as deleted:
+    TermDocs* tdocs = reader->termDocs(t);
+    int count = 0;
+    while(tdocs->next()) {
+      count++;
+    }
+    _CLLDELETE(tdocs);
+    assertEquals(2, count);
+    
+    t->set(_T("content"), _T("gg"));
+    assertEquals(reader->docFreq(t), 0);
+    _CLDECDELETE(t);
+
+    reader->close();
+    _CLLDELETE(reader);
 
     dir->close();
-    _CLLDELETE(dir);
+    _CLDECDELETE(dir);
 }
 
 /**
@@ -380,7 +394,7 @@ void testWickedLongTerm(CuTest *tc) {
 
     // Make sure the doc that has the massive term is in
     // the index:
-    assertEqualsMsg(_T("document with wicked long term should is not in the index!"), 2, reader->numDocs());
+    assertEqualsMsg(_T("document with wicked long term should is not in the index!"), 1, reader->numDocs());
 
     reader->close();
     _CLLDELETE(reader);
@@ -393,12 +407,12 @@ void testWickedLongTerm(CuTest *tc) {
     sa.setMaxTokenLength(100000);
     writer = _CLNEW IndexWriter(dir, &sa, true);
     writer->addDocument(doc);
+    _CLLDELETE(doc);
     writer->close();
     reader = IndexReader::open(dir);
     t->set(_T("content"), bigTerm);
     assertEquals(1, reader->docFreq(t));
     reader->close();
-    _CLLDELETE(doc);
 
     _CLDECDELETE(t);
 
@@ -419,8 +433,8 @@ CuSuite *testindexwriter(void)
     SUITE_ADD_TEST(suite, testIWmergeSegments2);
     SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
 
-    SUITE_ADD_TEST(suite, testWickedLongTerm);              // JIRA issue 1072
-    SUITE_ADD_TEST(suite, testExceptionFromTokenStream);    // JIRA issue 1072
+    SUITE_ADD_TEST(suite, testWickedLongTerm);
+    SUITE_ADD_TEST(suite, testExceptionFromTokenStream);
 
   return suite;
 }
