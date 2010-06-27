@@ -1322,7 +1322,7 @@ void DocumentsWriter::balanceRAM() {
           numToFree = postingsFreeChunk;
         else
           numToFree = this->postingsFreeCountDW;
-        for ( size_t i = this->postingsFreeCountDW-numToFree;i< this->postingsFreeListDW.length; i++ ){
+        for ( size_t i = this->postingsFreeCountDW-numToFree;i< this->postingsFreeCountDW; i++ ){
           _CLDELETE(this->postingsFreeListDW.values[i]);
         }
         this->postingsFreeCountDW -= numToFree;
