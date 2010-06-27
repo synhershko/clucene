@@ -101,17 +101,27 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	}
 
     //writer->setInfoStream(&std::cout);
+
+    // We can tell the writer to flush at certain occasions
+    //writer->setRAMBufferSizeMB(0.5);
     //writer->setMaxBufferedDocs(3);
+
+    // To bypass a possible exception (we have no idea what we will be indexing...)
     writer->setMaxFieldLength(0x7FFFFFFFL); // LUCENE_INT32_MAX_SHOULDBE
+    
+    // Turn this off to make indexing faster; we'll turn it on later before optimizing
     writer->setUseCompoundFile(false);
-    writer->setRAMBufferSizeMB(0.5);
 
 	uint64_t str = Misc::currentTimeMillis();
 
 	indexDocs(writer, path);
 	
+    // Make the index use as little files as possible, and optimize it
+    writer->setUseCompoundFile(true);
     writer->optimize();
-	writer->close();
+	
+    // Close and clean up
+    writer->close();
 	_CLLDELETE(writer);
 
 	printf("Indexing took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));
