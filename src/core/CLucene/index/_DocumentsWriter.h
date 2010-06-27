@@ -228,7 +228,7 @@ private:
     int32_t endIndex;
   public:
     ByteSliceReader();
-    ~ByteSliceReader();
+    virtual ~ByteSliceReader();
     void init(ByteBlockPool* pool, int32_t startIndex, int32_t endIndex);
 
     uint8_t readByte();
