@@ -19,6 +19,7 @@
 #include "CLucene/index/TermVector.h"
 #include "CLucene/queryParser/MultiFieldQueryParser.h"
 
+#include <stdio.h>
 #include <iostream>
 #include <string.h>
 using namespace std;
