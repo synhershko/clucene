@@ -118,6 +118,11 @@ DocumentsWriter::~DocumentsWriter(){
   for(size_t i=0;i<threadStates.length;i++) {
     _CLDELETE(threadStates.values[i]);
   }
+
+  // Make sure unused posting slots aren't attempted delete on
+  memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
+      , NULL
+      , (this->postingsFreeListDW.length - this->postingsFreeCountDW) * sizeof(Posting*));
 }
 
 void DocumentsWriter::setInfoStream(std::ostream* infoStream) {
