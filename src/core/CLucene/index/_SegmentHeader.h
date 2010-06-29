@@ -102,7 +102,7 @@ private:
 public:
   ///\param Parent must be a segment reader
   SegmentTermPositions(const SegmentReader* Parent);
-  ~SegmentTermPositions();
+  virtual ~SegmentTermPositions();
 
 private:
   void seek(const TermInfo* ti, Term* term);
@@ -140,6 +140,7 @@ private:
   // So we move the prox pointer lazily to the document
   // as soon as positions are requested.
   void lazySkip();
+
 public:
   int32_t getPayloadLength() const;
 

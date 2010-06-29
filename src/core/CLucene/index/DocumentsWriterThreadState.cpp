@@ -852,7 +852,7 @@ void DocumentsWriter::ThreadState::FieldData::invertField(Field* field, Analyzer
 
   if (!field->isTokenized()) {     // un-tokenized field
     const TCHAR* stringValue = field->stringValue();
-    size_t valueLength = _tcslen(stringValue);
+    const size_t valueLength = _tcslen(stringValue);
     Token* token = localToken;
     token->clear();
 

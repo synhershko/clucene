@@ -366,15 +366,183 @@ void testIWlargeScaleCorrectness(CuTest *tc){
 	_CLDECDELETE(disk);
 }
 
+void testExceptionFromTokenStream(CuTest *tc) {
+
+    class TokenFilterWithException : public TokenFilter
+    {
+    private:
+        int count;
+
+    public:
+        TokenFilterWithException(TokenStream * in) : 
+          TokenFilter(in, true), count(0) {};
+
+          Token* next(Token * pToken) {
+              if (count++ == 5) {
+                  _CLTHROWA(CL_ERR_IO, "TokenFilterWithException testing IO exception");         
+              }
+              return input->next(pToken);
+          };
+    };
+
+    class AnalyzerWithException : public Analyzer
+    {
+    public:
+        TokenStream* tokenStream(const TCHAR * fieldName, Reader * reader) {
+            return _CLNEW TokenFilterWithException(_CLNEW WhitespaceTokenizer(reader));
+        };
+    };
+
+    RAMDirectory * dir = _CLNEW RAMDirectory();
+    AnalyzerWithException a;
+    IndexWriter * writer = _CLNEW IndexWriter(dir, &a, true);
+
+    Document* doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd ee ff gg hh ii"),
+        Field::STORE_NO | Field::INDEX_TOKENIZED));
+    try {
+        writer->addDocument(doc);
+        CuFail(tc, _T("did not hit expected exception"));
+    } catch (CLuceneError& e) {
+    }
+    _CLLDELETE(doc);
+
+    // Make sure we can add another normal document
+    doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    // Make sure we can add another normal document
+    doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("aa bb cc dd"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    writer->close();
+    _CLLDELETE(writer);
+
+    IndexReader* reader = IndexReader::open(dir);
+    Term* t = _CLNEW Term(_T("content"), _T("aa"));
+    assertEquals(reader->docFreq(t), 3);
+    
+    // Make sure the doc that hit the exception was marked
+    // as deleted:
+    TermDocs* tdocs = reader->termDocs(t);
+    int count = 0;
+    while(tdocs->next()) {
+      count++;
+    }
+    _CLLDELETE(tdocs);
+    assertEquals(2, count);
+    
+    t->set(_T("content"), _T("gg"));
+    assertEquals(reader->docFreq(t), 0);
+    _CLDECDELETE(t);
+
+    reader->close();
+    _CLLDELETE(reader);
+
+    dir->close();
+    _CLDECDELETE(dir);
+}
+
+/**
+* Make sure we skip wicked long terms.
+*/
+void testWickedLongTerm(CuTest *tc) {
+    RAMDirectory* dir = _CLNEW RAMDirectory();
+    StandardAnalyzer a;
+    IndexWriter* writer = _CLNEW IndexWriter(dir, &a, true);
+
+    TCHAR bigTerm[16383];
+    for (int i=0; i<16383; i++)
+        bigTerm[i]=_T('x');
+    bigTerm[16383] = 0;
+
+    Document* doc = _CLNEW Document();
+
+    // Max length term is 16383, so this contents produces
+    // a too-long term:
+    TCHAR* contents = _CL_NEWARRAY(TCHAR, 17000);
+    _tcscpy(contents, _T("abc xyz x"));
+    _tcscat(contents, bigTerm);
+    _tcscat(contents, _T(" another term"));
+    doc->add(* _CLNEW Field(_T("content"), contents, Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    // Make sure we can add another normal document
+    doc = _CLNEW Document();
+    doc->add(* _CLNEW Field(_T("content"), _T("abc bbb ccc"), Field::STORE_NO | Field::INDEX_TOKENIZED));
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+    writer->close();
+
+    IndexReader* reader = IndexReader::open(dir);
+
+    // Make sure all terms < max size were indexed
+    Term* t = _CLNEW Term(_T("content"), _T("abc"), true);
+    assertEquals(2, reader->docFreq(t));
+    t->set(_T("content"), _T("bbb"), true);
+    assertEquals(1, reader->docFreq(t));
+    t->set(_T("content"), _T("term"), true);
+    assertEquals(1, reader->docFreq(t));
+    t->set(_T("content"), _T("another"), true);
+    assertEquals(1, reader->docFreq(t));
+
+    // Make sure position is still incremented when
+    // massive term is skipped:
+    t->set(_T("content"), _T("another"), true);
+    TermPositions* tps = reader->termPositions(t);
+    assertTrue(tps->next());
+    assertEquals(1, tps->freq());
+    assertEquals(3, tps->nextPosition());
+    _CLLDELETE(tps);
+
+    // Make sure the doc that has the massive term is in
+    // the index:
+    assertEqualsMsg(_T("document with wicked long term should is not in the index!"), 1, reader->numDocs());
+
+    reader->close();
+    _CLLDELETE(reader);
+
+    // Make sure we can add a document with exactly the
+    // maximum length term, and search on that term:
+    doc = _CLNEW Document();
+    doc->add(*_CLNEW Field(_T("content"), bigTerm, Field::STORE_NO | Field::INDEX_TOKENIZED));
+    StandardAnalyzer sa;
+    sa.setMaxTokenLength(100000);
+    writer = _CLNEW IndexWriter(dir, &sa, true);
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+    writer->close();
+    reader = IndexReader::open(dir);
+    t->set(_T("content"), bigTerm);
+    assertEquals(1, reader->docFreq(t));
+    reader->close();
+
+    _CLDECDELETE(t);
+
+    _CLLDELETE(writer);
+    _CLLDELETE(reader);
+
+    dir->close();
+    _CLDECDELETE(dir);
+}
+
 CuSuite *testindexwriter(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
 	SUITE_ADD_TEST(suite, testHashingBug);
 	SUITE_ADD_TEST(suite, testAddIndexes);
 	SUITE_ADD_TEST(suite, testIWmergeSegments1);
-    SUITE_ADD_TEST(suite, testIWmergeSegments2);
+	SUITE_ADD_TEST(suite, testIWmergeSegments2);
 	SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
 	SUITE_ADD_TEST(suite, testIWlargeScaleCorrectness);
+
+    SUITE_ADD_TEST(suite, testWickedLongTerm);
+    SUITE_ADD_TEST(suite, testExceptionFromTokenStream);
 
   return suite;
 }

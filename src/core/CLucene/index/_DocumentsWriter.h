@@ -230,7 +230,7 @@ private:
     int32_t endIndex;
   public:
     ByteSliceReader();
-    ~ByteSliceReader();
+    virtual ~ByteSliceReader();
     void init(ByteBlockPool* pool, int32_t startIndex, int32_t endIndex);
 
     uint8_t readByte();
@@ -563,11 +563,11 @@ private:
     CL_NS(util)::ValueArray<FieldData*> allFieldDataArray; // All FieldData instances
     bool doFlushAfter;
     int32_t docID;                            // docID we are now working on
-	  DocumentsWriter* _parent;
 
+    DocumentsWriter* _parent;
 
-	  ThreadState(DocumentsWriter* _parent);
-	  ~ThreadState();
+    ThreadState(DocumentsWriter* _parent);
+    virtual ~ThreadState();
 
     /** Initializes shared state for this new document */
     void init(CL_NS(document)::Document* doc, int32_t docID);

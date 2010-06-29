@@ -413,6 +413,7 @@ std::ostream* IndexWriter::getDefaultInfoStream() {
   return IndexWriter::defaultInfoStream;
 }
 
+//TODO: infoStream - unicode
 void IndexWriter::setInfoStream(std::ostream* infoStream) {
   ensureOpen();
   this->infoStream = infoStream;
@@ -600,8 +601,8 @@ bool IndexWriter::flushDocStores() {
 
       try {
         CompoundFileWriter cfsWriter(directory, compoundFileName.c_str());
-        const int32_t size = files.size();
-        for(int32_t i=0;i<size;i++)
+        const size_t size = files.size();
+        for(size_t i=0;i<size;++i)
           cfsWriter.addFile(files[i].c_str());
 
         // Perform the merge
@@ -2294,8 +2295,10 @@ void IndexWriter::Internal::applyDeletesSelectively(const DocumentsWriter::TermN
 
   if (deleteIds.size() > 0) {
     vector<int32_t>::const_iterator iter2 = deleteIds.begin();
-    while(iter2 != deleteIds.end() )
+    while (iter2 != deleteIds.end()){
       reader->deleteDocument(*iter2);
+      ++iter2;
+    }
   }
 }
 

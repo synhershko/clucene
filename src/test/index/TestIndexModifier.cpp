@@ -8,6 +8,71 @@
 #include "CLucene/index/IndexModifier.h"
 #include <sstream>
 
+CL_NS_USE(store)
+CL_NS_USE(index)
+CL_NS_USE(document)
+CL_NS_USE2(analysis,standard)
+
+void IndexModifierExceptionTest(CuTest *tc)
+{
+    class LockedLock : public LuceneLock
+    {
+    public:
+        LockedLock() : LuceneLock() {};
+        virtual bool obtain() {return obtain(0);};
+        virtual void release() {};
+        virtual bool isLocked() {return true;};
+        bool obtain(int64_t lockWaitTimeout) {return false;};
+        virtual std::string toString() {return "LockedLock";};
+        virtual const char* getObjectName() const {return "LockedLock";};
+    };
+
+    class LockedDirectory : public RAMDirectory
+    {
+    public:
+        bool    errOn;
+
+        LockedDirectory() : RAMDirectory(), errOn(false) {};
+
+        // this simulates locking problem, only if errOn is true
+        LuceneLock* makeLock(const char* name) {
+            if (errOn)
+                return _CLNEW LockedLock();
+            else
+                return RAMDirectory::makeLock(name);
+        };
+    };
+
+    LockedDirectory     directory;
+    StandardAnalyzer    analyzer;
+    Document            doc;
+    IndexModifier *     pIm = NULL;
+
+    try
+    {
+        doc.add(* _CLNEW Field(_T("text"), _T("Document content"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+        pIm = _CLNEW IndexModifier(&directory, &analyzer, true);
+
+        // switch on locking timeout simulation
+        directory.errOn = true;
+
+        // throws lock timeout exception
+        pIm->addDocument(&doc);
+    }
+    catch (CLuceneError & err)
+    {
+        cout << "CLucene error: " << err.what() << "\n";
+    }
+
+    // this produces Access Violation exception
+    try {
+        _CLLDELETE(pIm);
+    } catch (...)
+    {
+        CuFail(tc, _T("Exception thrown upon deletion"));
+    }
+}
+
 class bulk_modification {
 public:
 	void modify_index(CuTest *tc, IndexModifier& ndx);
@@ -129,11 +194,11 @@ void testIMinsertDelete(CuTest *tc){
 	_CLDECDELETE(disk);
 }
 
-CuSuite *testindexmodifier(void)
+CuSuite *testIndexModifier(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene IndexModifier Test"));
+	SUITE_ADD_TEST(suite, IndexModifierExceptionTest);
 	SUITE_ADD_TEST(suite, testIMinsertDelete);
 
   return suite; 
 }
-// EOF

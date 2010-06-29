@@ -35,6 +35,7 @@
 #include "CLucene/document/NumberTools.h"
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/FSDirectory.h"
+#include "CLucene/store/RAMDirectory.h"
 #include "CLucene/queryParser/QueryParser.h"
 #include "CLucene/analysis/standard/StandardAnalyzer.h"
 #include "CLucene/analysis/Analyzers.h"
