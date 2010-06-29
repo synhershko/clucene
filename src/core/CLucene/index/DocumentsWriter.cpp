@@ -109,20 +109,23 @@ DocumentsWriter::DocumentsWriter(CL_NS(store)::Directory* directory, IndexWriter
   docStoreOffset = nextDocID = numDocsInRAM = numDocsInStore = nextWriteDocID = 0;
 }
 DocumentsWriter::~DocumentsWriter(){
-  _CLDELETE(bufferedDeleteTerms);
-  _CLDELETE(skipListWriter);
-  _CLDELETE_ARRAY(copyByteBuffer);
-  _CLDELETE(_files);
-  _CLDELETE(fieldInfos);
+  _CLLDELETE(bufferedDeleteTerms);
+  _CLLDELETE(skipListWriter);
+  _CLDELETE_LARRAY(copyByteBuffer);
+  _CLLDELETE(_files);
+  _CLLDELETE(fieldInfos);
 
   for(size_t i=0;i<threadStates.length;i++) {
-    _CLDELETE(threadStates.values[i]);
+    _CLLDELETE(threadStates.values[i]);
   }
 
   // Make sure unused posting slots aren't attempted delete on
-  memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
-      , NULL
-      , (this->postingsFreeListDW.length - this->postingsFreeCountDW) * sizeof(Posting*));
+  if (this->postingsFreeListDW.values){
+      memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
+          , NULL
+          , sizeof(Posting*));
+      postingsFreeListDW.deleteUntilNULL();
+  }
 }
 
 void DocumentsWriter::setInfoStream(std::ostream* infoStream) {

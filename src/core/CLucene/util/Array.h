@@ -135,7 +135,15 @@ public:
   void deleteValues(){
       if ( this->values == NULL )
         return;
-		  for (size_t i=0;i<this->length;i++){
+		  for (size_t i=0;i<this->length;++i){
+			    _CLLDELETE(this->values[i]);
+		  }
+	    this->deleteArray();
+	}
+  void deleteUntilNULL(){
+      if ( this->values == NULL )
+        return;
+		  for (size_t i=0;i<this->length && this->values[i] != NULL;++i){
 			    _CLLDELETE(this->values[i]);
 		  }
 	    this->deleteArray();
