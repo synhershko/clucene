@@ -53,7 +53,9 @@ void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) 
 }
 
 IndexModifier::~IndexModifier(){
-	close();
+	if (open) {
+		close();
+	}
 }
 
 void IndexModifier::assureOpen() const{
@@ -207,9 +209,9 @@ int32_t IndexModifier::getMergeFactor() {
 }
 
 void IndexModifier::close() {
+	if (!open)
+		_CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
-    if (!open)
-        _CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	if (indexWriter != NULL) {
 		indexWriter->close();
 		_CLDELETE(indexWriter);
