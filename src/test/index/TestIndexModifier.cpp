@@ -53,15 +53,26 @@ void IndexModifierExceptionTest(CuTest *tc)
         doc.add(* _CLNEW Field(_T("text"), _T("Document content"), Field::STORE_YES | Field::INDEX_TOKENIZED));
         pIm = _CLNEW IndexModifier(&directory, &analyzer, true);
 
+        pIm->addDocument(&doc);
+        pIm->deleteDocument(0);
+    }
+    catch (CLuceneError & err)
+    {
+        CuFail(tc, _T("Exception thrown upon startup"));
+        return;
+    }
+
+    try
+    {
         // switch on locking timeout simulation
         directory.errOn = true;
 
         // throws lock timeout exception
         pIm->addDocument(&doc);
+        CuFail(tc, _T("Exception was not thrown during addDocument"));
     }
     catch (CLuceneError & err)
     {
-        cout << "CLucene error: " << err.what() << "\n";
     }
 
     // this produces Access Violation exception
