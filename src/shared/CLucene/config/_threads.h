@@ -34,9 +34,13 @@
 
     	    __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
 
+#ifdef _M_X64
+          __declspec(dllimport) long long __stdcall _InterlockedIncrement64(__inout long long volatile*);
+          __declspec(dllimport) long long __stdcall _InterlockedDecrement64(__inout long long volatile*);
+#else
           __declspec(dllimport) long __stdcall InterlockedIncrement(long volatile*);
           __declspec(dllimport) long __stdcall InterlockedDecrement(long volatile*);
-    	  
+#endif
     	    typedef struct  _SECURITY_ATTRIBUTES
           {
             _cl_dword_t nLength;

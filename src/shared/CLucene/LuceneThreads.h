@@ -101,7 +101,11 @@ class CLuceneThreadIdCompare;
        
           #define _LUCENE_ATOMIC_INC(theInteger) CL_NS(util)::mutex_thread::atomic_increment(theInteger)
           #define _LUCENE_ATOMIC_DEC(theInteger) CL_NS(util)::mutex_thread::atomic_decrement(theInteger)
+#ifdef _M_X64
+          #define _LUCENE_ATOMIC_INT long long
+#else
           #define _LUCENE_ATOMIC_INT long
+#endif
           #define _LUCENE_ATOMIC_INT_SET(x,v) x=v
           #define _LUCENE_ATOMIC_INT_GET(x) x
 

@@ -63,10 +63,18 @@ CL_NS_DEF(util)
   }
 
   int32_t mutex_thread::atomic_increment(_LUCENE_ATOMIC_INT *theInteger){
+#ifdef _M_X64
+    return _InterlockedIncrement64(theInteger);
+#else
     return InterlockedIncrement(theInteger);
+#endif
   }
   int32_t mutex_thread::atomic_decrement(_LUCENE_ATOMIC_INT *theInteger){
+#ifdef _M_X64
+    return _InterlockedDecrement64(theInteger);
+#else
     return InterlockedDecrement(theInteger);
+#endif
   }
 
 
