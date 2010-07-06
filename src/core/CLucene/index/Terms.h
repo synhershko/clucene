@@ -23,7 +23,7 @@ class TermPositions;
 
  @see IndexReader#termDocs()
  */
-class CLUCENE_EXPORT TermDocs: LUCENE_BASE {
+class CLUCENE_EXPORT TermDocs {
 public:
 	virtual ~TermDocs(){
 	}
