@@ -1478,7 +1478,8 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
 
           if (!segment.empty())
             deleter->refresh(segment.c_str());
-        }
+        } else if (flushDeletes)
+            _CLDELETE(rollback);
       )
 
       deleter->checkpoint(segmentInfos, autoCommit);
