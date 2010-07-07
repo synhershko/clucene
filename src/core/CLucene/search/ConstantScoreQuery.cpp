@@ -29,7 +29,9 @@ public:
         bits(filter->bits(reader)), theScore(w->getValue()), _doc(-1)
     {
     }
-    virtual ~ConstantScorer(){}
+    virtual ~ConstantScorer() {
+        _CLDELETE(bits);
+    }
 
     bool next() {
         _doc = bits->nextSetBit(_doc+1);
@@ -132,13 +134,17 @@ public:
             result->setValue(0);
             result->setMatch(true);
         }
+
+        _CLDELETE(cs);
         return result;
     }
 };
 
 ConstantScoreQuery::ConstantScoreQuery(Filter* _filter) : filter(_filter) {
 }
-ConstantScoreQuery::~ConstantScoreQuery(){}
+ConstantScoreQuery::~ConstantScoreQuery() {
+    _CLDELETE(filter);
+}
 
 Filter* ConstantScoreQuery::getFilter() const {
     return filter;
