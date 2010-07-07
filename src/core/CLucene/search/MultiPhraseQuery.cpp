@@ -231,8 +231,7 @@ MultiPhraseQuery::MultiPhraseQuery():
 MultiPhraseQuery::~MultiPhraseQuery(){
 	for (size_t i = 0; i < termArrays->size(); i++){
 		for ( size_t j=0;j<termArrays->at(i)->length;j++ ) {
-      _CLLDECDELETE(termArrays->at(i)->values[j]);
-			++j;
+			_CLLDECDELETE(termArrays->at(i)->values[j]);
 		}
 		_CLDELETE(termArrays->at(i));
 	}
