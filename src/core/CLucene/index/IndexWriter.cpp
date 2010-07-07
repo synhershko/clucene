@@ -2218,6 +2218,7 @@ void IndexWriter::applyDeletes(bool flushedNewSegment) {
           reader->doCommit();
         } _CLFINALLY (
           reader->doClose();
+          _CLDELETE(reader);
         )
       }
     )
