@@ -409,11 +409,65 @@ void testRangeFilterTrigger(CuTest* tc)
     trf.testRangeFilterRand();
 }
 
+void testIncludeLowerTrue(CuTest* tc)
+{
+    WhitespaceAnalyzer a;
+    RAMDirectory* index = _CLNEW RAMDirectory();
+    IndexWriter* writer = _CLNEW IndexWriter(index,
+        &a, true);
+
+    Document doc;
+    doc.add(*_CLNEW Field(_T("Category"), _T("a 1"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+    writer->addDocument(&doc); doc.clear();
+
+    doc.add(*_CLNEW Field(_T("Category"), _T("a 2"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+    writer->addDocument(&doc); doc.clear();
+
+    doc.add(*_CLNEW Field(_T("Category"), _T("a 3"), Field::STORE_YES | Field::INDEX_TOKENIZED));
+    writer->addDocument(&doc); doc.clear();
+
+    writer->close();
+    _CLLDELETE(writer);
+
+    IndexSearcher* s = _CLNEW IndexSearcher(index);
+    Filter* f = _CLNEW RangeFilter(_T("Category"), _T("3"), _T("3"), true, true);
+
+    Term* t = _CLNEW Term(_T("Category"), _T("a"));
+    Query* q1 = _CLNEW TermQuery(t);
+    _CLLDECDELETE(t);
+
+    t = _CLNEW Term(_T("Category"), _T("3"));
+    Query* q2 = _CLNEW TermQuery(t);
+    _CLLDECDELETE(t);
+
+    Hits* h = s->search(q1);
+    assertTrue(h->length() == 3);
+    _CLLDELETE(h);
+
+    h = s->search(q2);
+    assertTrue(h->length() == 1);
+    _CLLDELETE(h);
+
+    h = s->search(q1, f);
+    assertTrue(h->length() == 1);
+    _CLLDELETE(h);
+
+    s->close();
+    _CLLDELETE(s);
+    _CLLDELETE(q1);
+    _CLLDELETE(q2);
+    _CLLDELETE(f);
+
+    index->close();
+    _CLLDECDELETE(index);
+}
+
 CuSuite *testRangeFilter(void)
 {
     CuSuite *suite = CuSuiteNew(_T("CLucene RangeFilter Test"));
 
     SUITE_ADD_TEST(suite, testRangeFilterTrigger);
+    SUITE_ADD_TEST(suite, testIncludeLowerTrue);
 
     return suite;
 }
