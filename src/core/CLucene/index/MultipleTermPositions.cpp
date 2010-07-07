@@ -96,6 +96,11 @@ MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, const CL_
 	_CLDELETE_ARRAY(tps);
 }
 
+MultipleTermPositions::~MultipleTermPositions() {
+	_CLDELETE(_termPositionsQueue);
+	_CLDELETE(_posList);
+}
+
 bool MultipleTermPositions::next() {
 	if (_termPositionsQueue->size() == 0)
 		return false;
