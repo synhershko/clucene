@@ -95,6 +95,11 @@ MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, const CL_
 	_termPositionsQueue = _CLNEW TermPositionsQueue(tps,terms->length);
 }
 
+MultipleTermPositions::~MultipleTermPositions() {
+	_CLDELETE(_termPositionsQueue);
+	_CLDELETE(_posList);
+}
+
 bool MultipleTermPositions::next() {
 	if (_termPositionsQueue->size() == 0)
 		return false;
