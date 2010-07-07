@@ -1092,20 +1092,21 @@ bool SegmentReader::hasNorms(const TCHAR* field){
     //disown this memory
     this->freqStream = NULL;
     this->_fieldInfos = NULL;
-    this->fieldsReader = NULL;
+    if (fieldsReader != NULL)
+        _CLDELETE(fieldsReader);
     this->tis = NULL;
     this->deletedDocs = NULL;
     this->ones = NULL;
     this->termVectorsReaderOrig = NULL;
     this->cfsReader = NULL;
-    this->fieldsReader = NULL;
     this->tis = NULL;
     this->freqStream = NULL;
     this->proxStream = NULL;
     this->termVectorsReaderOrig = NULL;
     this->cfsReader = NULL;
     this->storeCFSReader = NULL;
-    this->singleNormStream = NULL;
+    if (this->singleNormStream != NULL)
+        _CLDELETE(this->singleNormStream);
 
     return clone;
   }
