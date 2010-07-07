@@ -34,6 +34,7 @@ SET(test_files ./tests.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
 ./search/TestQueries.cpp
+./search/TestRangeFilter.cpp
 ./search/TestSearch.cpp
 ./search/TestSort.cpp
 ./search/TestWildcard.cpp

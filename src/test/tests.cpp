@@ -24,6 +24,7 @@ unittest tests[] = {
     {"mfqueryparser", testMultiFieldQueryParser},
     {"boolean", testBoolean},
     {"search", testsearch},
+    {"rangefilter", testRangeFilter},
     {"queries", testqueries},
     {"termvector",testtermvector},
     {"sort",testsort},
