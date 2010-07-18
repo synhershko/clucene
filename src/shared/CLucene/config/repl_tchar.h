@@ -58,6 +58,7 @@
         //conversion functions
         #define _tcstod wcstod //convert a string to a double
         #define _tcstoi64 wcstoll //* convers a string to an 64bit bit integer
+        #define _itot _i64tot
         #define _i64tot lltow //* converts a 64 bit integer to a string (with base)
     #else //if defined(_ASCII)
 
@@ -93,6 +94,7 @@
         //converstion methods
         #define _tcstod strtod
         #define _tcstoi64 strtoll
+        #define _itot _i64tot 
         #define _i64tot lltoa
 
     #endif
