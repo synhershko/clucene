@@ -39,6 +39,7 @@ SET(test_files ./tests.cpp
 ./search/TestSort.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
+./search/TestIndexSearcher.cpp
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
@@ -46,6 +47,7 @@ SET(test_files ./tests.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
+./index/store/TestRAMDirectory.cpp
 ./util/TestPriorityQueue.cpp
 ./util/English.cpp
 ${test_HEADERS}
