@@ -10,15 +10,6 @@
 
 #include <limits>
 
-namespace std
-{
-#ifdef _UNICODE
-    typedef wstring tstring;
-#else
-    typedef string tstring;
-#endif
-};
-
 static const size_t getMaxIntLength()
 {
     TCHAR buf[40];
