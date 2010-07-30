@@ -115,6 +115,10 @@
   #define _ttoi(x) (int)_tcstoi64(x,NULL,10)
 #endif
 
+#ifndef _itot
+  #define _itot(i, buf, radix) lucene_i64tot(i, buf, radix)
+#endif
+
 #define STRCPY_AtoA(target,src,len) strncpy(target,src,len)
 #define STRDUP_AtoA(x) strdup(x)
 
