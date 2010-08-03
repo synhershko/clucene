@@ -74,7 +74,7 @@ CL_NS_DEF(index)
           _CLDELETE(writeLock);
         }
 
-        _CLDELETE(deleter);
+        _CLLDELETE(deleter);
       }
       else
         commitChanges();

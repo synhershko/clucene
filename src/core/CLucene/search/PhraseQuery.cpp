@@ -420,7 +420,7 @@ CL_NS_DEF(search)
 		  queryNormExpl->getValue());
 
 	  if (deleteBoostExpl)
-	    _CLDELETE(boostExpl);
+	    _CLLDELETE(boostExpl);
 
 	  result->addDetail(queryExpl);
 
@@ -434,7 +434,7 @@ CL_NS_DEF(search)
 
 	  Scorer* sc = scorer(reader);
 	  Explanation* tfExpl = sc->explain(doc);
-	  _CLDELETE(sc);
+	  _CLLDELETE(sc);
 	  fieldExpl->addDetail(tfExpl);
 	  fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
 

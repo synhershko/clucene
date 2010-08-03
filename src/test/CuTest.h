@@ -66,11 +66,12 @@ void CuMessageV(CuTest* tc, const TCHAR* format, va_list& argp);
 void CuMessageA(CuTest* tc, const char* format, ...);
 void CuNotImpl(CuTest* tc, const TCHAR* message);
 void CuAssert(CuTest* tc, const TCHAR* message, int condition);
-void CuAssertTrue(CuTest* tc, int condition);
-void CuAssertEquals(CuTest* tc, const int32_t expected, const int32_t actual, TCHAR* msg = NULL);
+void CuAssertTrue(CuTest* tc, int condition, const TCHAR* msg = NULL);
+void CuAssertEquals(CuTest* tc, const int32_t expected, const int32_t actual, const TCHAR* msg = NULL);
 void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, const TCHAR* actual);
 void CuAssertStrEquals(CuTest* tc, const TCHAR* preMessage, const TCHAR* expected, TCHAR* actual, bool bDelActual = false);
 void CuAssertIntEquals(CuTest* tc, const TCHAR* preMessage, int expected, int actual);
+void CuAssertSizeEquals(CuTest* tc, const TCHAR* preMessage, int expected, int actual);
 void CuAssertPtrEquals(CuTest* tc, const TCHAR* preMessage, const void* expected, const void* actual);
 void CuAssertPtrNotNull(CuTest* tc, const TCHAR* preMessage, const void* pointer);
 
@@ -86,6 +87,7 @@ void CuTestRun(CuTest* tc);
  * Macros used to make porting of Java Lucene tests easier. Assumes CuTest exists in the scope as tc
  */
 #define assertTrue(CND)                                 CuAssertTrue(tc, CND)
+#define assertTrueMsg(MSG, CND)                         CuAssertTrue(tc, CND, MSG)
 #define assertEquals(EXPECTED, ACTUAL)                  CuAssertEquals(tc, EXPECTED, ACTUAL)
 #define assertEqualsMsg(MSG, EXPECTED, ACTUAL)          CuAssertEquals(tc, EXPECTED, ACTUAL, MSG)
 

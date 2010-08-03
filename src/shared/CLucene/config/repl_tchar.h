@@ -58,6 +58,7 @@
         //conversion functions
         #define _tcstod wcstod //convert a string to a double
         #define _tcstoi64 wcstoll //* convers a string to an 64bit bit integer
+        #define _itot _i64tot
         #define _i64tot lltow //* converts a 64 bit integer to a string (with base)
     #else //if defined(_ASCII)
 
@@ -93,6 +94,7 @@
         //converstion methods
         #define _tcstod strtod
         #define _tcstoi64 strtoll
+        #define _itot _i64tot 
         #define _i64tot lltoa
 
     #endif
@@ -115,13 +117,28 @@
   #define _ttoi(x) (int)_tcstoi64(x,NULL,10)
 #endif
 
+#ifndef _itot
+  #define _itot(i, buf, radix) lucene_i64tot(i, buf, radix)
+#endif
+
+namespace std
+{
+#ifndef tstring
+  #ifdef _UNICODE
+    typedef wstring tstring;
+  #else
+    typedef string tstring;
+  #endif
+#endif
+};
+
 #define STRCPY_AtoA(target,src,len) strncpy(target,src,len)
 #define STRDUP_AtoA(x) strdup(x)
 
 #if defined(_UCS2)
   #define stringDuplicate(x) _tcsdup(x)
 
-	#if defined(_CL_HAVE_FUNCTION_WCSDUP)
+  #if defined(_CL_HAVE_FUNCTION_WCSDUP)
   	#define STRDUP_WtoW	wcsdup
   #else
   	#define STRDUP_WtoW	lucene_wcsdup

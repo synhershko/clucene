@@ -42,6 +42,17 @@ CL_NS_DEF(util)
    ///Puts a copy of the string value in front of the current string in the StringBuffer
    void prepend(const TCHAR* value, size_t prependedLength);
 
+   StringBuffer& operator<< (const TCHAR* value)
+   {
+       append(value);
+       return *this;
+   }
+   StringBuffer& operator<< (const int64_t value)
+   {
+       appendInt(value);
+       return *this;
+   }
+
    ///Contains the length of string in the StringBuffer
    ///Public so that analyzers can edit the length directly
    size_t len;

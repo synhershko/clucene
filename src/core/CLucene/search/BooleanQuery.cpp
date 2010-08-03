@@ -399,7 +399,7 @@ CL_NS_DEF(search)
 				sumExpl->addDetail(r);
 				fail = true;
 			} else {
-				_CLDELETE(e);
+				_CLLDELETE(e);
 			}
 		}
 		if (fail) {
