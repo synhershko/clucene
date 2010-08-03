@@ -140,10 +140,10 @@ CL_NS_DEF(store)
 		void close();
 		int64_t length() const;
 		
-		inline uint8_t readByte();
+		uint8_t readByte();
 		void readBytes( uint8_t* dest, const int32_t len );
 		
-		inline int64_t getFilePointer() const;
+		int64_t getFilePointer() const;
 		
 		void seek(const int64_t pos);
 		const char* getDirectoryType() const;
