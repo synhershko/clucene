@@ -423,6 +423,51 @@ void testWickedLongTerm(CuTest *tc) {
     _CLDECDELETE(dir);
 }
 
+
+void testDeleteDocument(CuTest* tc) {
+    const int size = 205;
+    RAMDirectory* dir = _CLNEW RAMDirectory();
+    StandardAnalyzer a;
+    IndexWriter* writer = _CLNEW IndexWriter(dir, &a, true);
+
+    // build an index that is big enough that a deletion files is written
+    // in the DGaps format
+    for (int i = 0; i < size; i++) {
+        Document* doc = _CLNEW Document();
+        TCHAR* contents = _CL_NEWARRAY(TCHAR, (size / 10) + 1);
+        _i64tot(i, contents, 10);
+        doc->add(* _CLNEW Field(_T("content"), contents, Field::STORE_NO | Field::INDEX_TOKENIZED));
+        writer->addDocument(doc);
+        _CLLDELETE(doc);
+    }
+
+    // assure that the index has only one segment
+    writer->optimize();
+    // close and flush index
+    writer->close();
+
+    // reopen the index and delete the document next to last
+    writer = _CLNEW IndexWriter(dir, &a, false);
+    TCHAR* contents = _CL_NEWARRAY(TCHAR, (size / 10) + 1);
+    _i64tot(size - 2, contents, 10);
+    Term* t = _CLNEW Term(_T("content"), contents);
+    writer->deleteDocuments(t);
+    writer->close();
+
+    // now the index has a deletion file in the DGaps format
+
+    _CLLDELETE(writer);
+    _CLDECDELETE(t);
+
+    // open this index with a searcher to read the deletions file again 
+    IndexReader* reader = IndexReader::open(dir);
+    IndexSearcher* searcher = _CLNEW IndexSearcher(reader);
+    searcher->close();
+    reader->close();
+    _CLLDELETE(searcher);
+    _CLLDELETE(reader);
+}
+
 CuSuite *testindexwriter(void)
 {
     CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
@@ -435,6 +480,7 @@ CuSuite *testindexwriter(void)
 
     SUITE_ADD_TEST(suite, testWickedLongTerm);
     SUITE_ADD_TEST(suite, testExceptionFromTokenStream);
+    SUITE_ADD_TEST(suite, testDeleteDocument);
 
   return suite;
 }
