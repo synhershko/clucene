@@ -189,7 +189,7 @@ size_t ConstantScoreQuery::hashCode() const {
     return 0;
 }
 
-ConstantScoreQuery::ConstantScoreQuery( const ConstantScoreQuery& copy ) : filter(copy.filter)
+ConstantScoreQuery::ConstantScoreQuery( const ConstantScoreQuery& copy ) : filter(copy.getFilter()->clone())
 {
 }
 
