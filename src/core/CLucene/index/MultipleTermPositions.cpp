@@ -93,12 +93,12 @@ MultipleTermPositions::MultipleTermPositions(IndexReader* indexReader, const CL_
 	termPositions.toArray(tps, true);
 
 	_termPositionsQueue = _CLNEW TermPositionsQueue(tps,terms->length);
-	_CLDELETE_ARRAY(tps);
+	_CLDELETE_LARRAY(tps);
 }
 
 MultipleTermPositions::~MultipleTermPositions() {
-	_CLDELETE(_termPositionsQueue);
-	_CLDELETE(_posList);
+	_CLLDELETE(_termPositionsQueue);
+	_CLLDELETE(_posList);
 }
 
 bool MultipleTermPositions::next() {
@@ -120,7 +120,7 @@ bool MultipleTermPositions::next() {
 		else {
 			_termPositionsQueue->pop();
 			tp->close();
-			_CLDELETE(tp);
+			_CLLDELETE(tp);
 		}
 	} while (_termPositionsQueue->size() > 0 && _termPositionsQueue->peek()->doc() == _doc);
 
@@ -141,7 +141,7 @@ bool MultipleTermPositions::skipTo(int32_t target) {
 			_termPositionsQueue->put(tp);
 		else {
 			tp->close();
-			_CLDELETE(tp);
+			_CLLDELETE(tp);
 		}
 	}
 	return next();
@@ -159,7 +159,7 @@ void MultipleTermPositions::close() {
 	while (_termPositionsQueue->size() > 0) {
 		TermPositions* tp = _termPositionsQueue->pop();
 		tp->close();
-		_CLDELETE(tp);
+		_CLLDELETE(tp);
 	}
 }
 
