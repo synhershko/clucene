@@ -35,5 +35,6 @@ unittest tests[] = {
     {"wildcard", testwildcard},
     {"store", teststore},
     {"utf8", testutf8},
+    {"bitset", testBitSet},
     {"LastTest", NULL}
 };
