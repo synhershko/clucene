@@ -35,5 +35,6 @@ unittest tests[] = {
     {"store", teststore},
     {"utf8", testutf8},
     {"bitset", testBitSet},
+    {"extractterms",testExtractTerms},
     {"LastTest", NULL}
 };

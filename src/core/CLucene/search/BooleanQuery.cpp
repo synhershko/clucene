@@ -19,6 +19,8 @@
 #include "_BooleanScorer2.h"
 #include "Scorer.h"
 
+#include <assert.h>
+
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
@@ -269,6 +271,19 @@ CL_NS_DEF(search)
    } else
       return this;                                // no clauses rewrote
   }
+
+    void BooleanQuery::extractTerms( TermSet * termset )
+    {
+	    assert( termset );
+		if( ! termset )
+			return;
+			
+		for (uint32_t i = 0 ; i < clauses->size(); i++) 
+        {
+            BooleanClause* clause = (*clauses)[i];
+            clause->getQuery()->extractTerms( termset );
+        }
+    }
 
   Query* BooleanQuery::clone()  const{
     BooleanQuery* clone = _CLNEW BooleanQuery(*this);

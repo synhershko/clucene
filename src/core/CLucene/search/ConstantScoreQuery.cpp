@@ -157,6 +157,12 @@ Query* ConstantScoreQuery::rewrite(IndexReader* reader) {
     return this;
 }
 
+void ConstantScoreQuery::extractTerms( TermSet * termset )
+{
+    // OK to not add any terms when used for MultiSearcher,
+    // but may not be OK for highlighting
+}
+
 Weight* ConstantScoreQuery::_createWeight(Searcher* searcher) {
     return _CLNEW /*ConstantScoreQuery::*/ConstantWeight(this, searcher);
 }

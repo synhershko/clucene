@@ -35,13 +35,8 @@ public:
 
     Query* rewrite(CL_NS(index)::IndexReader* reader);
 
-    /*
-    TODO:
-    void extractTerms(Set terms) {
-    // OK to not add any terms when used for MultiSearcher,
-    // but may not be OK for highlighting
-    }
-    */
+    /** Constant score query does not return any terms */
+    void extractTerms( TermSet * termset );    
 
 protected:
     Weight* _createWeight(Searcher* searcher);

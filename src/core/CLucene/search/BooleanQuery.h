@@ -104,6 +104,9 @@ CL_NS_DEF(search)
 	  Query* rewrite(CL_NS(index)::IndexReader* reader);
 	  Query* clone() const;
 
+    /** Expert: adds all terms occurring in this query to the termset set. */
+    void extractTerms( TermSet * termset );
+
 	  bool equals(Query* o) const;
 	  Similarity* getSimilarity( Searcher* searcher );
 		

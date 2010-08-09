@@ -220,6 +220,23 @@ Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
   }
 }
 
+void MultiPhraseQuery::extractTerms( TermSet * termset )
+{
+    if( ! termset )
+        return;
+
+    for( size_t i = 0; i < termArrays->size(); i++ )
+    {
+        ArrayBase<Term*> * terms = termArrays->at( i ); 
+	    for( size_t j=0; j < terms->length; j++ )
+        {
+            Term * pTerm = terms->values[ j ];
+            if( pTerm && termset->end() == termset->find( pTerm ))
+                termset->insert( _CL_POINTER( pTerm ));
+	    }
+    }
+}
+
 MultiPhraseQuery::MultiPhraseQuery():
   field(NULL),
   termArrays(_CLNEW CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>),

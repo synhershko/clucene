@@ -57,6 +57,9 @@ CL_NS_DEF(search)
         /** Returns a clone of this query. */
         virtual Query* clone() const;
         
+        /** Expert: MatchAllDocsQuery provides no terms at all. */
+        void extractTerms( TermSet * termset );
+
         virtual bool equals(Query* o) const;
         virtual size_t hashCode() const;
 

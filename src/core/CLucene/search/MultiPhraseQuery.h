@@ -93,19 +93,10 @@ public:
 	*/
 	void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
 
-	/*
-	TODO:
-	void extractTerms(Set terms) {
-		for (Iterator iter = termArrays.iterator(); iter.hasNext();) {
-			Term[] arr = (Term[])iter.next();
-			for (int i=0; i<arr.length; i++) {
-				terms.add(arr[i]);
-			}
-		}
-	}
-	*/
-
 	Query* rewrite(CL_NS(index)::IndexReader* reader);
+
+    /** Expert: adds all terms occurring in this query to the terms set. */
+    void extractTerms( TermSet * termset );
 
 protected:
 	Weight* _createWeight(Searcher* searcher);
