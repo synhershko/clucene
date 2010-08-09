@@ -26,6 +26,7 @@ unittest tests[] = {
     {"search", testsearch},
     {"rangefilter", testRangeFilter},
     {"queries", testqueries},
+    {"csrqueries", testConstantScoreQueries},
     {"termvector",testtermvector},
     {"sort",testsort},
     {"duplicates", testduplicates},

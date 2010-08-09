@@ -50,6 +50,7 @@ CuSuite *testpriorityqueue(void);
 CuSuite *testQueryParser(void);
 CuSuite *testMultiFieldQueryParser(void);
 CuSuite *testqueries(void);
+CuSuite *testConstantScoreQueries(void);
 CuSuite *testsearch(void);
 CuSuite *testtermvector(void);
 CuSuite *testsort(void);
