@@ -205,7 +205,7 @@ ConstantScoreRangeQuery::ConstantScoreRangeQuery( const ConstantScoreRangeQuery&
 {
 }
 
-ConstantScoreRangeQuery::ConstantScoreRangeQuery(const TCHAR* _fieldName, TCHAR* _lowerVal, TCHAR* _upperVal,
+ConstantScoreRangeQuery::ConstantScoreRangeQuery(const TCHAR* _fieldName, const TCHAR* _lowerVal, const TCHAR* _upperVal,
                         bool _includeLower, bool _includeUpper) : fieldName(NULL), lowerVal(NULL), upperVal(NULL)
 {
     // do a little bit of normalization...
@@ -235,9 +235,12 @@ ConstantScoreRangeQuery::~ConstantScoreRangeQuery(){
 
 Query* ConstantScoreRangeQuery::rewrite(CL_NS(index)::IndexReader* reader) {
     // Map to RangeFilter semantics which are slightly different...
+    const TCHAR* lowerSafe = lowerVal!=NULL?lowerVal:_T("");
     RangeFilter* rangeFilt = _CLNEW RangeFilter(fieldName,
-        lowerVal!=NULL?lowerVal:_T(""),
-        upperVal, (_tcscmp(lowerVal, _T(""))==0)?false:includeLower, upperVal==NULL?false:includeUpper);
+        lowerSafe,
+        upperVal, 
+        (_tcscmp(lowerSafe, _T(""))==0)?false:includeLower, 
+        upperVal==NULL?false:includeUpper);
     Query* q = _CLNEW ConstantScoreQuery(rangeFilt);
     q->setBoost(getBoost());
     return q;

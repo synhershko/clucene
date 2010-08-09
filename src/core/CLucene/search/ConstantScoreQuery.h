@@ -87,7 +87,7 @@ private:
     bool includeUpper;
 
 public:
-    ConstantScoreRangeQuery(const TCHAR* _fieldName, TCHAR* _lowerVal, TCHAR* _upperVal,
+    ConstantScoreRangeQuery(const TCHAR* _fieldName, const TCHAR* _lowerVal, const TCHAR* _upperVal,
         bool _includeLower, bool _includeUpper);
     virtual ~ConstantScoreRangeQuery();
 
