@@ -51,6 +51,10 @@ CL_NS_DEF(store)
   }
 
   RAMFile::~RAMFile(){
+      if ( directory != NULL ) {
+          SCOPED_LOCK_MUTEX(directory->THIS_LOCK);
+          directory->sizeInBytes -= sizeInBytes;
+      } 
   }
 
   int64_t RAMFile::getLength()
@@ -86,6 +90,7 @@ CL_NS_DEF(store)
 		  SCOPED_LOCK_MUTEX(directory->THIS_LOCK);
 		  buffers.push_back( rfb );
 		  directory->sizeInBytes += size;
+          sizeInBytes += size;
 	  } else {
 		buffers.push_back(rfb);
 	  }

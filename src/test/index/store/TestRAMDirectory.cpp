@@ -8,6 +8,9 @@
 #include <string>
 #include <iostream>
 
+#include "CLucene.h"
+#include "CLucene/_clucene-config.h"
+
 #include "CLucene/analysis/Analyzers.h"
 #include "CLucene/document/Document.h"
 #include "CLucene/document/Field.h"
@@ -17,9 +20,7 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/FSDirectory.h"
 #include "CLucene/store/RAMDirectory.h"
-
-// BK> No idea what it is, doesn't exist in JLucene 2_3_2
-//import org.apache.lucene.store.MockRAMDirectory; 
+#include "../../store/MockRAMDirectory.h"
 
 /**
  * JUnit testcase to test RAMDirectory. RAMDirectory itself is used in many testcases,
@@ -32,7 +33,15 @@
 
 static int docsToAdd = 500;
 static char indexDir[CL_MAX_PATH] = "";
-  
+
+struct ThreadData
+{
+    MockRAMDirectory * dir;
+    IndexWriter * writer;
+    int           num;
+    CuTest *      tc;
+};
+
 // setup the index
 void testRAMDirectorySetUp (CuTest *tc) {
 
@@ -45,26 +54,28 @@ void testRAMDirectorySetUp (CuTest *tc) {
 
     // add some documents
     Document doc;
+    TCHAR * text;
     for (int i = 0; i < docsToAdd; i++) {
-      doc.add(* new Field(_T("content"), English::IntToEnglish(i), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+      text = English::IntToEnglish(i);
+      doc.add(* new Field(_T("content"), text, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
       writer->addDocument(&doc);
       doc.clear();
+      _CLDELETE_ARRAY(text);
     }
 
-    CuAssertEquals(tc, docsToAdd, writer->docCount());
+    CuAssertEquals(tc, docsToAdd, writer->docCount(), _T("document count"));
     writer->close();
 }
 
 // BK> all test functions are the same except RAMDirectory constructor, so shared code moved here
-void checkDir(CuTest *tc, RAMDirectory * ramDir) {
+void checkDir(CuTest *tc, MockRAMDirectory * ramDir) {
 
     // Check size
-    // BK> getRecomputedSizeInBytes() not implemented
-    //CuAssertEquals(tc, ramDir->sizeInBytes, ramDir->getRecomputedSizeInBytes());
+    CuAssertTrue(tc, ramDir->sizeInBytes == ramDir->getRecomputedSizeInBytes(), _T("RAMDir size"));
 
     // open reader to test document count
     IndexReader * reader = IndexReader::open(ramDir);
-    CuAssertEquals(tc, docsToAdd, reader->numDocs());
+    CuAssertEquals(tc, docsToAdd, reader->numDocs(), _T("document count"));
 
     // open search to check if all doc's are there
     IndexSearcher * searcher = _CLNEW IndexSearcher(reader);
@@ -73,7 +84,7 @@ void checkDir(CuTest *tc, RAMDirectory * ramDir) {
     Document doc;
     for (int i = 0; i < docsToAdd; i++) {
         searcher->doc(i, doc);
-        CuAssertTrue(tc, doc.getField(_T("content")) != NULL);
+        CuAssertTrue(tc, doc.getField(_T("content")) != NULL, _T("content is NULL"));
     }
 
     // cleanup
@@ -86,9 +97,7 @@ void checkDir(CuTest *tc, RAMDirectory * ramDir) {
 void testRAMDirectory (CuTest *tc) {
 
     Directory * dir = FSDirectory::getDirectory(indexDir);
-    // BK> No idea what it is, doesn't exist in JLucene 2_3_2
-    //MockRAMDirectory ramDir = new MockRAMDirectory(dir);
-    RAMDirectory * ramDir = _CLNEW RAMDirectory(dir);
+    MockRAMDirectory * ramDir = _CLNEW MockRAMDirectory(dir);
 
     // close the underlaying directory
     dir->close();
@@ -101,7 +110,7 @@ void testRAMDirectory (CuTest *tc) {
 
 void testRAMDirectoryString (CuTest *tc) {
 
-    RAMDirectory * ramDir = _CLNEW RAMDirectory(indexDir);
+    MockRAMDirectory * ramDir = _CLNEW MockRAMDirectory(indexDir);
 
     checkDir(tc, ramDir);
 
@@ -112,35 +121,44 @@ void testRAMDirectoryString (CuTest *tc) {
 static int numThreads = 50;
 static int docsPerThread = 40;
 
-_LUCENE_THREAD_FUNC(indexDocs, _writer){
+_LUCENE_THREAD_FUNC(indexDocs, _data) {
 
-    IndexWriter * writer = (IndexWriter *)_writer;
-    int num = 1;
+    ThreadData * data = (ThreadData *)_data;
     Document doc;
+    int cnt = 0;
+    TCHAR * text;
     for (int j=1; j<docsPerThread; j++) {
-        doc.add(*new Field(_T("sizeContent"), English::IntToEnglish(num*docsPerThread+j), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-        writer->addDocument(&doc);
+        text = English::IntToEnglish(data->num*docsPerThread+j);
+        doc.add(*new Field(_T("sizeContent"), text, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+        data->writer->addDocument(&doc);
         doc.clear();
-        //synchronized (ramDir) {
-        //    assertEquals(ramDir.sizeInBytes(), ramDir.getRecomputedSizeInBytes());
-        //}
+        _CLDELETE_ARRAY(text);
+        {
+            SCOPED_LOCK_MUTEX(data->dir->THIS_LOCK);
+            CuAssertTrue(data->tc, data->dir->sizeInBytes == data->dir->getRecomputedSizeInBytes());
+        }
     }
 }
   
 void testRAMDirectorySize(CuTest * tc)  {
       
-    RAMDirectory * ramDir = _CLNEW RAMDirectory(indexDir);
+    MockRAMDirectory * ramDir = _CLNEW MockRAMDirectory(indexDir);
     IndexWriter * writer;
     
     writer  = _CLNEW IndexWriter(ramDir, new WhitespaceAnalyzer(), false);
     writer->optimize();
     
-    //assertEquals(ramDir.sizeInBytes(), ramDir.getRecomputedSizeInBytes());
+    CuAssertTrue(tc, ramDir->sizeInBytes == ramDir->getRecomputedSizeInBytes(), _T("RAMDir size"));
 
     _LUCENE_THREADID_TYPE* threads = _CL_NEWARRAY(_LUCENE_THREADID_TYPE, numThreads);
+    ThreadData * tdata = _CL_NEWARRAY(ThreadData, numThreads);
     
     for (int i=0; i<numThreads; i++) {
-      threads[i] = _LUCENE_THREAD_CREATE(&indexDocs, writer);
+      tdata[i].num = i;
+      tdata[i].dir = ramDir;
+      tdata[i].tc = tc;
+      tdata[i].writer = writer;
+      threads[i] = _LUCENE_THREAD_CREATE(&indexDocs, &tdata[i]);
     }
 
     for (int i=0; i<numThreads; i++){
@@ -148,11 +166,12 @@ void testRAMDirectorySize(CuTest * tc)  {
     }
 
     _CLDELETE_ARRAY(threads);
+    _CLDELETE_ARRAY(tdata);
 
     writer->optimize();
-    //assertEquals(ramDir.sizeInBytes(), ramDir.getRecomputedSizeInBytes());
+    CuAssertTrue(tc, ramDir->sizeInBytes == ramDir->getRecomputedSizeInBytes(), _T("RAMDir size"));
     
-    CuAssertEquals(tc, docsToAdd + (numThreads * (docsPerThread-1)), writer->docCount());
+    CuAssertEquals(tc, docsToAdd + (numThreads * (docsPerThread-1)), writer->docCount(), _T("document count"));
 
     writer->close();
     _CLLDELETE(writer);
@@ -182,7 +201,6 @@ void testRAMDirectoryTearDown(CuTest * tc) {
 
 }
   
-
 CuSuite *testRAMDirectory(void)
 {
     CuSuite *suite = CuSuiteNew(_T("CLucene RAMDirectory Test"));
