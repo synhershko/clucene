@@ -40,6 +40,9 @@ SET(test_files ./tests.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
 ./search/TestExtractTerms.cpp
+./search/TestConstantScoreRangeQuery.cpp
+./search/BaseTestRangeFilter.h
+./search/BaseTestRangeFilter.cpp
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
