@@ -13,8 +13,6 @@
 #include "CLucene/index/_Term.h"
 CL_CLASS_DEF(index,IndexReader)
 
-typedef std::set<CL_NS(index)::Term *, CL_NS(index)::Term_UnorderedCompare>  TermSet;
-
 //#include "Filter.h"
 //#include "Sort.h"
 //#include "CLucene/util/VoidList.h"
@@ -26,6 +24,8 @@ CL_NS_DEF(search)
     class Similarity;
     class Searcher;
     
+    typedef std::set<CL_NS(index)::Term *, CL_NS(index)::Term_UnorderedCompare>  TermSet;
+
 	/** The abstract base class for queries.
     <p>Instantiable subclasses are:
     <ul>
