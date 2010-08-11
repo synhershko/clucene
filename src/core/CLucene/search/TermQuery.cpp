@@ -242,8 +242,7 @@ CL_NS_DEF(search)
 
     void TermQuery::extractTerms( TermSet * termset )
     {
-        assert( termset );
-        if( term && termset && termset->end() == termset->find( term ))
+        if( term && termset->end() == termset->find( term ))
             termset->insert( _CL_POINTER( term ));
     }
 

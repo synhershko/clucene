@@ -274,11 +274,7 @@ CL_NS_DEF(search)
 
     void BooleanQuery::extractTerms( TermSet * termset )
     {
-	    assert( termset );
-		if( ! termset )
-			return;
-			
-		for (uint32_t i = 0 ; i < clauses->size(); i++) 
+		for (size_t i = 0 ; i < clauses->size(); i++) 
         {
             BooleanClause* clause = (*clauses)[i];
             clause->getQuery()->extractTerms( termset );

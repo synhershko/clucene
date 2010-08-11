@@ -222,9 +222,6 @@ Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
 
 void MultiPhraseQuery::extractTerms( TermSet * termset )
 {
-    if( ! termset )
-        return;
-
     for( size_t i = 0; i < termArrays->size(); i++ )
     {
         ArrayBase<Term*> * terms = termArrays->at( i ); 

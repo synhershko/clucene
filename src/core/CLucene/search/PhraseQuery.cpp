@@ -269,11 +269,7 @@ CL_NS_DEF(search)
 
 void PhraseQuery::extractTerms( TermSet * termset )
 {
-    assert( termset );
-    if( ! termset )
-        return;
-
-    for( uint32_t i = 0; i < terms->size(); i++ )
+    for( size_t i = 0; i < terms->size(); i++ )
     {
         Term * pTerm = (*terms)[i];
         if( pTerm && termset->end() == termset->find( pTerm ))
