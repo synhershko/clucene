@@ -38,7 +38,7 @@ CL_NS_DEF(search)
     coord = getSimilarity()->coord(this->scorers->length, this->scorers->length);
   }
 	ConjunctionScorer::~ConjunctionScorer(){
-		//_CLDELETE(scorers);
+		_CLLDELETE(scorers);
 	}
 
 	TCHAR* ConjunctionScorer::toString(){
