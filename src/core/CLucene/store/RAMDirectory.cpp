@@ -51,10 +51,6 @@ CL_NS_DEF(store)
   }
 
   RAMFile::~RAMFile(){
-      if ( directory != NULL ) {
-          SCOPED_LOCK_MUTEX(directory->THIS_LOCK);
-          directory->sizeInBytes -= sizeInBytes;
-      } 
   }
 
   int64_t RAMFile::getLength()
@@ -477,9 +473,15 @@ CL_NS_DEF(store)
 
   bool RAMDirectory::doDeleteFile(const char* name) {
     SCOPED_LOCK_MUTEX(files_mutex);
-    files->removeitr( files->find((char*)name) );
-    return true;
-  }
+    FileMap::iterator itr = files->find((char*)name);
+    if (itr != files->end()) {
+        sizeInBytes -= itr->second->sizeInBytes;
+        files->removeitr(itr);
+        return true;
+    } else {
+        return false;
+    }
+ }
 
   void RAMDirectory::renameFile(const char* from, const char* to) {
 	SCOPED_LOCK_MUTEX(files_mutex);
