@@ -475,8 +475,9 @@ CL_NS_DEF(store)
     SCOPED_LOCK_MUTEX(files_mutex);
     FileMap::iterator itr = files->find((char*)name);
     if (itr != files->end()) {
-        sizeInBytes -= itr->second->sizeInBytes;
         files->removeitr(itr);
+        SCOPED_LOCK_MUTEX(this->THIS_LOCK);
+        sizeInBytes -= itr->second->sizeInBytes;
         return true;
     } else {
         return false;
