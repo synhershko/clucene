@@ -15,19 +15,19 @@ CL_NS_DEF(store)
 
 MockRAMDirectory::MockRAMDirectory() :
 	RAMDirectory(),
-	noDeleteOpenFile(true), maxSize(ULONG_MAX) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
 MockRAMDirectory::MockRAMDirectory(const char* dir) :
 	RAMDirectory(dir),
-	noDeleteOpenFile(true), maxSize(ULONG_MAX) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
 MockRAMDirectory::MockRAMDirectory(Directory* dir) :
 	RAMDirectory(dir),
-	noDeleteOpenFile(true), maxSize(ULONG_MAX) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
