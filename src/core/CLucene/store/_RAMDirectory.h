@@ -64,6 +64,8 @@ CL_NS_DEF(store)
 		uint8_t* newBuffer( const int32_t size );
 		
 		int64_t CLUCENE_EXPORT getSizeInBytes() const;
+
+        friend class RAMDirectory;
 	};
 
 	class CLUCENE_EXPORT RAMOutputStream: public IndexOutput {

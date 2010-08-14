@@ -475,9 +475,9 @@ CL_NS_DEF(store)
     SCOPED_LOCK_MUTEX(files_mutex);
     FileMap::iterator itr = files->find((char*)name);
     if (itr != files->end()) {
-        files->removeitr(itr);
         SCOPED_LOCK_MUTEX(this->THIS_LOCK);
         sizeInBytes -= itr->second->sizeInBytes;
+        files->removeitr(itr);
         return true;
     } else {
         return false;
@@ -494,7 +494,10 @@ CL_NS_DEF(store)
     ** exception, but it happens routinely in CLucene's internals (e.g., during
     ** IndexWriter.addIndexes with the file named 'segments'). */
     if (files->exists((char*)to)) {
-      files->removeitr( files->find((char*)to) );
+        FileMap::iterator itr1 = files->find((char*)to);
+        SCOPED_LOCK_MUTEX(this->THIS_LOCK);
+        sizeInBytes -= itr1->second->sizeInBytes;
+        files->removeitr( itr1 );
     }
     if ( itr == files->end() ){
       char tmp[1024];
@@ -541,6 +544,8 @@ CL_NS_DEF(store)
 	if ( itr!=files->end() )  {
 		n = itr->first;
 		RAMFile* rf = itr->second;
+        SCOPED_LOCK_MUTEX(this->THIS_LOCK);
+        sizeInBytes -= rf->sizeInBytes;
 		_CLDELETE(rf);
 	} else {
 		n = STRDUP_AtoA(name);
