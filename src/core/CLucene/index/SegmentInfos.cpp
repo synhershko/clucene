@@ -940,6 +940,7 @@ string SegmentInfo::segString(Directory* dir) {
                 }
                 break;
               } else {
+				  genInput->close();
 	              _CLLDELETE(genInput);
 	              throw e;
               }
@@ -955,12 +956,14 @@ string SegmentInfo::segString(Directory* dir) {
 		              if (gen0 == gen1) {
 			              // The file is consistent.
 			              genB = gen0;
+			              genInput->close();
 			              _CLDELETE(genInput);
 			              break;
 		              }
 	              }
               } catch (CLuceneError &err2) {
 	              if (err2.number() != CL_ERR_IO) {
+					  genInput->close();
 		              _CLLDELETE(genInput);
 		              throw err2; // retry only for IOException
 	              }
