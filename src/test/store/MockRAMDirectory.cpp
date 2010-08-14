@@ -55,17 +55,18 @@ IndexOutput* MockRAMDirectory::createOutput(const char* name) {
 
 	MockRAMFile* existing = static_cast<MockRAMFile*>(files->get((char*)name));
 
-	if (existing = NULL && strcmp(name, "segments.gen") != 0) {
+	if (existing != NULL && strcmp(name, "segments.gen") != 0) {
 		char buffer[200];
 		_snprintf(buffer, 200, "MockRAMDirectory: file %s already exist", name);
 		_CLTHROWA(CL_ERR_IO, buffer);
 	} else {
 		if (existing != NULL) {
+            SCOPED_LOCK_MUTEX(THIS_LOCK);
 			sizeInBytes -= existing->getSizeInBytes();
 			existing->setDirectory(NULL);
 		}
 
-	files->put(STRDUP_AtoA(name), file);
+	    files->put(STRDUP_AtoA(name), file);
 	}
 
 	return _CLNEW MockRAMOutputStream(this, file);
