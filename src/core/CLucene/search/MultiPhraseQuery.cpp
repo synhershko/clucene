@@ -233,11 +233,11 @@ MultiPhraseQuery::~MultiPhraseQuery(){
 		for ( size_t j=0;j<termArrays->at(i)->length;j++ ) {
 			_CLLDECDELETE(termArrays->at(i)->values[j]);
 		}
-		_CLDELETE(termArrays->at(i));
+		_CLLDELETE(termArrays->at(i));
 	}
 	_CLLDELETE(termArrays);
 	_CLLDELETE(positions);
-	_CLDELETE_CARRAY(field);
+	_CLDELETE_LCARRAY(field);
 }
 
 void MultiPhraseQuery::setSlop(const int32_t s) { slop = s; }

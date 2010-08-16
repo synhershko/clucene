@@ -209,6 +209,39 @@ void testBitAtEndOfBitSet(CuTest* tc) {
   doTestBitAtEndOfBitSet(tc, 202, 200);
 }
 
+void doTestNextSetBit(CuTest* tc, int nSize)
+{
+    BitSet  bv( nSize );
+    int     nIdx;
+    int     nExpectedIdx;
+
+    // initialize bit set by setting every second bit starting with 0
+    for( int32_t i = 0; i < bv.size(); i+=2 )
+        bv.set(i);
+    
+    // iterate the bits
+    nIdx = 0;
+    nExpectedIdx = 0;
+    while( (nIdx = bv.nextSetBit( nIdx )) != -1 )
+    {
+        assertEquals( nExpectedIdx, nIdx );
+        nExpectedIdx += 2;
+        nIdx++;
+    }
+}
+
+/**
+ * Test the nextSetBit() method on BitVectors of various sizes.
+ * CLucene specific
+ * @throws Exception
+ */
+void testNextSetBit(CuTest* tc)
+{
+    doTestNextSetBit(tc, 8);
+    doTestNextSetBit(tc, 20);
+    doTestNextSetBit(tc, 100);
+}
+
 CuSuite *testBitSet(void)
 {
     CuSuite *suite = CuSuiteNew(_T("CLucene BitSet Test"));
@@ -220,6 +253,8 @@ CuSuite *testBitSet(void)
     SUITE_ADD_TEST(suite, testWriteRead);
     SUITE_ADD_TEST(suite, testDgaps);
     SUITE_ADD_TEST(suite, testBitAtEndOfBitSet);
+
+    SUITE_ADD_TEST(suite, testNextSetBit);
 
     return suite; 
 }
