@@ -39,7 +39,7 @@ CL_NS_DEF(search)
 	//Pre  - true
 	//Post - The instance has been destroyed
 
-		_CLDELETE(doc);
+		_CLLDELETE(doc);
 	}
 
 
@@ -54,12 +54,6 @@ CL_NS_DEF(search)
 	//Post - The instance has been created
 
 		hitDocs = _CLNEW CL_NS(util)::CLVector<HitDoc*, CL_NS(util)::Deletor::Object<HitDoc> >;
-		//_length  = 0;
-		first   = NULL;
-		last    = NULL;
-		//numDocs = 0;
-		//maxDocs = 200;
-		//nDeletedHits = 0;
 		nDeletions = countDeletions(s);
 
 		//retrieve 100 initially
@@ -68,8 +62,8 @@ CL_NS_DEF(search)
 		_lengthAtStart = _length;
 	}
 
-	Hits::~Hits(){ 
-		_CLDELETE(hitDocs);
+	Hits::~Hits(){
+		_CLLDELETE(hitDocs);
 	}
 
 	// count # deletions, return -1 if unknown.

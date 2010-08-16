@@ -398,8 +398,8 @@ CL_NS_DEF(search)
 				r->addDetail(e);
 				sumExpl->addDetail(r);
 				fail = true;
-			}else{
-			  _CLDELETE(e);
+			} else {
+				_CLLDELETE(e);
 			}
 		}
 		if (fail) {

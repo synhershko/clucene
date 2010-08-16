@@ -153,8 +153,8 @@ BitSet* BitSet::clone() const {
     output->writeInt(count());       // write count
     int32_t last=0;
     int32_t n = count();
-    int32_t m = (_size >> 3);
-    for (int32_t i=0; i<=m && n>0; i++) {
+    int32_t m = (_size >> 3) + 1;
+    for (int32_t i=0; i<m && n>0; i++) {
       if (bits[i]!=0) {
         output->writeVInt(i-last);
         output->writeByte(bits[i]);
@@ -189,7 +189,7 @@ BitSet* BitSet::clone() const {
           return -1;
 
       while (true) {
-          if ( (bits[fromIndex >> 3] & (1 << (fromIndex & 7))) != 0)
+          if ((bits[fromIndex >> 3] & (1 << (fromIndex & 7))) != 0)
               return fromIndex;
           if (++fromIndex == _size)
               return -1;

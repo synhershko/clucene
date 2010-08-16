@@ -97,7 +97,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
         }            
     }     */   
     //code to reconstruct the original sequence of Tokens
-    const lucene::util::ArrayBase<const TCHAR*>* terms=tpv->getTerms();
+    const ArrayBase<const TCHAR*>* terms = tpv->getTerms();
     const ArrayBase<int32_t>* freq=tpv->getTermFrequencies();
 
     size_t totalTokens=0;

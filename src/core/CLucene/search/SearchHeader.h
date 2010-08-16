@@ -107,7 +107,8 @@ CL_NS_DEF(search)
    * {@link #normalize(float_t)}.  At this point the weighting is complete and a
    * scorer may be constructed by calling {@link #scorer(IndexReader)}.
    */
-	class CLUCENE_EXPORT Weight/*: LUCENE_BASE*/ {
+	class CLUCENE_EXPORT Weight
+    {
     public:
 		virtual ~Weight();
 
@@ -132,7 +133,8 @@ CL_NS_DEF(search)
       virtual TCHAR* toString();
    };
 
-   class CLUCENE_EXPORT HitDoc:LUCENE_BASE {
+   class CLUCENE_EXPORT HitDoc
+   {
     public:
 		float_t score;
 		int32_t id;
@@ -142,7 +144,7 @@ CL_NS_DEF(search)
 		HitDoc* prev;					  // in doubly-linked cache
 		
 		HitDoc(const float_t s, const int32_t i);
-		~HitDoc();
+		virtual ~HitDoc();
     };
 
 

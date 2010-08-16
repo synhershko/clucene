@@ -231,14 +231,13 @@ MultiPhraseQuery::MultiPhraseQuery():
 MultiPhraseQuery::~MultiPhraseQuery(){
 	for (size_t i = 0; i < termArrays->size(); i++){
 		for ( size_t j=0;j<termArrays->at(i)->length;j++ ) {
-      _CLLDECDELETE(termArrays->at(i)->values[j]);
-			++j;
+			_CLLDECDELETE(termArrays->at(i)->values[j]);
 		}
-		_CLDELETE(termArrays->at(i));
+		_CLLDELETE(termArrays->at(i));
 	}
 	_CLLDELETE(termArrays);
 	_CLLDELETE(positions);
-	_CLDELETE_CARRAY(field);
+	_CLDELETE_LCARRAY(field);
 }
 
 void MultiPhraseQuery::setSlop(const int32_t s) { slop = s; }

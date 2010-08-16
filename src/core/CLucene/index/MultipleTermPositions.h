@@ -32,7 +32,7 @@ public:
 	* @exception IOException
 	*/ 
   MultipleTermPositions(IndexReader* indexReader, const CL_NS(util)::ArrayBase<Term*>* terms);
-	virtual ~MultipleTermPositions(){}
+	virtual ~MultipleTermPositions();
 
 	bool next();
 

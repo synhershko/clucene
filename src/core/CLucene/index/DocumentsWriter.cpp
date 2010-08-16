@@ -122,9 +122,11 @@ DocumentsWriter::~DocumentsWriter(){
 
   // Make sure unused posting slots aren't attempted delete on
   if (this->postingsFreeListDW.values){
-      memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
-          , NULL
-          , sizeof(Posting*));
+      if (this->postingsFreeCountDW > this->postingsFreeListDW.length) {
+          memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
+              , NULL
+              , sizeof(Posting*));
+      }
       postingsFreeListDW.deleteUntilNULL();
   }
 }

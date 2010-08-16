@@ -56,6 +56,7 @@ CuSuite *testsearch(void);
 CuSuite *testtermvector(void);
 CuSuite *testsort(void);
 CuSuite *testduplicates(void);
+CuSuite *testRangeFilter(void);
 CuSuite *testdatefilter(void);
 CuSuite *testwildcard(void);
 CuSuite *testdebug(void);
@@ -65,6 +66,7 @@ CuSuite *testdocument(void);
 CuSuite *testNumberTools(void);
 CuSuite *testDateTools(void);
 CuSuite *testBoolean(void);
+CuSuite *testBitSet(void);
 
 class English{
 public:

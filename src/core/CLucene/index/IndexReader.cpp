@@ -95,7 +95,7 @@ CL_NS_DEF(index)
   //       Destroys the instance and releases the writeLock if needed
   //Pre  - true
   //Post - The instance has been destroyed if pre(writeLock) exists is has been released
-  	_CLDELETE(_internal);
+  	_CLLDELETE(_internal);
   }
 
   IndexReader* IndexReader::open(const char* path, bool closeDirectoryOnCleanup, IndexDeletionPolicy* deletionPolicy){
