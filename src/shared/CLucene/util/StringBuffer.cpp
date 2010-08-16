@@ -344,4 +344,88 @@ CL_NS_DEF(util)
     buffer = tmp;
   }
 
+  void StringBuffer::setCharAt(size_t pos, const TCHAR chr) {
+    if (pos < bufferLength) {
+      buffer[pos] = chr;
+    }
+  }
+
+  TCHAR StringBuffer::charAt(size_t pos) {
+    if (pos >= bufferLength) {
+    }
+    return buffer[pos];
+  }
+
+  void StringBuffer::insert(const size_t pos, TCHAR chr) {
+    if (pos > len) {
+    }
+
+    growBuffer(len + 1, 0);
+    memmove(&buffer[pos + 1], &buffer[pos], sizeof(TCHAR) * (len - pos));
+    buffer[pos] = chr;
+    len++;
+  }
+
+  void StringBuffer::insert(const size_t pos, const TCHAR* chrs, size_t length) {
+    if (pos >= len) {
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is larger than string len"));
+      return;
+    }
+
+    if (length == -1) {
+      length = _tcslen(chrs);
+    }
+
+    if (length > 0) {
+      growBuffer(len + length, 0);
+      memmove(&buffer[pos + length], &buffer[pos], sizeof(TCHAR) * (len - pos));
+      _tcsncpy(&buffer[pos], chrs, sizeof(TCHAR) * (length - 1));
+      len += length;
+    }
+  }
+
+  void StringBuffer::deleteCharAt(size_t pos) {
+    if (pos >= len) {
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is larger than string len"));
+      return;
+    }
+
+    memmove(&buffer[pos], &buffer[pos + 1], sizeof(TCHAR) * (len - pos));
+    len--;
+    buffer[len] = _T('\0');
+  }
+
+  void StringBuffer::deleteChars(size_t start, size_t end) {
+    if (start > end || end > bufferLength) {
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("start/end is not in string"));
+      return;
+    }
+
+    memmove(&buffer[start], &buffer[end], sizeof(TCHAR) * (len - end));
+    buffer[len - (end - start)] = _T('\0');
+    len -= end - start;
+  }
+
+  void StringBuffer::toLower() {
+    _tcslwr(buffer);
+  }
+
+  bool StringBuffer::substringEquals(size_t start, size_t end, const TCHAR* str, size_t length) const {
+    if (length == -1) {
+      length = _tcslen(str);
+    }
+
+    if (end - start != length) {
+      return false;
+    }
+
+    for (size_t c = start; c < end; c++) {
+      if (buffer[c] != str[c - start]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
 CL_NS_END

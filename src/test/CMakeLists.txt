@@ -49,6 +49,7 @@ SET(test_files ./tests.cpp
 ./index/TestReuters.cpp
 ./util/TestPriorityQueue.cpp
 ./util/TestBitSet.cpp
+./util/TestStringBuffer.cpp
 ./util/English.cpp
 ${test_HEADERS}
 )

@@ -65,6 +65,7 @@ CuSuite *testNumberTools(void);
 CuSuite *testDateTools(void);
 CuSuite *testBoolean(void);
 CuSuite *testBitSet(void);
+CuSuite *testStringBuffer(void);
 
 class English{
 public:

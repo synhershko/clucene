@@ -53,6 +53,17 @@ CL_NS_DEF(util)
        return *this;
    }
 
+   void setCharAt(size_t pos, const TCHAR chr);
+   TCHAR charAt(size_t pos);
+
+   void insert(const size_t pos, TCHAR chr);
+   void insert(const size_t pos, const TCHAR* chrs, size_t length = -1);
+   void deleteCharAt(size_t pos);
+   void deleteChars(size_t start, size_t end);
+
+   void toLower();
+   bool substringEquals(size_t start, size_t end, const TCHAR* str, size_t length = -1) const;
+
    ///Contains the length of string in the StringBuffer
    ///Public so that analyzers can edit the length directly
    size_t len;
