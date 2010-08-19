@@ -104,6 +104,17 @@ public:
    * @return a score factor for the phrase
    */
    float_t idf(CL_NS(util)::CLVector<CL_NS(index)::Term*>* terms, Searcher* searcher);
+
+   template<class TermIterator>
+   float_t idf( TermIterator first, TermIterator last, Searcher* searcher )
+   {
+      float_t _idf = 0.0f;
+      for( ; first != last; first++ ) {
+         _idf += idf(*first, searcher);
+      }
+      return _idf;
+   }
+
    //float_t idf(Term** terms, Searcher* searcher);
 
    
