@@ -17,72 +17,63 @@ CL_NS_USE(util)
 CL_NS_USE(document)
 
 
-RangeFilter::RangeFilter( const TCHAR* fieldName, const TCHAR* lowerTerm, const TCHAR* upperTerm,
-                         bool includeLower, bool includeUpper ) : field(NULL), lowerValue(NULL), upperValue(NULL)
+RangeFilter::RangeFilter( const TCHAR* _fieldName, const TCHAR* _lowerTerm, const TCHAR* _upperTerm,
+                         bool _includeLower, bool _includeUpper )
+                         : fieldName(NULL), lowerTerm(NULL), upperTerm(NULL)
+                         , includeLower(_includeLower), includeUpper(_includeUpper)
 {
-    if (NULL == lowerTerm && NULL == upperTerm) {
+    if (NULL == _lowerTerm && NULL == _upperTerm) {
         _CLTHROWT(CL_ERR_IllegalArgument, _T("At least one value must be non-null"));
     }
-    if (includeLower && NULL == lowerTerm) {
+    if (_includeLower && NULL == _lowerTerm) {
         _CLTHROWT(CL_ERR_IllegalArgument, _T("The lower bound must be non-null to be inclusive"));
     }
-    if (includeUpper && NULL == upperTerm) {
+    if (_includeUpper && NULL == _upperTerm) {
         _CLTHROWT(CL_ERR_IllegalArgument, _T("The upper bound must be non-null to be inclusive"));
     }
 
-	this->field = STRDUP_TtoT(fieldName);
-	if ( lowerTerm != NULL )
-		this->lowerValue = STRDUP_TtoT(lowerTerm);
-	if ( upperTerm != NULL )
-		this->upperValue = STRDUP_TtoT(upperTerm);
-	this->includeLower = includeLower;
-	this->includeUpper = includeUpper;
+	this->fieldName = STRDUP_TtoT(_fieldName);
+	if ( _lowerTerm != NULL )
+		this->lowerTerm = STRDUP_TtoT(_lowerTerm);
+	if ( _upperTerm != NULL )
+		this->upperTerm = STRDUP_TtoT(_upperTerm);
 }
-
-RangeFilter* RangeFilter::Less( const TCHAR* fieldName, const TCHAR* upperTerm ) {
-	return _CLNEW RangeFilter( fieldName, NULL, upperTerm, false, true );
-}
-
-RangeFilter* RangeFilter::More( const TCHAR* fieldName, const TCHAR* lowerTerm ) {
-	return _CLNEW RangeFilter( fieldName, lowerTerm, NULL, true, false );
-}
-
-
-RangeFilter::~RangeFilter()
-{
-    _CLDELETE_LCARRAY( field );
-	_CLDELETE_LCARRAY( lowerValue );
-	_CLDELETE_LCARRAY( upperValue );
-}
-
 
 RangeFilter::RangeFilter( const RangeFilter& copy ) : 
-	field( STRDUP_TtoT(copy.field) ),
-	lowerValue( STRDUP_TtoT(copy.lowerValue) ), 
-	upperValue( STRDUP_TtoT(copy.upperValue) ),
+	fieldName( STRDUP_TtoT(copy.fieldName) ),
+	lowerTerm( STRDUP_TtoT(copy.lowerTerm) ), 
+	upperTerm( STRDUP_TtoT(copy.upperTerm) ),
 	includeLower( copy.includeLower ),
 	includeUpper( copy.includeUpper )
 {
 }
 
-
-Filter* RangeFilter::clone() const {
-	return _CLNEW RangeFilter(*this );
+RangeFilter::~RangeFilter()
+{
+    _CLDELETE_LCARRAY( fieldName );
+	_CLDELETE_LCARRAY( lowerTerm );
+	_CLDELETE_LCARRAY( upperTerm );
 }
 
-/** Returns a BitSet with true for documents which should be permitted in
-search results, and false for those that should not. */
+RangeFilter* RangeFilter::Less( const TCHAR* _fieldName, const TCHAR* _upperTerm ) {
+	return _CLNEW RangeFilter( _fieldName, NULL, _upperTerm, false, true );
+}
+
+RangeFilter* RangeFilter::More( const TCHAR* _fieldName, const TCHAR* _lowerTerm ) {
+	return _CLNEW RangeFilter( _fieldName, _lowerTerm, NULL, true, false );
+}
+
 BitSet* RangeFilter::bits( IndexReader* reader )
 {
 	BitSet* bts = _CLNEW BitSet( reader->maxDoc() );
 	Term* term = NULL;
 	
-	Term* t = _CLNEW Term( field, (lowerValue ? lowerValue : _T("")), false );
+	Term* t = _CLNEW Term( fieldName, (lowerTerm ? lowerTerm : _T("")), false );
 	TermEnum* enumerator = reader->terms( t );	// get enumeration of all terms after lowerValue
 	_CLDECDELETE( t );
 	
 	if( enumerator->term(false) == NULL ) {
-		_CLDELETE( enumerator );
+		_CLLDELETE( enumerator );
 		return bts;
 	}
 	
@@ -98,15 +89,15 @@ BitSet* RangeFilter::bits( IndexReader* reader )
 		{
 			term = enumerator->term();
 			
-			if( term == NULL || _tcscmp(term->field(), field) )
+			if( term == NULL || _tcscmp(term->field(), fieldName) )
 				break;
 			
-			if( !checkLower || lowerValue == NULL || _tcscmp(term->text(), lowerValue) > 0 )
+			if( !checkLower || lowerTerm == NULL || _tcscmp(term->text(), lowerTerm) > 0 )
 			{
 				checkLower = false;
-				if( upperValue != NULL )
+				if( upperTerm != NULL )
 				{
-					int compare = _tcscmp( upperValue, term->text() );
+					int compare = _tcscmp( upperTerm, term->text() );
 					
 					/* if beyond the upper term, or is exclusive and
 					 * this is equal to the upper term, break out */
@@ -126,11 +117,11 @@ BitSet* RangeFilter::bits( IndexReader* reader )
 	}
 	_CLFINALLY
 	(
-		_CLDECDELETE( term );
+		_CLLDECDELETE( term );
 		termDocs->close();
-		_CLVDELETE( termDocs );
+		_CLLDELETE(termDocs);
 		enumerator->close();
-		_CLDELETE( enumerator );
+		_CLLDELETE( enumerator );
 	);
 	
 	return bts;
@@ -138,12 +129,16 @@ BitSet* RangeFilter::bits( IndexReader* reader )
 
 TCHAR* RangeFilter::toString()
 {
-	size_t len = (field ? _tcslen(field) : 0) + (lowerValue ? _tcslen(lowerValue) : 0) + (upperValue ? _tcslen(upperValue) : 0) + 8;
+	size_t len = (fieldName ? _tcslen(fieldName) : 0) + (lowerTerm ? _tcslen(lowerTerm) : 0) + (upperTerm ? _tcslen(upperTerm) : 0) + 8;
 	TCHAR* ret = _CL_NEWARRAY( TCHAR, len );
 	ret[0] = 0;
-	_sntprintf( ret, len, _T("%s: [%s-%s]"), field, (lowerValue?lowerValue:_T("")), (upperValue?upperValue:_T("")) );
+	_sntprintf( ret, len, _T("%s: [%s-%s]"), fieldName, (lowerTerm?lowerTerm:_T("")), (upperTerm?upperTerm:_T("")) );
 	
 	return ret;
+}
+
+Filter* RangeFilter::clone() const {
+	return _CLNEW RangeFilter(*this );
 }
 
 CL_NS_END

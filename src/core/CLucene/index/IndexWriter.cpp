@@ -599,8 +599,8 @@ bool IndexWriter::flushDocStores() {
 
       try {
         CompoundFileWriter cfsWriter(directory, compoundFileName.c_str());
-        const int32_t size = files.size();
-        for(int32_t i=0;i<size;i++)
+        const size_t size = files.size();
+        for(size_t i=0;i<size;++i)
           cfsWriter.addFile(files[i].c_str());
 
         // Perform the merge
@@ -2218,6 +2218,7 @@ void IndexWriter::applyDeletes(bool flushedNewSegment) {
           reader->doCommit();
         } _CLFINALLY (
           reader->doClose();
+          _CLLDELETE(reader);
         )
       }
     )

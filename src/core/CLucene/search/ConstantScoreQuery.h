@@ -25,6 +25,8 @@ protected:
     Filter* filter;
 
 public:
+    /* Constructs a new ConstantScoreQuery, and takes ownership of the filter object
+    */
     ConstantScoreQuery(Filter* _filter);
     virtual ~ConstantScoreQuery();
 

@@ -29,7 +29,9 @@ public:
         bits(filter->bits(reader)), theScore(w->getValue()), _doc(-1)
     {
     }
-    virtual ~ConstantScorer(){}
+    virtual ~ConstantScorer() {
+        _CLLDELETE(bits);
+    }
 
     bool next() {
         _doc = bits->nextSetBit(_doc+1);
@@ -50,7 +52,7 @@ public:
     }
 
     Explanation* explain(int32_t /*doc*/) {
-        _CLTHROWT(CL_ERR_UnsupportedOperation, _T("Unsupported operation at ConstantScoreQuery::explain"));
+        _CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation at ConstantScoreQuery::explain");
     }
 
     TCHAR* toString(){
@@ -69,7 +71,9 @@ private:
 
 public:
     ConstantWeight(ConstantScoreQuery* enclosingInstance, Searcher* searcher) :
-      similarity(enclosingInstance->getSimilarity(searcher)), queryNorm(0), queryWeight(0), parentQuery(enclosingInstance)
+          similarity(enclosingInstance->getSimilarity(searcher)),
+          queryNorm(0), queryWeight(0),
+          parentQuery(enclosingInstance)
     {
     }
     virtual ~ConstantWeight(){}
@@ -132,13 +136,18 @@ public:
             result->setValue(0);
             result->setMatch(true);
         }
+
+        _CLLDELETE(cs);
         return result;
     }
 };
 
 ConstantScoreQuery::ConstantScoreQuery(Filter* _filter) : filter(_filter) {
 }
-ConstantScoreQuery::~ConstantScoreQuery(){}
+
+ConstantScoreQuery::~ConstantScoreQuery() {
+    _CLLDELETE(filter);
+}
 
 Filter* ConstantScoreQuery::getFilter() const {
     return filter;
@@ -180,7 +189,7 @@ size_t ConstantScoreQuery::hashCode() const {
     return 0;
 }
 
-ConstantScoreQuery::ConstantScoreQuery( const ConstantScoreQuery& copy ):filter(copy.filter)
+ConstantScoreQuery::ConstantScoreQuery( const ConstantScoreQuery& copy ) : filter(copy.getFilter()->clone())
 {
 }
 

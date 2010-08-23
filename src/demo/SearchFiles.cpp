@@ -72,6 +72,7 @@ void SearchFiles(const char* index){
 
         s.close();
     }
+    reader->close();
     _CLLDELETE(reader);
 }
 

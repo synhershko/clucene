@@ -8,12 +8,9 @@
 #ifndef _lucene_search_RangeFilter_
 #define _lucene_search_RangeFilter_
 
-//#include "CLucene/document/DateField.h"
-CL_CLASS_DEF(index,Term)
-//#include "CLucene/index/Terms.h"
-//#include "CLucene/index/IndexReader.h"
-//#include "CLucene/util/BitSet.h"
 #include "Filter.h"
+
+CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)
 
@@ -29,9 +26,9 @@ CL_NS_DEF(search)
 class CLUCENE_EXPORT RangeFilter: public Filter 
 {
 private:
-	TCHAR* field;
-	TCHAR* lowerValue;
-	TCHAR* upperValue;
+	TCHAR* fieldName;
+	TCHAR* lowerTerm;
+	TCHAR* upperTerm;
 	bool   includeLower;
 	bool   includeUpper;
 
@@ -42,11 +39,8 @@ public:
      * @param upperTerm The upper bound on this range
      * @param includeLower Does this range include the lower bound?
      * @param includeUpper Does this range include the upper bound?
-     * @throws IllegalArgumentException if both terms are null or if
-     *  lowerTerm is null and includeLower is true (similar for upperTerm
-     *  and includeUpper)
      */
-	RangeFilter( const TCHAR* fieldName, const TCHAR* lowerValue, const TCHAR* upperValue,
+	RangeFilter( const TCHAR* fieldName, const TCHAR* lowerTerm, const TCHAR* upperTerm,
         bool includeLower, bool includeUpper );
     virtual ~RangeFilter();
 	

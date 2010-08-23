@@ -45,9 +45,9 @@ CL_NS_DEF(search)
 		// query boost factor
 		float_t boost;
 	protected:
-		Query(const Query& clone);
+        Query();
+        Query(const Query& clone);
 	public:
-		Query();
 		virtual ~Query();
 
 		/** Sets the boost for this query clause to <code>b</code>.  Documents

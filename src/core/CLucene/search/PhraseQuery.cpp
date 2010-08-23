@@ -405,8 +405,11 @@ CL_NS_DEF(search)
 	  queryExpl->setDescription(descbuf);
 
 	  Explanation* boostExpl = _CLNEW Explanation(parentQuery->getBoost(), _T("boost"));
+	  bool deleteBoostExpl = false;
 	  if (parentQuery->getBoost() != 1.0f)
-		  queryExpl->addDetail(boostExpl);
+	    queryExpl->addDetail(boostExpl);
+	  else
+	    deleteBoostExpl = true;
 	  queryExpl->addDetail(idfExpl);
 
 	  Explanation* queryNormExpl = _CLNEW Explanation(queryNorm,_T("queryNorm"));
@@ -415,6 +418,9 @@ CL_NS_DEF(search)
 	  queryExpl->setValue(boostExpl->getValue() *
 		  idfExpl->getValue() *
 		  queryNormExpl->getValue());
+
+	  if (deleteBoostExpl)
+	    _CLLDELETE(boostExpl);
 
 	  result->addDetail(queryExpl);
 
@@ -426,7 +432,9 @@ CL_NS_DEF(search)
 	  fieldExpl->setDescription(descbuf);
 
 
-	  Explanation* tfExpl = scorer(reader)->explain(doc);
+	  Scorer* sc = scorer(reader);
+	  Explanation* tfExpl = sc->explain(doc);
+	  _CLLDELETE(sc);
 	  fieldExpl->addDetail(tfExpl);
 	  fieldExpl->addDetail( _CLNEW Explanation(idfExpl->getValue(), idfExpl->getDescription()) );
 
