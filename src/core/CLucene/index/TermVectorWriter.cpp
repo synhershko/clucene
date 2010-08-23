@@ -47,29 +47,55 @@ CL_NS_DEF(index)
       try{
         tvx->close();
       }catch(CLuceneError& ioerr){
-        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
-        bError = true;
-        keep.set(ioerr.number(), ioerr.what());
+        if ( ioerr.number() != CL_ERR_IO )
+        {
+            _CLDELETE(tvx);
+            _CLDELETE(tvd);
+            _CLDELETE(tvf);
+            throw ioerr;
+        }
+        if (!bError)
+        {
+            bError = true;
+            keep.set(ioerr.number(), ioerr.what());
+        }
       }
       _CLDELETE(tvx);
     }
+
     if ( tvd != NULL ){
       try{
         tvd->close();
       }catch(CLuceneError& ioerr){
-        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
-        bError = true;
-        keep.set(ioerr.number(), ioerr.what());
+        if ( ioerr.number() != CL_ERR_IO )
+        {
+            _CLDELETE(tvd);
+            _CLDELETE(tvf);
+            throw ioerr;
+        }
+        if (!bError)
+        {
+            bError = true;
+            keep.set(ioerr.number(), ioerr.what());
+        }
       }
       _CLDELETE(tvd);
     }
+
     if ( tvf != NULL ){
       try{
         tvf->close();
       }catch(CLuceneError& ioerr){
-        if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
-        bError = true;
-        keep.set(ioerr.number(), ioerr.what());
+        if ( ioerr.number() != CL_ERR_IO )
+        {
+            _CLDELETE(tvf);
+            throw ioerr;
+        }
+        if (!bError)
+        {
+            bError = true;
+            keep.set(ioerr.number(), ioerr.what());
+        }
       }
       _CLDELETE(tvf);
     }
