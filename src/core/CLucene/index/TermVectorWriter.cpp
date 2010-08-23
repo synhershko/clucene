@@ -21,6 +21,7 @@ CL_NS_DEF(index)
     // Open files for TermVector storage
     char fbuf[CL_MAX_NAME];
     strcpy(fbuf,segment);
+    strcat(fbuf,".");
     char* fpbuf=fbuf+strlen(fbuf);
 
     strcpy(fpbuf,IndexFileNames::VECTORS_INDEX_EXTENSION);
@@ -40,12 +41,14 @@ CL_NS_DEF(index)
 
   void TermVectorsWriter::close(CLuceneError* err){
     CLuceneError keep;
+    bool bError = false;
 
     if ( tvx != NULL ){
       try{
         tvx->close();
       }catch(CLuceneError& ioerr){
         if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        bError = true;
         keep.set(ioerr.number(), ioerr.what());
       }
       _CLDELETE(tvx);
@@ -55,6 +58,7 @@ CL_NS_DEF(index)
         tvd->close();
       }catch(CLuceneError& ioerr){
         if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        bError = true;
         keep.set(ioerr.number(), ioerr.what());
       }
       _CLDELETE(tvd);
@@ -64,15 +68,19 @@ CL_NS_DEF(index)
         tvf->close();
       }catch(CLuceneError& ioerr){
         if ( ioerr.number() != CL_ERR_IO ) throw ioerr;
+        bError = true;
         keep.set(ioerr.number(), ioerr.what());
       }
       _CLDELETE(tvf);
     }
 
-    if ( err != NULL )
-      err->set(keep.number(), keep.what());
-    else
-      throw keep;
+    if (bError)
+    {
+        if ( err != NULL )
+            err->set(keep.number(), keep.what());
+        else 
+            throw keep;
+    }
   }
 
   TermVectorsWriter::~TermVectorsWriter(){

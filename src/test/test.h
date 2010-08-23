@@ -43,6 +43,7 @@ CuSuite *testindexwriter(void);
 CuSuite *testIndexModifier(void);
 CuSuite *testindexreader(void);
 CuSuite *testIndexSearcher(void);
+CuSuite *testAddIndexesNoOptimize(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
 CuSuite *testanalyzers(void);

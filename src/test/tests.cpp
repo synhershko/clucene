@@ -9,7 +9,7 @@
 unittest tests[] = {
     //{"threads", testatomicupdates},
     {"indexreader", testindexreader},
-    {"indexsearcher", testIndexSearcher},
+    //{"indexsearcher", testIndexSearcher},
     {"reuters", testreuters},
     {"analysis", testanalysis},
     {"analyzers", testanalyzers},
@@ -19,6 +19,7 @@ unittest tests[] = {
     {"ramdirectory", testRAMDirectory},
     {"indexwriter", testindexwriter},
     {"indexmodifier", testIndexModifier},
+    {"addIndexesNoOptimize", testAddIndexesNoOptimize},
     {"highfreq", testhighfreq},
     {"priorityqueue", testpriorityqueue},
     {"datetools", testDateTools},

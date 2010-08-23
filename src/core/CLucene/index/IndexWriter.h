@@ -1161,6 +1161,7 @@ private:
   bool flushDocStores();
 
   //for test purposes
+protected:
   int32_t getDocCount(int32_t i);
   int32_t getNumBufferedDocuments();
   int32_t getSegmentCount();
@@ -1168,6 +1169,7 @@ private:
   int32_t getNumBufferedDeleteTerms();
   SegmentInfo* newestSegment();
 
+private:
   void waitForClose();
   void deletePartialSegmentsFile();
 

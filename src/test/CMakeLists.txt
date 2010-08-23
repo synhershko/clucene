@@ -41,6 +41,7 @@ SET(test_files ./tests.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
 ./search/TestIndexSearcher.cpp
+./index/IndexWriter4Test.cpp
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
@@ -48,6 +49,7 @@ SET(test_files ./tests.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
+./index/TestAddIndexesNoOptimize.cpp
 ./index/store/TestRAMDirectory.cpp
 ./util/TestPriorityQueue.cpp
 ./util/TestBitSet.cpp
