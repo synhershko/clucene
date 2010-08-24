@@ -45,7 +45,7 @@ CL_NS_DEF2(analysis,standard)
 		WordlistLoader::getWordSet(stopwordsReader, stopSet, _bDeleteReader);
 	}
 
-        class StandardAnalyzer::SavedStreams {
+        class StandardAnalyzer::SavedStreams : public TokenStream {
         public:
             StandardTokenizer* tokenStream;
             TokenStream* filteredTokenStream;
@@ -53,6 +53,9 @@ CL_NS_DEF2(analysis,standard)
             SavedStreams():tokenStream(NULL), filteredTokenStream(NULL)
             {
             }
+
+            void close(){}
+            Token* next(Token* token) {return NULL;}
         };
 
 	StandardAnalyzer::~StandardAnalyzer(){

@@ -252,10 +252,15 @@ StopAnalyzer::StopAnalyzer():
 {
 	StopFilter::fillStopTable(stopTable,ENGLISH_STOP_WORDS);
 }
-class StopAnalyzer::SavedStreams {
+class StopAnalyzer::SavedStreams : public TokenStream {
 public:
     Tokenizer* source;
     TokenStream* result;
+
+    SavedStreams():source(NULL), result(NULL) {}
+
+    void close(){}
+    Token* next(Token* token) {return NULL;}
 };
 StopAnalyzer::~StopAnalyzer()
 {

@@ -14,22 +14,22 @@ CL_NS_USE(util)
 CL_NS_DEF(analysis)
 
 struct Analyzer::Internal{
-	CL_NS(util)::ThreadLocal<void*,
-		CL_NS(util)::Deletor::Object<void> >* tokenStreams;
+	CL_NS(util)::ThreadLocal<TokenStream*,
+		CL_NS(util)::Deletor::Object<TokenStream> >* tokenStreams;
 };
 Analyzer::Analyzer(){
 	_internal = new Internal;
-	_internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<void*,
-		CL_NS(util)::Deletor::Object<void> >;
+	_internal->tokenStreams = _CLNEW CL_NS(util)::ThreadLocal<TokenStream*,
+		CL_NS(util)::Deletor::Object<TokenStream> >;
 }
 Analyzer::~Analyzer(){
 	_CLLDELETE(_internal->tokenStreams);
 	delete _internal;
 }
-void* Analyzer::getPreviousTokenStream() {
+TokenStream* Analyzer::getPreviousTokenStream() {
 	return _internal->tokenStreams->get();
 }
-void Analyzer::setPreviousTokenStream(void* obj) {
+void Analyzer::setPreviousTokenStream(TokenStream* obj) {
 	_internal->tokenStreams->set(obj);
 }
 TokenStream* Analyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {

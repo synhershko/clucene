@@ -272,15 +272,16 @@ private:
 	struct Internal;
 	Internal* _internal;
 protected:
+
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to retrieve previously saved TokenStreams for re-use
 	*  by the same thread. */
-	void* getPreviousTokenStream();
+	TokenStream* getPreviousTokenStream();
 
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to save a TokenStream for later re-use by the same
 	*  thread. */
-	void setPreviousTokenStream(void* obj);
+	void setPreviousTokenStream(TokenStream* obj);
 public:
 	/**
 	* Invoked before indexing a Field instance if
