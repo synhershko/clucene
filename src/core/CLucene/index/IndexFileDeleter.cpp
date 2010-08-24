@@ -90,7 +90,7 @@ void IndexFileDeleter::setInfoStream(std::ostream* infoStream) {
 }
 
 void IndexFileDeleter::message(string message) {
-	(*infoStream) << string("IFD [") << Misc::toString( (int32_t)(_LUCENE_CURRTHREADID) ) << string("]: ") << message << string("\n");
+	(*infoStream) << string("IFD [") << Misc::toString( _LUCENE_CURRTHREADID ) << string("]: ") << message << string("\n");
 }
 
 

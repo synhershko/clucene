@@ -8,6 +8,7 @@
 #include "Misc.h"
 #include <assert.h>
 #include <iostream>
+#include <map>
 
 #if defined(_CL_HAVE_SYS_TIME_H)
 # include <sys/time.h>
@@ -430,6 +431,14 @@ bool Misc::listFiles(const char* directory, std::vector<std::string>& files, boo
 
 std::string Misc::toString(const bool value){
   return value ? "true" : "false";
+}
+std::string Misc::toString(_LUCENE_THREADID_TYPE value){
+  static int32_t nextindex = 0;
+  static std::map<_LUCENE_THREADID_TYPE, int32_t> ids;
+  if (ids.find(value) == ids.end()) {
+    ids[value] = nextindex++;
+  }
+  return toString(ids[value]);
 }
 std::string Misc::toString(const int32_t value){
   char buf[20];
