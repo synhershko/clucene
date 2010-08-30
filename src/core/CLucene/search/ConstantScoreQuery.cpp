@@ -10,10 +10,12 @@
 #include "SearchHeader.h"
 #include "Scorer.h"
 #include "RangeFilter.h"
+#include "Similarity.h"
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/BitSet.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -284,16 +286,19 @@ bool ConstantScoreRangeQuery::equals(Query* o) const {
 }
 
 // TODO: Complete this
-size_t ConstantScoreRangeQuery::hashCode() const {
-    size_t h = 0; /*Float.floatToIntBits(getBoost()) ^ fieldName.hashCode();
+size_t ConstantScoreRangeQuery::hashCode() const 
+{
+    int32_t h = Similarity::floatToByte( getBoost() ) ^ Misc::thashCode( fieldName );
     // hashCode of "" is 0, so don't use that for null...
-    h ^= lowerVal != NULL ? lowerVal.hashCode() : 0x965a965a;
+
+    h ^= ( lowerVal != NULL ) ? Misc::thashCode( lowerVal ) : 0x965a965a;
     // don't just XOR upperVal with out mixing either it or h, as it will cancel
     // out lowerVal if they are equal.
-    h ^= (h << 17) | (h >>> 16);  // a reversible (one to one) 32 bit mapping mix
-    h ^= (upperVal != NULL ? (upperVal.hashCode()) : 0x5a695a69);
-    h ^= (includeLower ? 0x665599aa : 0)
-        ^ (includeUpper ? 0x99aa5566 : 0);*/
+
+    h ^= (h << 17) | (h >> 16);  // a reversible (one to one) 32 bit mapping mix
+    h ^= (upperVal != NULL) ? Misc::thashCode( upperVal ) : 0x5a695a69;
+    h ^= (includeLower ? 0x665599aa : 0) ^ (includeUpper ? 0x99aa5566 : 0);
+
     return h;
 }
 
