@@ -136,11 +136,11 @@ CL_NS_DEF(search)
 		size_t ret = Similarity::floatToByte(getBoost()) ^ Similarity::floatToByte(slop);
 
 		{ //msvc6 scope fix
-			for ( size_t i=0;terms->size();i++ )
+			for ( size_t i=0;i<terms->size();i++ )
 				ret = 31 * ret + (*terms)[i]->hashCode();
 		}
 		{ //msvc6 scope fix
-			for ( size_t i=0;positions->size();i++ )
+			for ( size_t i=0;i<positions->size();i++ )
 				ret = 31 * ret + (*positions)[i];
 		}
 		return ret;
