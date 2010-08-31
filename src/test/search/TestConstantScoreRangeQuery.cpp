@@ -500,12 +500,12 @@ public:
     {
         setUp();
         testBasics();
-//         testEqualScores(); 
-//         testBoost();
-//         testBooleanOrderUnAffected();
-//         testRangeQueryId();
-//         testRangeQueryRand();
-//         testBooleanMemLeaks();
+        testEqualScores(); 
+        testBoost();
+        testBooleanOrderUnAffected();
+        testRangeQueryId();
+        testRangeQueryRand();
+        testBooleanMemLeaks();
     }
 };
 
