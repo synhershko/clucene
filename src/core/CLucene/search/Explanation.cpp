@@ -164,8 +164,9 @@ TCHAR* ComplexExplanation::getSummary() {
 	return buf.giveBuffer();
 }
 
-Explanation* ComplexExplanation::clone() const{
-   ComplexExplanation* ret = static_cast<ComplexExplanation*>(_CLNEW Explanation(*this));
+Explanation* ComplexExplanation::clone() const{ 
+//   ComplexExplanation* ret = static_cast<ComplexExplanation*>(_CLNEW Explanation(*this)); // This causes heap error while freeing explanations
+   ComplexExplanation* ret = _CLNEW ComplexExplanation( *this );
    ret->match = this->match;
    return ret;
 }
