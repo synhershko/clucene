@@ -61,7 +61,7 @@ void BaseTestRangeFilter::build()
         IndexWriter* writer = _CLNEW IndexWriter(index,
                                              &a, T);
 
-        for (int d = minId; d <= maxId; d++) {
+        for (int32_t d = minId; d <= maxId; d++) {
             Document doc;
             std::tstring paddedD = pad(d);
             doc.add(* _CLNEW Field(_T("id"),paddedD.c_str(), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
@@ -88,14 +88,14 @@ void BaseTestRangeFilter::build()
 
 void BaseTestRangeFilter::testPad() 
 {
-    const int tests[] = {
+    const int32_t tests[] = {
         -9999999, -99560, -100, -3, -1, 0, 3, 9, 10, 1000, 999999999
     };
     const size_t testsLen = 11;
 
-    for (int i = 0; i < testsLen - 1; i++) {
-        const int a = tests[i];
-        const int b = tests[i+1];
+    for (size_t i = 0; i < testsLen - 1; i++) {
+        const int32_t a = tests[i];
+        const int32_t b = tests[i+1];
         const TCHAR* aa = pad(a).c_str();
         const TCHAR* bb = pad(b).c_str();
 

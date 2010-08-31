@@ -14,11 +14,11 @@ public:
     
     RAMDirectory* index;
     
-    int maxR;
-    int minR;
+    int32_t maxR;
+    int32_t minR;
 
-    int minId;
-    int maxId;
+    int32_t minId;
+    int32_t maxId;
 
     const size_t intLength;
 
@@ -30,7 +30,7 @@ public:
     /**
      * a simple padding function that should work with any int
      */
-    std::tstring pad(int n);
+    std::tstring pad(int32_t n);
     
 private:
     void build();
