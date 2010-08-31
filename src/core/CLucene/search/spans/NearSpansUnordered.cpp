@@ -26,6 +26,7 @@ NearSpansUnordered::SpansCell::SpansCell( NearSpansUnordered * parentSpans, Span
 
 NearSpansUnordered::SpansCell::~SpansCell()
 {
+    _CLLDELETE( spans );
 }
 
 bool NearSpansUnordered::SpansCell::adjust( bool condition )
@@ -83,6 +84,7 @@ NearSpansUnordered::NearSpansUnordered( SpanNearQuery * query, CL_NS(index)::Ind
     this->max = NULL;                       // CLucene specific, SpansCell::adjust tests this member to NULL
     this->first = NULL;                     // CLucene specific
     this->last = NULL;                      // CLucene specific, addToList test this member to NULL 
+    this->totalLength = 0;                  // CLucene specific
 
     this->query = query;
     this->slop = query->getSlop();

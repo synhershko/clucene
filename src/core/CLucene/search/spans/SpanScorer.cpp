@@ -27,6 +27,7 @@ Scorer( similarity ), firstTime( true ), more( true )
 
 SpanScorer::~SpanScorer()
 {
+    _CLLDELETE( spans );
 }
 
 bool SpanScorer::next()

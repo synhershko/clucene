@@ -30,6 +30,9 @@ SpanWeight::SpanWeight( SpanQuery * query, CL_NS(search)::Searcher * searcher )
 
 SpanWeight::~SpanWeight()
 {
+    for( TermSet::iterator iTerm = terms->begin(); iTerm != terms->end(); iTerm++ )
+        _CLLDECDELETE( *iTerm );
+
     _CLDELETE( terms );
 }
 
@@ -81,7 +84,7 @@ CL_NS(search)::Explanation * SpanWeight::explain( CL_NS(index)::IndexReader* rea
     result->setDescription( strBuf.getBuffer() );
     
     CL_NS(util)::StringBuffer docFreqs;
-    for( CL_NS(search)::TermSet::iterator itTerms = terms->begin(); itTerms != terms->end(); itTerms++ )
+    for( TermSet::iterator itTerms = terms->begin(); itTerms != terms->end(); itTerms++ )
     {
         CL_NS(index)::Term * term = (*itTerms);
         docFreqs.append( term->text());
@@ -131,9 +134,10 @@ CL_NS(search)::Explanation * SpanWeight::explain( CL_NS(index)::IndexReader* rea
     strBuf.append( _T( "), product of:" ));
     fieldExpl->setDescription( strBuf.getBuffer() );
 
-    Explanation * tfExpl = scorer( reader )->explain( doc );
+    Scorer * pScorer = scorer( reader );
+    Explanation * tfExpl = pScorer->explain( doc );
     fieldExpl->addDetail( tfExpl );
-    fieldExpl->addDetail( idfExpl );
+    fieldExpl->addDetail( idfExpl->clone() );
 
     Explanation * fieldNormExpl = _CLNEW Explanation();
     uint8_t * fieldNorms = reader->norms( field );
@@ -153,22 +157,24 @@ CL_NS(search)::Explanation * SpanWeight::explain( CL_NS(index)::IndexReader* rea
                          idfExpl->getValue() *
                          fieldNormExpl->getValue() );
 
-    result->addDetail( fieldExpl );
-    result->setMatch( fieldExpl->getMatch() );
-
-    // combine them
-    result->setValue( queryExpl->getValue() * fieldExpl->getValue() );
-
+    _CLLDELETE( pScorer );
     _CLDELETE_LCARRAY( tQry );
     _CLDELETE_LCARRAY( tQryF );
 
     if( queryExpl->getValue() == 1.0f )
     {
-        _CLDELETE( result );
+        _CLLDELETE( result );
         return fieldExpl;
     }
+    else
+    {
+        result->addDetail( fieldExpl );
+        result->setMatch( fieldExpl->getMatch() );
 
-    return result;
+        // combine them
+        result->setValue( queryExpl->getValue() * fieldExpl->getValue() );
+        return result;
+    }
 }
 
 CL_NS_END2

@@ -50,7 +50,7 @@ NearSpansOrdered::NearSpansOrdered( SpanNearQuery * spanNearQuery, CL_NS(index):
     subSpansByDoc = _CL_NEWARRAY( Spans *, subSpansCount );
 
     SpanQuery ** clauses = spanNearQuery->getClauses();
-    for( size_t i = 0; i < spanNearQuery->getClausesCount(); i++ )
+    for( size_t i = 0; i < subSpansCount; i++ )
     {
         subSpans[ i ] = clauses[ i ]->getSpans( reader );
         subSpansByDoc[ i ] = subSpans[ i ];             // used in toSameDoc()
@@ -131,7 +131,7 @@ bool NearSpansOrdered::toSameDoc()
 {
     sort( subSpansByDoc, subSpansByDoc + subSpansCount, spanDocCompare );
     size_t firstIndex = 0;
-    int32_t maxDoc = subSpansByDoc[ subSpansCount ]->doc();
+    int32_t maxDoc = subSpansByDoc[ subSpansCount-1 ]->doc();
     while( subSpansByDoc[ firstIndex ]->doc() != maxDoc )
     {
         if( ! subSpansByDoc[ firstIndex ]->skipTo( maxDoc ))
@@ -206,7 +206,7 @@ bool NearSpansOrdered::shrinkToAfterShortestMatch()
     int32_t lastStart = matchStart;
     int32_t lastEnd   = matchEnd;
 
-    for( size_t i = subSpansCount - 2; i >= 0; i-- )
+    for( int32_t i = (int32_t)subSpansCount - 2; i >= 0; i-- )
     {
         Spans * prevSpans = subSpans[ i ];
         int32_t prevStart = prevSpans->start();

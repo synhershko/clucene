@@ -18,10 +18,14 @@ TermSpans::TermSpans( CL_NS(index)::TermPositions * positions, CL_NS(index)::Ter
     this->positions = positions;
     this->term = _CL_POINTER( term );
     doc_ = -1;
+    freq = 0;
+    count = 0;
+    position = 0;
 }
 
 TermSpans::~TermSpans()
 {
+    _CLLDELETE( positions );
     _CLLDECDELETE( term );
 }
 

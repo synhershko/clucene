@@ -16,6 +16,9 @@ CL_NS_DEF2( search, spans )
 class CLUCENE_EXPORT Spans 
 {
 public:
+    /** Empty base destructor */
+    virtual ~Spans() {};
+
     /** Move to the next match, returning true iff any such exists. */
     virtual bool next() = 0;
   
