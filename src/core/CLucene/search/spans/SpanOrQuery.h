@@ -33,7 +33,33 @@ protected:
 
 public:
     /** Construct a SpanOrQuery merging the provided clauses. */
-    SpanOrQuery( CL_NS(util)::ArrayBase<SpanQuery *> * clauses, bool bDeleteClauses );
+    template<class ClauseIterator>
+    SpanOrQuery( ClauseIterator first, ClauseIterator last, bool bDeleteClauses )
+    {
+        // CLucene specific: at least one clause must be here
+        if( first ==  last )
+            _CLTHROWA( CL_ERR_IllegalArgument, "Missing query clauses." );
+
+        this->bDeleteClauses = bDeleteClauses;
+        this->clausesCount = last - first;
+        this->clauses = _CL_NEWARRAY( SpanQuery *, clausesCount );
+
+        // copy clauses array into an array and check fields
+        for( size_t i = 0; first != last; first++, i++ )
+        {
+            SpanQuery * clause = *first;
+            if( i == 0 )
+            {                               
+                field = STRDUP_TtoT( clause->getField() );
+            } 
+            else if( 0 != _tcscmp( clause->getField(), field )) 
+            {
+                _CLTHROWA( CL_ERR_IllegalArgument, "Clauses must have same field." );
+            }
+            this->clauses[ i ] = clause;
+        }
+    }
+
     virtual ~SpanOrQuery();
 
     CL_NS(search)::Query * clone() const;

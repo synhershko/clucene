@@ -15,31 +15,6 @@
 
 CL_NS_DEF2( search, spans )
 
-SpanNearQuery::SpanNearQuery( CL_NS(util)::ArrayBase<SpanQuery *> * clauses, int32_t slop, bool inOrder, bool bDeleteClauses )
-{
-    this->clauses = _CL_NEWARRAY( SpanQuery*, clauses->length );
-    memcpy( this->clauses, clauses->values, clauses->length * sizeof( SpanQuery* ));
-    this->clausesCount = clauses->length;
-    this->bDeleteClauses = bDeleteClauses;
-
-    // check fields
-    for( size_t i = 0; i < clauses->length; i++ )
-    {
-        SpanQuery * clause = clauses->values[ i ];
-        if( i == 0 )
-        {                               
-            field = STRDUP_TtoT( clause->getField() );
-        } 
-        else if( 0 != _tcscmp( clause->getField(), field )) 
-        {
-            _CLTHROWA( CL_ERR_IllegalArgument, "Clauses must have same field." );
-        }
-    }
-
-    this->slop = slop;
-    this->inOrder = inOrder;
-}
-
 SpanNearQuery::SpanNearQuery( const SpanNearQuery& clone ) :
     SpanQuery( clone )
 {

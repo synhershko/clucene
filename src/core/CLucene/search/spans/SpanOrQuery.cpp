@@ -92,7 +92,7 @@ bool SpanOrQuery::SpanOrQuerySpans::next()
         return true;
     }
 
-    queue->pop();  // exhausted a clause
+    _CLLDELETE( queue->pop() );  // exhausted a clause
     return queue->size() != 0;
 }
 
@@ -106,7 +106,7 @@ bool SpanOrQuery::SpanOrQuerySpans::skipTo( int32_t target )
         if( top()->skipTo( target ))
             queue->adjustTop();
         else 
-            queue->pop();
+            _CLLDELETE( queue->pop() );
     }
 
     return queue->size() != 0;
@@ -127,45 +127,21 @@ TCHAR* SpanOrQuery::SpanOrQuerySpans::toString() const
 
 bool SpanOrQuery::SpanOrQuerySpans::initSpanQueue( int32_t target )
 {
-    queue = new SpanQueue( parentQuery->clausesCount );
+    queue = _CLNEW SpanQueue( parentQuery->clausesCount );
 
     for( size_t i = 0; i < parentQuery->clausesCount; i++ )
     {
         Spans * spans = parentQuery->clauses[ i ]->getSpans( reader );
-        if(( target == -1 && spans->next())
-            || ( target != -1 && spans->skipTo( target )))
-        {
+        if(( target == -1 && spans->next()) || ( target != -1 && spans->skipTo( target )))
             queue->put( spans );
-        }
+        else
+            _CLLDELETE( spans );
     }
     return ( queue->size() != 0 );
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
-SpanOrQuery::SpanOrQuery( CL_NS(util)::ArrayBase<SpanQuery *> * clauses, bool bDeleteClauses )
-{
-    // copy clauses array into an array
-    this->clauses = _CL_NEWARRAY( SpanQuery*, clauses->length );
-    memcpy( this->clauses, clauses->values, clauses->length * sizeof( SpanQuery* ));
-    this->clausesCount = clauses->length;
-    this->bDeleteClauses = bDeleteClauses;
-
-    // check fields
-    for( size_t i = 0; i < clauses->length; i++ )
-    {
-        SpanQuery * clause = clauses->values[ i ];
-        if( i == 0 )
-        {                               
-            field = STRDUP_TtoT( clause->getField() );
-        } 
-        else if( 0 != _tcscmp( clause->getField(), field )) 
-        {
-            _CLTHROWA( CL_ERR_IllegalArgument, "Clauses must have same field." );
-        }
-    }
-}
-
 SpanOrQuery::SpanOrQuery( const SpanOrQuery& clone ) :
     SpanQuery( clone )
 {
@@ -279,7 +255,7 @@ bool SpanOrQuery::equals( Query* other ) const
 
 	SpanOrQuery * that = (SpanOrQuery *) other;
     if( 0 != _tcscmp( field, that->field )
-        || getBoost() == that->getBoost())
+        || getBoost() != that->getBoost())
     {
         return false;
     }
