@@ -36,5 +36,6 @@ unittest tests[] = {
     {"utf8", testutf8},
     {"bitset", testBitSet},
     {"extractterms",testExtractTerms},
+    {"spanqueries",testSpanQueries},
     {"LastTest", NULL}
 };

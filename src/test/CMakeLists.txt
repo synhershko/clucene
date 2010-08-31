@@ -13,6 +13,7 @@ SOURCE_GROUP("document" ./document/*)
 SOURCE_GROUP("index" ./index/*)
 SOURCE_GROUP("queryParser" ./queryParser/*)
 SOURCE_GROUP("search" ./search/*)
+SOURCE_GROUP("search-spans" ./search/spans/*)
 SOURCE_GROUP("store" ./store/*)
 SOURCE_GROUP("util" ./util/*)
 
@@ -43,6 +44,15 @@ SET(test_files ./tests.cpp
 ./search/TestConstantScoreRangeQuery.cpp
 ./search/BaseTestRangeFilter.h
 ./search/BaseTestRangeFilter.cpp
+./search/QueryUtils.h
+./search/QueryUtils.cpp
+./search/CheckHits.h
+./search/CheckHits.cpp
+./search/spans/TestSpans.h
+./search/spans/TestSpans.cpp
+./search/spans/TestSpanQueries.cpp
+./search/spans/TestBasics.h
+./search/spans/TestBasics.cpp
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
