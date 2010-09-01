@@ -6,7 +6,8 @@
 ------------------------------------------------------------------------------*/
 #include "TestBasics.h"
 #include "TestSpans.h"
-
+#include "TestNearSpansOrdered.h"
+#include "TestSpansAdvanced2.h"
 
 /////////////////////////////////////////////////////////////////////////////
 void testBasics( CuTest * tc )
@@ -55,13 +56,52 @@ void testSpans( CuTest * tc )
 }
 
 /////////////////////////////////////////////////////////////////////////////
+void testNearSpansOrdered( CuTest * tc )
+{
+    TestNearSpansOrdered test( tc );
+    test.setUp();
+    test.testSpanNearQuery();
+    test.testNearSpansNext();
+    test.testNearSpansSkipToLikeNext();
+    test.testNearSpansNextThenSkipTo();
+    test.testNearSpansNextThenSkipPast();
+    test.testNearSpansSkipPast();
+    test.testNearSpansSkipTo0();
+    test.testNearSpansSkipTo1();
+    test.testSpanNearScorerSkipTo1();
+    test.testSpanNearScorerExplain();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void testSpansAdvanced( CuTest * tc )
+{
+    TestSpansAdvanced test( tc );
+    test.setUp();
+    test.testBooleanQueryWithSpanQueries();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void testSpansAdvanced2( CuTest * tc )
+{
+    TestSpansAdvanced2 test( tc );
+    test.setUp();
+    test.testVerifyIndex();
+    test.testSingleSpanQuery();
+    test.testMultipleDifferentSpanQueries();
+    test.testBooleanQueryWithSpanQueries();
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Test suite for all tests of span queries
 CuSuite *testSpanQueries(void)
 {
 	CuSuite *suite = CuSuiteNew( _T( "CLucene SpanQuery Tests" ));
 
-	SUITE_ADD_TEST( suite, testBasics );
-	SUITE_ADD_TEST( suite, testSpans );
+    SUITE_ADD_TEST( suite, testBasics );
+    SUITE_ADD_TEST( suite, testSpans );
+    SUITE_ADD_TEST( suite, testNearSpansOrdered );
+    SUITE_ADD_TEST( suite, testSpansAdvanced );
+    SUITE_ADD_TEST( suite, testSpansAdvanced2 );
 
 	return suite; 
 }

@@ -53,6 +53,12 @@ SET(test_files ./tests.cpp
 ./search/spans/TestSpanQueries.cpp
 ./search/spans/TestBasics.h
 ./search/spans/TestBasics.cpp
+./search/spans/TestSpansAdvanced.cpp
+./search/spans/TestSpansAdvanced.h
+./search/spans/TestSpansAdvanced2.cpp
+./search/spans/TestSpansAdvanced2.h
+./search/spans/TestNearSpansOrdered.cpp
+./search/spans/TestNearSpansOrdered.h
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
