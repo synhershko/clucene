@@ -29,8 +29,9 @@ const TCHAR * TestSpans::docFields[] =
 
 TestSpans::TestSpans( CuTest* tc )
 {
-    searcher = NULL;
     this->tc = tc;
+    this->searcher = NULL;
+    this->directory = NULL;
 }
 
 TestSpans::~TestSpans()

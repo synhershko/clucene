@@ -20,6 +20,7 @@ TestBasics::TestBasics( CuTest* tc )
 {
     this->tc = tc;
     this->searcher = NULL;
+    this->directory = NULL;
 }
 
 TestBasics::~TestBasics()
