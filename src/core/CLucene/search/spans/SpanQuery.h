@@ -30,7 +30,6 @@ public:
     */
 //    public abstract Collection getTerms();
 
-protected:
     Weight * _createWeight( CL_NS(search)::Searcher * searcher )
     {
         return _CLNEW SpanWeight( this, searcher );
