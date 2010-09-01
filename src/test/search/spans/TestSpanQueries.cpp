@@ -8,6 +8,7 @@
 #include "TestSpans.h"
 #include "TestNearSpansOrdered.h"
 #include "TestSpansAdvanced2.h"
+#include "TestSpanExplanationsOfNonMatches.h"
 
 /////////////////////////////////////////////////////////////////////////////
 void testBasics( CuTest * tc )
@@ -92,6 +93,81 @@ void testSpansAdvanced2( CuTest * tc )
 }
 
 /////////////////////////////////////////////////////////////////////////////
+void testSpanExplanations( CuTest * tc )
+{
+    TestSpanExplanations test( tc );
+    test.setUp();
+    test.testST1();
+    test.testST2();
+    test.testST4();
+    test.testST5();
+    test.testSF1();
+    test.testSF2();
+    test.testSF4();
+    test.testSF5();
+    test.testSF6();
+    test.testSO1();
+    test.testSO2();
+    test.testSO3();
+    test.testSO4();
+    test.testSNear1();
+    test.testSNear2();
+    test.testSNear3();
+    test.testSNear4();
+    test.testSNear5();
+    test.testSNear6();
+    test.testSNear7();
+    test.testSNear8();
+    test.testSNear9();
+    test.testSNear10();
+    test.testSNear11();
+    test.testSNot1();
+    test.testSNot2();
+    test.testSNot4();
+    test.testSNot5();
+    test.testSNot7();
+    test.testSNot10();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void testSpanExplanationsOfNonMatches( CuTest * tc )
+{
+    TestSpanExplanationsOfNonMatches test( tc );
+    test.setUp();
+    test.testST1();
+    test.testST2();
+    test.testST4();
+    test.testST5();
+    test.testSF1();
+    test.testSF2();
+    test.testSF4();
+    test.testSF5();
+    test.testSF6();
+    test.testSO1();
+    test.testSO2();
+    test.testSO3();
+    test.testSO4();
+    test.testSNear1();
+    test.testSNear2();
+    test.testSNear3();
+    test.testSNear4();
+    test.testSNear5();
+    test.testSNear6();
+    test.testSNear7();
+    test.testSNear8();
+    test.testSNear9();
+    test.testSNear10();
+    test.testSNear11();
+    test.testSNot1();
+    test.testSNot2();
+    test.testSNot4();
+    test.testSNot5();
+    test.testSNot7();
+    test.testSNot10();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Test suite for all tests of span queries
 CuSuite *testSpanQueries(void)
 {
@@ -102,6 +178,8 @@ CuSuite *testSpanQueries(void)
     SUITE_ADD_TEST( suite, testNearSpansOrdered );
     SUITE_ADD_TEST( suite, testSpansAdvanced );
     SUITE_ADD_TEST( suite, testSpansAdvanced2 );
+    SUITE_ADD_TEST( suite, testSpanExplanations );
+    SUITE_ADD_TEST( suite, testSpanExplanationsOfNonMatches );
 
 	return suite; 
 }

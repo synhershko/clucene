@@ -48,6 +48,8 @@ SET(test_files ./tests.cpp
 ./search/QueryUtils.cpp
 ./search/CheckHits.h
 ./search/CheckHits.cpp
+./search/TestExplanations.cpp
+./search/TestExplanations.h
 ./search/spans/TestSpans.h
 ./search/spans/TestSpans.cpp
 ./search/spans/TestSpanQueries.cpp
@@ -59,6 +61,10 @@ SET(test_files ./tests.cpp
 ./search/spans/TestSpansAdvanced2.h
 ./search/spans/TestNearSpansOrdered.cpp
 ./search/spans/TestNearSpansOrdered.h
+./search/spans/TestSpanExplanations.cpp
+./search/spans/TestSpanExplanations.h
+./search/spans/TestSpanExplanationsOfNonMatches.cpp
+./search/spans/TestSpanExplanationsOfNonMatches.h
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexReader.cpp
