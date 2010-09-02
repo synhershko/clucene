@@ -719,7 +719,7 @@ string SegmentInfo::segString(Directory* dir) {
 	void SegmentInfos::range(size_t from, size_t to, SegmentInfos& ret) const{
     segmentInfosType::const_iterator itr = infos.begin();
     itr+= from;
-    for (size_t i=0;i<to && itr != infos.end();i++){
+    for (size_t i=from;i<to && itr != infos.end();i++){
       ret.infos.push_back(*itr);
 
       itr++;
