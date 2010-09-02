@@ -4,7 +4,6 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
-
 #include "test.h"
 #include "CLucene/analysis/Analyzers.h"
 #include "CLucene/document/Document.h"
@@ -471,7 +470,7 @@ void testMoreMerges(CuTest * tc)  {
     writer->addIndexesNoOptimize(dirs);
 
     assertEquals(30, writer->docCount());
-    assertEquals(3, writer->getSegmentCount()); // only 2 segments in CLucene (is it really a bug?)
+    assertEquals(3, writer->getSegmentCount()); 
     writer->close();
     _CLLDELETE(writer);
 
@@ -562,13 +561,13 @@ void testHangOnClose(CuTest * tc) {
 
     writer->close();
     _CLLDELETE(writer);
-/*
+
     dir->close();
     _CLLDELETE(dir);
 
     dir2->close();
     _CLLDELETE(dir2);
-*/
+
 }
 
 CuSuite *testAddIndexesNoOptimize(void)
