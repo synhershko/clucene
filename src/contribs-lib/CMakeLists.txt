@@ -11,6 +11,7 @@ SOURCE_GROUP("analysis" ./CLucene/analysis/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
 #seems to be a bug in cmake, can't put these in analysis\\standard folder :(
 SOURCE_GROUP("analysis-cjk" ./CLucene/analysis/cjk/*)
+SOURCE_GROUP("analysis-de" ./CLucene/analysis/de/*)
 SOURCE_GROUP("highlighter" ./CLucene/highlighter/*)
 SOURCE_GROUP("index" ./CLucene/index/*)
 SOURCE_GROUP("snowball" ./CLucene/snowball/*)
@@ -26,6 +27,10 @@ SET(clucene_contribs_Files
     ./CLucene/analysis/LanguageBasedAnalyzer.cpp
     ./CLucene/analysis/cjk/CJKAnalyzer.cpp
     
+	./CLucene/analysis/de/GermanAnalyzer.cpp
+	./CLucene/analysis/de/GermanStemFilter.cpp
+	./CLucene/analysis/de/GermanStemmer.cpp
+	
     ./CLucene/highlighter/Encoder.cpp
     ./CLucene/highlighter/Formatter.cpp
     ./CLucene/highlighter/Fragmenter.cpp
