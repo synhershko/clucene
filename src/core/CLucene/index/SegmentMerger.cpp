@@ -397,10 +397,10 @@ void SegmentMerger::mergeVectors(){
 					continue;
 
 				ArrayBase<TermFreqVector*>* tmp = reader->getTermFreqVectors(docNum);
-        if ( tmp != NULL ){
+//        if ( tmp != NULL ){
 					termVectorsWriter->addAllDocVectors(tmp);
 				  _CLLDELETE(tmp);
-        }
+//        }
           if (checkAbort != NULL)
             checkAbort->work(300);
 			}

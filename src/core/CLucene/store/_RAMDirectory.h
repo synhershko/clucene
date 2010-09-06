@@ -31,12 +31,13 @@ CL_NS_DEF(store)
 
 
 		int64_t length;
-		RAMDirectory* directory;
 		int64_t sizeInBytes;                  // Only maintained if in a directory; updates synchronized on directory
 
 		// This is publicly modifiable via Directory::touchFile(), so direct access not supported
 		uint64_t lastModified;
 
+	protected:
+		RAMDirectory* directory;
 
 	public:
     DEFINE_MUTEX(THIS_LOCK)
@@ -45,16 +46,16 @@ CL_NS_DEF(store)
 		const char* filename;
     #endif
 		// File used as buffer, in no RAMDirectory
-		RAMFile( RAMDirectory* directory=NULL );
-		~RAMFile();
+		CLUCENE_EXPORT RAMFile( RAMDirectory* directory=NULL );
+		CLUCENE_EXPORT ~RAMFile();
 		
 		// For non-stream access from thread that might be concurrent with writing
-		int64_t getLength();
-		void setLength( const int64_t _length );
+		int64_t CLUCENE_EXPORT getLength();
+		void CLUCENE_EXPORT setLength( const int64_t _length );
 		
 		// For non-stream access from thread that might be concurrent with writing
-		uint64_t getLastModified();
-		void setLastModified( const uint64_t lastModified );
+		uint64_t CLUCENE_EXPORT getLastModified();
+		void CLUCENE_EXPORT setLastModified( const uint64_t lastModified );
 		
 		uint8_t* addBuffer( const int32_t size );
 		uint8_t* getBuffer( const int32_t index );
@@ -62,11 +63,12 @@ CL_NS_DEF(store)
 		int32_t numBuffers() const;
 		uint8_t* newBuffer( const int32_t size );
 		
-		int64_t getSizeInBytes() const;
+		int64_t CLUCENE_EXPORT getSizeInBytes() const;
+
+        friend class RAMDirectory;
 	};
 
-
-	class RAMOutputStream: public IndexOutput {		
+	class CLUCENE_EXPORT RAMOutputStream: public IndexOutput {
 	protected:
 		RAMFile* file;
 		bool deleteFile;
@@ -107,12 +109,12 @@ CL_NS_DEF(store)
   	int64_t getFilePointer() const;
     	
 		const char* getObjectName();
-		static const char* getClassName();   	
+		static const char* getClassName();
    	
 	};
 	typedef RAMOutputStream RAMIndexOutput; //deprecated
 
-	class RAMInputStream:public IndexInput {				
+	class CLUCENE_EXPORT RAMInputStream:public IndexInput {
 	private:
 		RAMFile* file;
 		int64_t _length;
@@ -140,10 +142,10 @@ CL_NS_DEF(store)
 		void close();
 		int64_t length() const;
 		
-		inline uint8_t readByte();
+		uint8_t readByte();
 		void readBytes( uint8_t* dest, const int32_t len );
 		
-		inline int64_t getFilePointer() const;
+		int64_t getFilePointer() const;
 		
 		void seek(const int64_t pos);
 		const char* getDirectoryType() const;

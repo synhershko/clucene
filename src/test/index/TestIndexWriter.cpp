@@ -12,7 +12,7 @@ void testIWmergePhraseSegments(CuTest *tc){
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
 	SimpleAnalyzer a;
-  Directory* dir = FSDirectory::getDirectory(fsdir, true);
+    Directory* dir = FSDirectory::getDirectory(fsdir, true);
 
 	IndexWriter ndx2(dir,&a,true);
 	ndx2.setUseCompoundFile(false);
@@ -62,6 +62,7 @@ void testIWmergePhraseSegments(CuTest *tc){
 	_CLDELETE(query1);
 	_CLDELETE(hits0);
 	_CLDELETE(hits1);
+    dir->close();
 	_CLDECDELETE(dir);
 }
 
@@ -71,14 +72,14 @@ void testIWmergeSegments1(CuTest *tc){
 	RAMDirectory ram;
 	SimpleAnalyzer a;
 
-  IndexWriter ndx2(&ram,&a,true);
-	ndx2.close(); //test immediate closing bug reported
+    IndexWriter ndx2(&ram,&a,true);
+	ndx2.close();                   //test immediate closing bug reported
 
-	IndexWriter ndx(&ram,&a,true); //set create to false
+	IndexWriter ndx(&ram,&a,true);  //set create to false
 
 	ndx.setUseCompoundFile(false);
 	ndx.setMergeFactor(2);
-	TCHAR fld[1000];
+ 	TCHAR fld[1000];
 	for ( int i=0;i<1000;i++ ){
     English::IntToEnglish(i,fld,1000);
 
@@ -91,17 +92,17 @@ void testIWmergeSegments1(CuTest *tc){
 		ndx.addDocument(&doc);
 	}
 	//ndx.optimize(); //optimize so we can read terminfosreader with segmentreader
-	ndx.close();
-
-	//test the ram loading
-	RAMDirectory ram2(&ram);
-	IndexReader* reader2 = IndexReader::open(&ram2);
+ 	ndx.close();
+ 
+ 	//test the ram loading
+ 	RAMDirectory ram2(&ram);
+ 	IndexReader* reader2 = IndexReader::open(&ram2);
 	Term* term = _CLNEW Term(_T("field0"),fld);
 	TermEnum* en = reader2->terms(term);
 	CLUCENE_ASSERT(en->next());
 	_CLDELETE(en);
 	_CLDECDELETE(term);
-	_CLDELETE(reader2);
+ 	_CLDELETE(reader2);
 }
 
 //checks if appending to an index works correctly
@@ -109,7 +110,7 @@ void testIWmergeSegments2(CuTest *tc){
 	char fsdir[CL_MAX_PATH];
 	sprintf(fsdir,"%s/%s",cl_tempDir, "test.indexwriter");
 	SimpleAnalyzer a;
-  Directory* dir = FSDirectory::getDirectory(fsdir, true);
+    Directory* dir = FSDirectory::getDirectory(fsdir, true);
 
 	IndexWriter ndx2(dir,&a,true);
 	ndx2.setUseCompoundFile(false);
@@ -152,10 +153,11 @@ void testIWmergeSegments2(CuTest *tc){
 	_CLDELETE(query0);
 	_CLDELETE(query1);
 	_CLDELETE(hits0);
-  _CLDELETE(hits1);
+    _CLDELETE(hits1);
 	_CLDECDELETE(term0);
 	_CLDECDELETE(term1);
-	_CLDECDELETE(dir);
+    dir->close();
+    _CLDECDELETE(dir);
 }
 
 void testAddIndexes(CuTest *tc){
@@ -279,10 +281,20 @@ void testExceptionFromTokenStream(CuTest *tc) {
 
     class AnalyzerWithException : public Analyzer
     {
+        TokenStream* lastStream;
     public:
+        AnalyzerWithException() { lastStream = NULL; }
+        virtual ~AnalyzerWithException() { _CLDELETE( lastStream ); } 
         TokenStream* tokenStream(const TCHAR * fieldName, Reader * reader) {
             return _CLNEW TokenFilterWithException(_CLNEW WhitespaceTokenizer(reader));
         };
+        
+        TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+        {
+            _CLDELETE( lastStream );
+            lastStream = _CLNEW TokenFilterWithException(_CLNEW WhitespaceTokenizer(reader));
+            return lastStream;
+        }
     };
 
     RAMDirectory * dir = _CLNEW RAMDirectory();
@@ -350,7 +362,7 @@ void testWickedLongTerm(CuTest *tc) {
     TCHAR bigTerm[16383];
     for (int i=0; i<16383; i++)
         bigTerm[i]=_T('x');
-    bigTerm[16383] = 0;
+    bigTerm[16382] = 0;
 
     Document* doc = _CLNEW Document();
 
@@ -438,6 +450,7 @@ void testDeleteDocument(CuTest* tc) {
         _i64tot(i, contents, 10);
         doc->add(* _CLNEW Field(_T("content"), contents, Field::STORE_NO | Field::INDEX_TOKENIZED));
         writer->addDocument(doc);
+        _CLDELETE_ARRAY( contents );
         _CLLDELETE(doc);
     }
 
@@ -445,12 +458,14 @@ void testDeleteDocument(CuTest* tc) {
     writer->optimize();
     // close and flush index
     writer->close();
+    _CLLDELETE( writer );
 
     // reopen the index and delete the document next to last
     writer = _CLNEW IndexWriter(dir, &a, false);
     TCHAR* contents = _CL_NEWARRAY(TCHAR, (size / 10) + 1);
     _i64tot(size - 2, contents, 10);
     Term* t = _CLNEW Term(_T("content"), contents);
+    _CLDELETE_LARRAY( contents );
     writer->deleteDocuments(t);
     writer->close();
 
@@ -466,6 +481,9 @@ void testDeleteDocument(CuTest* tc) {
     reader->close();
     _CLLDELETE(searcher);
     _CLLDELETE(reader);
+
+    dir->close();
+    _CLLDELETE( dir );
 }
 
 CuSuite *testindexwriter(void)
@@ -482,6 +500,6 @@ CuSuite *testindexwriter(void)
     SUITE_ADD_TEST(suite, testExceptionFromTokenStream);
     SUITE_ADD_TEST(suite, testDeleteDocument);
 
-  return suite;
+    return suite;
 }
 // EOF
