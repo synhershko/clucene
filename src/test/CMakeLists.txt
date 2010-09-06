@@ -31,6 +31,7 @@ SET(test_files ./tests.cpp
 ./document/TestDocument.cpp
 ./document/TestNumberTools.cpp
 ./store/TestStore.cpp
+./store/MockRAMDirectory.cpp
 ./search/TestBoolean.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
@@ -42,6 +43,8 @@ SET(test_files ./tests.cpp
 ./search/TestTermVector.cpp
 ./search/TestExtractTerms.cpp
 ./search/TestConstantScoreRangeQuery.cpp
+./search/TestIndexSearcher.cpp
+./index/IndexWriter4Test.cpp
 ./search/BaseTestRangeFilter.h
 ./search/BaseTestRangeFilter.cpp
 ./search/QueryUtils.h
@@ -72,6 +75,8 @@ SET(test_files ./tests.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
+./index/TestAddIndexesNoOptimize.cpp
+./index/store/TestRAMDirectory.cpp
 ./util/TestPriorityQueue.cpp
 ./util/TestBitSet.cpp
 ./util/English.cpp

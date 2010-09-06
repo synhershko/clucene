@@ -350,7 +350,7 @@ void testWickedLongTerm(CuTest *tc) {
     TCHAR bigTerm[16383];
     for (int i=0; i<16383; i++)
         bigTerm[i]=_T('x');
-    bigTerm[16383] = 0;
+    bigTerm[16382] = 0;
 
     Document* doc = _CLNEW Document();
 
