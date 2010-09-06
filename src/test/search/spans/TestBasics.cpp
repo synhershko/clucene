@@ -273,9 +273,9 @@ void TestBasics::testSpanWithMultipleNotSingle()
     SpanNearQuery * near = _CLNEW SpanNearQuery( clauses, clauses+2, 4, true, true );
 
     clauses[ 0 ] = _CLNEW SpanTermQuery( term3 );
-    SpanOrQuery * or = _CLNEW SpanOrQuery( clauses, clauses+1, true );
+    SpanOrQuery * orQuery = _CLNEW SpanOrQuery( clauses, clauses+1, true );
 
-    SpanNotQuery * query = _CLNEW SpanNotQuery( near, or, true );
+    SpanNotQuery * query = _CLNEW SpanNotQuery( near, orQuery, true );
     
     _CLLDECDELETE( term1 );
     _CLLDECDELETE( term2 );
@@ -312,9 +312,9 @@ void TestBasics::testSpanWithMultipleNotMany()
     clauses[ 0 ] = _CLNEW SpanTermQuery( term3 );
     clauses[ 1 ] = _CLNEW SpanTermQuery( term4 );
     clauses[ 2 ] = _CLNEW SpanTermQuery( term5 );
-    SpanOrQuery * or = _CLNEW SpanOrQuery( clauses, clauses+3, true );
+    SpanOrQuery * orQuery = _CLNEW SpanOrQuery( clauses, clauses+3, true );
 
-    SpanNotQuery * query = _CLNEW SpanNotQuery( near, or, true );
+    SpanNotQuery * query = _CLNEW SpanNotQuery( near, orQuery, true );
 
     _CLLDECDELETE( term1 );
     _CLLDECDELETE( term2 );
