@@ -295,7 +295,17 @@ CL_NS_DEF(index)
   //Pre  - doClose has been invoked!
   //Post - the instance has been destroyed
 
-      doClose(); //this means that index reader doesn't need to be closed manually
+      if( ! closed )
+      {
+        doClose(); //this means that index reader doesn't need to be closed manually
+        NormsType::iterator it = _norms.begin();
+        while (it != _norms.end()) 
+        {
+            Norm* norm = it->second;
+            norm->decRef();
+            it++;
+        }
+      }
 
       _CLDELETE(_fieldInfos);
       _CLDELETE(fieldsReader);
@@ -307,6 +317,7 @@ CL_NS_DEF(index)
       _CLDELETE(termVectorsReaderOrig)
       _CLDECDELETE(cfsReader);
       //termVectorsLocal->unregister(this);
+
       _norms.clear();
   }
 
