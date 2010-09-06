@@ -9,7 +9,7 @@
 #include "CLucene/search/spans/SpanQuery.h"
 #include "CLucene/search/spans/SpanTermQuery.h"
 #include "CLucene/search/spans/SpanNearQuery.h"
-#include "CLucene/search/spans/spans.h"
+#include "CLucene/search/spans/Spans.h"
 #include "CLucene/search/Scorer.h"
 
 CL_NS_USE2(search,spans);
