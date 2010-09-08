@@ -25,9 +25,11 @@ SpanNearQuery::SpanNearQuery( const SpanNearQuery& clone ) :
     this->clausesCount = clone.clausesCount;
     this->bDeleteClauses = true;
 
-    this->field = STRDUP_TtoT( clone.field );
     this->slop = clone.slop;
     this->inOrder = clone.inOrder;
+
+    this->field = NULL;
+    setField( clone.field );
 }
 
 SpanNearQuery::~SpanNearQuery()
@@ -66,6 +68,12 @@ SpanQuery ** SpanNearQuery::getClauses() const
 size_t SpanNearQuery::getClausesCount() const
 {
     return clausesCount;
+}
+
+void SpanNearQuery::setField( const TCHAR * field )
+{
+    _CLDELETE_LARRAY( this->field );
+    this->field = STRDUP_TtoT( field );
 }
 
 const TCHAR * SpanNearQuery::getField() const

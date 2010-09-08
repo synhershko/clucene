@@ -152,7 +152,8 @@ SpanOrQuery::SpanOrQuery( const SpanOrQuery& clone ) :
     this->clausesCount = clone.clausesCount;
     this->bDeleteClauses = true;
 
-    this->field = STRDUP_TtoT( clone.field );
+    this->field = NULL;
+    setField( clone.field );
 }
 
 SpanOrQuery::~SpanOrQuery()
@@ -191,6 +192,12 @@ SpanQuery ** SpanOrQuery::getClauses() const
 size_t SpanOrQuery::getClausesCount() const
 {
     return clausesCount;
+}
+
+void SpanOrQuery::setField( const TCHAR * field )
+{
+    _CLDELETE_LARRAY( this->field );
+    this->field = STRDUP_TtoT( field );
 }
 
 const TCHAR * SpanOrQuery::getField() const

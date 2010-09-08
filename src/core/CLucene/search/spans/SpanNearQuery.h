@@ -45,6 +45,7 @@ public:
         this->bDeleteClauses = bDeleteClauses;
         this->clausesCount = last - first;
         this->clauses = _CL_NEWARRAY( SpanQuery *, clausesCount );
+        this->field = NULL;
 
         // copy clauses array into an array and check fields
         for( size_t i = 0; first != last; first++, i++ )
@@ -52,7 +53,7 @@ public:
             SpanQuery * clause = *first;
             if( i == 0 )
             {                               
-                field = STRDUP_TtoT( clause->getField() );
+                setField( clause->getField() );
             } 
             else if( 0 != _tcscmp( clause->getField(), field )) 
             {
@@ -102,6 +103,9 @@ public:
     size_t hashCode() const;
 
     Spans * getSpans( CL_NS(index)::IndexReader * reader );
+
+protected:
+    void setField( const TCHAR * field );
 };
 
 CL_NS_END2
