@@ -298,13 +298,13 @@ CL_NS_DEF(index)
       if( ! closed )
       {
         doClose(); //this means that index reader doesn't need to be closed manually
-        NormsType::iterator it = _norms.begin();
-        while (it != _norms.end()) 
-        {
-            Norm* norm = it->second;
-            norm->decRef();
-            it++;
-        }
+//        NormsType::iterator it = _norms.begin();
+//         while (it != _norms.end()) 
+//         {
+//             Norm* norm = it->second;
+//             norm->decRef();
+//             it++;
+//         }
       }
 
       _CLDELETE(_fieldInfos);
