@@ -30,11 +30,14 @@ class MultiPhraseWeight;
 class CLUCENE_EXPORT MultiPhraseQuery : public Query {
 private:
 	TCHAR* field;
-  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* termArrays;
+    CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* termArrays;
 	CL_NS(util)::CLVector<int32_t,CL_NS(util)::Deletor::DummyInt32>* positions;
 
 	int32_t slop;
 
+protected:
+    MultiPhraseQuery( const MultiPhraseQuery& clone );
+    
 public:
 	MultiPhraseQuery();
 	virtual ~MultiPhraseQuery();
@@ -111,8 +114,7 @@ public:
 	/** Returns a hash code value for this object.*/
 	size_t hashCode() const;
 
-	// TODO:
-	Query* clone() const {return NULL;}
+	Query* clone() const;
 
 	const char* getObjectName() const { return getClassName(); }
 	static const char* getClassName(){ return "MultiPhraseQuery"; }

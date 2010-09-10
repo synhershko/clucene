@@ -5,7 +5,8 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-
+#include "CLucene/search/MultiPhraseQuery.h"
+#include "QueryUtils.h"
 
 /// Java PrefixQuery test, 2009-06-02
 void testPrefixQuery(CuTest *tc){
@@ -335,11 +336,41 @@ void testFuzzyQuery(CuTest *tc){
 	}
 #endif
 
+void testMultiPhraseQuery( CuTest * tc )
+{
+    MultiPhraseQuery * pQuery = _CLNEW MultiPhraseQuery();
+
+    Term * t1 = _CLNEW Term( _T( "field" ), _T( "t1" ));
+    Term * t2 = _CLNEW Term( _T( "field" ), _T( "t2" ));
+    Term * t3 = _CLNEW Term( _T( "field" ), _T( "t3" ));
+    Term * t4 = _CLNEW Term( _T( "field" ), _T( "t4" ));
+    
+    CL_NS(util)::ValueArray<CL_NS(index)::Term*> terms( 3 );
+    terms[ 0 ] = t2;
+    terms[ 1 ] = t3;
+    terms[ 2 ] = t4;
+
+    pQuery->add( t1 );
+    pQuery->add( &terms );
+
+    Query * pClone = pQuery->clone();
+    
+    QueryUtils::checkEqual( tc, pQuery, pClone );
+
+    _CLLDECDELETE( t1 );
+    _CLLDECDELETE( t2 );
+    _CLLDECDELETE( t3 );
+    _CLLDECDELETE( t4 );
+    _CLLDELETE( pQuery );
+    _CLLDELETE( pClone );
+}
+
 CuSuite *testqueries(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Queries Test"));
 
 	SUITE_ADD_TEST(suite, testPrefixQuery);
+	SUITE_ADD_TEST(suite, testMultiPhraseQuery);
 	#ifndef NO_FUZZY_QUERY
 		SUITE_ADD_TEST(suite, testFuzzyQuery);
 	#else
