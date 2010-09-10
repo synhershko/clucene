@@ -28,6 +28,7 @@ class CLUCENE_EXPORT SpanQueryFilter : public SpanFilter
 {
 protected:
     CL_NS2(search,spans)::SpanQuery *   query;
+    bool                                bDeleteQuery;
 
 protected:
     SpanQueryFilter();
@@ -38,7 +39,9 @@ public:
      * <code>query</code>.
      * @param query The {@link org.apache.lucene.search.spans.SpanQuery} to use as the basis for the Filter.
      */
-    SpanQueryFilter( CL_NS2(search,spans)::SpanQuery * query );
+    SpanQueryFilter( const CL_NS2(search,spans)::SpanQuery * query );
+
+    SpanQueryFilter( CL_NS2(search,spans)::SpanQuery * query, bool bDeleteQuery );
 
     virtual ~SpanQueryFilter();
 

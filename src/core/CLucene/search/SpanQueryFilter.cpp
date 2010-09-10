@@ -15,19 +15,28 @@ CL_NS_DEF(search)
 SpanQueryFilter::SpanQueryFilter() : query( NULL )
 {}
 
-SpanQueryFilter::SpanQueryFilter( CL_NS2(search,spans)::SpanQuery * query )
+SpanQueryFilter::SpanQueryFilter( const CL_NS2(search,spans)::SpanQuery * query )
 {
     this->query = (CL_NS2(search,spans)::SpanQuery *) query->clone();
+    bDeleteQuery = true;
+}
+
+SpanQueryFilter::SpanQueryFilter( CL_NS2(search,spans)::SpanQuery * query, bool bDeleteQuery )
+{
+    this->query = query;
+    bDeleteQuery = bDeleteQuery; 
 }
 
 SpanQueryFilter::SpanQueryFilter( const SpanQueryFilter& copy )
 {
 	this->query = (CL_NS2(search,spans)::SpanQuery *) copy.query->clone();
+    bDeleteQuery = true;
 }
 
 SpanQueryFilter::~SpanQueryFilter()
 {
-    _CLDELETE( query );
+    if( bDeleteQuery )
+        _CLDELETE( query );
 }
 
 Filter* SpanQueryFilter::clone() const 
