@@ -10,8 +10,6 @@ Lucene 2.3.2 Files:
 ?	analysis\LetterTokenizer.java
 ?	analysis\LowerCaseFilter.java
 ?	analysis\LowerCaseTokenizer.java
-?	analysis\PorterStemFilter.java
-?	analysis\PorterStemmer.java
 ?	analysis\SinkTokenizer.java
 ?	analysis\standard\StandardAnalyzer.java
 ?	analysis\standard\StandardFilter.java
@@ -19,7 +17,6 @@ Lucene 2.3.2 Files:
 ?	analysis\standard\StandardTokenizerImpl.java
 ?	analysis\standard\StandardTokenizerImpl.jflex
 DONE ISH	analysis\StopAnalyzer.java				- reusableTokenStream and StopAnalyzer(Set stopWords) were not implemented. May need to revisit reusableTokenStream()
-DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or similar? Radix/PATRICIA maybe?
 ?	analysis\TeeTokenFilter.java
 ?	analysis\Token.java
 ?	analysis\TokenFilter.java
@@ -28,8 +25,7 @@ DONE ISH	analysis\WhitespaceTokenizer.java
 DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
 DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
 
-PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL), and PrintStream implementation
-DONE ISH/BEN index\TermInfosReader.java				- Does not completely conform with JLucene yet, but doesn't lack functionality. See todos.
+
 
 DONE ISH	queryParser\MultiFieldQueryParser.java	- Some tests are missing
 DONE ISH	queryParser\QueryParser.java		- Missing Locale and Calendar support (for RangeQuery) and some tests. _tcstod.
@@ -107,6 +103,11 @@ Misc TODOs:
 
 
 Post v1 Final:
+DONE ISH	analysis\StopFilter.java				- Should we implement a CharArraySet or similar? Radix/PATRICIA maybe?
+DONE ISH	analysis\TokenStream.java				- Should we keep next() deprecated for performance reasons, or comply with JL? (ben: for me, it's fine as it is now) Also, check to see if reset() is required here at all, or can be defined for Tokenizer only (one level above)
+DONE ISH	analysis\WordlistLoader.java				- Missing getStemDict
+DONE ISH	document\DateTools.java				- TODO: Create a test suite for this based on values tested with Java Lucene
+PARTIAL ISH/BEN	index\SegmentInfos.java				- Still requires some testing of the sub-classes under SegmentInfos used for the retry mechanism, the write function (only after reading totally conforms with JL)
 
 ?	search\CachingSpanFilter.java
 ?	search\CachingWrapperFilter.java
@@ -170,6 +171,7 @@ DONE ISH	document\Field.java				- Still need to complete all TODOs in file
 
 DONE ISH	queryParser\ParseException.java		- Done, integrated within QueryParser as functions (no special Exception class required)
 
+DONE ISH/BEN    index\TermInfosReader.java
 DONE ISH	index\FieldsReader.java
 DONE BEN	index\FieldsWriter.java
 DONE ISH	index\TermVectorMapper.java
@@ -269,6 +271,8 @@ DONE ISH	search\ScoreDoc.java			- Implemented. Java Lucene has a constructor for
 DONE ISH	search\HitCollector.java			- No changes, abstract class
 
 
+IRRELEVANT	analysis\PorterStemFilter.java  - deprecated
+IRRELEVANT	analysis\PorterStemmer.java  - deprecated
 DONE ISH	analysis\WhitespaceAnalyzer.java
 DONE ISH	analysis\PerFieldAnalyzerWrapper.java		- toString() not yet implemented
 DONE ISH	analysis\LengthFilter.java

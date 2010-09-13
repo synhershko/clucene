@@ -47,6 +47,22 @@
     _CLDELETE(a);
   }
   
+  
+   void testKeywordAnalyzer(CuTest *tc){
+    Analyzer* a = _CLNEW KeywordAnalyzer();
+    
+    assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo bar FOO BAR;") );
+    assertAnalyzersTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo      bar .  FOO <> BAR;"));
+    assertAnalyzersTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo.bar.FOO.BAR;"));
+    assertAnalyzersTo(tc,a, _T("U.S.A."), _T("U.S.A.;") );
+    assertAnalyzersTo(tc,a, _T("C++"), _T("C++;") );
+    assertAnalyzersTo(tc,a, _T("B2B"), _T("B2B;"));
+    assertAnalyzersTo(tc,a, _T("2B"), _T("2B;"));
+    assertAnalyzersTo(tc,a, _T("\"QUOTED\" word"), _T("\"QUOTED\" word;"));
+    
+    _CLDELETE(a);
+   }
+
    void testStandardAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW StandardAnalyzer();
     
@@ -331,6 +347,7 @@ CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
 
+    SUITE_ADD_TEST(suite, testKeywordAnalyzer);
     SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
     SUITE_ADD_TEST(suite, testStopAnalyzer);
     SUITE_ADD_TEST(suite, testNullAnalyzer);

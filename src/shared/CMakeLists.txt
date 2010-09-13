@@ -37,11 +37,14 @@ INCLUDE (CheckStdCallFunctionExists)
 
 find_package(Threads REQUIRED)
 INCLUDE (CheckPthread)
+INCLUDE (CheckAtomicFunctions)
 
 find_package(ZLIB)
 IF ( ZLIB_FOUND )
   SET ( EXTRA_LIBS ${EXTRA_LIBS} ${ZLIB_LIBRARY} )
   INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ELSE ( ZLIB_FOUND )
+  INCLUDE_DIRECTORIES( ${clucene-ext_SOURCE_DIR}/zlib )
 ENDIF ( ZLIB_FOUND )
 
 ########################################################################
@@ -215,10 +218,11 @@ ENDIF (CMAKE_USE_PTHREADS_INIT)
 IF ( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
     MESSAGE(FATAL_ERROR "Threads library not implemented")
 ENDIF( CMAKE_USE_SPROC_INIT OR CMAKE_HP_PTHREADS_INIT )
-SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_LIBS_INIT}" )
 
-#define if we have pthreads with recusrive capabilities
+#define if we have pthreads with recursive capabilities
 CHECK_PTHREAD_RECURSIVE(_CL_HAVE_PTHREAD _CL_HAVE_PTHREAD_MUTEX_RECURSIVE)
+
+CHECK_HAVE_GCC_ATOMIC_FUNCTIONS(_CL_HAVE_GCC_ATOMIC_FUNCTIONS)
 
 #see if we can hide all symbols by default...
 MACRO_CHECK_GCC_VISIBILITY(_CL_HAVE_GCCVISIBILITYPATCH)
@@ -271,6 +275,7 @@ CONFIGURE_FILE(${clucene-shared_SOURCE_DIR}/CLucene/_clucene-config.h.cmake ${cl
 SOURCE_GROUP("config" ./CLucene/config/*)
 SOURCE_GROUP("debug" ./CLucene/debug/*)
 SOURCE_GROUP("util" ./CLucene/util/*)
+SOURCE_GROUP("zlib" ./zlib/*)
 
 MACRO (GET_SHARED_FILES result)
     IF ( "" STREQUAL "${ARGV2}" )
@@ -295,18 +300,19 @@ MACRO (GET_SHARED_FILES result)
     	${rel}/CLucene/util/Misc.cpp
       ${rel}/CLucene/util/dirent.cpp
     )
+
     IF ( NOT ZLIB_FOUND )
       SET(${result} ${${result}}
-        ${rel}/CLucene/util/zlib/adler32.c
-        ${rel}/CLucene/util/zlib/compress.c
-        ${rel}/CLucene/util/zlib/crc32.c
-        ${rel}/CLucene/util/zlib/deflate.c
-        ${rel}/CLucene/util/zlib/gzio.c
-        ${rel}/CLucene/util/zlib/inffast.c
-        ${rel}/CLucene/util/zlib/inflate.c
-        ${rel}/CLucene/util/zlib/inftrees.c
-        ${rel}/CLucene/util/zlib/trees.c
-        ${rel}/CLucene/util/zlib/zutil.c
+        ${clucene-ext_SOURCE_DIR}/zlib/adler32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/compress.c
+        ${clucene-ext_SOURCE_DIR}/zlib/crc32.c
+        ${clucene-ext_SOURCE_DIR}/zlib/deflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/gzio.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inffast.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inflate.c
+        ${clucene-ext_SOURCE_DIR}/zlib/inftrees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/trees.c
+        ${clucene-ext_SOURCE_DIR}/zlib/zutil.c
       )
     ENDIF ( NOT ZLIB_FOUND )
 ENDMACRO (GET_SHARED_FILES)
@@ -326,6 +332,7 @@ SET_TARGET_PROPERTIES(clucene-shared PROPERTIES
     SOVERSION ${CLUCENE_SOVERSION}
     COMPILE_DEFINITIONS_DEBUG _DEBUG
 )
+TARGET_LINK_LIBRARIES(clucene-shared ${CMAKE_THREAD_LIBS_INIT})
 IF ( EXTRA_LIBS )
   TARGET_LINK_LIBRARIES(clucene-shared ${EXTRA_LIBS})
 ENDIF ( EXTRA_LIBS )
@@ -344,6 +351,7 @@ IF ( BUILD_STATIC_LIBRARIES )
 	    SOVERSION ${CLUCENE_SOVERSION}
 	    COMPILE_DEFINITIONS_DEBUG _DEBUG
 	)
+  TARGET_LINK_LIBRARIES(clucene-shared-static ${CMAKE_THREAD_LIBS_INIT})
 	install(TARGETS clucene-shared-static 
 	        DESTINATION ${LIB_DESTINATION} 
 	        COMPONENT runtime )

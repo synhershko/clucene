@@ -57,7 +57,7 @@ QueryParserTokenManager::~QueryParserTokenManager()
 	_CLLDELETE(input_stream);
 }
 
-int32_t QueryParserTokenManager::jjStopStringLiteralDfa_3(const int32_t pos, int64_t active0)
+int32_t QueryParserTokenManager::jjStopStringLiteralDfa_3(const int32_t /*pos*/, int64_t /*active0*/)
 {
 	return -1;
 }

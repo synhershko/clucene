@@ -103,6 +103,7 @@ public:
     Explanation* explain(IndexReader* reader, int32_t doc) {
         ConstantScorer* cs = (ConstantScorer*)scorer(reader);
         bool exists = cs->bits->get(doc);
+        _CLDELETE(cs);
 
         ComplexExplanation* result = _CLNEW ComplexExplanation();
 
@@ -112,7 +113,7 @@ public:
             
             TCHAR* tmp = parentQuery->filter->toString();
             buf.append(tmp);
-            _CLLDELETE(tmp);
+            _CLDELETE_LCARRAY(tmp);
 
             buf.append(_T("), product of:"));
 

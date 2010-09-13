@@ -100,13 +100,6 @@ CL_NS_DEF(search)
 	}
 
 
-	/**
-     * FIXME: Describe <code>rewrite</code> method here.
-     *
-     * @param reader an <code>IndexReader</code> value
-     * @return a <code>Query</code> value
-     * @exception IOException if an error occurs
-     */
     Query* RangeQuery::rewrite(IndexReader* reader){
 
         BooleanQuery* query = _CLNEW BooleanQuery( true );
@@ -154,7 +147,6 @@ CL_NS_DEF(search)
         return query;
     }
 
-    /** Prints a user-readable version of this query. */
     TCHAR* RangeQuery::toString(const TCHAR* field) const
     {
         StringBuffer buffer;
@@ -182,7 +174,6 @@ CL_NS_DEF(search)
 		return (lowerTerm != NULL ? lowerTerm->field() : upperTerm->field());
 	}
 
-	/** Returns the lower term of this range query */
     Term* RangeQuery::getLowerTerm(bool pointer) const { 
 		if ( pointer )
 			return _CL_POINTER(lowerTerm); 
@@ -190,7 +181,6 @@ CL_NS_DEF(search)
 			return lowerTerm;
 	}
 
-    /** Returns the upper term of this range query */
     Term* RangeQuery::getUpperTerm(bool pointer) const { 
 		if ( pointer )
 			return _CL_POINTER(upperTerm); 
@@ -198,7 +188,6 @@ CL_NS_DEF(search)
 			return upperTerm;
 	}
 
-    /** Returns <code>true</code> if the range query is inclusive */
     bool RangeQuery::isInclusive() const { return inclusive; }
 
 

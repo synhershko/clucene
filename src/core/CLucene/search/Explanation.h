@@ -85,6 +85,7 @@ private:
 	bool match;
 public:
 	ComplexExplanation();
+	ComplexExplanation(const ComplexExplanation& copy);
 	ComplexExplanation(const bool _match, const float_t _value, const TCHAR* _description);
 	virtual ~ComplexExplanation();
 

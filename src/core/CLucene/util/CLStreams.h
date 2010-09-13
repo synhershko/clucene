@@ -151,10 +151,7 @@ public:
 	~BufferedReader(){}
 	BufferedReader* __asBufferedReader(){ return this; }
 };
-class CLUCENE_EXPORT InputStream: public CLStream<signed char>{
-public:
-	~InputStream(){}
-};
+typedef CLStream<signed char> InputStream;
 class CLUCENE_EXPORT BufferedInputStream: public InputStream, public BufferedStream<signed char>{
 public:
 	virtual ~BufferedInputStream(){}

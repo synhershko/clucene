@@ -59,20 +59,30 @@ public:
   const char* getObjectName() const;
   static const char* getClassName();
 
+  /**
+   * FIXME: Describe <code>rewrite</code> method here.
+   *
+   * @param reader an <code>IndexReader</code> value
+   * @return a <code>Query</code> value
+   * @exception IOException if an error occurs
+   */
   Query* rewrite(CL_NS(index)::IndexReader* reader);
 
   Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
 
-  // Prints a user-readable version of this query.
+  /** Prints a user-readable version of this query. */
   TCHAR* toString(const TCHAR* field) const;
 
   Query* clone() const;
 
   bool equals(Query * other) const;
 
+  /** Returns the lower term of this range query */
   CL_NS(index)::Term* getLowerTerm(bool pointer=true) const;
+  /** Returns the upper term of this range query */
   CL_NS(index)::Term* getUpperTerm(bool pointer=true) const;
   bool isInclusive() const;
+  /** Returns <code>true</code> if the range query is inclusive */
   const TCHAR* getField() const;
 
   size_t hashCode() const;

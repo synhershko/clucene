@@ -7,6 +7,8 @@
 #ifndef _lucene_index_MergeScheduler_
 #define _lucene_index_MergeScheduler_
 
+#include "CLucene/util/Equators.h"
+#include "CLucene/LuceneThreads.h"
 CL_NS_DEF(index)
 
 class IndexWriter;
@@ -18,7 +20,7 @@ class IndexWriter;
  * <p><b>NOTE:</b> This API is new and still experimental
  * (subject to change suddenly in the next release)</p>
 */
-class MergeScheduler: public CL_NS(util)::NamedObject {
+class CLUCENE_EXPORT MergeScheduler: public CL_NS(util)::NamedObject {
 public:
   /** Run the merges provided by {@link IndexWriter#getNextMerge()}. */
   virtual void merge(IndexWriter* writer) = 0;
@@ -29,7 +31,7 @@ public:
 
 /** A {@link MergeScheduler} that simply does each merge
  *  sequentially, using the current thread. */
-class SerialMergeScheduler: public MergeScheduler {
+class CLUCENE_EXPORT SerialMergeScheduler: public MergeScheduler {
 public:
   DEFINE_MUTEX(THIS_LOCK)
 

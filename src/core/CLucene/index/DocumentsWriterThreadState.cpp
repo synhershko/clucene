@@ -49,10 +49,10 @@ DocumentsWriter::ThreadState::ThreadState(DocumentsWriter* __parent):
   fieldDataArray(ValueArray<FieldData*>(8)),
   fieldDataHash(ValueArray<FieldData*>(16)),
   postingsVectors(ObjectArray<PostingVector>(1)),
-  allFieldDataArray(ValueArray<FieldData*>(10)),
   postingsPool( _CLNEW ByteBlockPool(true, __parent) ),
   vectorsPool( _CLNEW ByteBlockPool(false, __parent) ),
   charPool( _CLNEW CharBlockPool(__parent) ),
+  allFieldDataArray(ValueArray<FieldData*>(10)),
   _parent(__parent)
 {
   fieldDataHashMask = 15;
@@ -88,7 +88,7 @@ DocumentsWriter::ThreadState::~ThreadState(){
   _CLDELETE(tvfLocal);
   _CLDELETE(fdtLocal);
 
-  for ( int i=0; i<allFieldDataArray.length;i++)
+  for ( size_t i=0; i<allFieldDataArray.length;i++)
     _CLDELETE(allFieldDataArray.values[i]);
 }
 
@@ -506,7 +506,7 @@ void DocumentsWriter::ThreadState::trimFields() {
     }
   }
   //delete everything after up to in allFieldDataArray
-  for ( int i=upto;i<allFieldDataArray.length;i++ ){
+  for ( size_t i=upto;i<allFieldDataArray.length;i++ ){
     allFieldDataArray[i] = NULL;
   }
 

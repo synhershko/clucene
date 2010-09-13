@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -110,7 +110,7 @@ const TCHAR* Field::stringValue()	{ return (valueType & VALUE_STRING) ? static_c
 const ValueArray<uint8_t>* Field::binaryValue() { return (valueType & VALUE_BINARY) ? static_cast<ValueArray<uint8_t>*>(fieldsData) : NULL; } ///<returns reference
 Reader* Field::readerValue()	{ return (valueType & VALUE_READER) ? static_cast<Reader*>(fieldsData) : NULL; } ///<returns reference
 CL_NS(analysis)::TokenStream* Field::tokenStreamValue() { return (valueType & VALUE_TOKENSTREAM) ? static_cast<CL_NS(analysis)::TokenStream*>(fieldsData) : NULL; }
-	    
+
 bool	Field::isStored() const 	{ return (config & STORE_YES) != 0; }
 bool 	Field::isIndexed() const	{ return (config & INDEX_TOKENIZED)!=0 || (config & INDEX_UNTOKENIZED)!=0; }
 bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
@@ -122,8 +122,13 @@ bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YE
 bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
 
 bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
-void Field::setOmitNorms(const bool omitNorms) { config |= INDEX_NONORMS; }
-    
+void Field::setOmitNorms(const bool omitNorms) {
+    if ( omitNorms )
+        config |= INDEX_NONORMS;
+    else
+        config &= ~INDEX_NONORMS;
+}
+
 bool Field::isLazy() const { return lazy; }
 
 void Field::setValue(TCHAR* value, const bool duplicateValue) {
@@ -148,9 +153,9 @@ void Field::setValue(ValueArray<uint8_t>* value) {
 
 /** Expert: change the value of this field.  See <a href="#setValue(java.lang.String)">setValue(String)</a>. */
 void Field::setValue(CL_NS(analysis)::TokenStream* value) {
-	//_resetValue();
-	//fieldsData = value;
-	//valueType = VALUE_TOKENSTREAM;
+	_resetValue();
+    fieldsData = value;
+	valueType = VALUE_TOKENSTREAM;
 }
 
 void Field::setBoost(const float_t boost)	{ this->boost = boost; }
@@ -248,16 +253,16 @@ TCHAR* Field::toString() {
         result.append( _T(",") );
       result.append( _T("termVector") );
     }
-    if (isStoreOffsetWithTermVector()) { 
-      if (result.length() > 0) 
-        result.appendChar( ',' ); 
-      result.append( _T("termVectorOffsets") ); 
-    } 
-    if (isStorePositionWithTermVector()) { 
-      if (result.length() > 0) 
-        result.appendChar( ',' ); 
-      result.append( _T("termVectorPosition") ); 
-    } 
+    if (isStoreOffsetWithTermVector()) {
+      if (result.length() > 0)
+        result.appendChar( ',' );
+      result.append( _T("termVectorOffsets") );
+    }
+    if (isStorePositionWithTermVector()) {
+      if (result.length() > 0)
+        result.appendChar( ',' );
+      result.append( _T("termVectorPosition") );
+    }
     if (isBinary()) {
       if (result.length() > 0)
         result.appendChar( ',' );
@@ -272,7 +277,7 @@ TCHAR* Field::toString() {
     result.appendChar('<');
     result.append(name());
     result.appendChar(':');
-    
+
 	if (! isLazy() && fieldsData != NULL) {
 		if (valueType & VALUE_STRING)
 			result.append(static_cast<const TCHAR*>(fieldsData));
@@ -283,7 +288,7 @@ TCHAR* Field::toString() {
 		else
 			result.append( _T("NULL") );
 	}
-    
+
     result.appendChar('>');
     return result.toString();
 }

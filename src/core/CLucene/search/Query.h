@@ -9,12 +9,8 @@
 
 
 #include "CLucene/util/Array.h"
+#include "CLucene/util/Equators.h"
 CL_CLASS_DEF(index,IndexReader)
-//#include "Filter.h"
-//#include "Sort.h"
-//#include "CLucene/util/VoidList.h"
-//#include "Explanation.h"
-//#include "Similarity.h"
 
 CL_NS_DEF(search)
     class Weight;
@@ -101,7 +97,7 @@ CL_NS_DEF(search)
 
         /** Returns a clone of this query. */
         virtual Query* clone() const = 0;
-        _CL_DEPRECATED(getObjectName) const char* getQueryName() const{ return getObjectName(); }
+        _CL_DEPRECATED(getObjectName) const char* getQueryName() const;
 
         /** Prints a query to a string, with <code>field</code> assumed to be the 
         * default field and omitted.

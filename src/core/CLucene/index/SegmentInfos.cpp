@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "CLucene/store/Directory.h"
-//#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
 
 CL_NS_USE(store)
@@ -665,14 +664,14 @@ string SegmentInfo::segString(Directory* dir) {
 
   void SegmentInfos::clearto(size_t from, size_t end){
 	size_t range = end - from;
-	  if ( from >= 0 && (infos.size() - from) >= range) { // Make sure we actually need to remove
-		segmentInfosType::iterator itr,bitr=infos.begin()+from,eitr=infos.end();
-		size_t count = 0;
-		for(itr=bitr;itr!=eitr && count < range;++itr, count++) {
-				_CLLDELETE((*itr));
-			}
-			infos.erase(bitr,bitr + count);
-		}
+      if ( (infos.size() - from) >= range) { // Make sure we actually need to remove
+        segmentInfosType::iterator itr,bitr=infos.begin()+from,eitr=infos.end();
+        size_t count = 0;
+        for(itr=bitr;itr!=eitr && count < range;++itr, count++) {
+                _CLLDELETE((*itr));
+            }
+            infos.erase(bitr,bitr + count);
+        }
   }
   void SegmentInfos::add(SegmentInfo* info, int32_t pos){
     if ( pos == -1 ){

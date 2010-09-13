@@ -25,17 +25,23 @@
              void * LockSemaphore;
              _cl_dword_t SpinCount;
           };
-          
-          
+
           __declspec(dllimport) void __stdcall InitializeCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall EnterCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall LeaveCriticalSection(CRITICAL_SECTION *);
           __declspec(dllimport) void __stdcall DeleteCriticalSection(CRITICAL_SECTION *);
-		  __declspec(dllimport) void __stdcall ExitThread(_cl_dword_t);
+		      __declspec(dllimport) void __stdcall ExitThread(_cl_dword_t);
 
-    	  __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
-    	  
-    	  typedef struct  _SECURITY_ATTRIBUTES
+    	    __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+
+#ifdef _M_X64
+          __declspec(dllimport) long long __stdcall _InterlockedIncrement64(__inout long long volatile*);
+          __declspec(dllimport) long long __stdcall _InterlockedDecrement64(__inout long long volatile*);
+#else
+          __declspec(dllimport) long __stdcall InterlockedIncrement(long volatile*);
+          __declspec(dllimport) long __stdcall InterlockedDecrement(long volatile*);
+#endif
+    	    typedef struct  _SECURITY_ATTRIBUTES
           {
             _cl_dword_t nLength;
             void* lpSecurityDescriptor;

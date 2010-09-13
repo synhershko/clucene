@@ -371,7 +371,7 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
 			    t = v.at(i);
 			    if (t->getPositionIncrement() > 0 && multiTerms.size() > 0) {
             ValueArray<Term*> termsArray(multiTerms.size());
-            multiTerms.toArray(termsArray.values, false);
+            multiTerms.toArray(termsArray.values);
 				    if (enablePositionIncrements) {
 					    mpq->add(&termsArray,position);
 				    } else {
@@ -383,7 +383,7 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
 			    multiTerms.push_back(_CLNEW Term(field, t->termBuffer()));
 		    }
         ValueArray<Term*> termsArray(multiTerms.size());
-        multiTerms.toArray(termsArray.values, false);
+        multiTerms.toArray(termsArray.values);
 		    if (enablePositionIncrements) {
 			    mpq->add(&termsArray,position);
 		    } else {

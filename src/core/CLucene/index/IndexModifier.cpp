@@ -4,6 +4,12 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
+* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
+* the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
 #include "IndexModifier.h"
 
@@ -24,30 +30,32 @@ IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer, bool crea
 }
 
 IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool create) {
-	Directory* dir = FSDirectory::getDirectory(dirName, create);
+	Directory* dir = FSDirectory::getDirectory(dirName);
 	init(dir, analyzer, create);
 }
 
 void IndexModifier::init(Directory* directory, Analyzer* analyzer, bool create) {
-    indexWriter = NULL;
+	indexWriter = NULL;
 	indexReader = NULL;
 	open = false;
-    infoStream = NULL;
+	infoStream = NULL;
 
 	useCompoundFile = true;
 	this->maxBufferedDocs = IndexWriter::DEFAULT_MAX_BUFFERED_DOCS;
 	this->maxFieldLength = IndexWriter::DEFAULT_MAX_FIELD_LENGTH;
 	this->mergeFactor = IndexWriter::DEFAULT_MERGE_FACTOR;
 
-    this->directory = _CL_POINTER(directory);
-    SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
-    this->analyzer = analyzer;
+	this->directory = _CL_POINTER(directory);
+	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
+	this->analyzer = analyzer;
 	indexWriter = _CLNEW IndexWriter(directory, analyzer, create);
-    open = true;
+	open = true;
 }
 
 IndexModifier::~IndexModifier(){
-	close();
+	if (open) {
+		close();
+	}
 }
 
 void IndexModifier::assureOpen() const{
@@ -56,12 +64,13 @@ void IndexModifier::assureOpen() const{
 	}
 }
 
-void IndexModifier::createIndexWriter() {
+void IndexModifier::createIndexWriter(bool create) {
 	if (indexWriter == NULL) {
 		if (indexReader != NULL) {
 			indexReader->close();
 			_CLDELETE(indexReader);
 		}
+
 		indexWriter = _CLNEW IndexWriter(directory, analyzer, false);
         // IndexModifier cannot use ConcurrentMergeScheduler
         // because it synchronizes on the directory which can
@@ -200,9 +209,9 @@ int32_t IndexModifier::getMergeFactor() {
 }
 
 void IndexModifier::close() {
+	if (!open)
+		_CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	SCOPED_LOCK_MUTEX(directory->THIS_LOCK)
-    if (!open)
-        _CLTHROWA(CL_ERR_IllegalState, "Index is closed already");
 	if (indexWriter != NULL) {
 		indexWriter->close();
 		_CLDELETE(indexWriter);

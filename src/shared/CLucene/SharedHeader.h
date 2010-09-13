@@ -171,8 +171,6 @@
 
 
 //todo: put this logic in cmake
-//TODO: allow to deprecate functions for external use only (and not warning when used internally for backward
-//      compatiability)
 #if defined(_MSC_VER)
 	#if _MSC_FULL_VER >= 140050320
 	    #define _CL_DEPRECATE_TEXT(_Text) __declspec(deprecated(_Text))
@@ -187,7 +185,15 @@
     #define _CL_DEPRECATE_TEXT(_Text)
 #endif
 #define _CL_DEPRECATED(_NewItem) _CL_DEPRECATE_TEXT("This function or variable has been superceded by newer library or operating system functionality. Consider using " #_NewItem " instead. See online help for details.")
+//
+////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////
+// boost stuff
+////////////////////////////////////////////////////////
+#if defined(_MSC_VER)
+#  pragma warning (disable : 4251) // disable exported dll function
+# endif
 
 ////////////////////////////////////////////////////////
 //Class interfaces

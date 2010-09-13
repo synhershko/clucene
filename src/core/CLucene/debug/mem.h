@@ -42,16 +42,17 @@
 
 //Macro for deleting
 #ifdef LUCENE_ENABLE_REFCOUNT
-	#define _CLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; x=NULL; }
-	#define _CLLDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; }
+	#define _CLDELETE(x) if (x!=NULL){ CND_PRECONDITION(_LUCENE_ATOMIC_INT_GET((x)->__cl_refcount)>=0,"__cl_refcount was < 0"); if (_LUCENE_ATOMIC_INT_GET((x)->__cl_decref()) <= 0)delete x; x=NULL; }
+	#define _CLLDELETE(x) if (x!=NULL){ CND_PRECONDITION(_LUCENE_ATOMIC_INT_GET((x)->__cl_refcount)>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; }
 #else
 	#define _CLDELETE(x) {delete x;x=NULL;}
 	#define _CLLDELETE(x) {delete x;}
 #endif
 
 //_CLDECDELETE deletes objects which are *always* refcounted
-#define _CLDECDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; x=NULL; }
-#define _CLLDECDELETE(x) if (x!=NULL){ CND_PRECONDITION((x)->__cl_refcount>=0,"__cl_refcount was < 0"); if ((x)->__cl_decref() <= 0)delete x; }
+#define _CLDECDELETE(x) if (x!=NULL){ CND_PRECONDITION(_LUCENE_ATOMIC_INT_GET((x)->__cl_refcount)>=0,"__cl_refcount was < 0"); _LUCENE_ATOMIC_DECDELETE(&(x)->__cl_refcount, x); x=NULL; }
+#define _CLLDECDELETE(x) if (x!=NULL){ CND_PRECONDITION(_LUCENE_ATOMIC_INT_GET((x)->__cl_refcount)>=0,"__cl_refcount was < 0"); _LUCENE_ATOMIC_DECDELETE(&(x)->__cl_refcount, x); }
+#define _LUCENE_ATOMIC_DECDELETE(theInteger, theObject) { if ( _LUCENE_ATOMIC_DEC(theInteger) == 0) delete theObject;} 
 
 //_VDelete should be used for deleting non-clucene objects.
 //when using reference counting, _CLDELETE casts the object

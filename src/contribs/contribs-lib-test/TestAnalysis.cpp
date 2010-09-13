@@ -1,18 +1,9 @@
-/**
- * Copyright 2003-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/*------------------------------------------------------------------------------
+* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
+* the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
 #include "test.h"
 #include "CLucene/analysis/cjk/CJKAnalyzer.h"
 #include "CLucene/analysis/LanguageBasedAnalyzer.h"
@@ -128,7 +119,7 @@ void _testCJK(CuTest *tc, const char* astr, const char** results, bool ignoreSur
     TCHAR tres[LUCENE_MAX_WORD_LEN];
 
     while (results[pos] != NULL) {
-        CLUCENE_ASSERT(tokenizer->next(&tok) == true);
+        CLUCENE_ASSERT(tokenizer->next(&tok) != NULL);
 
         lucene_utf8towcs(tres, results[pos], LUCENE_MAX_WORD_LEN);
         CuAssertStrEquals(tc, _T("unexpected token value"), tres, tok.termBuffer());
@@ -166,9 +157,9 @@ void testLanguageBasedAnalyzer(CuTest* tc) {
     a.setStem(false);
     ts = a.tokenStream(_T("contents"), &reader);
 
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("he")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("abhorred")) == 0);
     _CLDELETE(ts);
 
@@ -178,11 +169,11 @@ void testLanguageBasedAnalyzer(CuTest* tc) {
     a.setStem(true);
     ts = a.tokenStream(_T("contents"), &reader);
 
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("he")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("abhorred")) == 0);
-    CLUCENE_ASSERT(ts->next(&t));
+    CLUCENE_ASSERT(ts->next(&t) != NULL);
     CLUCENE_ASSERT(_tcscmp(t.termBuffer(), _T("accentuer")) == 0);
     _CLDELETE(ts);
 }

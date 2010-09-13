@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_index_IndexModifier_
@@ -20,7 +20,7 @@ CL_CLASS_DEF(index, TermEnum)
 
 CL_NS_DEF(index)
 
-/** 
+/**
 * <p>[Note that as of <b>2.1</b>, all but one of the
 * methods in this class are available via {@link
 * IndexWriter}.  The one method that is not available is
@@ -30,12 +30,12 @@ CL_NS_DEF(index)
 * class hides {@link IndexReader} and {@link IndexWriter} so that you
 * do not need to care about implementation details such as that adding
 * documents is done via IndexWriter and deletion is done via IndexReader.
-* 
+*
 * <p>Note that you cannot create more than one <code>IndexModifier</code> object
 * on the same directory at the same time.
-* 
+*
 * <p>Example usage:
-* 
+*
 * <div align="left" class="java">
 * <table border="0" cellpadding="3" cellspacing="0" bgcolor="#ffffff">
 * <tr>
@@ -59,20 +59,20 @@ CL_NS_DEF(index)
 * </table>
 * </div>
 *
-* <p>Not all methods of IndexReader and IndexWriter are offered by this 
-* class. If you need access to additional methods, either use those classes 
+* <p>Not all methods of IndexReader and IndexWriter are offered by this
+* class. If you need access to additional methods, either use those classes
 * directly or implement your own class that extends <code>IndexModifier</code>.
-* 
+*
 * <p>Although an instance of this class can be used from more than one
-* thread, you will not get the best performance. You might want to use 
-* IndexReader and IndexWriter directly for that (but you will need to 
+* thread, you will not get the best performance. You might want to use
+* IndexReader and IndexWriter directly for that (but you will need to
 * care about synchronization yourself then).
-* 
+*
 * <p>While you can freely mix calls to add() and delete() using this class,
 * you should batch you calls for best performance. For example, if you
 * want to update 20 documents, you should first delete all those documents,
 * then add all the new documents.
-* 
+*
 * @deprecated Please use {@link IndexWriter} instead.
 */
 class CLUCENE_EXPORT IndexModifier {
@@ -133,7 +133,7 @@ protected:
 	* Close the IndexReader and open an IndexWriter.
 	* @throws IOException
 	*/
-	void createIndexWriter();
+	void createIndexWriter(bool create = false);
 
 	/**
 	* Close the IndexWriter and open an IndexReader.
@@ -155,7 +155,7 @@ public:
 	* discarded.
 	* @see IndexWriter#addDocument(Document*, Analyzer*)
 	* @throws IllegalStateException if the index is closed
-    */	
+    */
 	void addDocument(CL_NS(document)::Document* doc,  CL_NS(analysis)::Analyzer* docAnalyzer=NULL);
 
 
@@ -281,15 +281,15 @@ public:
 	*/
 	void close();
 
-  std::string toString() const;	
-	
+  std::string toString() const;
+
 	/**
 	* Gets the version number of the currently open index.
 	*/
 	int64_t getCurrentVersion() const;
-	
+
 	/**
-	* Returns an enumeration of all the documents which contain term. 
+	* Returns an enumeration of all the documents which contain term.
 	*
 	* Warning: This is not threadsafe. Make sure you lock the modifier object
 	* while using the TermDocs. If the IndexReader that the modifier manages
@@ -299,7 +299,7 @@ public:
 
 	/**
 	* Returns an enumeration of all terms after a given term.
-	* If no term is given, an enumeration of all the terms 
+	* If no term is given, an enumeration of all the terms
 	* in the index is returned.
 	* The enumeration is ordered by Term.compareTo().  Each term
 	* is greater than all that precede it in the enumeration.
@@ -311,7 +311,7 @@ public:
 	TermEnum* terms(Term* term=NULL);
 
 	/**
-	* Returns the stored fields of the n-th Document in this index. 
+	* Returns the stored fields of the n-th Document in this index.
 	*
 	* Warning: This is not threadsafe. Make sure you lock the modifier object
 	* while using the TermDocs. If the IndexReader that the modifier manages

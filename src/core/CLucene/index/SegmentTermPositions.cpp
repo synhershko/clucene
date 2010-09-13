@@ -81,7 +81,7 @@ bool SegmentTermPositions::next() {
 	// we remember to skip the remaining positions of the current
     // document lazily
     lazySkipProxCount += proxCount;
-    
+
     if (SegmentTermDocs::next()) {				  // run super
         proxCount = _freq;				  // note frequency
         position = 0;				  // reset position
@@ -90,7 +90,7 @@ bool SegmentTermPositions::next() {
     return false;
 }
 
-int32_t SegmentTermPositions::read(int32_t* docs, int32_t* freqs, int32_t length) {
+int32_t SegmentTermPositions::read(int32_t* /*docs*/, int32_t* /*freqs*/, int32_t /*length*/) {
     _CLTHROWA(CL_ERR_UnsupportedOperation,"TermPositions does not support processing multiple documents in one call. Use TermDocs instead.");
 }
 

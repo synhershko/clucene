@@ -129,7 +129,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
                 unsortedTokens=_CLNEW CLSetList<Token*,TokenOrderCompare>(false);
             for (int32_t tp=0; tp < offsets->length; tp++)
             {
-                unsortedTokens->insert(_CLNEW Token((*terms)[t],
+                unsortedTokens->insert(_CLNEW Token(terms->values[t],
                     (*offsets)[tp]->getStartOffset(),
                     (*offsets)[tp]->getEndOffset()));
             }
@@ -144,7 +144,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
             //tokens stored with positions - can use this to index straight into sorted array
             for (int32_t tp = 0; tp < pos->length; tp++)
             {
-                tokensInOriginalOrder[(*pos)[tp]]=_CLNEW Token((*terms)[t],
+                tokensInOriginalOrder[(*pos)[tp]]=_CLNEW Token(terms->values[t],
                         (*offsets)[tp]->getStartOffset(),
 						(*offsets)[tp]->getEndOffset());
             }                

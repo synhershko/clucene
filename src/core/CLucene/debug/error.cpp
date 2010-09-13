@@ -17,7 +17,7 @@ CL_NS_USE(util)
 	 #warning "==================Lucene exceptions are disabled=================="
 	#endif
 #else
-    CLuceneError::CLuceneError():error_number(0),_twhat(NULL){
+    CLuceneError::CLuceneError():_twhat(NULL),error_number(0){
 #ifndef _ASCII
 		_awhat = NULL;
 #endif

@@ -28,7 +28,7 @@ class MultiReader::Internal: LUCENE_BASE{
 public:
   MultiSegmentReader::NormsCacheType normsCache;
 
-  bool* decrefOnClose; //remember which subreaders to decRef on close
+  bool* closeOnClose; //remember which subreaders to close on close
   bool _hasDeletions;
   uint8_t* ones;
   int32_t _maxDoc;
@@ -41,38 +41,32 @@ public:
     _numDocs       = -1;
     ones           = NULL;
     _hasDeletions  = false;
-    decrefOnClose  = NULL;
+    closeOnClose  = NULL;
 	}
 	~Internal(){
     _CLDELETE_ARRAY(ones);
-    _CLDELETE_ARRAY(decrefOnClose);
+    _CLDELETE_ARRAY(closeOnClose);
 	}
 };
 
-MultiReader::MultiReader(CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders)
+MultiReader::MultiReader(const CL_NS(util)::ArrayBase<IndexReader*>* subReaders, bool closeSubReaders)
 {
 	this->_internal = _CLNEW Internal();
   this->init(subReaders, closeSubReaders);
 }
 
-void MultiReader::init(CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
-  this->subReaders = _subReaders;
+void MultiReader::init(const CL_NS(util)::ArrayBase<IndexReader*>* _subReaders, bool closeSubReaders){
+  this->subReaders = _CLNEW CL_NS(util)::ValueArray<IndexReader*>(_subReaders->length);
   starts = _CL_NEWARRAY(int32_t, subReaders->length + 1);    // build starts array
-  _internal->decrefOnClose = _CL_NEWARRAY(bool, subReaders->length);
+  _internal->closeOnClose = _CL_NEWARRAY(bool, subReaders->length);
 
   for (size_t i = 0; i < subReaders->length; i++) {
+    this->subReaders->values[i] = _subReaders->values[i];
       starts[i] = _internal->_maxDoc;
 
       // compute maxDocs
       _internal->_maxDoc += (*subReaders)[i]->maxDoc();
-
-      if (!closeSubReaders) {
-        (*subReaders)[i]->incRef();
-        _internal->decrefOnClose[i] = true;
-      } else {
-        _internal->decrefOnClose[i] = false;
-      }
-
+      _internal->closeOnClose[i] = closeSubReaders;
       if ((*subReaders)[i]->hasDeletions())
         _internal->_hasDeletions = true;
   }
@@ -85,9 +79,10 @@ MultiReader::~MultiReader() {
 //Post - The instance has been destroyed all IndexReader instances
 //       this instance managed have been destroyed to
 
+  close();
 	_CLDELETE(_internal);
   _CLDELETE_ARRAY(starts);
-  subReaders->deleteValues();
+  _CLDELETE(subReaders);
 }
 
 
@@ -95,50 +90,49 @@ IndexReader* MultiReader::reopen() {
   ensureOpen();
 
   bool reopened = false;
-  ArrayBase<IndexReader*>* newSubReaders = _CLNEW ObjectArray<IndexReader>(subReaders->length);
-  bool* newDecrefOnClose = _CL_NEWARRAY(bool,subReaders->length);
+  ValueArray<IndexReader*> newSubReaders(subReaders->length);
+  ValueArray<bool> newCloseOnClose(subReaders->length);
 
   bool success = false;
+  IndexReader* ret = NULL;
   try {
     for (size_t i = 0; i < subReaders->length; i++) {
-      newSubReaders->values[i] = (*subReaders)[i]->reopen();
+      newSubReaders[i] = (*subReaders)[i]->reopen();
+
       // if at least one of the subreaders was updated we remember that
       // and return a new MultiReader
-      if ((*newSubReaders)[i] != (*subReaders)[i]) {
+      if (newSubReaders[i] != (*subReaders)[i]) {
         reopened = true;
-        // this is a new subreader instance, so on close() we don't
-        // decRef but close it
-        newDecrefOnClose[i] = false;
-//TODO: cleanup memory
+        // this is a new subreader instance, so on close() we don't close it
+        newCloseOnClose[i] = true;
       }
     }
 
     if (reopened) {
+      MultiReader* mr = _CLNEW MultiReader(&newSubReaders);
+
       for (size_t i = 0; i < subReaders->length; i++) {
-        if ((*newSubReaders)[i] == (*subReaders)[i]) {
-          (*newSubReaders)[i]->incRef();
-          newDecrefOnClose[i] = true;
+        if (newSubReaders[i] == (*subReaders)[i]) {
+          // 'give' the memory to the new object
+          mr->_internal->closeOnClose[i] = this->_internal->closeOnClose[i];
+          this->subReaders->values[i] = NULL;
         }
       }
-
-      MultiReader* mr = _CLNEW MultiReader(newSubReaders);
-      mr->_internal->decrefOnClose = newDecrefOnClose;
       success = true;
-      return mr;
+      ret = mr;
     } else {
       success = true;
-      return this;
+      ret = this;
     }
   } _CLFINALLY (
     if (!success && reopened) {
-      for (size_t i = 0; i < newSubReaders->length; i++) {
-        if ((*newSubReaders)[i] != NULL) {
+      for (size_t i = 0; i < newSubReaders.length; i++) {
+        if (newSubReaders[i] != NULL) {
           try {
-            if (newDecrefOnClose[i]) {
-              (*newSubReaders)[i]->decRef();
-            } else {
-              (*newSubReaders)[i]->close();
-            }
+            if (newCloseOnClose[i]) {
+               newSubReaders.values[i]->close();
+               _CLDELETE(newSubReaders.values[i]);
+             }
           } catch (CLuceneError& ignore) {
             if ( ignore.number() != CL_ERR_IO ) throw ignore;
             // keep going - we want to clean up as much as possible
@@ -147,6 +141,7 @@ IndexReader* MultiReader::reopen() {
       }
     }
   )
+  return ret;
 }
 
 ArrayBase<TermFreqVector*>* MultiReader::getTermFreqVectors(int32_t n){
@@ -183,8 +178,9 @@ int32_t MultiReader::numDocs() {
     // Don't call ensureOpen() here (it could affect performance)
 	if (_internal->_numDocs == -1) {			  // check cache
 	  int32_t n = 0;				  // cache miss--recompute
-	  for (size_t i = 0; i < subReaders->length; i++)
+	  for (size_t i = 0; i < subReaders->length; i++){
 	    n += (*subReaders)[i]->numDocs();		  // sum from readers
+	  }
 	  _internal->_numDocs = n;
 	}
 	return _internal->_numDocs;
@@ -326,11 +322,11 @@ void MultiReader::doCommit() {
 void MultiReader::doClose() {
 	SCOPED_LOCK_MUTEX(THIS_LOCK)
 	for (size_t i = 0; i < subReaders->length; i++){
-    if (_internal->decrefOnClose[i]) {
-        (*subReaders)[i]->decRef();
-    } else {
-      (*subReaders)[i]->close();
-    }
+      if ( (*subReaders)[i] == NULL ) continue; //reopen may take some memory...
+      if (_internal->closeOnClose[i]) {
+        subReaders->values[i]->close();
+        _CLDELETE(subReaders->values[i]);
+      }
 	}
 }
 

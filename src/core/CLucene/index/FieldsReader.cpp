@@ -26,7 +26,8 @@ CL_NS_USE(util)
 CL_NS_DEF(index)
 
 FieldsReader::FieldsReader(Directory* d, const char* segment, FieldInfos* fn, int32_t _readBufferSize, int32_t _docStoreOffset, int32_t size):
-	fieldInfos(fn), closed(false)
+	fieldInfos(fn), cloneableFieldsStream(NULL), fieldsStream(NULL), indexStream(NULL),
+        numTotalDocs(0),_size(0), closed(false),docStoreOffset(0)
 {
 //Func - Constructor
 //Pre  - d contains a valid reference to a Directory
@@ -470,7 +471,7 @@ const TCHAR* FieldsReader::LazyField::stringValue() {
 			//read in chars b/c we already know the length we need to read
 			TCHAR* chars = _CL_NEWARRAY(TCHAR, toRead+1);
 			localFieldsStream->readChars(chars, 0, toRead);
-      chars[toRead] = NULL;
+			chars[toRead] = _T('\0');
 			_resetValue();
 			fieldsData = chars;
 		}
@@ -520,20 +521,15 @@ CL_NS(analysis)::TokenStream* FieldsReader::FieldForMerge::tokenStreamValue() co
 FieldsReader::FieldForMerge::FieldForMerge(void* _value, ValueType _type, const FieldInfo* fi, const bool binary, const bool compressed, const bool tokenize) : Field(fi->name, 0) {
 
 	uint32_t bits = STORE_YES;
-	if (compressed) bits |= STORE_COMPRESS;
 
 	this->fieldsData = _value;
 	this->valueType = _type;
 
-	//this->isTokenized = tokenize;
 	if (tokenize) bits |= INDEX_TOKENIZED;
+	if (compressed) bits |= STORE_COMPRESS;
 
 	if (fi->isIndexed && !tokenize) bits |= INDEX_UNTOKENIZED;
-	//this->isIndexed = fi->isIndexed;
-
 	if (fi->omitNorms) bits |= INDEX_NONORMS;
-	//this->omitNorms = fi->omitNorms;
-
 	if (fi->storeOffsetWithTermVector) bits |= TERMVECTOR_WITH_OFFSETS;
 	if (fi->storePositionWithTermVector) bits |= TERMVECTOR_WITH_POSITIONS;
 	if (fi->storeTermVector) bits |= TERMVECTOR_YES;

@@ -8,6 +8,7 @@
 #define _lucene_document_Field_
 
 #include "CLucene/util/Array.h"
+#include "CLucene/util/Equators.h"
 /*
 Fieldable reading:
 https://issues.apache.org/jira/browse/LUCENE-1219?page=com.atlassian.jira.plugin.system.issuetabpanels:comment- tabpanel&focusedCommentId=12578199#action_12578199

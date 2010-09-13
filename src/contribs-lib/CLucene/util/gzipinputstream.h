@@ -20,9 +20,9 @@ private:
 	 class Internal;
 	 Internal* internal;
 public:
-    explicit GZipInputStream(BufferedInputStream* input,
+    _CL_DEPRECATED(Use compressed field) explicit GZipInputStream(BufferedInputStream* input,
         ZipFormat format=GZIPFORMAT);
-    explicit GZipInputStream(InputStream* input,
+    _CL_DEPRECATED(Use compressed field) explicit GZipInputStream(InputStream* input,
         ZipFormat format=GZIPFORMAT);
     ~GZipInputStream();
 

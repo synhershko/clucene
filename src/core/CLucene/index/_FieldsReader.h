@@ -49,7 +49,7 @@ CL_NS_DEF(index)
 	public:
 		FieldsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fn,
 			int32_t readBufferSize = CL_NS(store)::BufferedIndexInput::BUFFER_SIZE, int32_t docStoreOffset = -1, int32_t size = 0);
-		~FieldsReader();
+		virtual ~FieldsReader();
 
 	//protected:
 		/**
@@ -113,8 +113,8 @@ CL_NS_DEF(index)
 			FieldsReader* parent;
 
 		public:
-			LazyField(FieldsReader* _parent, const TCHAR* _name, int config, const int32_t _toRead, const int64_t _pointer);
-      virtual ~LazyField();
+            LazyField(FieldsReader* _parent, const TCHAR* _name, int config, const int32_t _toRead, const int64_t _pointer);
+            virtual ~LazyField();
 		private:
 			CL_NS(store)::IndexInput* getFieldStream();
 

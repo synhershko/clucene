@@ -71,20 +71,11 @@ FilteredTermEnum::FilteredTermEnum():currentTerm(NULL),actualEnum(NULL){
         return false;
     }
 
-    Term* FilteredTermEnum::term() {
-	//Func - Returns the current Term in the enumeration.
-	//Pre  - next() must have been called at least once
-	//       pointer is true or false
-	//Post - if pre(pointer) is true the reference counter of currentTerm is increased
-	//       and current Term is returned otherwise currentTerm is only returned
-
-        return _CL_POINTER(currentTerm);
-    }
     Term* FilteredTermEnum::term(bool pointer) {
     	if ( pointer )
-        	return _CL_POINTER(currentTerm);
-        else
-        	return currentTerm;
+        return _CL_POINTER(currentTerm);
+      else
+        return currentTerm;
     }
 
     void FilteredTermEnum::close(){
