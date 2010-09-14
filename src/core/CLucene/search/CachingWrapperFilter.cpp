@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -18,7 +18,7 @@ class BitSetHolder: LUCENE_BASE{
 	bool deleteBs;
 public:
 	CL_NS(util)::BitSet* bits;
-	
+
 	BitSetHolder(CL_NS(util)::BitSet* bits, bool deleteBs){
 		this->bits = bits;
 		this->deleteBs = deleteBs;
@@ -26,16 +26,16 @@ public:
 	~BitSetHolder(){
 		if ( deleteBs )
 			_CLDELETE(bits);
-	}	
+	}
 };
 
 struct AbstractCachingFilter::Internal{
-	typedef CL_NS(util)::CLHashMap<CL_NS(index)::IndexReader*, 
-	  BitSetHolder*, 
+	typedef CL_NS(util)::CLHashMap<CL_NS(index)::IndexReader*,
+	  BitSetHolder*,
 	  CL_NS(util)::Compare::Void<CL_NS(index)::IndexReader>,
 	  CL_NS(util)::Equals::Void<CL_NS(index)::IndexReader>,
-	  CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>, 
-	  CL_NS(util)::Deletor::Object<BitSetHolder> > CacheType; 
+	  CL_NS(util)::Deletor::Object<CL_NS(index)::IndexReader>,
+	  CL_NS(util)::Deletor::Object<BitSetHolder> > CacheType;
 
 	CacheType cache;
 	DEFINE_MUTEX(cache_LOCK)
@@ -49,7 +49,7 @@ AbstractCachingFilter::AbstractCachingFilter():
 	_internal(new Internal)
 {
 }
-AbstractCachingFilter::AbstractCachingFilter(const AbstractCachingFilter& copy):
+AbstractCachingFilter::AbstractCachingFilter(const AbstractCachingFilter& /*copy*/):
 	_internal(new Internal)
 {
 }
@@ -75,7 +75,9 @@ void AbstractCachingFilter::closeCallback(CL_NS(index)::IndexReader* reader, voi
 
 
 
-CachingWrapperFilter::CachingWrapperFilter(Filter* filter, bool deleteFilter){
+CachingWrapperFilter::CachingWrapperFilter(Filter* filter, bool deleteFilter):
+	AbstractCachingFilter()
+{
 	this->filter = filter;
 	this->deleteFilter = deleteFilter;
 }

@@ -8,25 +8,7 @@
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/IndexInput.h"
 #include <stdlib.h>
-#include <stdio.h>
 
-void hashTest(CuTest *tc){
-    //todo: this is testing internal stuff, turn it on again using a shared test..
-	/*CLHashMap<const char*,int,Compare::Char,Equals::Char,Deletor::acArray,Deletor::ConstNullVal<int> > map(true,true);
-	map.put(STRDUP_AtoA("a1"),1);
-	map.put(STRDUP_AtoA("a1"),2);
-	map.put(STRDUP_AtoA("a2"),3);
-	map.put(STRDUP_AtoA("a3"),4);
-
-
-	CuAssertIntEquals(tc, _T("map size!=3"), 3, map.size());
-
-	map.remove("a1");
-	CuAssertIntEquals(tc, _T("map size!=2"), 2, map.size());
-
-	map.put(STRDUP_AtoA("a1"),5);
-	CuAssertIntEquals(tc, _T("mapsize!=3"),3, map.size());*/
-}
 
 void StoreTest(CuTest *tc,int32_t count, bool ram){
 	srand(1251971);
@@ -36,8 +18,8 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 	uint64_t start = Misc::currentTimeMillis();
 
 	char fsdir[CL_MAX_PATH];
-	sprintf(fsdir,"%s/%s",cl_tempDir, "test.store");
-	Directory* store = (ram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir, true) );
+	_snprintf(fsdir, CL_MAX_PATH, "%s/%s",cl_tempDir, "test.store");
+	Directory* store = (ram?(Directory*)_CLNEW RAMDirectory():(Directory*)FSDirectory::getDirectory(fsdir) );
 	int32_t LENGTH_MASK = 0xFFF;
 	char name[260];
 
@@ -60,7 +42,7 @@ void StoreTest(CuTest *tc,int32_t count, bool ram){
 	if (!ram){
 		store->close();
 		_CLDECDELETE(store);
-		store = (Directory*)FSDirectory::getDirectory(fsdir, false);
+		store = (Directory*)FSDirectory::getDirectory(fsdir);
   }else{
     CuMessageA(tc, "Memory used at end: %l", ((RAMDirectory*)store)->sizeInBytes);
   }
@@ -123,7 +105,6 @@ CuSuite *teststore(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Store Test"));
 
-    SUITE_ADD_TEST(suite, hashTest);
     SUITE_ADD_TEST(suite, ramtest);
     SUITE_ADD_TEST(suite, fstest);
 

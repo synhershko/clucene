@@ -185,7 +185,7 @@ CL_NS_DEF(index)
 			lastIndexPointer = other->output->getFilePointer(); // write pointer
 		}
     if (lastTermText.length < termTextLength || lastTermText.length == 0){
-      lastTermText.resize( cl_max(10,termTextLength*1.25) );
+      lastTermText.resize( (int32_t)cl_max(10.0,termTextLength*1.25) );
     }
     if ( termText != NULL )
       _tcsncpy(lastTermText.values,termText,termTextLength);

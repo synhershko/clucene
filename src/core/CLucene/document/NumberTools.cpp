@@ -41,7 +41,7 @@ TCHAR* NumberTools::longToString(int64_t l)
 	return buf;
 }
 
-int64_t NumberTools::stringToLong(TCHAR* str) {
+int64_t NumberTools::stringToLong(const TCHAR* str) {
 	if (str == NULL) {
 		_CLTHROWA(CL_ERR_NullPointer,"string cannot be null");
 	}

@@ -58,7 +58,7 @@ CL_NS_USE(util)
 			int32_t fhandle;
 			int64_t _length;
 			int64_t _fpos;
-			DEFINE_MUTEX(*THIS_LOCK)
+			DEFINE_MUTEX(*SHARED_LOCK)
 			char path[CL_MAX_DIR]; //todo: this is only used for cloning, better to get information from the fhandle
 			SharedHandle(const char* path);
 			~SharedHandle();
@@ -98,7 +98,7 @@ CL_NS_USE(util)
 		// output methods:
 		void flushBuffer(const uint8_t* b, const int32_t size);
 	public:
-		FSIndexOutput(const char* path);
+		FSIndexOutput(const char* path, int filemode);
 		~FSIndexOutput();
 
 		// output methods:
@@ -147,7 +147,7 @@ CL_NS_USE(util)
       	error.set(CL_ERR_IO, "Could not open file");
 	  }
 #ifndef _CL_DISABLE_MULTITHREADING
-    delete handle->THIS_LOCK;
+    delete handle->SHARED_LOCK;
 #endif
 	  _CLDECDELETE(handle);
 	  return false;
@@ -161,7 +161,7 @@ CL_NS_USE(util)
 	  if ( other.handle == NULL )
 		  _CLTHROWA(CL_ERR_NullPointer, "other handle is null");
 
-	  SCOPED_LOCK_MUTEX(*other.handle->THIS_LOCK)
+	  SCOPED_LOCK_MUTEX(*other.handle->SHARED_LOCK)
 	  handle = _CL_POINTER(other.handle);
 	  _pos = other.handle->_fpos; //note where we are currently...
   }
@@ -173,7 +173,7 @@ CL_NS_USE(util)
     strcpy(this->path,path);
 
 #ifndef _CL_DISABLE_MULTITHREADING
-	  THIS_LOCK = new _LUCENE_THREADMUTEX;
+	  SHARED_LOCK = new _LUCENE_THREADMUTEX;
 #endif
   }
   FSDirectory::FSIndexInput::SharedHandle::~SharedHandle() {
@@ -207,12 +207,12 @@ CL_NS_USE(util)
 		//won't be able to unlock the mutex...
 
 		//take a reference of the lock object...
-		_LUCENE_THREADMUTEX* mutex = handle->THIS_LOCK;
+		_LUCENE_THREADMUTEX* mutex = handle->SHARED_LOCK;
 		//lock the mutex
 		mutex->lock();
 
 		//determine if we are about to delete the handle...
-		bool dounlock = ( handle->__cl_refcount > 1 );
+		bool dounlock = ( _LUCENE_ATOMIC_INT_GET(handle->__cl_refcount) > 1 );
 
     //decdelete (deletes if refcount is down to 0
 		_CLDECDELETE(handle);
@@ -238,7 +238,7 @@ CL_NS_USE(util)
 void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	CND_PRECONDITION(handle!=NULL,"shared file handle has closed");
 	CND_PRECONDITION(handle->fhandle>=0,"file is not open");
-	SCOPED_LOCK_MUTEX(*handle->THIS_LOCK)
+	SCOPED_LOCK_MUTEX(*handle->SHARED_LOCK)
 
 	if ( handle->_fpos != _pos ){
 		if ( fileSeek(handle->fhandle,_pos,SEEK_SET) != _pos ){
@@ -261,15 +261,18 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	handle->_fpos=_pos;
 }
 
-  FSDirectory::FSIndexOutput::FSIndexOutput(const char* path){
+  FSDirectory::FSIndexOutput::FSIndexOutput(const char* path, int filemode){
 	//O_BINARY - Opens file in binary (untranslated) mode
 	//O_CREAT - Creates and opens new file for writing. Has no effect if file specified by filename exists
 	//O_RANDOM - Specifies that caching is optimized for, but not restricted to, random access from disk.
 	//O_WRONLY - Opens file for writing only;
+    if ( filemode <= 0 ){
+      filemode = _S_IWRITE | _S_IREAD;
+    }
 	  if ( Misc::dir_Exists(path) )
-	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, _S_IREAD | _S_IWRITE);
+	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, filemode);
 	  else // added by JBP
-	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, _S_IREAD | _S_IWRITE);
+	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, filemode);
 
 	  if ( fhandle < 0 ){
       int err = errno;
@@ -352,10 +355,16 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 		return LOCK_DIR;
 	}
 
-  FSDirectory::FSDirectory(const char* _path, const bool createDir, LockFactory* lockFactory):
+  FSDirectory::FSDirectory():
    Directory(),
    refCount(0),
-   useMMap(LUCENE_USE_MMAP)
+   useMMap(LUCENE_USE_MMAP),
+   filemode(_S_IWRITE | _S_IREAD) //default to user (only) writable index
+  {
+    this->lockFactory = NULL;
+  }
+
+  void FSDirectory::init(const char* _path, LockFactory* lockFactory)
   {
     directory = _path;
     bool doClearLockID = false;
@@ -364,7 +373,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     	if ( disableLocks ) {
     		lockFactory = NoLockFactory::getNoLockFactory();
     	} else {
-    		lockFactory = _CLNEW FSLockFactory( directory.c_str() );
+    		lockFactory = _CLNEW FSLockFactory( directory.c_str(), this->filemode );
     		doClearLockID = true;
     	}
     }
@@ -375,38 +384,17 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     	lockFactory->setLockPrefix(NULL);
     }
 
-    if (createDir) {
-      create();
-    }
-
     if (!Misc::dir_Exists(directory.c_str())){
       char* err = _CL_NEWARRAY(char,19+directory.length()+1); //19: len of " is not a directory"
       strcpy(err,directory.c_str());
       strcat(err," is not a directory");
       _CLTHROWA_DEL(CL_ERR_IO, err );
     }
-
   }
 
 
   void FSDirectory::create(){
     SCOPED_LOCK_MUTEX(THIS_LOCK)
-    struct cl_stat_t fstat;
-    if ( fileStat(directory.c_str(),&fstat) != 0 ) {
-	  	//todo: should construct directory using _mkdirs... have to write replacement
-      if ( _mkdir(directory.c_str()) == -1 ){
-			  char* err = _CL_NEWARRAY(char,27+directory.length()+1); //27: len of "Couldn't create directory: "
-			  strcpy(err,"Couldn't create directory: ");
-			  strcat(err,directory.c_str());
-			  _CLTHROWA_DEL(CL_ERR_IO, err );
-      }
-		}
-
-		if ( fileStat(directory.c_str(),&fstat) != 0 || !(fstat.st_mode & S_IFDIR) ){
-	      char tmp[1024];
-	      _snprintf(tmp,1024,"%s not a directory", directory.c_str());
-	      _CLTHROWA(CL_ERR_IO,tmp);
-		}
 
 	  //clear old files
 	  vector<string> files;
@@ -434,18 +422,23 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   FSDirectory::~FSDirectory(){
   }
 
+  void FSDirectory::setFileMode(int mode){
+    this->filemode = mode;
+  }
+  int FSDirectory::getFileMode(){
+    return this->filemode;
+  }
+  void FSDirectory::setUseMMap(bool value){ useMMap = value; }
+  bool FSDirectory::getUseMMap() const{ return useMMap; }
+  const char* FSDirectory::getClassName(){
+    return "FSDirectory";
+  }
+  const char* FSDirectory::getObjectName() const{
+    return getClassName();
+  }
 
-    void FSDirectory::setUseMMap(bool value){ useMMap = value; }
-    bool FSDirectory::getUseMMap() const{ return useMMap; }
-    const char* FSDirectory::getClassName(){
-      return "FSDirectory";
-    }
-    const char* FSDirectory::getObjectName() const{
-      return getClassName();
-    }
-
-    void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
-    bool FSDirectory::getDisableLocks() { return disableLocks; }
+  void FSDirectory::setDisableLocks(bool doDisableLocks) { disableLocks = doDisableLocks; }
+  bool FSDirectory::getDisableLocks() { return disableLocks; }
 
 
   bool FSDirectory::list(vector<string>* names) const{ //todo: fix this, ugly!!!
@@ -464,27 +457,54 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     return directory.c_str();
   }
 
+  FSDirectory* FSDirectory::getDirectory(const char* file, bool create, LockFactory* lockFactory){
+    FSDirectory* dir = getDirectory(file, (LockFactory*)NULL);
+
+    // This is now deprecated (creation should only be done
+    // by IndexWriter):
+    if (create) {
+      dir->create();
+    }
+
+    return dir;
+  }
   //static
-  FSDirectory* FSDirectory::getDirectory(const char* file, const bool _create, LockFactory* lockFactory){
+  FSDirectory* FSDirectory::getDirectory(const char* _file, LockFactory* lockFactory){
     FSDirectory* dir = NULL;
 	{
-		if ( !file || !*file )
+		if ( !_file || !*_file )
 			_CLTHROWA(CL_ERR_IO,"Invalid directory");
-
+    
     char buf[CL_MAX_PATH];
-  	char* tmpdirectory = _realpath(file,buf);//set a realpath so that if we change directory, we can still function
-  	if ( !tmpdirectory || !*tmpdirectory ){
-  		strncpy(buf,file, CL_MAX_PATH);
-      tmpdirectory = buf;
+  	char* file = _realpath(_file,buf);//set a realpath so that if we change directory, we can still function
+  	if ( !file || !*file ){
+  		strncpy(buf, _file, CL_MAX_PATH);
+      file = buf;
   	}
+    
+    struct cl_stat_t fstat;
+		if ( fileStat(file,&fstat) != 0 && !(fstat.st_mode & S_IFDIR) ){
+	      char tmp[1024];
+	      _snprintf(tmp,1024,"%s not a directory", file);
+	      _CLTHROWA(CL_ERR_IO,tmp);
+		}
+
+    if ( fileStat(file,&fstat) != 0 ) {
+	  	//todo: should construct directory using _mkdirs... have to write replacement
+      if ( _mkdir(file) == -1 ){
+        string err = "Couldn't create directory: ";
+        err += string(file);
+			  _CLTHROWA(CL_ERR_IO, err.c_str() );
+      }
+		}
+
 
 		SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
-		dir = DIRECTORIES.get(tmpdirectory);
+		dir = DIRECTORIES.get(file);
 		if ( dir == NULL  ){
-			dir = _CLNEW FSDirectory(tmpdirectory,_create,lockFactory);
+			dir = _CLNEW FSDirectory();
+      dir->init(file,lockFactory);
 			DIRECTORIES.put( dir->directory.c_str(), dir);
-		} else if ( _create ) {
-	    	dir->create();
 		} else {
 			if ( lockFactory != NULL && lockFactory != dir->getLockFactory() ) {
 				_CLTHROWA(CL_ERR_IO,"Directory was previously created with a different LockFactory instance, please pass NULL as the lockFactory instance and use setLockFactory to change it");
@@ -493,7 +513,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 
 		{
 			SCOPED_LOCK_MUTEX(dir->THIS_LOCK)
-				dir->refCount++;
+			dir->refCount++;
 		}
 	}
 
@@ -525,10 +545,10 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     char buffer[CL_MAX_DIR];
     _snprintf(buffer,CL_MAX_DIR,"%s%s%s",directory.c_str(),PATH_DELIMITERA,name);
 
-    int32_t r = _cl_open(buffer, O_RDWR, _S_IWRITE);
-	if ( r < 0 )
-		_CLTHROWA(CL_ERR_IO,"IO Error while touching file");
-	::_close(r);
+    int32_t r = _cl_open(buffer, O_RDWR, this->filemode);
+    if ( r < 0 )
+      _CLTHROWA(CL_ERR_IO,"IO Error while touching file");
+    ::_close(r);
   }
 
   int64_t FSDirectory::fileLength(const char* name) const {
@@ -574,7 +594,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   void FSDirectory::close(){
     SCOPED_LOCK_MUTEX(DIRECTORIES_LOCK)
     {
-	    SCOPED_LOCK_MUTEX(THIS_LOCK)
+	    THIS_LOCK.lock();
 
 	    CND_PRECONDITION(directory[0]!=0,"directory is not open");
 
@@ -583,9 +603,12 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 	        if(dir){
 	            DIRECTORIES.remove( getDirName() ); //this will be removed in ~FSDirectory
 	            _CLDECDELETE(dir);
+              //NOTE: Don't unlock the mutex, since it has been destroyed now...
+	            return;
 	        }
 	    }
-	}
+	    THIS_LOCK.unlock();  
+	  }
    }
 
    /**
@@ -682,7 +705,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
 			  _CLTHROWA(CL_ERR_IO, tmp);
 		  }
 	  }
-    return _CLNEW FSIndexOutput( fl );
+    return _CLNEW FSIndexOutput( fl, this->filemode );
   }
 
   string FSDirectory::toString() const{

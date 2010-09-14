@@ -95,12 +95,12 @@ if [ $t_env -eq 1 ]; then
         if [ "${BH:0:1}" != "_" ]; then
             DH=`dirname "${H:3}"`
         
-            #move headers somewhere to compile
-            mkdir -p "$TMP/$DH" 2>/dev/null
-            ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
-            
-            #create pub-headers.cpp
             if [ "${H:7}" != "core/CLucene/util/Reader.h" ]; then
+	            #move headers somewhere to compile
+	            mkdir -p "$TMP/$DH" 2>/dev/null
+	            ln -s "`cd "$DN" && pwd`/$BH" "$TMP/${H:3}" 2>/dev/null
+	            
+	            #create pub-headers.cpp
               echo "#include \"${H:7}\"" >>$TMP/pub-headers.cpp
             fi
         fi
@@ -130,7 +130,7 @@ if [ $t_c_h -eq 1 ] || [ $t_ifdefs -eq 1 ] || [ $t_exports -eq 1 ]; then
       			#internal headers... none must be exported
 	          XX=`awk '/^[ \t]*(class|struct)/ { print $line }' $H| grep -v ";$"| grep -v CLUCENE_EXPORT| grep -v CLUCENE_INLINE_EXPORT| grep -v CLUCENE_SHARED_EXPORT| grep -v CLUCENE_SHARED_INLINE_EXPORT`
 	          if [ "$XX" == "" ]; then
-	              echo "$H has exported class: $XX"
+	              echo "$H is internal but has exported class: $XX"
 	              echo ""
 	              FAIL=1
 	          fi
@@ -146,13 +146,17 @@ if [ $t_c_h -eq 1 ] || [ $t_ifdefs -eq 1 ] || [ $t_exports -eq 1 ]; then
         fi
         
         #test that each header compiles independently...
-        if [ $t_c_h -eq 1 ] && [ "${H:7}" != "disttest/src/core/CLucene/util/Reader.h" ]; then
-            echo "Test that $H compiles seperately..."
+        if [ $t_c_h -eq 1 ]; then
             echo "#include \"CLucene/StdHeader.h"\" >$TMP/pub-header.cpp
             echo "#include \"$H"\" >>$TMP/pub-header.cpp
             echo "int main(){ return 0; }" >>"$TMP/pub-header.cpp"
-            g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp
-            if [ $? -ne 0 ]; then FAIL=1; fi
+            ERROR=`g++ -I. -I$TMP/src/shared -I./src/shared -I$TMP/src/core $TMP/pub-header.cpp`
+            if [ $? -ne 0 ]; then 
+              echo ""
+            	echo "$H doesn't compile seperately..."
+            	echo $ERROR
+            	FAIL=1; 
+            fi
         fi
     done
 fi
@@ -164,15 +168,28 @@ if [ $t_license -eq 1 ]; then
         BH_len=${#BH}
         
         if [ "${BH:BH_len-2}" == ".h" ] || [ "${BH:BH_len-2}" == ".c" ] || [ "${BH:BH_len-4}" == ".cpp" ]; then
+		        
+		        #snowball has its own license...
+		        if [ "echo $H|grep 'snowball/src_c'" != "" ]; then
+		        	continue
+		        fi
+		        #snowball has its own license...
+		        if [ "echo $H|grep 'libstemmer'" != "" ]; then
+		        	continue
+		        fi
+		        #zlib has its own license...
+		        if [ "echo $H|grep 'CLucene/util/zlib'" != "" ]; then
+		        	continue
+		        fi
+		        
             if [ "`awk '/\* Copyright \(C\) [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
                 if [ "`awk '/\* Copyright [0-9]*-[0-9]* .*$/ { print $line }' $H`" == "" ]; then
-                    echo "$H has invalid license"
+                    echo "$H ($BH) has invalid license"
                     FAIL=1
                 fi
             fi
         fi
     done
-
 fi
 
 
@@ -182,7 +199,7 @@ if [ $t_c_all -eq 1 ]; then
 fi
 
 if [ $t_inline -eq 1 ]; then
-		if [ ! -f "./doc" ]; then
+		if [ ! -d "./doc" ]; then
 			echo "Couldn't find docs, run:"
 		  echo "# cmake -DENABLE_CLDOCS:BOOLEAN=TRUE ."
 		  echo "# make doc"
@@ -197,7 +214,13 @@ if [ $t_inline -eq 1 ]; then
         if [ "doc/html/classlucene_1_1index_1_1Term.html:1" == $line ]; then
             continue;
         fi
-
+        if [ "doc/html/classlucene_1_1search_1_1Similarity.html:1" == $line ]; then
+            continue;
+        fi
+        if [ "doc/html/classlucene_1_1store_1_1BufferedIndexInput.html:1" == $line ]; then
+            continue;
+        fi
+        
         if [ $INLINES -eq 0 ]; then
             echo "These files report inline code:"
             INLINES=1

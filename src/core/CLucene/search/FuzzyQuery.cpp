@@ -38,8 +38,6 @@ CL_NS_DEF(search)
 			_CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity cannot be greater than or equal to 1");
 		else if (minSimilarity < 0.0f)
 			_CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity cannot be less than 0");
-		if(_prefixLength < 0)
-			_CLTHROWA(CL_ERR_IllegalArgument,"prefixLength cannot be less than 0");
 
 		scale_factor = 1.0f / (1.0f - minimumSimilarity); // only now we are safe from a division by zero
 		//TODO: this.field = searchTerm.field();
@@ -274,7 +272,9 @@ CL_NS_DEF(search)
 
 
   FuzzyQuery::FuzzyQuery(Term* term, float_t _minimumSimilarity, size_t _prefixLength):
-  MultiTermQuery(term),minimumSimilarity(_minimumSimilarity),prefixLength(_prefixLength)
+    MultiTermQuery(term),
+    minimumSimilarity(_minimumSimilarity),
+    prefixLength(_prefixLength)
   {
 	  if ( minimumSimilarity < 0 )
 		  minimumSimilarity = defaultMinSimilarity;
@@ -285,14 +285,6 @@ CL_NS_DEF(search)
 		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity >= 1");
 	  else if (minimumSimilarity < 0.0f)
 		  _CLTHROWA(CL_ERR_IllegalArgument,"minimumSimilarity < 0");
-	  if (prefixLength < 0)
-		  _CLTHROWA(CL_ERR_IllegalArgument,"prefixLength < 0");
-
-	  /*
-	  TODO: Not in original Java version
-	  if(prefixLength >= term->textLength())
-	  _CLTHROWA(CL_ERR_IllegalArgument,"prefixLength >= term.textLength()");
-	  */
   }
 
   float_t FuzzyQuery::defaultMinSimilarity = 0.5f;

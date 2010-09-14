@@ -441,7 +441,7 @@ int32_t TermVectorOffsetInfo::getStartOffset() const{
 }
 
 void TermVectorOffsetInfo::setStartOffset(const int32_t _startOffset) {
-	this->startOffset = startOffset;
+	this->startOffset = _startOffset;
 }
 
 bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo) {
@@ -481,8 +481,9 @@ bool TermVectorMapper::isIgnoringOffsets() const
 	return ignoringOffsets;
 }
 
-void TermVectorMapper::setDocumentNumber(const int32_t documentNumber)
+void TermVectorMapper::setDocumentNumber(const int32_t /*documentNumber*/)
 {
+    //default implementation does nothing...
 }
 
 ParallelArrayTermVectorMapper::ParallelArrayTermVectorMapper():

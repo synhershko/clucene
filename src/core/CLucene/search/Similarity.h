@@ -7,6 +7,7 @@
 #ifndef _lucene_search_Similarity_
 #define _lucene_search_Similarity_
 
+#include "CLucene/util/VoidList.h"
 CL_CLASS_DEF(index,Term)
 
 CL_NS_DEF(search)

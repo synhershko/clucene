@@ -57,8 +57,8 @@ void testTermVectors(CuTest *tc) {
       }
 
 	  //test mem leaks with vectors
-      Explanation expl;
-	  tv_searcher->explain(&query, hits->id(50), &expl);
+      CL_NS(search)::Explanation expl;
+	    tv_searcher->explain(&query, hits->id(50), &expl);
       TCHAR* tmp = expl.toString();
       _CLDELETE_CARRAY(tmp);
 
@@ -165,7 +165,7 @@ void testKnownSetOfDocuments(CuTest *tc) {
       TermEnum* termEnum = knownSearcher.getReader()->terms();
       TermDocs* termDocs = knownSearcher.getReader()->termDocs();
 
-      Similarity* sim = knownSearcher.getSimilarity();
+      CL_NS(search)::Similarity* sim = knownSearcher.getSimilarity();
       while (termEnum->next() == true)
       {
         Term* term = termEnum->term(true);

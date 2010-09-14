@@ -10,11 +10,7 @@
 
 CL_NS_DEF(index)
 
-Term* TermEnum::term(bool pointer){
-	Term* ret = term();
-	if ( !pointer )
-		ret->__cl_decref();
-	return ret;
+TermDocs::~TermDocs(){
 }
 
 TermEnum::~TermEnum(){

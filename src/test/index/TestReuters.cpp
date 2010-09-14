@@ -1,10 +1,18 @@
+/*------------------------------------------------------------------------------
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+------------------------------------------------------------------------------*/
 #include "test.h"
 #include "CLucene/util/dirent.h"
 #include "CLucene/util/CLStreams.h"
 #include "CLucene/LuceneThreads.h"
+#include "CLucene/search/Explanation.h"
+CL_NS_USE(search)
 
 #ifdef _CL_HAVE_SYS_STAT_H
-	#include <sys/stat.h>
+#include <sys/stat.h>
 #endif
 #include <stdio.h>
 #include <algorithm>
@@ -68,191 +76,159 @@ CL_NS_USE(util)
 
 
 
-	char reuters_fsdirectory[CL_MAX_PATH];
-	bool reuters_ready = false;
 
-	char reuters_srcdirectory[1024];
-	char reuters_origdirectory[1024];
+char reuters_fsdirectory[CL_MAX_PATH];
+bool reuters_ready = false;
 
-	//indexes the reuters-21578 data.
-	void testReuters(CuTest *tc) {
-		strcpy(reuters_srcdirectory, clucene_data_location);
-		strcat(reuters_srcdirectory, "/reuters-21578");
-		CuAssert(tc,_T("Data does not exist"),Misc::dir_Exists(reuters_srcdirectory));
+char reuters_srcdirectory[1024];
+char reuters_origdirectory[1024];
 
-		strcpy(reuters_origdirectory, clucene_data_location);
-		strcat(reuters_origdirectory, "/reuters-21578-index");
-		CuAssert(tc,_T("Index does not exist"),Misc::dir_Exists(reuters_origdirectory));
+//indexes the reuters-21578 data.
+void testReuters(CuTest *tc) {
+  strcpy(reuters_srcdirectory, clucene_data_location);
+  strcat(reuters_srcdirectory, "/reuters-21578");
+  CuAssert(tc,_T("Data does not exist"),Misc::dir_Exists(reuters_srcdirectory));
 
-		FSDirectory* fsdir = FSDirectory::getDirectory(reuters_fsdirectory,true);
-		ReutersAnalyzer a;
+  strcpy(reuters_origdirectory, clucene_data_location);
+  strcat(reuters_origdirectory, "/reuters-21578-index");
+  CuAssert(tc,_T("Index does not exist"),Misc::dir_Exists(reuters_origdirectory));
 
-		IndexWriter writer(fsdir,&a,true);
-		writer.setUseCompoundFile(false);
-		//NOTE: when comparing against indexes created <~= 1.9, there was always 1 more field
-    //added then the actual limit...
-		writer.setMaxFieldLength(10001);
+  FSDirectory* fsdir = FSDirectory::getDirectory(reuters_fsdirectory);
+  ReutersAnalyzer a;
 
-		vector<string> files;
-    CuAssertTrue(tc, Misc::listFiles(reuters_srcdirectory, files,false));
-    sort(files.begin(), files.end(), stringLowercaseCompare);
+  IndexWriter writer(fsdir,&a,true);
+  writer.setUseCompoundFile(false);
+  //NOTE: when comparing against indexes created <~= 1.9, there was always 1 more field
+  //added then the actual limit...
+  writer.setMaxFieldLength(10001);
 
-		char tmppath[CL_MAX_DIR];
-		strncpy(tmppath,reuters_srcdirectory,CL_MAX_DIR);
-		strcat(tmppath,"/");
-		char* tmppathP = tmppath + strlen(tmppath);
-		TCHAR tpath[CL_MAX_PATH];
-		struct cl_stat_t buf;
+  vector<string> files;
+  CuAssertTrue(tc, Misc::listFiles(reuters_srcdirectory, files,false));
+  sort(files.begin(), files.end(), stringLowercaseCompare);
 
-    vector<string>::iterator fl = files.begin();
-		while ( fl != files.end() ){
-			strcpy(tmppathP,fl->c_str());
-			STRCPY_AtoT(tpath,fl->c_str(),CL_MAX_PATH);
-			fileStat(tmppath,&buf);
-			if ( buf.st_mode & S_IFREG){
-				Document* doc = _CLNEW Document;
-				doc->add(*_CLNEW Field(_T("path"),tpath,Field::INDEX_UNTOKENIZED | Field::STORE_YES));
-				doc->add(*_CLNEW Field(_T("contents"), _CLNEW FileReader(tmppath, "ASCII"),Field::INDEX_TOKENIZED));
+  char tmppath[CL_MAX_DIR];
+  strncpy(tmppath,reuters_srcdirectory,CL_MAX_DIR);
+  strcat(tmppath,"/");
+  char* tmppathP = tmppath + strlen(tmppath);
+  TCHAR tpath[CL_MAX_PATH];
+  struct cl_stat_t buf;
 
-				writer.addDocument( doc );
-				_CLDELETE(doc);
+  vector<string>::iterator fl = files.begin();
+  while ( fl != files.end() ){
+    strcpy(tmppathP,fl->c_str());
+    STRCPY_AtoT(tpath,fl->c_str(),CL_MAX_PATH);
+    fileStat(tmppath,&buf);
+    if ( buf.st_mode & S_IFREG){
+      Document* doc = _CLNEW Document;
+      doc->add(*_CLNEW Field(_T("path"),tpath,Field::INDEX_UNTOKENIZED | Field::STORE_YES));
+      doc->add(*_CLNEW Field(_T("contents"), _CLNEW FileReader(tmppath, "ASCII"),Field::INDEX_TOKENIZED));
 
-			}
-			fl++;
-		}
+      writer.addDocument( doc );
+      _CLDELETE(doc);
 
-		writer.close();
-		fsdir->close();
-		_CLDECDELETE(fsdir);
+    }
+    fl++;
+  }
 
-		//note: for those comparing 0.9.16 to later, the optimize() has been removed so
-		//we can do certain tests with the multi-* classes (reader,etc)
-		//performance will naturally be worse
+  writer.close();
+  fsdir->close();
+  _CLDECDELETE(fsdir);
 
-		reuters_ready = true;
-	}
+  //note: for those comparing 0.9.16 to later, the optimize() has been removed so
+  //we can do certain tests with the multi-* classes (reader,etc)
+  //performance will naturally be worse
 
-	void testByteForByte(CuTest* tc){
-		CLUCENE_ASSERT(reuters_ready);
+  reuters_ready = true;
+}
 
-		char tmppath[CL_MAX_DIR];
+void testBySection(CuTest* tc){
+  IndexReader* reader1 = IndexReader::open(reuters_origdirectory);
+  IndexReader* reader2 = IndexReader::open(reuters_fsdirectory);
 
-		strcpy(tmppath,reuters_origdirectory);
-		strcat(tmppath,"/_z.cfs");
-		FILE* f1 = fopen(tmppath,"rb");
-		CLUCENE_ASSERT(f1!=NULL);
+  TestAssertIndexReaderEquals(tc,reader1,reader2);
+  reader1->close();
+  reader2->close();
+  _CLDELETE(reader1);
+  _CLDELETE(reader2);
+}
 
-		strcpy(tmppath,reuters_fsdirectory);
-		strcat(tmppath,"/_z.cfs");
-		FILE* f2 = fopen(tmppath,"rb");
-		CLUCENE_ASSERT(f2!=NULL);
+#define threadsCount 10
 
-		uint8_t buf1[1024];
-		uint8_t buf2[1024];
+void threadSearch(IndexSearcher* searcher, const TCHAR* qry, StandardAnalyzer* threadAnalyzer){
+  Query* q = NULL;
+  Hits* h = NULL;
+  try{
+    q = QueryParser::parse(qry , _T("contents"), threadAnalyzer);
+    if ( q != NULL ){
+      h = searcher->search( q );
 
-		int s1,s2;
+      if ( h->length() > 0 ){
+        //check for explanation memory leaks...
+        CL_NS(search)::Explanation expl1;
+        searcher->explain(q, h->id(0), &expl1);
+        TCHAR* tmp = expl1.toString();
+        _CLDELETE_CARRAY(tmp);
+        if ( h->length() > 1 ){ //do a second one just in case
+          CL_NS(search)::Explanation expl2;
+          searcher->explain(q, h->id(1), &expl2);
+          tmp = expl2.toString();
+          _CLDELETE_CARRAY(tmp);
+        }
+      }
+    }
+  }_CLFINALLY(
+              _CLDELETE(h);
+              _CLDELETE(q);
+  );
+}
+_LUCENE_THREAD_FUNC(threadedSearcherTest, arg){
+  IndexSearcher* searcher = (IndexSearcher*)(((void**)arg)[0]);
+  StandardAnalyzer* threadAnalyzer = (StandardAnalyzer*)(((void**)arg)[1]);
 
-		while ( true){
-			s1 = fread(buf1,sizeof(uint8_t),1024,f1);
-			s2 = fread(buf2,sizeof(uint8_t),1024,f2);
-			CuAssert(tc,_T("comparison yielded different lengths"),s1==s2);
-			if ( s1 == 0 )
-				break;
+  for ( int i=0;i<100;i++ ){
+    threadSearch(searcher, _T("test"), threadAnalyzer );
+    threadSearch(searcher, _T("reuters"), threadAnalyzer );
+    threadSearch(searcher, _T("data"), threadAnalyzer );
+  }
+  _LUCENE_THREAD_FUNC_RETURN(0);
+}
 
-			for ( int i=0;i<1024;i++ )
-				CuAssert(tc,_T("comparison with original failed"),buf1[i]==buf2[i]);
-		}
+void testThreaded(CuTest* tc){
+  CLUCENE_ASSERT(reuters_ready);
+  IndexSearcher searcher(reuters_origdirectory);
 
-		fclose(f1);
-		fclose(f2);
-	}
+  //read using multiple threads...
+  _LUCENE_THREADID_TYPE threads[threadsCount];
 
-	void testBySection(CuTest* tc){
-    IndexReader* reader1 = IndexReader::open(reuters_origdirectory);
-    IndexReader* reader2 = IndexReader::open(reuters_fsdirectory);
+  int i;
+  StandardAnalyzer threadAnalyzer;
+  void* args[2];
+  args[0] = &searcher;
+  args[1] = &threadAnalyzer;
 
-    TestAssertIndexReaderEquals(tc,reader1,reader2);
-    reader1->close();
-    reader2->close();
-    _CLDELETE(reader1);
-    _CLDELETE(reader2);
-	}
+  for ( i=0;i<threadsCount;i++ ){
+    threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, args);
+  }
 
-	#define threadsCount 10
+  CL_NS(util)::Misc::sleep(3000);
 
-	StandardAnalyzer threadAnalyzer;
-	void threadSearch(IndexSearcher* searcher, const TCHAR* qry){
-	    Query* q = NULL;
-		Hits* h = NULL;
-		try{
-			q = QueryParser::parse(qry , _T("contents"), &threadAnalyzer);
-			if ( q != NULL ){
-			    h = searcher->search( q );
+  for ( i=0;i<threadsCount;i++ )
+    _LUCENE_THREAD_JOIN(threads[i]);
 
-			    if ( h->length() > 0 ){
-			        //check for explanation memory leaks...
-					Explanation expl1;
-					searcher->explain(q, h->id(0), &expl1);
-					TCHAR* tmp = expl1.toString();
-					_CLDELETE_CARRAY(tmp);
-					if ( h->length() > 1 ){ //do a second one just in case
-						Explanation expl2;
-						searcher->explain(q, h->id(1), &expl2);
-						tmp = expl2.toString();
-						_CLDELETE_CARRAY(tmp);
-					}
-				}
-			}
-		}_CLFINALLY(
-    		_CLDELETE(h);
-    		_CLDELETE(q);
-		);
-	}
-	_LUCENE_THREAD_FUNC(threadedSearcherTest, arg){
-	    IndexSearcher* searcher = (IndexSearcher*)arg;
-
-	    for ( int i=0;i<100;i++ ){
-    	    threadSearch(searcher, _T("test") );
-    	    threadSearch(searcher, _T("reuters") );
-    	    threadSearch(searcher, _T("data") );
-    	}
-		_LUCENE_THREAD_FUNC_RETURN(0);
-	}
-
-	void testThreaded(CuTest* tc){
-		CLUCENE_ASSERT(reuters_ready);
-		IndexSearcher searcher(reuters_origdirectory);
-
-    //read using multiple threads...
-    _LUCENE_THREADID_TYPE threads[threadsCount];
-
-    int i;
-    for ( i=0;i<threadsCount;i++ )
-         threads[i] = _LUCENE_THREAD_CREATE(&threadedSearcherTest, &searcher);
-
-    CL_NS(util)::Misc::sleep(3000);
-
-    for ( i=0;i<threadsCount;i++ )
-        _LUCENE_THREAD_JOIN(threads[i]);
-
-    searcher.close();
-	}
+  searcher.close();
+}
 
 CuSuite *testreuters(void)
 {
-	CuSuite *suite = CuSuiteNew(_T("CLucene Reuters Test"));
+  CuSuite *suite = CuSuiteNew(_T("CLucene Reuters Test"));
 
-	//setup some variables
-	strcpy(reuters_fsdirectory,cl_tempDir);
-	strcat(reuters_fsdirectory,"/reuters-index");
+  //setup some variables
+  strcpy(reuters_fsdirectory,cl_tempDir);
+  strcat(reuters_fsdirectory,"/reuters-index");
 
-    SUITE_ADD_TEST(suite, testReuters);
-    //SUITE_ADD_TEST(suite, testByteForByte); this test rarely works currently, use more robust by section test...
-    SUITE_ADD_TEST(suite, testBySection);
-
-    //we still do this, but it'll be slow because the 'threads' will be run serially.
-    SUITE_ADD_TEST(suite, testThreaded);
-
-    return suite;
+  SUITE_ADD_TEST(suite, testReuters);
+  SUITE_ADD_TEST(suite, testBySection);
+  SUITE_ADD_TEST(suite, testThreaded);
+  return suite;
 }
 // EOF

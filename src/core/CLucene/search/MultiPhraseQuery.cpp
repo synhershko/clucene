@@ -206,7 +206,7 @@ public:
 	}
 };
 
-Query* MultiPhraseQuery::rewrite(IndexReader* reader) {
+Query* MultiPhraseQuery::rewrite(IndexReader* /*reader*/) {
   if (termArrays->size() == 1) {                 // optimize one-term case
 	  ArrayBase<Term*>* terms = termArrays->at(0);
 	  BooleanQuery* boq = _CLNEW BooleanQuery(true);
@@ -313,13 +313,38 @@ void MultiPhraseQuery::add(const CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* _t
   for ( size_t i=0;i<_terms->length;i++ ){
 		if ( _tcscmp(_terms->values[i]->field(), field) != 0) {
 			TCHAR buf[250];
-			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]);
+			_sntprintf(buf,250,_T("All phrase terms must be in the same field (%s): %s"),field, (*terms)[i]->field());
 			_CLTHROWT(CL_ERR_IllegalArgument,buf);
 		}
     terms->values[i] = _CL_POINTER(_terms->values[i]);
 	}
 	termArrays->push_back(terms);
 	positions->push_back(position);
+}
+const CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>* MultiPhraseQuery::getTermArrays() {
+  return termArrays;
+}
+void MultiPhraseQuery::extractTerms(CL_NS(util)::RefCountArray<Term*>& terms){
+  CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator itr;
+  itr = termArrays->begin();
+  CL_NS(util)::ArrayBase<CL_NS(index)::Term*>* arr;
+  vector<Term*> v;
+  while ( itr != termArrays->end() ){
+      arr = *itr;
+      for (size_t i=0; i<arr->length; i++) {
+          v.push_back(_CL_POINTER(arr->values[i]));
+      }
+
+      itr++;
+  }
+
+  vector<Term*>::iterator itr2 = v.begin();
+  terms.resize(v.size(), false);
+  int i=0;
+  while ( itr2 != v.end() ){
+    terms[i++] = *itr2;
+    itr2++;
+  }
 }
 
 void MultiPhraseQuery::getPositions(ValueArray<int32_t>& result) const {
@@ -341,7 +366,7 @@ TCHAR* MultiPhraseQuery::toString(const TCHAR* f) const {
 	}
 
 	buffer.appendChar(_T('"'));
-	
+
   CL_NS(util)::CLArrayList<CL_NS(util)::ArrayBase<CL_NS(index)::Term*>*>::iterator i;
   i = termArrays->begin();
   while (i != termArrays->end()){

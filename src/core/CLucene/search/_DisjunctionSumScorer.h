@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_DisjunctionSumScorer_
@@ -11,16 +11,16 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 /** A Scorer for OR like queries, counterpart of <code>ConjunctionScorer</code>.
-* This Scorer implements {@link Scorer#skipTo(int)} and uses skipTo() on the given Scorers. 
+* This Scorer implements {@link Scorer#skipTo(int)} and uses skipTo() on the given Scorers.
 * @java-todo Implement score(HitCollector, int).
 */
 class DisjunctionSumScorer : public Scorer {
-private:
+public:
 	typedef CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > ScorersType;
-
+private:
 	/** The minimum number of scorers that should match. */
 	int32_t minimumNrMatchers;
-	
+
 	/** The scorerDocQueue contains all subscorers ordered by their current doc(),
 	* with the minimum at the top.
 	* <br>The scorerDocQueue is initialized the first time next() or skipTo() is called.
@@ -39,14 +39,14 @@ private:
 	/** The document number of the current match. */
 	int32_t currentDoc;
 	float_t currentScore;
-	
+
 	/** Called the first time next() or skipTo() is called to
 	* initialize <code>scorerDocQueue</code>.
 	*/
 	void initScorerDocQueue();
-	
+
 protected:
-	/** The number of subscorers. */ 
+	/** The number of subscorers. */
 	int32_t nrScorers;
 
 	/** The subscorers. */
@@ -54,7 +54,7 @@ protected:
 
 	/** The number of subscorers that provide the current match. */
 	int32_t _nrMatchers;
-	
+
 	/** Expert: Collects matching documents in a range.  Hook for optimization.
 	* Note that {@link #next()} must be called once before this method is called
 	* for the first time.
@@ -84,7 +84,7 @@ protected:
 	* hold Scorers at currentDoc that are temporarily popped from scorerQueue.
 	*/
 	bool advanceAfterCurrent();
-	
+
 public:
 	/** Construct a <code>DisjunctionScorer</code>, using one as the minimum number
 	* of matching subscorers.
@@ -97,7 +97,7 @@ public:
 	* <br>When minimumNrMatchers equals the number of subScorers,
 	* it more efficient to use <code>ConjunctionScorer</code>.
 	*/
-	DisjunctionSumScorer( CL_NS(util)::CLVector<Scorer*,CL_NS(util)::Deletor::Object<Scorer> >* _subScorers, const int32_t _minimumNrMatchers = 1);
+	DisjunctionSumScorer( DisjunctionSumScorer::ScorersType* _subScorers, const int32_t _minimumNrMatchers = 1);
 	virtual ~DisjunctionSumScorer();
 
 	/** Scores and collects all matching documents.

@@ -15,7 +15,7 @@ CL_NS_DEF(index)
 class Term;
 class IndexReader;
 
-class MultipleTermPositions : public TermPositions {
+class CLUCENE_EXPORT MultipleTermPositions : public TermPositions {
 private:
 	class TermPositionsQueue;
 	class IntQueue;
@@ -50,53 +50,41 @@ public:
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	void seek(Term*) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::seek");
-	}
+	void seek(Term*);
 
 	/**
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	void seek(TermEnum*) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::seek");
-	}
+	void seek(TermEnum*);
 
 	/**
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	int32_t read(int32_t*, int32_t*,int32_t) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::read");
-	}
+	int32_t read(int32_t*, int32_t*,int32_t);
 
 	/**
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	int32_t getPayloadLength() const {
-		_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::getPayloadLength");
-	}
+	int32_t getPayloadLength() const;
 
 	/**
 	* Not implemented.
 	* @throws UnsupportedOperationException
 	*/
-	uint8_t* getPayload(uint8_t*) {
-		_CLTHROWA(CL_ERR_UnsupportedOperation, "Unsupported operation: MultipleTermPositions::getPayload");
-	}
+	uint8_t* getPayload(uint8_t*);
 
 	/**
 	*
 	* @return false
 	*/
 	// Java-TODO: Remove warning after API has been finalized
-	bool isPayloadAvailable() const{
-		return false;
-	} 
+	bool isPayloadAvailable() const; 
 
-	TermDocs* __asTermDocs(){ return (TermDocs*)this; };
-	TermPositions* __asTermPositions(){ return (TermPositions*)this; };
+	TermDocs* __asTermDocs();
+	TermPositions* __asTermPositions();
 };
 
 

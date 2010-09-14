@@ -8,6 +8,7 @@
 #define _lucene_store_Lock_
 
 #include <limits.h>
+#include "CLucene/util/Equators.h"
 
 CL_NS_DEF(store)
   class LocksType;

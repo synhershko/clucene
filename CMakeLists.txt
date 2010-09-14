@@ -128,6 +128,7 @@ INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/shared )
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 
 #include the projects
+ADD_SUBDIRECTORY (src/ext)
 ADD_SUBDIRECTORY (src/shared)
 ADD_SUBDIRECTORY (src/core)
 ADD_SUBDIRECTORY (src/test)

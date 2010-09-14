@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_SharedHeader.h"
@@ -31,28 +31,28 @@ CL_NS_DEF(util)
 	mutex_thread::mutex_thread(const mutex_thread& clone):
 		_internal(new Internal)
 	{
-		InitializeCriticalSection(&_internal->mtx); 
+		InitializeCriticalSection(&_internal->mtx);
 	}
 	mutex_thread::mutex_thread():
 		_internal(new Internal)
-	{ 
-		InitializeCriticalSection(&_internal->mtx); 
+	{
+		InitializeCriticalSection(&_internal->mtx);
 	}
-	
+
 	mutex_thread::~mutex_thread()
-	{ 
-		DeleteCriticalSection(&_internal->mtx); 
+	{
+		DeleteCriticalSection(&_internal->mtx);
 		delete _internal;
 	}
-	
+
 	void mutex_thread::lock()
-	{ 
-		EnterCriticalSection(&_internal->mtx); 
+	{
+		EnterCriticalSection(&_internal->mtx);
 	}
-	
+
 	void mutex_thread::unlock()
-	{ 
-		LeaveCriticalSection(&_internal->mtx); 
+	{
+		LeaveCriticalSection(&_internal->mtx);
 	}
 
   _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
@@ -61,9 +61,24 @@ CL_NS_DEF(util)
   void mutex_thread::_exitThread(int val){
   	ExitThread(val);
   }
-  
-  
-  
+
+  int32_t mutex_thread::atomic_increment(_LUCENE_ATOMIC_INT *theInteger){
+#ifdef _M_X64
+    return _InterlockedIncrement64(theInteger);
+#else
+    return InterlockedIncrement(theInteger);
+#endif
+  }
+  int32_t mutex_thread::atomic_decrement(_LUCENE_ATOMIC_INT *theInteger){
+#ifdef _M_X64
+    return _InterlockedDecrement64(theInteger);
+#else
+    return InterlockedDecrement(theInteger);
+#endif
+  }
+
+
+
 	class shared_condition::Internal{
 	public:
 	    void* _event;
@@ -88,7 +103,7 @@ CL_NS_DEF(util)
 	void shared_condition::NotifyAll(){
 		assert ( 0 != SetEvent(_internal->_event) );
 	}
-    
+
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
 	    return (_LUCENE_THREADID_TYPE) ::_beginthread (func, 0, arg);
 	}
@@ -98,9 +113,9 @@ CL_NS_DEF(util)
 
 
 #elif defined(_CL_HAVE_PTHREAD)
-    #ifndef _REENTRANT
-        #error ACK! You need to compile with _REENTRANT defined since this uses threads
-    #endif
+  #ifndef _REENTRANT
+      #error ACK! You need to compile with _REENTRANT defined since this uses threads
+  #endif
 
 	#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		bool mutex_pthread_attr_initd=false;
@@ -112,7 +127,7 @@ CL_NS_DEF(util)
 	#else
 		#define _CLPTHREAD_CHECK(c,m) c;
 	#endif
-	
+
 	struct mutex_thread::Internal{
   	pthread_mutex_t mtx;
   	#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
@@ -121,7 +136,7 @@ CL_NS_DEF(util)
   	#endif
   };
 
-	mutex_thread::mutex_thread(const mutex_thread& clone):
+	mutex_thread::mutex_thread(const mutex_thread& /*clone*/):
 		_internal(new Internal)
 	{
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
@@ -138,7 +153,7 @@ CL_NS_DEF(util)
 	}
 	mutex_thread::mutex_thread():
 		_internal(new Internal)
-	{ 
+	{
 		#ifdef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 	  	if ( mutex_pthread_attr_initd == false ){
 	  		pthread_mutexattr_init(&mutex_thread_attr);
@@ -156,17 +171,35 @@ CL_NS_DEF(util)
 		_internal->lockOwner=0;
 		#endif
 	}
-	
+
 	mutex_thread::~mutex_thread()
-	{ 
-		_CLPTHREAD_CHECK(pthread_mutex_destroy(&_internal->mtx), "~mutex_thread destructor failed") 
+	{
+		_CLPTHREAD_CHECK(pthread_mutex_destroy(&_internal->mtx), "~mutex_thread destructor failed")
 		delete _internal;
 	}
-	
+
     _LUCENE_THREADID_TYPE mutex_thread::_GetCurrentThreadId(){
         return pthread_self();
     }
-    
+      
+    int32_t atomic_threads::atomic_increment(_LUCENE_ATOMIC_INT *theInteger){
+      #ifdef _CL_HAVE_GCC_ATOMIC_FUNCTIONS
+        return __sync_add_and_fetch(theInteger, 1);
+      #else
+        SCOPED_LOCK_MUTEX(theInteger->THIS_LOCK)
+        return ++theInteger->value;
+      #endif
+    }
+    int32_t atomic_threads::atomic_decrement(_LUCENE_ATOMIC_INT *theInteger){
+      #ifdef _CL_HAVE_GCC_ATOMIC_FUNCTIONS
+        return __sync_sub_and_fetch(theInteger, 1);
+      #else
+        SCOPED_LOCK_MUTEX(theInteger->THIS_LOCK)
+        return --theInteger->value;
+      #endif
+    }
+
+
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
 	    _LUCENE_THREADID_TYPE ret;
 	    assert(pthread_create(&ret, NULL, func, arg) == 0 );
@@ -177,7 +210,7 @@ CL_NS_DEF(util)
 	}
 
 	void mutex_thread::lock()
-	{ 
+	{
 		#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		pthread_t currentThread = pthread_self();
 		if( pthread_equal( _internal->lockOwner, currentThread ) ) {
@@ -191,9 +224,9 @@ CL_NS_DEF(util)
 		_CLPTHREAD_CHECK(pthread_mutex_lock(&_internal->mtx), "mutex_thread::lock")
 		#endif
 	}
-	
+
 	void mutex_thread::unlock()
-	{ 
+	{
 		#ifndef _CL_HAVE_PTHREAD_MUTEX_RECURSIVE
 		--_internal->lockCount;
 		if( _internal->lockCount == 0 )
@@ -205,8 +238,8 @@ CL_NS_DEF(util)
 		_CLPTHREAD_CHECK(pthread_mutex_unlock(&_internal->mtx), "mutex_thread::unlock")
 		#endif
 	}
-	
-	
+
+
 	struct shared_condition::Internal{
 	    pthread_cond_t condition;
 	    Internal(){
@@ -237,7 +270,7 @@ CL_NS_DEF(util)
 #endif //thread impl choice
 
 
-mutexGuard::mutexGuard(const mutexGuard& clone){
+mutexGuard::mutexGuard(const mutexGuard& /*clone*/){
 	//no autoclone
 	mrMutex = NULL;
 }

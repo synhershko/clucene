@@ -169,8 +169,7 @@ CL_NS_DEF(index)
 		//delete the previous enumerated term
 		Term* tmp=NULL;
 		if ( prev != NULL ){
-			int32_t usage = prev->__cl_refcount;
-			if ( usage > 1 ){
+			if ( _LUCENE_ATOMIC_INT_GET(prev->__cl_refcount) > 1 ){
 				_CLDECDELETE(prev); //todo: tune other places try and delete its term 
 			}else
 				tmp = prev; //we are going to re-use this term
@@ -209,16 +208,6 @@ CL_NS_DEF(index)
 		return true;
 	}
 
-	Term* SegmentTermEnum::term() {
-	//Func - Returns the current term.
-	//Pre  - pointer is true or false and indicates if the reference counter
-	//       of term must be increased or not
-	//       next() must have been called once!
-	//Post - pointer = true -> term has been returned with an increased reference counter
-	//       pointer = false -> term has been returned
-
-		return _CL_POINTER(_term);
-	}
 	Term* SegmentTermEnum::term(bool pointer) {
 		if ( pointer )
 			return _CL_POINTER(_term);
@@ -268,7 +257,7 @@ CL_NS_DEF(index)
 		position = p;
 
 		//finalize the current term
-		if ( _term == NULL || _term->__cl_refcount > 1 ){
+		if ( _term == NULL || _LUCENE_ATOMIC_INT_GET(_term->__cl_refcount) > 1 ){
 			_CLDECDELETE(_term);
 			//Get a pointer from t and increase the reference counter of t
 			_term = _CLNEW Term; //cannot use reference, because TermInfosReader uses non ref-counted array

@@ -13,7 +13,7 @@
 CL_NS_DEF(index)
 
 
-class IndexCommitPoint {
+class CLUCENE_EXPORT IndexCommitPoint {
 public:
   virtual ~IndexCommitPoint();
   /**
@@ -67,7 +67,7 @@ public:
  * href="http://issues.apache.org/jira/browse/LUCENE-710">LUCENE-710</a>
  * for details.</p>
  */
-class IndexDeletionPolicy: public CL_NS(util)::NamedObject{
+class CLUCENE_EXPORT IndexDeletionPolicy: public CL_NS(util)::NamedObject{
 public:
   virtual ~IndexDeletionPolicy();
 
@@ -131,35 +131,21 @@ public:
  * the default deletion policy.
  */
 
-class KeepOnlyLastCommitDeletionPolicy: public IndexDeletionPolicy {
+class CLUCENE_EXPORT KeepOnlyLastCommitDeletionPolicy: public IndexDeletionPolicy {
 public:
   virtual ~KeepOnlyLastCommitDeletionPolicy();
   /**
    * Deletes all commits except the most recent one.
    */
-  void onInit(std::vector<IndexCommitPoint*>& commits) {
-    // Note that commits.size() should normally be 1:
-    onCommit(commits);
-  }
+  void onInit(std::vector<IndexCommitPoint*>& commits);
 
   /**
    * Deletes all commits except the most recent one.
    */
-  void onCommit(std::vector<IndexCommitPoint*>& commits) {
-    // Note that commits.size() should normally be 2 (if not
-    // called by onInit above):
-    size_t size = commits.size();
-    for(size_t i=0;i<size-1;i++) {
-      commits[i]->deleteCommitPoint();
-    }
-  }
+  void onCommit(std::vector<IndexCommitPoint*>& commits);
 
-	static const char* getClassName(){
-		return "KeepOnlyLastCommitDeletionPolicy";
-	}
-	const char* getObjectName() const{
-		return getClassName();
-	}
+	static const char* getClassName();
+	const char* getObjectName() const;
 };
 
 CL_NS_END

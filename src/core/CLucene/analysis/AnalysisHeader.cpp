@@ -195,7 +195,7 @@ size_t Token::termTextLength() {
 size_t Token::termLength() {
 	if ( _termTextLen == -1 ) //it was invalidated by growBuffer
 		_termTextLen = _tcslen(_buffer);
-	return _termTextLen; 
+	return _termTextLen;
 }
 void Token::resetTermTextLen(){
 	_termTextLen=-1;
@@ -298,7 +298,7 @@ Tokenizer::~Tokenizer(){
 }
 
 
-int32_t Analyzer::getPositionIncrementGap(const TCHAR* fieldName)
+int32_t Analyzer::getPositionIncrementGap(const TCHAR* /*fieldName*/)
 {
 	return 0;
 }

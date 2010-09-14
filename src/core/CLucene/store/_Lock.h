@@ -58,10 +58,10 @@ public:
   class FSLock: public LuceneLock {
   private:
 	  char* lockFile;
-  	  char* lockDir;
-
+  	char* lockDir;
+    int filemode;
   public:
-	  FSLock( const char* _lockDir, const char* name );
+	  FSLock( const char* _lockDir, const char* name, int filemode = -1 );
 	  ~FSLock();
 
 	  bool obtain();

@@ -90,6 +90,8 @@ CL_NS_DEF(search)
   Query* PhraseQuery::clone() const{
 	  return _CLNEW PhraseQuery(*this);
   }
+  
+  const TCHAR* PhraseQuery::getFieldName() const{ return field; }
 
   void PhraseQuery::setSlop(const int32_t s) { slop = s; }
   int32_t PhraseQuery::getSlop() const { return slop; }
@@ -315,7 +317,7 @@ void PhraseQuery::extractTerms( TermSet * termset )
   //Post -
 
 	  //Get the length of terms
-      const size_t tpsLength = parentQuery->terms->size();
+      const int32_t tpsLength = (const int32_t)parentQuery->terms->size();
 
 	  //optimize zero-term case
       if (tpsLength == 0)
@@ -329,7 +331,7 @@ void PhraseQuery::extractTerms( TermSet * termset )
     TermPositions* p = NULL;
 
 	//Iterate through all terms
-    for (size_t i = 0; i < tpsLength; i++) {
+    for (int32_t i = 0; i < tpsLength; i++) {
         //Get the termPostitions for the i-th term
         p = reader->termPositions((*parentQuery->terms)[i]);
 

@@ -12,6 +12,10 @@
 #include "CLucene/_clucene-config.h"
 #include "CLucene/SharedHeader.h"
 
+//don't show deprecated warnings while building internally...
+#undef _CL_DEPRECATE_TEXT
+#define _CL_DEPRECATE_TEXT(_Text)
+
 #define LUCENE_INT64_MAX_SHOULDBE _ILONGLONG(0x7FFFFFFFFFFFFFFF)
 #define LUCENE_INT64_MIN_SHOULDBE (-LUCENE_INT64_MAX_SHOULDBE - _ILONGLONG(1) )
 

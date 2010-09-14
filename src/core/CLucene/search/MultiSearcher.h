@@ -27,13 +27,8 @@ CL_NS_DEF(search)
     int32_t* starts;
     int32_t _maxDoc;
 	protected:
-		int32_t* getStarts() {
-  			return starts;
-		}
-		int32_t getLength() {
-			return searchablesLen;
-		}
-
+		int32_t* getStarts();
+		int32_t getLength();
   public:
       /** Creates a searcher which searches <i>Searchables</i>. */
       MultiSearcher(Searchable** searchables);

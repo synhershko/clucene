@@ -66,6 +66,9 @@ ${SYMBOL__T}
 /* Define if you have Win32 threads libraries and header files. */
 #cmakedefine _CL_HAVE_WIN32_THREADS  1 
 
+/* Define if we have gcc atomic functions */
+#cmakedefine _CL_HAVE_GCC_ATOMIC_FUNCTIONS 1
+
 /* Define what eval method is required for float_t to be defined (for GCC). */
 #cmakedefine _FLT_EVAL_METHOD  ${_FLT_EVAL_METHOD} 
 

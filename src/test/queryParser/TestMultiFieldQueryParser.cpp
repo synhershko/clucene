@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
@@ -52,7 +52,7 @@ public:
 	}
 
 	/** Filters LowerCaseTokenizer with StopFilter. */
-	TokenStream* tokenStream(const TCHAR* fieldName, Reader* reader) {
+	TokenStream* tokenStream(const TCHAR* /*fieldName*/, Reader* reader) {
 		return _CLNEW MQPTestFilter(_CLNEW LowerCaseTokenizer(reader));
 	}
 };
@@ -74,7 +74,7 @@ void assertQueryEquals(CuTest *tc,const TCHAR* result, Query* q) {
 	_CLDELETE_LCARRAY(s);
 }
 
-// verify parsing of query using a stopping analyzer  
+// verify parsing of query using a stopping analyzer
 void assertStopQueryEquals(CuTest *tc, const TCHAR* qtxt, const TCHAR* expectedRes) {
 	const TCHAR* fields[] = {_T("b"), _T("t"), NULL };
 	const uint8_t occur[] = {BooleanClause::SHOULD, BooleanClause::SHOULD, NULL};
@@ -90,7 +90,7 @@ void assertStopQueryEquals(CuTest *tc, const TCHAR* qtxt, const TCHAR* expectedR
 	_CLDELETE(a);
 }
 
-/** test stop words arsing for both the non static form, and for the 
+/** test stop words arsing for both the non static form, and for the
 * corresponding static form (qtxt, fields[]). */
 void tesStopwordsParsing(CuTest *tc) {
 	assertStopQueryEquals(tc, _T("one"), _T("b:one t:one"));
@@ -167,5 +167,5 @@ CuSuite *testMultiFieldQueryParser(void)
 	SUITE_ADD_TEST(suite, tesStopwordsParsing);
 	SUITE_ADD_TEST(suite, testMFQPSimple);
 
-	return suite; 
+	return suite;
 }
