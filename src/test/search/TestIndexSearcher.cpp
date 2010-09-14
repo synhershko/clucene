@@ -38,9 +38,11 @@ void testEndThreadException(CuTest *tc) {
     // add some documents
     Document doc;
     for (int i = 0; i < MAX_DOCS; i++) {
-        doc.add(* new Field(_T("content"), English::IntToEnglish(i), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+        TCHAR * tmp = English::IntToEnglish(i);
+        doc.add(* new Field(_T("content"), tmp, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
         writer->addDocument(&doc);
         doc.clear();
+        _CLDELETE_ARRAY( tmp );
     }
 
     CuAssertEquals(tc, MAX_DOCS, writer->docCount());

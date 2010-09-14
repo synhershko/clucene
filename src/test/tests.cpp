@@ -9,7 +9,7 @@
 unittest tests[] = {
     {"threads", testatomicupdates},
     {"indexreader", testindexreader},
-    //{"indexsearcher", testIndexSearcher},
+    {"indexsearcher", testIndexSearcher},
     {"reuters", testreuters},
     {"analysis", testanalysis},
     {"analyzers", testanalyzers},
