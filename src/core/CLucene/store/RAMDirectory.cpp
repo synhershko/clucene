@@ -420,7 +420,7 @@ CL_NS_DEF(store)
    Directory(),files( _CLNEW FileMap(true,true) )
   {
     this->sizeInBytes = 0;
-	  setLockFactory( _CLNEW SingleInstanceLockFactory() );
+	setLockFactory( _CLNEW SingleInstanceLockFactory() );
     _copyFromDir(dir,false);
   }
 
@@ -428,6 +428,7 @@ CL_NS_DEF(store)
       Directory(),files( _CLNEW FileMap(true,true) )
    {
       this->sizeInBytes = 0;
+      setLockFactory( _CLNEW SingleInstanceLockFactory() );
       Directory* fsdir = FSDirectory::getDirectory(dir);
       try{
          _copyFromDir(fsdir,false);
