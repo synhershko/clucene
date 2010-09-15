@@ -519,7 +519,7 @@ void testMoreMerges(CuTest * tc)  {
 void testHangOnClose(CuTest * tc) {
 
     WhitespaceAnalyzer an;
-    Directory * dir = _CLNEW MockRAMDirectory();
+    Directory * dir = _CLNEW RAMDirectory();
     IndexWriter4Test * writer = _CLNEW IndexWriter4Test(dir, false, &an, true);
     writer->setMergePolicy(_CLNEW LogByteSizeMergePolicy());
     writer->setMaxBufferedDocs(5);
@@ -546,7 +546,7 @@ void testHangOnClose(CuTest * tc) {
     writer->close();
     _CLLDELETE(writer);
 
-    Directory * dir2 = _CLNEW MockRAMDirectory();
+    Directory * dir2 = _CLNEW RAMDirectory();
     writer = _CLNEW IndexWriter4Test(dir2, false, &an, true);
     LogByteSizeMergePolicy * lmp = _CLNEW LogByteSizeMergePolicy();
     lmp->setMinMergeMB(0.0001);
