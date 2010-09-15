@@ -63,8 +63,8 @@ class _ThreadLocal;
 /**
 * List that holds the list of ThreadLocals that this thread has data in.
 */
-class ThreadLocals: private CL_NS ( util ) ::CLVector<_ThreadLocal*,
-		CL_NS ( util ) ::Deletor::ConstNullVal<_ThreadLocal*> >{
+class ThreadLocals : private std::set<_ThreadLocal*>
+{
 public:
 	void UnregisterThread();
 	void add(_ThreadLocal* thread);
@@ -246,20 +246,21 @@ void _ThreadLocal::_shutdown()
 void ThreadLocals::UnregisterThread()
 {
 	//this should only be accessed from its own thread... if this changes, then this access has to be locked.
-	while ( !this->empty() )
-	{
- 		_ThreadLocal* tl = this->back();
- 		this->pop_back();
- 		tl->setNull();
-	}
-
+    for( ThreadLocals::iterator iTLocal = begin(); iTLocal != end(); iTLocal++ )
+        (*iTLocal)->setNull();
+    clear();
 }
-void ThreadLocals::add(_ThreadLocal* thread){
+void ThreadLocals::add(_ThreadLocal* thread)
+{
 	//this should only be accessed from its own thread... if this changes, then this access has to be locked.
-	this->push_back(thread);
+    if( end() == find( thread ) )
+        insert( thread );
 }
-void ThreadLocals::remove(_ThreadLocal* thread){
-    erase( std::remove( begin(), end(), thread ), end());
+void ThreadLocals::remove(_ThreadLocal* thread)
+{    
+    ThreadLocals::iterator iTLocal = find( thread );
+    if( iTLocal != end() )
+        erase( iTLocal );
 }
 
 CL_NS_END
