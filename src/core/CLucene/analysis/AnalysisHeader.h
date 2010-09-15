@@ -78,7 +78,7 @@ public:
 	static const TCHAR* getDefaultType();
 
 	Token();
-	~Token();
+	virtual ~Token();
 
 	/// Constructs a Token with the given text, start and end offsets, & type. 
 	Token(const TCHAR* text, const int32_t start, const int32_t end, const TCHAR* typ=NULL);
@@ -272,15 +272,16 @@ private:
 	struct Internal;
 	Internal* _internal;
 protected:
+
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to retrieve previously saved TokenStreams for re-use
 	*  by the same thread. */
-	void* getPreviousTokenStream();
+	TokenStream* getPreviousTokenStream();
 
 	/** Used by Analyzers that implement reusableTokenStream
 	*  to save a TokenStream for later re-use by the same
 	*  thread. */
-	void setPreviousTokenStream(void* obj);
+	void setPreviousTokenStream(TokenStream* obj);
 public:
 	/**
 	* Invoked before indexing a Field instance if

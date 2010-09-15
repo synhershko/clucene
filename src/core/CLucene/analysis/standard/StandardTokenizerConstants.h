@@ -7,7 +7,7 @@
 #ifndef _lucene_analysis_standard_StandardTokenizerConstants
 #define _lucene_analysis_standard_StandardTokenizerConstants
 
-
+// TODO: Put these into StandardTokenizer
 CL_NS_DEF2(analysis,standard)
   enum TokenTypes {
     _EOF,

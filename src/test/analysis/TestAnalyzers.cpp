@@ -5,9 +5,11 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
-#include <stdio.h>
+#include "CLucene/analysis/standard/StandardTokenizer.h"
 
-  void assertAnalyzersTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
+// Ported from Java Lucene tests
+
+  void assertAnalyzesTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
    Reader* reader = _CLNEW StringReader(input);
 	TokenStream* ts = a->tokenStream(_T("dummy"), reader );
 
@@ -35,18 +37,17 @@
 
   void testSimpleAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW SimpleAnalyzer();
-	assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
-    assertAnalyzersTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo;bar;foo;bar;"));
-    assertAnalyzersTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo;bar;foo;bar;"));
-    assertAnalyzersTo(tc,a, _T("U.S.A."), _T("u;s;a;") );
-    assertAnalyzersTo(tc,a, _T("C++"), _T("c;") );
-    assertAnalyzersTo(tc,a, _T("B2B"), _T("b;b;"));
-    assertAnalyzersTo(tc,a, _T("2B"), _T("b;"));
-    assertAnalyzersTo(tc,a, _T("\"QUOTED\" word"), _T("quoted;word;"));
+	assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
+    assertAnalyzesTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo;bar;foo;bar;"));
+    assertAnalyzesTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo;bar;foo;bar;"));
+    assertAnalyzesTo(tc,a, _T("U.S.A."), _T("u;s;a;") );
+    assertAnalyzesTo(tc,a, _T("C++"), _T("c;") );
+    assertAnalyzesTo(tc,a, _T("B2B"), _T("b;b;"));
+    assertAnalyzesTo(tc,a, _T("2B"), _T("b;"));
+    assertAnalyzesTo(tc,a, _T("\"QUOTED\" word"), _T("quoted;word;"));
     
-    _CLDELETE(a);
+    _CLLDELETE(a);
   }
-  
   
    void testKeywordAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW KeywordAnalyzer();
@@ -63,16 +64,118 @@
     _CLDELETE(a);
    }
 
-   void testStandardAnalyzer(CuTest *tc){
-    Analyzer* a = _CLNEW StandardAnalyzer();
+  void testNull(CuTest *tc){
+      Analyzer* a = _CLNEW WhitespaceAnalyzer();
+      assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;FOO;BAR;"));
+      assertAnalyzesTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo;bar;.;FOO;<>;BAR;"));
+      assertAnalyzesTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo.bar.FOO.BAR;"));
+      assertAnalyzesTo(tc,a, _T("U.S.A."), _T("U.S.A.;"));
+      assertAnalyzesTo(tc,a, _T("C++"), _T("C++;"));
+      assertAnalyzesTo(tc,a, _T("B2B"), _T("B2B;"));
+      assertAnalyzesTo(tc,a, _T("2B"), _T("2B;"));
+      assertAnalyzesTo(tc,a, _T("\"QUOTED\" word"), _T("\"QUOTED\";word;") );
+
+      _CLLDELETE(a);
+  }
+
+  void testStop(CuTest *tc){
+    Analyzer* a = _CLNEW StopAnalyzer();
+    assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;"));
+    assertAnalyzesTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
     
-    //todo: check this
-	 assertAnalyzersTo(tc,a, _T("[050-070]"), _T("050;-070;") );
-    
-    _CLDELETE(a);
+    _CLLDELETE(a);
+  }
+
+  class BuffTokenFilter : public TokenFilter {
+  public:
+      std::list<Token*>* lst;
+
+      BuffTokenFilter(TokenStream* input) : TokenFilter(input), lst(NULL) {
+      }
+
+      virtual ~BuffTokenFilter()
+      {
+          _CLLDELETE(lst);
+      }
+
+      Token* next(Token* t) {
+          if (lst == NULL) {
+              lst = new std::list<Token*>();
+              for(;;) {
+                  if (input->next(t) == NULL) break;
+                  lst->push_back(t);
+              }
+          }
+          if (lst->size()==0) return NULL;
+          Token* ret = lst->back(); 
+          lst->pop_back();
+          return ret;
+      }
+  };
+
+  class PayloadSetter : public TokenFilter {
+  public:
+      ValueArray<uint8_t>* data;
+      Payload* p;
+
+      PayloadSetter(TokenStream* input) : TokenFilter(input), data(_CLNEW ValueArray<uint8_t>) {
+          p = _CLNEW Payload(data->values, 1, false);
+      }
+
+      Token* next(Token* target) {
+          if (input->next(target) == NULL) return NULL;
+          target->setPayload(p);  // reuse the payload / byte[]
+          data->values[0]++;
+          return target;
+      }
+  };
+
+  void verifyPayload(CuTest* tc, TokenStream* ts) {
+    Token* t = _CLNEW Token();
+    for(uint8_t b=1;;b++) {
+      t->clear();
+      if ( ts->next(t) ) break;
+      // System.out.println("id="+System.identityHashCode(t) + " " + t);
+      // System.out.println("payload=" + (int)t.getPayload().toByteArray()[0]);
+      const ValueArray<uint8_t>* pl = t->getPayload()->toByteArray();
+      assertTrue(b == pl->values[0]);
+      _CLLDELETE(pl);
+    }
+    _CLLDELETE(t);
+  }
+
+  // Make sure old style next() calls result in a new copy of payloads
+  void testPayloadCopy(CuTest* tc) {
+      const TCHAR* s = _T("how now brown cow");
+      TokenStream* ts;
+      ts = _CLNEW WhitespaceTokenizer(_CLNEW StringReader(s));
+      ts = _CLNEW BuffTokenFilter(ts);
+      ts = _CLNEW PayloadSetter(ts);
+      verifyPayload(tc, ts);
+      _CLLDELETE(ts);
+
+      ts = _CLNEW WhitespaceTokenizer(_CLNEW StringReader(s));
+      ts = _CLNEW PayloadSetter(ts);
+      ts = _CLNEW BuffTokenFilter(ts);
+      verifyPayload(tc, ts);
+      _CLLDELETE(ts);
+  }
+
+  // LUCENE-1150: Just a compile time test, to ensure the
+  // StandardAnalyzer constants remain publicly accessible
+   void _testStandardConstants() {
+       int x = standard::ALPHANUM;
+       x = standard::APOSTROPHE;
+       x = standard::ACRONYM;
+       x = standard::COMPANY;
+       x = standard::EMAIL;
+       x = standard::HOST;
+       x = standard::NUM;
+       x = standard::CJK; // TODO: Java Lucene 2.3.2 declares this as CJ
+       // const TCHAR** y = standard::tokenImage; <-- TODO: Failing compile time test
    }
 
-   
+// TestPerFieldAnalzyerWrapper.Java
    void testPerFieldAnalzyerWrapper(CuTest *tc){
         const TCHAR* text = _T("Qwerty");
         PerFieldAnalyzerWrapper analyzer(_CLNEW WhitespaceAnalyzer());
@@ -96,6 +199,7 @@
         _CLDELETE(tokenStream);
    }
 
+// A CLucene-specific test
 #define USE_PER_FIELD_ANALYZER
 //#define SUB_ANALYZER_TYPE lucene::analysis::WhitespaceAnalyzer
 #define SUB_ANALYZER_TYPE lucene::analysis::standard::StandardAnalyzer
@@ -159,27 +263,14 @@
        _CLLDELETE(q);
    }
 
-  void testNullAnalyzer(CuTest *tc){
-    Analyzer* a = _CLNEW WhitespaceAnalyzer();
-    assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;FOO;BAR;"));
-    assertAnalyzersTo(tc,a, _T("foo      bar .  FOO <> BAR"), _T("foo;bar;.;FOO;<>;BAR;"));
-    assertAnalyzersTo(tc,a, _T("foo.bar.FOO.BAR"), _T("foo.bar.FOO.BAR;"));
-    assertAnalyzersTo(tc,a, _T("U.S.A."), _T("U.S.A.;"));
-    assertAnalyzersTo(tc,a, _T("C++"), _T("C++;"));
-    assertAnalyzersTo(tc,a, _T("B2B"), _T("B2B;"));
-    assertAnalyzersTo(tc,a, _T("2B"), _T("2B;"));
-    assertAnalyzersTo(tc,a, _T("\"QUOTED\" word"), _T("\"QUOTED\";word;") );
-    
-    _CLDELETE(a);
-  }
+   void testStandardAnalyzer(CuTest *tc){
+       Analyzer* a = _CLNEW StandardAnalyzer();
 
-  void testStopAnalyzer(CuTest *tc){
-    Analyzer* a = _CLNEW StopAnalyzer();
-    assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;"));
-    assertAnalyzersTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
-    
-    _CLDELETE(a);
-  }
+       //todo: check this
+       assertAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
+
+       _CLDELETE(a);
+   }
 
   void testISOLatin1AccentFilter(CuTest *tc){
 	  TCHAR str[200];
@@ -287,8 +378,8 @@
 	  strcpy(stopwordsfile, clucene_data_location);
 	  strcat(stopwordsfile, "/StopWords.test");
 	  Analyzer* a = _CLNEW StopAnalyzer(stopwordsfile);
-	  assertAnalyzersTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;"));
-	  assertAnalyzersTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
+	  assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;"));
+	  assertAnalyzesTo(tc,a, _T("foo a bar such FOO THESE BAR"), _T("foo;bar;foo;bar;"));
     
 	  _CLDELETE(a);
 
@@ -347,16 +438,27 @@ CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
 
-    SUITE_ADD_TEST(suite, testKeywordAnalyzer);
-    SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
-    SUITE_ADD_TEST(suite, testStopAnalyzer);
-    SUITE_ADD_TEST(suite, testNullAnalyzer);
+    // Ported from TestAnalyzers.java
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
+    SUITE_ADD_TEST(suite, testNull);
+    SUITE_ADD_TEST(suite, testStop);
+    //SUITE_ADD_TEST(suite, testPayloadCopy); // <- TODO: Finish Payload and remove asserts before enabling this test
+
+    // Ported from TestPerFieldAnalzyerWrapper.java + 1 test of our own
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper);
     SUITE_ADD_TEST(suite, testPerFieldAnalzyerWrapper2);
+
+// Still incomplete:
+    // Ported from TestKeywordAnalyzer.java
+    //SUITE_ADD_TEST(suite, testMutipleDocument); // <- TODO: This is failing with an exception "Terms are out of order"
+
+    // Ported from TestISOLatin1AccentFilter.java
+    SUITE_ADD_TEST(suite, testISOLatin1AccentFilter);
+
     SUITE_ADD_TEST(suite, testWordlistLoader);
-    //SUITE_ADD_TEST(suite, testMutipleDocument);
     SUITE_ADD_TEST(suite, testEmptyStopList);
+    
+    // TODO: Remove testStandardAnalyzer and port TestStandardAnalyzer.java as a whole
 
     return suite; 
 }

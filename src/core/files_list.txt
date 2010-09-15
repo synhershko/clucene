@@ -1,7 +1,7 @@
 Lucene 2.3.2 Files:
 ---------------
 
-?	analysis\Analyzer.java
+DONE ISH	analysis\Analyzer.java				- Needs testing of mem-leaks caused by the reusableTokenStream interface. See http://permalink.gmane.org/gmane.comp.jakarta.lucene.clucene.devel/3359. Currently all class-specific data is being released on its destructor, and the Tokenizer is never being released by the Analyzer.
 ?	analysis\CachingTokenFilter.java
 ?	analysis\CharArraySet.java
 ?	analysis\CharTokenizer.java
@@ -278,7 +278,7 @@ DONE ISH	analysis\PerFieldAnalyzerWrapper.java		- toString() not yet implemented
 DONE ISH	analysis\LengthFilter.java
 DONE ISH	analysis\KeywordAnalyzer.java
 DONE ISH	analysis\SimpleAnalyzer.java
-DONE ISH	analysis\Tokenizer.java
+DONE ISH	analysis\Tokenizer.java			-- Should we delete input on destructor and close? perhaps allow this through an optional parameter?
 
 DONE ISH	store\IndexInput.java			- Clone method implemented as constructor only
 IRRELEVANT	store\AlreadyClosedException.java		- Using CL_ERR_IllegalState for this
