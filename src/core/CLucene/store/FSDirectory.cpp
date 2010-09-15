@@ -21,6 +21,8 @@
 #endif
 #include <errno.h>
 
+#include <assert.h>
+
 #include "FSDirectory.h"
 #include "LockFactory.h"
 #include "CLucene/index/IndexReader.h"
@@ -269,7 +271,8 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     if ( filemode <= 0 ){
       filemode = _S_IWRITE | _S_IREAD;
     }
-	  if ( Misc::dir_Exists(path) )
+    bool bExists = Misc::dir_Exists(path);
+	  if ( bExists )
 	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_TRUNC, filemode);
 	  else // added by JBP
 	    fhandle = _cl_open( path, _O_BINARY | O_RDWR | _O_RANDOM | O_CREAT, filemode);
@@ -662,23 +665,12 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
       //we run this sequence of unlinking an arbitary 100 times
       //on some platforms (namely windows), there can be a
       //delay between unlink and dir_exists==false
-      while ( true ){
-          if( _unlink(nu) != 0 ){
+        if( Misc::file_Unlink( nu ) == -1 ) {
     	    char* err = _CL_NEWARRAY(char,16+strlen(to)+1); //16: len of "couldn't delete "
     		strcpy(err,"couldn't delete ");
     		strcat(err,to);
             _CLTHROWA_DEL(CL_ERR_IO, err );
-          }
-          //we can wait until the dir_Exists() returns false
-          //after the success run of unlink()
-          int i=0;
-		  while ( Misc::dir_Exists(nu) && i < 100 ){
-			  if ( ++i > 50 ) //if it still doesn't show up, then we do some sleeping for the last 50ms
-				  _LUCENE_SLEEP(1);
-		  }
-          if ( !Misc::dir_Exists(nu) )
-            break; //keep trying to unlink until the file is gone, or the unlink fails.
-      }
+        }
     }
     if ( _rename(old,nu) != 0 ){
        //todo: jlucene has some extra rename code - if the rename fails, it copies
@@ -698,12 +690,13 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
     char fl[CL_MAX_DIR];
     priv_getFN(fl, name);
 	  if ( Misc::dir_Exists(fl) ){
-		  if ( _unlink(fl) != 0 ){
+          if ( Misc::file_Unlink( fl, 1 ) == -1 ) {
 			  char tmp[1024];
 			  strcpy(tmp, "Cannot overwrite: ");
 			  strcat(tmp, name);
 			  _CLTHROWA(CL_ERR_IO, tmp);
 		  }
+          assert( ! Misc::dir_Exists(fl) );
 	  }
     return _CLNEW FSIndexOutput( fl, this->filemode );
   }
