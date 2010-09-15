@@ -138,6 +138,7 @@ _LUCENE_THREAD_FUNC(indexDocs, _data) {
             CuAssertTrue(data->tc, data->dir->sizeInBytes == data->dir->getRecomputedSizeInBytes());
         }
     }
+    _LUCENE_THREAD_FUNC_RETURN( 0 );
 }
   
 void testRAMDirectorySize(CuTest * tc)  {
