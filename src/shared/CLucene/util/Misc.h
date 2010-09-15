@@ -18,9 +18,19 @@ CL_NS_DEF(util)
     static uint64_t currentTimeMillis();
     static const TCHAR* replace_all( const TCHAR* val, const TCHAR* srch, const TCHAR* repl );
     static bool dir_Exists(const char* path);
-		static int64_t file_Size(const char* path);
+    static int64_t file_Size(const char* path);
     static int64_t filelength(int handle);
     static void sleep(const int ms);
+
+    /**
+     * Unlinks the given file, waits until dir_Exists is false. It makes maxAttempts
+     * attempts to remove the file. If maxAttemps is less than 0 then unlimited
+     * count of attempts is done. 
+     * Returns 1 if deleted and dir_Exists returns false
+     * Returns 0 if deleted and dir_Exists returns still true
+     * Returns -1 if file can not be deleted.
+     */
+    static int32_t file_Unlink(const char* path, int32_t maxAttempts = -1);
 
     static size_t ahashCode(const char* str);
 		static size_t ahashCode(const char* str, size_t len);
