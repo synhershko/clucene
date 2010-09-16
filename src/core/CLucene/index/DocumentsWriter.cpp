@@ -122,7 +122,7 @@ DocumentsWriter::~DocumentsWriter(){
 
   // Make sure unused posting slots aren't attempted delete on
   if (this->postingsFreeListDW.values){
-      if (this->postingsFreeCountDW > this->postingsFreeListDW.length) {
+      if (this->postingsFreeCountDW < this->postingsFreeListDW.length-1) {
           memset(this->postingsFreeListDW.values + this->postingsFreeCountDW
               , NULL
               , sizeof(Posting*));
