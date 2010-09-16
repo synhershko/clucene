@@ -18,6 +18,8 @@
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/index/Terms.h"
 
+#include <assert.h>
+
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
@@ -237,5 +239,13 @@ CL_NS_DEF(search)
 	Weight* TermQuery::_createWeight(Searcher* _searcher) {
         return _CLNEW TermWeight(_searcher,this,term);
     }
+
+    void TermQuery::extractTerms( TermSet * termset )
+    {
+        if( term && termset->end() == termset->find( term ))
+            termset->insert( _CL_POINTER( term ));
+    }
+
+
 CL_NS_END
 

@@ -43,6 +43,9 @@ class _ThreadLocal
 		*/
 		static void UnregisterCurrentThread();
 
+        static void RemoveThreadLocal( _ThreadLocal * tl );
+
+
 		/**
 		* Call this function to shutdown CLucene
 		*/

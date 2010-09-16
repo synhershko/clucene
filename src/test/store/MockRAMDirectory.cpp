@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2010 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 
@@ -15,19 +15,19 @@ CL_NS_DEF(store)
 
 MockRAMDirectory::MockRAMDirectory() :
 	RAMDirectory(),
-	noDeleteOpenFile(true) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
 MockRAMDirectory::MockRAMDirectory(const char* dir) :
 	RAMDirectory(dir),
-	noDeleteOpenFile(true) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
 MockRAMDirectory::MockRAMDirectory(Directory* dir) :
 	RAMDirectory(dir),
-	noDeleteOpenFile(true) {
+	noDeleteOpenFile(true), maxSize(0) {
 	// empty
 }
 
@@ -55,17 +55,18 @@ IndexOutput* MockRAMDirectory::createOutput(const char* name) {
 
 	MockRAMFile* existing = static_cast<MockRAMFile*>(files->get((char*)name));
 
-	if (existing = NULL && strcmp(name, "segments.gen") != 0) {
+	if (existing != NULL && strcmp(name, "segments.gen") != 0) {
 		char buffer[200];
 		_snprintf(buffer, 200, "MockRAMDirectory: file %s already exist", name);
 		_CLTHROWA(CL_ERR_IO, buffer);
 	} else {
 		if (existing != NULL) {
+            SCOPED_LOCK_MUTEX(THIS_LOCK);
 			sizeInBytes -= existing->getSizeInBytes();
 			existing->setDirectory(NULL);
 		}
 
-	files->put(STRDUP_AtoA(name), file);
+	    files->put(STRDUP_AtoA(name), file);
 	}
 
 	return _CLNEW MockRAMOutputStream(this, file);
@@ -157,13 +158,15 @@ std::map<std::string, int32_t>& MockRAMDirectory::getOpenFiles() {
 
 void MockRAMDirectory::maybeThrowIOException(void) {
 	if (randomIOExceptionRate > 0.0) {
-		int32_t number = rand() % 1000;
+		// don't use low bits from rand()
+		// (see http://en.wikipedia.org/wiki/Linear_congruential_generator#Advantages_and_disadvantages_of_LCGs)
+		int32_t number = ((rand() >> 4) % 1000);
 		if (number < randomIOExceptionRate * 1000) {
 			char buffer[200];
 			_snprintf(buffer, 200, "MockRAMDirectory: a random IOException");
 			_CLTHROWA(CL_ERR_IO, buffer);
 		}
-	} 
+	}
 }
 
 int64_t MockRAMDirectory::getRecomputedSizeInBytes(void) {
@@ -176,7 +179,7 @@ int64_t MockRAMDirectory::getRecomputedSizeInBytes(void) {
 		it++;
 	}
 
-	return size; 
+	return size;
 }
 
 int64_t MockRAMDirectory::getRecomputedActualSizeInBytes(void) {
@@ -189,7 +192,7 @@ int64_t MockRAMDirectory::getRecomputedActualSizeInBytes(void) {
 		it++;
 	}
 
-	return size; 
+	return size;
 }
 
 void MockRAMDirectory::failOn(Failure* fail) {
@@ -253,7 +256,7 @@ void MockRAMOutputStream::writeBytes(const uint8_t* b, const int32_t length) {
 	 	// down our test but makes it more accurate:
 	 	realUsage = dir->getRecomputedActualSizeInBytes();
 		freeSpace = dir->getMaxSizeInBytes() - realUsage;
-	} 
+	}
 
 	if (dir->getMaxSizeInBytes() != 0 && freeSpace <= length) {
 		if (freeSpace > 0 && freeSpace < length) {

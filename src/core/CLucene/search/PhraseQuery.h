@@ -99,6 +99,9 @@ CL_NS_DEF(search)
 
 		const char* getObjectName() const;
 		static const char* getClassName();
+
+        /** Expert: adds all terms occurring in this query to the terms set. */
+        void extractTerms( TermSet * termset );
 	};
 CL_NS_END
 #endif

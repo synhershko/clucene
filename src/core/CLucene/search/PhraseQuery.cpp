@@ -27,6 +27,8 @@
 #include "_ExactPhraseScorer.h"
 #include "_SloppyPhraseScorer.h"
 
+#include <assert.h>
+
 CL_NS_USE(index)
 CL_NS_USE(util)
 CL_NS_DEF(search)
@@ -136,11 +138,11 @@ CL_NS_DEF(search)
 		size_t ret = Similarity::floatToByte(getBoost()) ^ Similarity::floatToByte(slop);
 
 		{ //msvc6 scope fix
-			for ( size_t i=0;terms->size();i++ )
+			for ( size_t i=0;i<terms->size();i++ )
 				ret = 31 * ret + (*terms)[i]->hashCode();
 		}
 		{ //msvc6 scope fix
-			for ( size_t i=0;positions->size();i++ )
+			for ( size_t i=0;i<positions->size();i++ )
 				ret = 31 * ret + (*positions)[i];
 		}
 		return ret;
@@ -266,6 +268,16 @@ CL_NS_DEF(search)
 
 	  return buffer.giveBuffer();
   }
+
+void PhraseQuery::extractTerms( TermSet * termset )
+{
+    for( size_t i = 0; i < terms->size(); i++ )
+    {
+        Term * pTerm = (*terms)[i];
+        if( pTerm && termset->end() == termset->find( pTerm ))
+            termset->insert( _CL_POINTER( pTerm ));
+    }
+}
 
 
  PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _parentQuery) {

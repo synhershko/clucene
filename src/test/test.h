@@ -40,9 +40,12 @@ CL_NS_USE2(analysis,standard)
 #include "CuTest.h"
 
 CuSuite *testatomicupdates(void);
+CuSuite *testRAMDirectory(void);
 CuSuite *testindexwriter(void);
 CuSuite *testIndexModifier(void);
 CuSuite *testindexreader(void);
+CuSuite *testIndexSearcher(void);
+CuSuite *testAddIndexesNoOptimize(void);
 CuSuite *teststore(void);
 CuSuite *testanalysis(void);
 CuSuite *testanalyzers(void);
@@ -52,6 +55,7 @@ CuSuite *testpriorityqueue(void);
 CuSuite *testQueryParser(void);
 CuSuite *testMultiFieldQueryParser(void);
 CuSuite *testqueries(void);
+CuSuite *testConstantScoreQueries(void);
 CuSuite *testsearch(void);
 CuSuite *testtermvector(void);
 CuSuite *testsort(void);
@@ -67,6 +71,8 @@ CuSuite *testNumberTools(void);
 CuSuite *testDateTools(void);
 CuSuite *testBoolean(void);
 CuSuite *testBitSet(void);
+CuSuite *testExtractTerms(void);
+CuSuite *testSpanQueries(void);
 CuSuite *testStringBuffer(void);
 
 class English{

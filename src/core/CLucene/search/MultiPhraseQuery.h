@@ -36,6 +36,9 @@ private:
 
 	int32_t slop;
 
+protected:
+    MultiPhraseQuery( const MultiPhraseQuery& clone );
+    
 public:
 	MultiPhraseQuery();
 	virtual ~MultiPhraseQuery();
@@ -86,9 +89,10 @@ public:
 	*/
 	void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
 
-	void extractTerms(CL_NS(util)::RefCountArray<CL_NS(index)::Term*>& terms);
-
 	Query* rewrite(CL_NS(index)::IndexReader* reader);
+
+    /** Expert: adds all terms occurring in this query to the terms set. */
+    void extractTerms( TermSet * termset );
 
 protected:
 	Weight* _createWeight(Searcher* searcher);
@@ -103,8 +107,7 @@ public:
 	/** Returns a hash code value for this object.*/
 	size_t hashCode() const;
 
-	// TODO:
-	Query* clone() const {return NULL;}
+	Query* clone() const;
 
 	const char* getObjectName() const { return getClassName(); }
 	static const char* getClassName(){ return "MultiPhraseQuery"; }

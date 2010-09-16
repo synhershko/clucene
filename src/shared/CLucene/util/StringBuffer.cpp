@@ -201,6 +201,10 @@ CL_NS_DEF(util)
 	  }
   }
 
+  void StringBuffer::appendBool(const bool value){
+      append( value ? _T( "true" ) : _T( "false" ));
+  }
+
   void StringBuffer::prepend(const TCHAR* value){
   //Func - Puts a copy of the string value infront of the current string in the StringBuffer
   //Pre  - value != NULL

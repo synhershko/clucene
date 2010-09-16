@@ -183,6 +183,10 @@ Query* MatchAllDocsQuery::clone() const{
 	return _CLNEW MatchAllDocsQuery(*this);
 }
 
+void MatchAllDocsQuery::extractTerms( TermSet * termset )
+{
+}
+
 bool MatchAllDocsQuery::equals(Query* o) const{
 	if (!(o->instanceOf(MatchAllDocsQuery::getClassName())))
 		return false;

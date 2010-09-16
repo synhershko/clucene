@@ -718,7 +718,7 @@ string SegmentInfo::segString(Directory* dir) {
 	void SegmentInfos::range(size_t from, size_t to, SegmentInfos& ret) const{
     segmentInfosType::const_iterator itr = infos.begin();
     itr+= from;
-    for (size_t i=0;i<to && itr != infos.end();i++){
+    for (size_t i=from;i<to && itr != infos.end();i++){
       ret.infos.push_back(*itr);
 
       itr++;
@@ -939,6 +939,7 @@ string SegmentInfo::segString(Directory* dir) {
                 }
                 break;
               } else {
+				  genInput->close();
 	              _CLLDELETE(genInput);
 	              throw e;
               }
@@ -954,12 +955,14 @@ string SegmentInfo::segString(Directory* dir) {
 		              if (gen0 == gen1) {
 			              // The file is consistent.
 			              genB = gen0;
+			              genInput->close();
 			              _CLDELETE(genInput);
 			              break;
 		              }
 	              }
               } catch (CLuceneError &err2) {
 	              if (err2.number() != CL_ERR_IO) {
+					  genInput->close();
 		              _CLLDELETE(genInput);
 		              throw err2; // retry only for IOException
 	              }

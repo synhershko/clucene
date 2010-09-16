@@ -125,6 +125,11 @@ Weight* Query::weight(Searcher* searcher){
     return weight;
 }
 
+void Query::extractTerms( TermSet * termset )
+{
+	_CLTHROWA( CL_ERR_UnsupportedOperation,"UnsupportedOperationException: Query::extractTerms" );
+}
+
 TopFieldDocs::TopFieldDocs (int32_t totalHits, FieldDoc** fieldDocs, int32_t scoreDocsLen, SortField** fields):
  TopDocs (totalHits, NULL, scoreDocsLen)
 {

@@ -96,12 +96,14 @@ CL_NS_DEF(util)
 		delete _internal;
 	}
 	void shared_condition::Wait(mutex_thread* shared_lock){
-    shared_lock->unlock();
-		assert ( 0x0 == WaitForSingleObject( _internal->_event, 0xFFFFFFFF ) );
-    shared_lock->lock();
+        shared_lock->unlock();
+        _cl_dword_t dwRes = WaitForSingleObject( _internal->_event, 0xFFFFFFFF );
+		assert ( 0x0 == dwRes );
+        shared_lock->lock();
 	}
 	void shared_condition::NotifyAll(){
-		assert ( 0 != SetEvent(_internal->_event) );
+		bool bRes = SetEvent(_internal->_event);
+        assert( bRes );
 	}
 
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
@@ -202,7 +204,8 @@ CL_NS_DEF(util)
 
 	_LUCENE_THREADID_TYPE mutex_thread::CreateThread(luceneThreadStartRoutine* func, void* arg){
 	    _LUCENE_THREADID_TYPE ret;
-	    assert(pthread_create(&ret, NULL, func, arg) == 0 );
+	    int nRes = pthread_create(&ret, NULL, func, arg);
+	    assert( nRes == 0 );
 	    return ret;
 	}
 	void mutex_thread::JoinThread(_LUCENE_THREADID_TYPE id){

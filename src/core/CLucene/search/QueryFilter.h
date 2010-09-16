@@ -20,10 +20,12 @@ class CLUCENE_EXPORT QueryFilter: public Filter
 {
 private:
 	Query* query;
+    bool   bDeleteQuery;
 protected:
 	QueryFilter( const QueryFilter& copy );
 public:
 	QueryFilter( const Query* query );
+	QueryFilter( Query* query, bool bDeleteQuery );
 	
 	~QueryFilter();
 	

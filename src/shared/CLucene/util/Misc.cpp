@@ -209,6 +209,40 @@ int64_t Misc::file_Size(const char* path){
 	else
 		return -1;
 }
+
+int Misc::file_Unlink(const char* path, int32_t maxAttempts )
+{
+    int32_t i;
+
+    if( ! path || ! * path )
+        return -1;
+
+    if( maxAttempts == 0 )
+        maxAttempts = 1;
+
+    while( maxAttempts != 0 )
+    {
+        if( _unlink( path ) != 0 )
+            return -1;
+
+        i = 0;
+        while( i < 100 )
+        {
+            if( ! Misc::dir_Exists( path ) )
+                return 1;
+
+            if( ++i > 50 )      // if it still doesn't show up, then we do some sleeping for the last 50ms
+                _LUCENE_SLEEP( 1 );
+        }
+
+        if( maxAttempts > 0 )
+            maxAttempts--;
+    }
+
+    return 0;
+}
+
+
 //static
 TCHAR* Misc::join ( const TCHAR* a, const TCHAR* b, const TCHAR* c, const TCHAR* d,const TCHAR* e,const TCHAR* f ) {
 #define LEN(x) (x == NULL ? 0 : _tcslen(x))

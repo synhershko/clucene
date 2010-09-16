@@ -32,18 +32,26 @@ public:
 QueryFilter::QueryFilter( const Query* query )
 {
 	this->query = query->clone();
+    bDeleteQuery = true;
 }
 
+QueryFilter::QueryFilter( Query* query, bool bDeleteQuery )
+{
+    this->query = query;
+    this->bDeleteQuery = bDeleteQuery;
+}
 
 QueryFilter::~QueryFilter()
 {
-	_CLDELETE( query );
+    if( bDeleteQuery )
+	    _CLDELETE( query );
 }
 
 
 QueryFilter::QueryFilter( const QueryFilter& copy )
 {
 	this->query = copy.query->clone();
+    bDeleteQuery = true;
 }
 
 

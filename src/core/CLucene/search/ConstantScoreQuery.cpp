@@ -10,10 +10,12 @@
 #include "SearchHeader.h"
 #include "Scorer.h"
 #include "RangeFilter.h"
+#include "Similarity.h"
 #include "CLucene/index/IndexReader.h"
 #include "CLucene/util/BitSet.h"
 #include "CLucene/util/StringBuffer.h"
 #include "CLucene/util/_StringIntern.h"
+#include "CLucene/util/Misc.h"
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -158,6 +160,12 @@ Query* ConstantScoreQuery::rewrite(IndexReader* reader) {
     return this;
 }
 
+void ConstantScoreQuery::extractTerms( TermSet * termset )
+{
+    // OK to not add any terms when used for MultiSearcher,
+    // but may not be OK for highlighting
+}
+
 Weight* ConstantScoreQuery::_createWeight(Searcher* searcher) {
     return _CLNEW /*ConstantScoreQuery::*/ConstantWeight(this, searcher);
 }
@@ -206,7 +214,7 @@ ConstantScoreRangeQuery::ConstantScoreRangeQuery( const ConstantScoreRangeQuery&
 {
 }
 
-ConstantScoreRangeQuery::ConstantScoreRangeQuery(const TCHAR* _fieldName, TCHAR* _lowerVal, TCHAR* _upperVal,
+ConstantScoreRangeQuery::ConstantScoreRangeQuery(const TCHAR* _fieldName, const TCHAR* _lowerVal, const TCHAR* _upperVal,
                         bool _includeLower, bool _includeUpper) : fieldName(NULL), lowerVal(NULL), upperVal(NULL)
 {
     // do a little bit of normalization...
@@ -236,9 +244,12 @@ ConstantScoreRangeQuery::~ConstantScoreRangeQuery(){
 
 Query* ConstantScoreRangeQuery::rewrite(CL_NS(index)::IndexReader* reader) {
     // Map to RangeFilter semantics which are slightly different...
+    const TCHAR* lowerSafe = lowerVal!=NULL?lowerVal:_T("");
     RangeFilter* rangeFilt = _CLNEW RangeFilter(fieldName,
-        lowerVal!=NULL?lowerVal:_T(""),
-        upperVal, (_tcscmp(lowerVal, _T(""))==0)?false:includeLower, upperVal==NULL?false:includeUpper);
+        lowerSafe,
+        upperVal, 
+        (_tcscmp(lowerSafe, _T(""))==0)?false:includeLower, 
+        upperVal==NULL?false:includeUpper);
     Query* q = _CLNEW ConstantScoreQuery(rangeFilt);
     q->setBoost(getBoost());
     return q;
@@ -276,16 +287,19 @@ bool ConstantScoreRangeQuery::equals(Query* o) const {
 }
 
 // TODO: Complete this
-size_t ConstantScoreRangeQuery::hashCode() const {
-    size_t h = 0; /*Float.floatToIntBits(getBoost()) ^ fieldName.hashCode();
+size_t ConstantScoreRangeQuery::hashCode() const 
+{
+    int32_t h = Similarity::floatToByte( getBoost() ) ^ Misc::thashCode( fieldName );
     // hashCode of "" is 0, so don't use that for null...
-    h ^= lowerVal != NULL ? lowerVal.hashCode() : 0x965a965a;
+
+    h ^= ( lowerVal != NULL ) ? Misc::thashCode( lowerVal ) : 0x965a965a;
     // don't just XOR upperVal with out mixing either it or h, as it will cancel
     // out lowerVal if they are equal.
-    h ^= (h << 17) | (h >>> 16);  // a reversible (one to one) 32 bit mapping mix
-    h ^= (upperVal != NULL ? (upperVal.hashCode()) : 0x5a695a69);
-    h ^= (includeLower ? 0x665599aa : 0)
-        ^ (includeUpper ? 0x99aa5566 : 0);*/
+
+    h ^= (h << 17) | (h >> 16);  // a reversible (one to one) 32 bit mapping mix
+    h ^= (upperVal != NULL) ? Misc::thashCode( upperVal ) : 0x5a695a69;
+    h ^= (includeLower ? 0x665599aa : 0) ^ (includeUpper ? 0x99aa5566 : 0);
+
     return h;
 }
 

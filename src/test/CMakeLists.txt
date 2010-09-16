@@ -13,6 +13,7 @@ SOURCE_GROUP("document" ./document/*)
 SOURCE_GROUP("index" ./index/*)
 SOURCE_GROUP("queryParser" ./queryParser/*)
 SOURCE_GROUP("search" ./search/*)
+SOURCE_GROUP("search-spans" ./search/spans/*)
 SOURCE_GROUP("store" ./store/*)
 SOURCE_GROUP("util" ./util/*)
 
@@ -40,6 +41,33 @@ SET(test_files ./tests.cpp
 ./search/TestSort.cpp
 ./search/TestWildcard.cpp
 ./search/TestTermVector.cpp
+./search/TestExtractTerms.cpp
+./search/TestConstantScoreRangeQuery.cpp
+./search/TestIndexSearcher.cpp
+./index/IndexWriter4Test.cpp
+./search/BaseTestRangeFilter.h
+./search/BaseTestRangeFilter.cpp
+./search/QueryUtils.h
+./search/QueryUtils.cpp
+./search/CheckHits.h
+./search/CheckHits.cpp
+./search/TestExplanations.cpp
+./search/TestExplanations.h
+./search/spans/TestSpans.h
+./search/spans/TestSpans.cpp
+./search/spans/TestSpanQueries.cpp
+./search/spans/TestBasics.h
+./search/spans/TestBasics.cpp
+./search/spans/TestSpansAdvanced.cpp
+./search/spans/TestSpansAdvanced.h
+./search/spans/TestSpansAdvanced2.cpp
+./search/spans/TestSpansAdvanced2.h
+./search/spans/TestNearSpansOrdered.cpp
+./search/spans/TestNearSpansOrdered.h
+./search/spans/TestSpanExplanations.cpp
+./search/spans/TestSpanExplanations.h
+./search/spans/TestSpanExplanationsOfNonMatches.cpp
+./search/spans/TestSpanExplanationsOfNonMatches.h
 ./index/TestIndexModifier.cpp
 ./index/TestIndexWriter.cpp
 ./index/TestIndexModifier.cpp
@@ -48,6 +76,8 @@ SET(test_files ./tests.cpp
 ./index/TestUtf8.cpp
 ./index/TestHighFreqTerms.cpp
 ./index/TestReuters.cpp
+./index/TestAddIndexesNoOptimize.cpp
+./index/store/TestRAMDirectory.cpp
 ./util/TestPriorityQueue.cpp
 ./util/TestBitSet.cpp
 ./util/TestStringBuffer.cpp

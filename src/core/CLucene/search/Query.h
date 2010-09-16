@@ -9,14 +9,19 @@
 
 
 #include "CLucene/util/Array.h"
+#include "CLucene/index/Term.h"
 #include "CLucene/util/Equators.h"
+#include "CLucene/index/_Term.h"
 CL_CLASS_DEF(index,IndexReader)
+
 
 CL_NS_DEF(search)
     class Weight;
     class Similarity;
     class Searcher;
     
+    typedef std::set<CL_NS(index)::Term *, CL_NS(index)::Term_UnorderedCompare>  TermSet;
+
 	/** The abstract base class for queries.
     <p>Instantiable subclasses are:
     <ul>
@@ -81,6 +86,17 @@ CL_NS_DEF(search)
         * the other queries.
         */
         virtual Query* combine(CL_NS(util)::ArrayBase<Query*>* queries);
+
+        /** Expert: adds all terms occurring in this query to the terms set. Only
+         * works if this query is in its {@link #rewrite rewritten} form.
+         * 
+         * @memory:
+         * CLucene specific - all terms in the list have their reference counter
+         * increased by one. 
+         * 
+         * @throws CLuceneError with CL_ERR_UnsupportedOperation
+         */
+        virtual void extractTerms( TermSet * termset );
 
         /** Expert: merges the clauses of a set of BooleanQuery's into a single
         * BooleanQuery.

@@ -42,6 +42,10 @@ CL_NS_DEF(search)
 
 		/** Returns a hash code value for this object.*/
 		size_t hashCode() const;
+
+        /** Expert: adds all terms occurring in this query to the termset set. */
+        void extractTerms( TermSet * termset );
+
     };
 CL_NS_END
 #endif
