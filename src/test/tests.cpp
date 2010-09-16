@@ -34,5 +34,6 @@ unittest tests[] = {
     {"store", teststore},
     {"utf8", testutf8},
     {"bitset", testBitSet},
+    {"stringbuffer", testStringBuffer},
     {"LastTest", NULL}
 };

@@ -98,7 +98,7 @@ void IndexWriter::ensureOpen()   {
 void IndexWriter::message(string message) {
   if (infoStream != NULL){
     (*infoStream) << string("IW ") << Misc::toString(messageID) << string(" [")
-    						  << Misc::toString( _LUCENE_CURRTHREADID ) << string("]: ") << message << string("\n");
+    						  << Misc::toString( (int32_t)(_LUCENE_CURRTHREADID) ) << string("]: ") << message << string("\n");
   }
 }
 
@@ -176,7 +176,6 @@ void IndexWriter::init(Directory* d, Analyzer* a, bool closeDir, IndexDeletionPo
 void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool closeDir,
                        IndexDeletionPolicy* deletionPolicy, const bool autoCommit){
   this->_internal = new Internal(this);
-
   this->termIndexInterval = IndexWriter::DEFAULT_TERM_INDEX_INTERVAL;
   this->mergeScheduler = _CLNEW SerialMergeScheduler(); //TODO: implement and use ConcurrentMergeScheduler
   this->mergingSegments = _CLNEW MergingSegmentsType;
@@ -194,7 +193,7 @@ void IndexWriter::init(Directory* d, Analyzer* a, const bool create, const bool 
   this->commitLockTimeout =0;
   this->closeDir = closeDir;
   this->commitPending = this->closed = this->closing = false;
-  directory = _CL_POINTER(d);
+  directory = d;
   analyzer = a;
   this->infoStream = defaultInfoStream;
   setMessageID();
@@ -543,10 +542,9 @@ void IndexWriter::closeInternal(bool waitForMerges) {
       deleter->close();
     }
 
-    if (closeDir){
+    if (closeDir)
       directory->close();
- 	  _CLDECDELETE(directory);
-    }
+
     if (writeLock != NULL) {
       writeLock->release();                          // release write lock
       _CLDELETE(writeLock);
@@ -1170,8 +1168,9 @@ void IndexWriter::addIndexes(CL_NS(util)::ArrayBase<CL_NS(store)::Directory*>& d
     startTransaction();
 
     try {
+
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (size_t i = 0; i< dirs.length; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           SegmentInfos sis;	  // read infos from dir
           sis.read(dirs[i]);
           segmentInfos->insert(&sis,true);	  // add each info
@@ -1221,7 +1220,7 @@ void IndexWriter::addIndexesNoOptimize(CL_NS(util)::ArrayBase<CL_NS(store)::Dire
     try {
 
       { SCOPED_LOCK_MUTEX(this->THIS_LOCK)
-        for (size_t i = 0; i< dirs.length; i++) {
+        for (int32_t i = 0; i< dirs.length; i++) {
           if (directory == dirs[i]) {
             // cannot add this index: segments may be deleted in merge before added
             _CLTHROWA(CL_ERR_IllegalArgument,"Cannot add this index to itself");
@@ -1471,7 +1470,6 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
                 segmentInfos->size() > 0 &&
                 segmentInfos->info(segmentInfos->size()-1) == newSegment)
               segmentInfos->remove(segmentInfos->size()-1);
-            _CLDELETE(rollback);
           }
           if (flushDocs)
             docWriter->abort(NULL);
@@ -1480,9 +1478,8 @@ bool IndexWriter::doFlush(bool _flushDocStores) {
 
           if (!segment.empty())
             deleter->refresh(segment.c_str());
-        }else{
-          _CLDELETE(rollback);
-        }
+        } else if (flushDeletes)
+            _CLDELETE(rollback);
       )
 
       deleter->checkpoint(segmentInfos, autoCommit);
@@ -1715,9 +1712,8 @@ bool IndexWriter::commitMerge(MergePolicy::OneMerge* _merge) {
       segmentInfos->insert(rollback,true);
       deletePartialSegmentsFile();
       deleter->refresh(_merge->info->name.c_str());
-    }else{
-      _CLDELETE(rollback);
     }
+    _CLDELETE(rollback);
   )
 
   if (_merge->optimize)
@@ -2329,7 +2325,7 @@ string IndexWriter::segString() {
   return buffer;
 }
 
-bool IndexWriter::testPoint(const char* /*name*/) {
+bool IndexWriter::testPoint(const char* name) {
   return true;
 }
 

@@ -71,7 +71,7 @@ CL_NS_DEF(index)
 
         if (writeLock != NULL) {
           writeLock->release();  // release write lock
-          writeLock = NULL;
+          _CLDELETE(writeLock);
         }
       }
       else
@@ -88,9 +88,10 @@ CL_NS_DEF(index)
 
       if (writeLock == NULL) {
         LuceneLock* writeLock = _directory->makeLock(IndexWriter::WRITE_LOCK_NAME);
-        if (!writeLock->obtain(IndexWriter::WRITE_LOCK_TIMEOUT)){ // obtain write lock
+        if (!writeLock->obtain(IndexWriter::WRITE_LOCK_TIMEOUT)) { // obtain write lock
+          string message = string("Index locked for write: ") + writeLock->getObjectName();
           _CLDELETE(writeLock);
-          _CLTHROWA(CL_ERR_LockObtainFailed, (string("Index locked for write: ") + writeLock->getObjectName()).c_str());
+          _CLTHROWA(CL_ERR_LockObtainFailed, message.c_str());
         }
         this->writeLock = writeLock;
 
@@ -99,7 +100,7 @@ CL_NS_DEF(index)
         if (SegmentInfos::readCurrentVersion(_directory) > segmentInfos->getVersion()) {
           stale = true;
           this->writeLock->release();
-          this->writeLock = NULL;
+          _CLDELETE(writeLock);
           _CLTHROWA(CL_ERR_StaleReader, "IndexReader out of date and no longer valid for delete, undelete, or setNorm operations");
         }
       }

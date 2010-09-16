@@ -30,6 +30,7 @@ SET(test_files ./tests.cpp
 ./document/TestDocument.cpp
 ./document/TestNumberTools.cpp
 ./store/TestStore.cpp
+./store/MockRAMDirectory.cpp
 ./search/TestBoolean.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
@@ -49,6 +50,7 @@ SET(test_files ./tests.cpp
 ./index/TestReuters.cpp
 ./util/TestPriorityQueue.cpp
 ./util/TestBitSet.cpp
+./util/TestStringBuffer.cpp
 ./util/English.cpp
 ${test_HEADERS}
 )
@@ -196,3 +198,15 @@ ENDIF ( ENABLE_COMPILE_TESTS )
 
 ############################
 
+IF ( BUILD_STATIC_LIBRARIES )
+PROJECT(clucene-test-static)
+
+ADD_EXECUTABLE(cl_test-static EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} )
+
+IF ( UNIX )
+	TARGET_LINK_LIBRARIES(cl_test-static clucene-core-static clucene-shared-static pthread ${EXTRA_LIBS})
+ELSE ()
+	TARGET_LINK_LIBRARIES(cl_test-static clucene-core-static clucene-shared-static ${EXTRA_LIBS})
+ENDIF ( UNIX )
+
+ENDIF ( BUILD_STATIC_LIBRARIES )

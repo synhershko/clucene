@@ -995,6 +995,7 @@ void DocumentsWriter::clearBufferedDeletes() {
   DocumentsWriter::TermNumMapType::iterator term = bufferedDeleteTerms->begin();
   while ( term != bufferedDeleteTerms->end() ){
     Term* t = term->first;
+    _CLDELETE(term->second);
     bufferedDeleteTerms->erase(term);
     _CLDECDELETE(t);
     term = bufferedDeleteTerms->begin();
