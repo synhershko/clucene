@@ -355,12 +355,16 @@ CL_NS_DEF(util)
 
   TCHAR StringBuffer::charAt(size_t pos) {
     if (pos >= bufferLength) {
+      throw std::out_of_range("pos is not in string");
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is not in string"));
     }
     return buffer[pos];
   }
 
   void StringBuffer::insert(const size_t pos, TCHAR chr) {
     if (pos > len) {
+      throw std::out_of_range("pos is larger than string len");
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is larger than string len"));
     }
 
     growBuffer(len + 1, 0);
@@ -371,8 +375,8 @@ CL_NS_DEF(util)
 
   void StringBuffer::insert(const size_t pos, const TCHAR* chrs, size_t length) {
     if (pos >= len) {
-      //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is larger than string len"));
-      return;
+      throw std::out_of_range("pos is larger than string len");
+      //_CLTHROWA(CL_ERR_IndexOutOfBounds, "pos is larger than string len");
     }
 
     if (length == -1) {
@@ -382,15 +386,15 @@ CL_NS_DEF(util)
     if (length > 0) {
       growBuffer(len + length, 0);
       memmove(&buffer[pos + length], &buffer[pos], sizeof(TCHAR) * (len - pos));
-      _tcsncpy(&buffer[pos], chrs, sizeof(TCHAR) * (length - 1));
+      memcpy(&buffer[pos], chrs, sizeof(TCHAR) * (length));
       len += length;
     }
   }
 
   void StringBuffer::deleteCharAt(size_t pos) {
     if (pos >= len) {
+      throw std::out_of_range("pos is larger than string len");
       //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("pos is larger than string len"));
-      return;
     }
 
     memmove(&buffer[pos], &buffer[pos + 1], sizeof(TCHAR) * (len - pos));
@@ -400,8 +404,8 @@ CL_NS_DEF(util)
 
   void StringBuffer::deleteChars(size_t start, size_t end) {
     if (start > end || end > bufferLength) {
+      throw std::out_of_range("start/end is not in string");
       //_CLTHROWA(CL_ERR_IndexOutOfBounds, _T("start/end is not in string"));
-      return;
     }
 
     memmove(&buffer[start], &buffer[end], sizeof(TCHAR) * (len - end));
