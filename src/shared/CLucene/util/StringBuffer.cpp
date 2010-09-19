@@ -8,6 +8,7 @@
 #include "StringBuffer.h"
 #include "Misc.h"
 #include <assert.h>
+#include <stdexcept>
 
 CL_NS_DEF(util)
 
