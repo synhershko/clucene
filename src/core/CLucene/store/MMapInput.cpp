@@ -11,6 +11,19 @@
 #include "_MMap.h"
 #include "CLucene/util/Misc.h"
 
+#include <fcntl.h>
+#ifdef _CL_HAVE_IO_H
+	#include <io.h>
+#endif
+#ifdef _CL_HAVE_SYS_STAT_H
+	#include <sys/stat.h>
+#endif
+#ifdef _CL_HAVE_UNISTD_H
+	#include <unistd.h>
+#endif
+#ifdef _CL_HAVE_DIRECT_H
+	#include <direct.h>
+#endif
 #ifdef _CL_HAVE_SYS_MMAN_H
 	#include <sys/mman.h>
 #endif
@@ -19,9 +32,9 @@
 #endif
 
 #if defined(_CL_HAVE_FUNCTION_MAPVIEWOFFILE)
-	typedef int HANDLE;
+    typedef int HANDLE;
 	
-	#define GENERIC_READ                     (0x80000000L)
+    #define GENERIC_READ                     (0x80000000L)
     #define FILE_SHARE_READ                 0x00000001  
     #define OPEN_EXISTING       3
     #define PAGE_READONLY          0x02     
