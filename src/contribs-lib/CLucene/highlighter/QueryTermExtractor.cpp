@@ -40,7 +40,7 @@ CL_NS_USE(index)
 
 		// Return extracted terms
 		WeightedTerm** ret = _CL_NEWARRAY(WeightedTerm*,terms.size()+1);
-		terms.toArray(ret, true);
+		terms.toArray_nullTerminated(ret);
 
 		return ret;
 	}
@@ -95,7 +95,7 @@ CL_NS_USE(index)
   	   
 		// Return extracted terms
 		WeightedTerm** ret = _CL_NEWARRAY(WeightedTerm*,terms.size()+1);
-		terms.toArray(ret, true);
+		terms.toArray_nullTerminated(ret);
 
 		return ret;
   	}

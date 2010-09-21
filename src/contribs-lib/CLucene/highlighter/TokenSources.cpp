@@ -158,7 +158,7 @@ TokenStream* TokenSources::getTokenStream(TermPositionVector* tpv, bool tokenPos
 			tokensInOriginalOrder = _CL_NEWARRAY(Token*,unsortedTokens->size()+1);
 		}
 		//the list has already sorted our items //todo:check that this is true...
-		unsortedTokens->toArray(tokensInOriginalOrder, true);
+		unsortedTokens->toArray_nullTerminated(tokensInOriginalOrder);
 		
 		return _CLNEW StoredTokenStream(tokensInOriginalOrder,unsortedTokens->size());
     }else
