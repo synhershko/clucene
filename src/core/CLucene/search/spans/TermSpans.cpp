@@ -6,6 +6,9 @@
  ------------------------------------------------------------------------------*/
 #include <climits>
 #include "CLucene/_ApiHeader.h"
+
+#include <limits.h>
+
 #include "CLucene/index/Terms.h"
 #include "CLucene/index/Term.h"
 #include "CLucene/util/StringBuffer.h"
