@@ -488,6 +488,7 @@ void testMoreMerges(CuTest * tc)  {
     }
     assertEquals(22, reader->numDocs());
     reader->close();
+    _CLLDELETE( reader );
 
     writer = newWriter(dir, &an, false);
     writer->setMaxBufferedDocs(6);
@@ -501,6 +502,7 @@ void testMoreMerges(CuTest * tc)  {
     assertEquals(1025, writer->docCount());
     assertEquals(1000, writer->getDocCount(0));
     writer->close();
+    _CLLDELETE( writer );
 
     // make sure the index is correct
     verifyNumDocs(tc, dir, 1025);
@@ -557,6 +559,7 @@ void testHangOnClose(CuTest * tc) {
     writer->setMergeFactor(4);
     writer->setUseCompoundFile(false);
     writer->setMergeScheduler(_CLNEW SerialMergeScheduler());
+
 
     ValueArray<Directory*> dirs(1);
     dirs[0] = dir;
