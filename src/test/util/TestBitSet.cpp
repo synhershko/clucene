@@ -135,6 +135,8 @@ void doTestWriteRead(CuTest* tc, int n) {
         // compare bit vectors with bits set incrementally
         CLUCENE_ASSERT(doCompare(bv,compare));
     }
+
+    _CLLDECDELETE( d );
 }
 
 /**
@@ -177,6 +179,7 @@ void doTestDgaps(CuTest* tc, int size, int count1, int count2) {
     bv->write(d, "TESTBV");
   }
   _CLLDELETE(bv);
+  _CLLDECDELETE( d );
 }
 
 /**
@@ -203,6 +206,8 @@ void doTestBitAtEndOfBitSet(CuTest* tc, int size, int pos) {
   _CLLDELETE(bv);
   bv = _CLNEW BitSet(d, "TESTBV");
   CLUCENE_ASSERT(bv->get(pos));
+  _CLLDELETE( bv );
+  _CLLDECDELETE( d );
 }
 
 void testBitAtEndOfBitSet(CuTest* tc) {
