@@ -102,7 +102,7 @@ public:
     if ( length == newSize ) return;
 
     if ( deleteValues ){
-      for ( size_t i=length;i<newSize;i++ ){
+      for ( size_t i=newSize;i<length;i++ ){
         deleteValue(values[i]);
       }
     }
