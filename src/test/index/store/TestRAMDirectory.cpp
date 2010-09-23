@@ -49,22 +49,22 @@ void testRAMDirectorySetUp (CuTest *tc) {
         CuFail(tc, _T("Not enough space in indexDir buffer"));
 
     sprintf(indexDir, "%s/RAMDirIndex", cl_tempDir);
-    
-    IndexWriter * writer  = new IndexWriter(indexDir, new WhitespaceAnalyzer(), true);
+    WhitespaceAnalyzer analyzer;
+    IndexWriter * writer  = new IndexWriter(indexDir, &analyzer, true);
 
     // add some documents
-    Document doc;
     TCHAR * text;
     for (int i = 0; i < docsToAdd; i++) {
+      Document doc;
       text = English::IntToEnglish(i);
       doc.add(* new Field(_T("content"), text, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
       writer->addDocument(&doc);
-      doc.clear();
       _CLDELETE_ARRAY(text);
     }
 
     CuAssertEquals(tc, docsToAdd, writer->docCount(), _T("document count"));
     writer->close();
+    _CLDELETE( writer );
 }
 
 // BK> all test functions are the same except RAMDirectory constructor, so shared code moved here
@@ -101,6 +101,7 @@ void testRAMDirectory (CuTest *tc) {
 
     // close the underlaying directory
     dir->close();
+    _CLDELETE( dir );
 
     checkDir(tc, ramDir);
 
@@ -124,14 +125,13 @@ static int docsPerThread = 40;
 _LUCENE_THREAD_FUNC(indexDocs, _data) {
 
     ThreadData * data = (ThreadData *)_data;
-    Document doc;
     int cnt = 0;
     TCHAR * text;
     for (int j=1; j<docsPerThread; j++) {
+        Document doc;
         text = English::IntToEnglish(data->num*docsPerThread+j);
         doc.add(*new Field(_T("sizeContent"), text, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
         data->writer->addDocument(&doc);
-        doc.clear();
         _CLDELETE_ARRAY(text);
         {
             SCOPED_LOCK_MUTEX(data->dir->THIS_LOCK);
@@ -144,9 +144,8 @@ _LUCENE_THREAD_FUNC(indexDocs, _data) {
 void testRAMDirectorySize(CuTest * tc)  {
       
     MockRAMDirectory * ramDir = _CLNEW MockRAMDirectory(indexDir);
-    IndexWriter * writer;
-    
-    writer  = _CLNEW IndexWriter(ramDir, new WhitespaceAnalyzer(), false);
+    WhitespaceAnalyzer analyzer;
+    IndexWriter * writer = _CLNEW IndexWriter(ramDir, &analyzer, false);
     writer->optimize();
     
     CuAssertTrue(tc, ramDir->sizeInBytes == ramDir->getRecomputedSizeInBytes(), _T("RAMDir size"));
@@ -211,7 +210,7 @@ CuSuite *testRAMDirectory(void)
     SUITE_ADD_TEST(suite, testRAMDirectory);
     SUITE_ADD_TEST(suite, testRAMDirectoryString);
     SUITE_ADD_TEST(suite, testRAMDirectorySize);
-
+ 
     SUITE_ADD_TEST(suite, testRAMDirectoryTearDown);
 
     return suite;
