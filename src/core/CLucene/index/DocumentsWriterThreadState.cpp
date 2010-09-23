@@ -528,7 +528,7 @@ void DocumentsWriter::ThreadState::trimFields() {
       newSize = 1;
     else
       newSize = (int32_t) (1.5*maxPostingsVectors);
-    postingsVectors.resize(newSize);
+    postingsVectors.resize(newSize, true);
   }
 }
 
@@ -954,7 +954,7 @@ DocumentsWriter::PostingVector* DocumentsWriter::ThreadState::FieldData::addNewV
       newSize = 2;
     else
       newSize = (int32_t) (1.5*threadState->postingsVectors.length);
-    threadState->postingsVectors.resize(newSize);
+    threadState->postingsVectors.resize(newSize, true);
   }
 
   threadState->p->vector = threadState->postingsVectors[postingsVectorsUpto];
