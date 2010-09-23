@@ -23,9 +23,9 @@ CL_NS_DEF(index)
 
   void DirectoryIndexReader::doClose() {
     if(closeDirectory && _directory){
-      _directory->close();
-    	_CLDECDELETE(_directory);
+        _directory->close();
     }
+    _CLDECDELETE(_directory);
   }
 
   void DirectoryIndexReader::doCommit() {
