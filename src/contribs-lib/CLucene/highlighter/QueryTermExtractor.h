@@ -40,13 +40,15 @@ class CLUCENE_CONTRIBS_EXPORT QueryTermExtractor
 	}
 public:
 
-	/**
-	 * Extracts all terms texts of a given Query into an array of WeightedTerms
-	 *
-	 * @param query      Query to extract term texts from
-	 * @return an array of the terms used in a query, plus their weights.
-	 */
-	static WeightedTerm** getTerms(const Query *query);
+    /**
+     * Extracts all terms texts of a given Query into an returned array of WeightedTerms
+     *
+     * @param query      Query to extract term texts from
+     * @param prohibited <code>true</code> to extract "prohibited" terms, too
+     * @param fieldName field name used for filtering query terms, MUST be interned prior to this call
+     * @return an array of the terms used in a query, plus their weights.Memory owned by the caller
+     */
+	static WeightedTerm** getTerms(const Query *query, bool prohibited = false, const TCHAR* fieldName = NULL);
 
 	/**
 	 * Extracts all terms texts of a given Query into an array of WeightedTerms
@@ -57,23 +59,20 @@ public:
 	 * @param fieldName the field on which Inverse Document Frequency (IDF) calculations are based
 	 * @return an array of the terms used in a query, plus their weights.
 	 */
-	 static WeightedTerm** getIdfWeightedTerms(const Query* query, CL_NS(index)::IndexReader* reader, const TCHAR* fieldName);
+	static WeightedTerm** getIdfWeightedTerms(const Query* query, CL_NS(index)::IndexReader* reader, const TCHAR* fieldName);
 
-	/**
-	 * Extracts all terms texts of a given Query into an array of WeightedTerms
-	 *
-	 * @param query      Query to extract term texts from
-	 * @param prohibited <code>true</code> to extract "prohibited" terms, too
+    /**
+     * Extracts all terms texts of a given Query into given array of WeightedTerms
+     *
+     * @param query      Query to extract term texts from
+     * @param prohibited <code>true</code> to extract "prohibited" terms, too
+     * @param fieldName field name used for filtering query terms, MUST be interned prior to this call
      * @return an array of the terms used in a query, plus their weights.Memory owned by the caller
      */
-	static WeightedTerm** getTerms(const Query * query, bool prohibited);
+	static void getTerms(const Query * query, WeightedTermList*, bool prohibited = false, const TCHAR* fieldName = NULL);
 
-
-	static void getTerms(const Query * query, WeightedTermList* terms,bool prohibited);
-	static void getTermsFromBooleanQuery(const BooleanQuery * query, WeightedTermList* terms, bool prohibited);
-	static void getTermsFromPhraseQuery(const PhraseQuery * query, WeightedTermList* terms);
-	static void getTermsFromTermQuery(const TermQuery * query, WeightedTermList* terms);
-//	static void getTermsFromSpanNearQuery(SpanNearQuery* query, WeightedTermList* terms);
+	static void getTermsFromBooleanQuery(const BooleanQuery * query, WeightedTermList* terms, bool prohibited, const TCHAR* fieldName);
+// 	static void getTermsFromFilteredQuery(const FilteredQuery * query, WeightedTermList* terms);
 };
 
 CL_NS_END2
