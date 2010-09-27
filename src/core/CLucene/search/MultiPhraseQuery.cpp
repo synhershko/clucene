@@ -220,11 +220,11 @@ Query* MultiPhraseQuery::rewrite(IndexReader* /*reader*/) {
   }
 }
 
-void MultiPhraseQuery::extractTerms( TermSet * termset )
+void MultiPhraseQuery::extractTerms( TermSet * termset ) const
 {
     for( size_t i = 0; i < termArrays->size(); i++ )
     {
-        ArrayBase<Term*> * terms = termArrays->at( i ); 
+        ArrayBase<Term*> * terms = termArrays->at( i );
 	    for( size_t j=0; j < terms->length; j++ )
         {
             Term * pTerm = terms->values[ j ];

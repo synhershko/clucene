@@ -125,7 +125,7 @@ Weight* Query::weight(Searcher* searcher){
     return weight;
 }
 
-void Query::extractTerms( TermSet * termset )
+void Query::extractTerms( TermSet * termset ) const
 {
 	_CLTHROWA( CL_ERR_UnsupportedOperation,"UnsupportedOperationException: Query::extractTerms" );
 }
