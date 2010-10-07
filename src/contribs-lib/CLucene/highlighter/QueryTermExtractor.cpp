@@ -57,6 +57,7 @@ CL_NS_USE(index)
                 Term * term = (Term *)(*iter);
                 if ( fieldName == NULL || term->field() == fieldName )
                     terms->insert(_CLNEW WeightedTerm(query->getBoost(), term->text()));
+                _CLLDECDELETE( term );
             }
         }
 	}
