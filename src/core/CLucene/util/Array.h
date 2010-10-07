@@ -63,30 +63,30 @@ public:
 	    return ret;
 	}
 
-	ArrayBase(){
-		values = NULL;
-		length = 0;
-	}
-	ArrayBase(T* values, size_t length){
-		this->values = values;
-		this->length = length;
-	}
-	ArrayBase(size_t length){
-		this->values = (T*)malloc(sizeof(T)*length);
-		this->length = length;
-		if ( length > 0 ) memset(this->values,0,sizeof(T)*length);
+    ArrayBase(const size_t initialLength = 0)
+        : values(NULL), length(initialLength)
+    {
+        if (initialLength > 0)
+        {
+            this->values = (T*)malloc(sizeof(T)*length);
+            memset(this->values,0,sizeof(T)*length);
+        }
+    }
+	ArrayBase(T* _values, const size_t _length)
+        : values(_values), length(_length)
+    {
 	}
 	virtual ~ArrayBase(){
 	}
 
-	const T& operator[](size_t _Pos) const
+	const T& operator[](const size_t _Pos) const
 	{
 		if (length <= _Pos){
 			_CLTHROWA(CL_ERR_IllegalArgument,"vector subscript out of range");
 		}
 		return (*(values + _Pos));
 	}
-	T& operator[](size_t _Pos)
+	T& operator[](const size_t _Pos)
 	{
 		if (length <= _Pos){
 			_CLTHROWA(CL_ERR_IllegalArgument,"vector subscript out of range");
