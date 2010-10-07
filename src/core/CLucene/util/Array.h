@@ -98,26 +98,41 @@ public:
   * Resize the array
   * @param deleteValues if shrinking, delete the values that are lost.
   */
-  void resize(size_t newSize, bool deleteValues=false){
+  void resize(const size_t newSize, const bool deleteValues=false){
     if ( length == newSize ) return;
 
-    if ( deleteValues ){
-      for ( size_t i=length;i<newSize;i++ ){
-        deleteValue(values[i]);
-      }
+    if ( values == NULL )
+    {
+        values = (T*)malloc(sizeof(T)*newSize);
+        memset(values,0,sizeof(T) * newSize);
+        length = newSize;
+        return;
     }
-    if ( newSize == 0 ){
-      free(values);
-      values = NULL;
-    }else{
-      if ( values == NULL ){
-		    values = (T*)malloc(sizeof(T)*newSize);
-      }else{
+
+    if (length < newSize)
+    {
         values = (T*)realloc(values, sizeof(T) * newSize);
-      }
+        memset(values + length,0,sizeof(T) * (newSize-length));
     }
-    if ( newSize > length )
-      memset(values + length,0,sizeof(T) * (newSize-length));
+    else // length > newSize, including newSize == 0
+    {
+        if ( deleteValues ){
+            for ( size_t i=newSize;i<length;i++ ){
+                deleteValue(values[i]);
+            }
+        }
+
+        if ( newSize == 0 )
+        {
+            free(values);
+            values = NULL;
+        }else{
+            // TODO: alternatively, we could store the actual array length without really shrinking it and
+            // by that save the deallocation process + possibly another realloc later
+            values = (T*)realloc(values, sizeof(T) * newSize);
+        }
+    }
+    
     length = newSize;
   }
 };
