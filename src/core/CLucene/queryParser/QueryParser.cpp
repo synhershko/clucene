@@ -358,7 +358,7 @@ Query* QueryParser::getFieldQuery(const TCHAR* _field, TCHAR* queryText) {
         BooleanQuery* q = _CLNEW BooleanQuery(true);
         for(size_t i=0; i<v.size(); i++ ){
           Term* tm = _CLNEW Term(_field, v.at(i)->termBuffer());
-          q->add(_CLNEW TermQuery(tm),BooleanClause::SHOULD);
+          q->add(_CLNEW TermQuery(tm), true, BooleanClause::SHOULD);
           _CLDECDELETE(tm);
         }
         return q;
