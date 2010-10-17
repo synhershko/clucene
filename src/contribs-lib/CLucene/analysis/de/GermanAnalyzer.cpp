@@ -20,14 +20,14 @@ CL_NS_USE2(analysis,standard)
 
   const TCHAR* GermanAnalyzer_GERMAN_STOP_WORDS[] = {
     _T("einer"), _T("eine"), _T("eines"), _T("einem"), _T("einen"),
-    _T("der"), _T("die"), _T("das"), _T("dass"), _T("daﬂ"),
+    _T("der"), _T("die"), _T("das"), _T("dass"), _T("da√ü"),
     _T("du"), _T("er"), _T("sie"), _T("es"),
     _T("was"), _T("wer"), _T("wie"), _T("wir"),
     _T("und"), _T("oder"), _T("ohne"), _T("mit"),
     _T("am"), _T("im"),_T("in"), _T("aus"), _T("auf"),
     _T("ist"), _T("sein"), _T("war"), _T("wird"),
     _T("ihr"), _T("ihre"), _T("ihres"),
-    _T("als"), _T("f¸r"), _T("von"), _T("mit"),
+    _T("als"), _T("f√ºr"), _T("von"), _T("mit"),
     _T("dich"), _T("dir"), _T("mich"), _T("mir"),
     _T("mein"), _T("sein"), _T("kein"),
     _T("durch"), _T("wegen"), _T("wird")
