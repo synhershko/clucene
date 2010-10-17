@@ -7,14 +7,14 @@ abschließender;abschliess
 abschließendes;abschliess
 abschließenden;abschliess
 
-Tisch;tisch
-Tische;tisch
-Tischen;tisch
+tisch;tisch
+tische;tisch
+tischen;tisch
 
-Haus;hau
-Hauses;hau
-Häuser;hau
-Häusern;hau
+haus;hau
+hauses;hau
+häuser;hau
+häusern;hau
 # here's a case where overstemming occurs, i.e. a word is 
 # mapped to the same stem as unrelated words:
 hauen;hau
@@ -22,11 +22,11 @@ hauen;hau
 # here's a case where understemming occurs, i.e. two related words
 # are not mapped to the same stem. This is the case with basically
 # all irregular forms:
-Drama;drama
-Dramen;dram
+drama;drama
+dramen;dram
 
 # replace "ß" with 'ss':
-Ausmaß;ausmass
+ausmaß;ausmass
 
 # fake words to test if suffixes are cut off:
 xxxxxe;xxxxx
