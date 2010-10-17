@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -52,13 +52,13 @@ SpanFirstQuery::SpanFirstQuerySpans::~SpanFirstQuerySpans()
 bool SpanFirstQuery::SpanFirstQuerySpans::next()
 {
     while( spans->next() )          // scan to next match
-    {                  
+    {
         if( spans->end() <= end_ )
             return true;
     }
     return false;
 }
- 
+
 bool SpanFirstQuery::SpanFirstQuerySpans::skipTo( int32_t target )
 {
     if( ! spans->skipTo( target ))
@@ -118,7 +118,7 @@ const char * SpanFirstQuery::getClassName()
 	return "SpanFirstQuery";
 }
 
-const char * SpanFirstQuery::getObjectName() const 
+const char * SpanFirstQuery::getObjectName() const
 {
 	return getClassName();
 }
@@ -138,7 +138,7 @@ const TCHAR * SpanFirstQuery::getField() const
     return match->getField();
 }
 
-void SpanFirstQuery::extractTerms( CL_NS(search)::TermSet * terms )
+void SpanFirstQuery::extractTerms( CL_NS(search)::TermSet * terms ) const
 {
     match->extractTerms( terms );
 }
@@ -151,13 +151,13 @@ CL_NS(search)::Query * SpanFirstQuery::rewrite( CL_NS(index)::IndexReader * read
     if( rewritten != match )
     {
         clone = (SpanFirstQuery *) this->clone();
-        _CLLDELETE( clone->match ); 
+        _CLLDELETE( clone->match );
         clone->match = rewritten;
     }
 
     if( clone )
         return clone;                        // some clauses rewrote
-    else 
+    else
         return this;                         // no clauses rewrote
 }
 
@@ -176,7 +176,7 @@ TCHAR* SpanFirstQuery::toString( const TCHAR* field ) const
 
     return buffer.toString();
 }
-  
+
 bool SpanFirstQuery::equals( Query * other ) const
 {
     if( this == other ) return true;

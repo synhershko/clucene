@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_BooleanQuery_
@@ -15,7 +15,7 @@ CL_CLASS_DEF(search,Weight)
 
 CL_NS_DEF(search)
 
-	
+
     // A Query that matches documents matching boolean combinations of other
     // queries, typically {@link TermQuery}s or {@link PhraseQuery}s.
 	class CLUCENE_EXPORT BooleanQuery:public Query {
@@ -27,7 +27,7 @@ CL_NS_DEF(search)
 
     /** Whether hit docs may be collected out of docid order. */
     static bool allowDocsOutOfOrder;
-	
+
 		bool disableCoord;
     protected:
 		int32_t minNrShouldMatch;
@@ -41,7 +41,7 @@ CL_NS_DEF(search)
 		~BooleanQuery();
 		const char* getObjectName() const;
 		static const char* getClassName();
-        
+
      /** Return the maximum number of clauses permitted, 1024 by default.
       * Attempts to add more than the permitted number of clauses cause {@link
       * TooManyClauses} to be thrown.*/
@@ -77,19 +77,19 @@ CL_NS_DEF(search)
 
 		void add(Query* query, const bool deleteQuery, BooleanClause::Occur occur);
 		void add(Query* query, BooleanClause::Occur occur) { add(query,false,occur); };
-		
+
 		/** Copies the clauses of this query into the array.
 		* The array must be at least as long as getClauseCount()
 		* If you want to use the clauses, make sure you null terminate it.
 		*/
 		void getClauses(BooleanClause** clauses) const;
-		
+
 		///@deprecated
 		_CL_DEPRECATED( getClauses(clauses) ) BooleanClause** getClauses() const;
-		
+
     /**
     * Give client code access to clauses.size() so we know how
-    * large the array returned by getClauses is. 
+    * large the array returned by getClauses is.
     */
     size_t getClauseCount() const;
 
@@ -102,17 +102,17 @@ CL_NS_DEF(search)
 	  Query* clone() const;
 
     /** Expert: adds all terms occurring in this query to the termset set. */
-    void extractTerms( TermSet * termset );
+    void extractTerms( TermSet * termset ) const;
 
 	  bool equals(Query* o) const;
 	  Similarity* getSimilarity( Searcher* searcher );
-		
+
 	  bool isCoordDisabled();
 	  void setCoordDisabled( bool disableCoord );
-		
+
 	  static bool getUseScorer14();
 	  static void setUseScorer14( bool use14 );
-      
+
     /**
      * Expert: Indicates whether hit docs may be collected out of docid
      * order.
@@ -128,26 +128,26 @@ CL_NS_DEF(search)
      * </p>
      *
      * <p>
-     * Specifics: By setting this option to true, calls to 
+     * Specifics: By setting this option to true, calls to
      * {@link HitCollector#collect(int,float)} might be
      * invoked first for docid N and only later for docid N-1.
      * Being static, this setting is system wide.
      * </p>
      */
     static void setAllowDocsOutOfOrder(bool allow);
-    
+
     /**
      * Whether hit docs may be collected out of docid order.
      * @see #setAllowDocsOutOfOrder(boolean)
      */
     static bool getAllowDocsOutOfOrder();
-    
-	 
+
+
   	/** Prints a user-readable version of this query. */
 	  TCHAR* toString(const TCHAR* field) const;
 	  /** Returns a hash code value for this object.*/
 	  size_t hashCode() const;
-		
+
 	  //internal
 	  int32_t getMinNrShouldMatch();
     friend class BooleanWeight;

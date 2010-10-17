@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_ConstantScoreQuery_
@@ -25,7 +25,7 @@ protected:
     Filter* filter;
 
 public:
-    /** 
+    /**
     * Constructs a new ConstantScoreQuery, and takes ownership of the filter object
     *
     * @memory this object consumes _filter
@@ -39,7 +39,7 @@ public:
     Query* rewrite(CL_NS(index)::IndexReader* reader);
 
     /** Constant score query does not return any terms */
-    void extractTerms( TermSet * termset );    
+    void extractTerms( TermSet * termset ) const;
 
 protected:
     Weight* _createWeight(Searcher* searcher);

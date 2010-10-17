@@ -183,7 +183,7 @@ Query* MatchAllDocsQuery::clone() const{
 	return _CLNEW MatchAllDocsQuery(*this);
 }
 
-void MatchAllDocsQuery::extractTerms( TermSet * termset )
+void MatchAllDocsQuery::extractTerms( TermSet * termset ) const
 {
 }
 

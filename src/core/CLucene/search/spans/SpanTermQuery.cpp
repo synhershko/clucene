@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -19,7 +19,7 @@ SpanTermQuery::SpanTermQuery( CL_NS(index)::Term * term )
 {
     this->term = _CL_POINTER( term );
 }
-	
+
 SpanTermQuery::SpanTermQuery( const SpanTermQuery& clone ) :
     SpanQuery( clone )
 {
@@ -41,12 +41,12 @@ const char* SpanTermQuery::getClassName()
 	return "SpanTermQuery";
 }
 
-const char* SpanTermQuery::getObjectName() const 
+const char* SpanTermQuery::getObjectName() const
 {
 	return getClassName();
 }
 
-size_t SpanTermQuery::hashCode() const 
+size_t SpanTermQuery::hashCode() const
 {
 	return Similarity::floatToByte(getBoost()) ^ term->hashCode() ^ 0xD23FE494;
 }
@@ -64,7 +64,7 @@ const TCHAR * SpanTermQuery::getField() const
     return term->field();
 }
 
-void SpanTermQuery::extractTerms( CL_NS(search)::TermSet * terms )
+void SpanTermQuery::extractTerms( CL_NS(search)::TermSet * terms ) const
 {
     if( term && terms->end() == terms->find( term ))
         terms->insert( _CL_POINTER( term ));

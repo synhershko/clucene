@@ -90,7 +90,7 @@ CL_NS_DEF(search)
   Query* PhraseQuery::clone() const{
 	  return _CLNEW PhraseQuery(*this);
   }
-  
+
   const TCHAR* PhraseQuery::getFieldName() const{ return field; }
 
   void PhraseQuery::setSlop(const int32_t s) { slop = s; }
@@ -269,7 +269,7 @@ CL_NS_DEF(search)
 	  return buffer.giveBuffer();
   }
 
-void PhraseQuery::extractTerms( TermSet * termset )
+void PhraseQuery::extractTerms( TermSet * termset ) const
 {
     for( size_t i = 0; i < terms->size(); i++ )
     {

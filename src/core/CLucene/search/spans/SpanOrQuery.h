@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_spans_SpanOrQuery_
@@ -12,10 +12,10 @@ CL_CLASS_DEF(index, IndexReader);
 
 CL_NS_DEF2( search, spans )
 
-/** 
+/**
  * Matches the union of its clauses.
  */
-class CLUCENE_EXPORT SpanOrQuery : public SpanQuery 
+class CLUCENE_EXPORT SpanOrQuery : public SpanQuery
 {
 private:
     class SpanQueue;
@@ -50,10 +50,10 @@ public:
         {
             SpanQuery * clause = *first;
             if( i == 0 )
-            {                               
+            {
                 setField( clause->getField() );
-            } 
-            else if( 0 != _tcscmp( clause->getField(), field )) 
+            }
+            else if( 0 != _tcscmp( clause->getField(), field ))
             {
                 _CLTHROWA( CL_ERR_IllegalArgument, "Clauses must have same field." );
             }
@@ -68,8 +68,8 @@ public:
     static const char * getClassName();
 	const char * getObjectName() const;
 
-    /** Return the clauses whose spans are matched. 
-     * CLucene: pointer to the internal array 
+    /** Return the clauses whose spans are matched.
+     * CLucene: pointer to the internal array
      */
     SpanQuery ** getClauses() const;
     size_t getClausesCount() const;
@@ -81,8 +81,8 @@ public:
      * @see #extractTerms(Set)
      */
 //    public Collection getTerms()
-  
-    void extractTerms( CL_NS(search)::TermSet * terms );
+
+    void extractTerms( CL_NS(search)::TermSet * terms ) const;
 
     CL_NS(search)::Query * rewrite( CL_NS(index)::IndexReader * reader );
 

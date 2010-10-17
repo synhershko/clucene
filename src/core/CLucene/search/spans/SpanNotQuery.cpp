@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -56,7 +56,7 @@ SpanNotQuery::SpanNotQuerySpans::~SpanNotQuerySpans()
     _CLLDELETE( includeSpans );
     _CLLDELETE( excludeSpans );
 }
- 
+
 bool SpanNotQuery::SpanNotQuerySpans::next()
 {
     if( moreInclude )                           // move to next include
@@ -85,7 +85,7 @@ bool SpanNotQuery::SpanNotQuerySpans::next()
     return moreInclude;
 }
 
-    
+
 bool SpanNotQuery::SpanNotQuerySpans::skipTo( int32_t target )
 {
     if( moreInclude )                           // skip include
@@ -102,7 +102,7 @@ bool SpanNotQuery::SpanNotQuerySpans::skipTo( int32_t target )
 
     while( moreExclude                          // while exclude is before
            && includeSpans->doc() == excludeSpans->doc()
-           && excludeSpans->end() <= includeSpans->start()) 
+           && excludeSpans->end() <= includeSpans->start())
     {
         moreExclude = excludeSpans->next();     // increment exclude
     }
@@ -169,7 +169,7 @@ const char * SpanNotQuery::getClassName()
 	return "SpanNotQuery";
 }
 
-const char * SpanNotQuery::getObjectName() const 
+const char * SpanNotQuery::getObjectName() const
 {
 	return getClassName();
 }
@@ -181,7 +181,7 @@ SpanQuery * SpanNotQuery::getInclude() const
 
 SpanQuery * SpanNotQuery::getExclude() const
 {
-    return exclude; 
+    return exclude;
 }
 
 const TCHAR * SpanNotQuery::getField() const
@@ -189,7 +189,7 @@ const TCHAR * SpanNotQuery::getField() const
     return include->getField();
 }
 
-void SpanNotQuery::extractTerms( CL_NS(search)::TermSet * terms )
+void SpanNotQuery::extractTerms( CL_NS(search)::TermSet * terms ) const
 {
     include->extractTerms( terms );
 }
@@ -197,7 +197,7 @@ void SpanNotQuery::extractTerms( CL_NS(search)::TermSet * terms )
 TCHAR* SpanNotQuery::toString( const TCHAR* field ) const
 {
     CL_NS(util)::StringBuffer buffer;
-    
+
     TCHAR * tmp;
 
     buffer.append( _T( "spanNot(" ));
@@ -212,7 +212,7 @@ TCHAR* SpanNotQuery::toString( const TCHAR* field ) const
 
     buffer.append( _T( ")" ));
     buffer.appendFloat(  getBoost(), 1 );
-    
+
     return buffer.toString();
 }
 
@@ -231,15 +231,15 @@ CL_NS(search)::Query * SpanNotQuery::rewrite( CL_NS(index)::IndexReader * reader
     SpanQuery * rewrittenExclude = (SpanQuery *) exclude->rewrite( reader );
     if( rewrittenExclude != exclude )
     {
-        if( ! clone ) 
+        if( ! clone )
             clone = (SpanNotQuery *) this->clone();
         _CLLDELETE( clone->exclude );
         clone->exclude = rewrittenExclude;
     }
 
-    if( clone ) 
+    if( clone )
         return clone;                        // some clauses rewrote
-    else       
+    else
         return this;                         // no clauses rewrote
 }
 
