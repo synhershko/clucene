@@ -7,16 +7,18 @@
 
 #include "test.h"
 #include "CLucene/util/CLStreams.h"
+#include "CLucene/analysis/Analyzers.h"
 #include "CLucene/analysis/de/GermanStemmer.h"
 #include "CLucene/analysis/de/GermanStemFilter.h"
 #include "CLucene/analysis/standard/StandardTokenizer.h"
 
 CL_NS_USE(util)
+CL_NS_USE(analysis)
 CL_NS_USE2(analysis,de)
 
   void check(CuTest* tc, const TCHAR* input, const TCHAR* expected) {
     StandardTokenizer* tokenStream = new StandardTokenizer(new StringReader(input));
-    GermanStemFilter filter(tokenStream);
+    GermanStemFilter filter(tokenStream, true);
     Token t;
     if (filter.next(&t) == NULL)
       CuFail(tc, _T("Token expected!"));
@@ -43,8 +45,9 @@ CL_NS_USE2(analysis,de)
         const TCHAR* pos = _tcsstr(buffer, _T(";"));
         TCHAR part0[1024], part1[1024];
         if (pos != NULL) {
-	  _tcsncpy(part0, buffer, pos - buffer);
-          _tcscpy(part1, pos++);
+          _tcsncpy(part0, buffer, pos - buffer);
+          _tcscpy(part1, pos + 1);
+          part0[pos - buffer] = '\0';
           check(tc, part0, part1);
         } else {
           check(tc, buffer, _T(""));
