@@ -11,7 +11,8 @@
 CL_NS_USE(util)
 CL_NS_USE2(analysis,de)
 
-    GermanStemmer::GermanStemmer() {
+    GermanStemmer::GermanStemmer() :
+      sb() {
     }
 
     TCHAR* GermanStemmer::stem(const TCHAR* term, size_t length) {
