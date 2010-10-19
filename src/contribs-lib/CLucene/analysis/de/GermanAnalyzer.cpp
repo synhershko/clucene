@@ -35,6 +35,19 @@ CL_NS_USE2(analysis,standard)
 
   CL_NS(util)::ConstValueArray<const TCHAR*> GermanAnalyzer::GERMAN_STOP_WORDS( GermanAnalyzer_GERMAN_STOP_WORDS, 48 );
 
+  class GermanAnalyzer::SavedStreams : public TokenStream {
+  public:
+      StandardTokenizer* tokenStream;
+      TokenStream* filteredTokenStream;
+
+      SavedStreams():tokenStream(NULL), filteredTokenStream(NULL)
+      {
+      }
+
+      void close(){}
+      Token* next(Token* token) {return NULL;}
+  };
+
   GermanAnalyzer::GermanAnalyzer() {
     exclusionSet = NULL;
     stopSet = _CLNEW CLTCSetList;
@@ -107,4 +120,28 @@ CL_NS_USE2(analysis,standard)
     result = _CLNEW GermanStemFilter(result, true, exclusionSet);
 
     return result;
+  }
+
+  TokenStream* GermanAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+  {
+    SavedStreams* streams = reinterpret_cast<SavedStreams*>(getPreviousTokenStream());
+
+    if (streams == NULL) {
+      streams = _CLNEW SavedStreams();
+      CL_NS(util)::BufferedReader* bufferedReader = reader->__asBufferedReader();
+
+      if ( bufferedReader == NULL )
+        streams->tokenStream = _CLNEW StandardTokenizer( _CLNEW CL_NS(util)::FilteredBufferedReader(reader, false), true );
+      else
+        streams->tokenStream = _CLNEW StandardTokenizer(bufferedReader);
+
+      streams->filteredTokenStream = _CLNEW StandardFilter(streams->tokenStream, true);
+      streams->filteredTokenStream = _CLNEW LowerCaseFilter(streams->filteredTokenStream, true);
+      streams->filteredTokenStream = _CLNEW StopFilter(streams->filteredTokenStream, true, stopSet);
+      streams->filteredTokenStream = _CLNEW GermanStemFilter(streams->filteredTokenStream, true, exclusionSet);
+      setPreviousTokenStream(streams);
+    } else
+      streams->tokenStream->reset(reader);
+
+    return streams->filteredTokenStream;
   }
