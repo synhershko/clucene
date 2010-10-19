@@ -16,18 +16,19 @@ SOURCE_GROUP("search" ./search/*)
 SOURCE_GROUP("search-spans" ./search/spans/*)
 SOURCE_GROUP("store" ./store/*)
 SOURCE_GROUP("util" ./util/*)
-SOURCE_GROUP("contribs-lib" ./contribs-lib/*)
-SOURCE_GROUP("contribs-lib\\analysis" ./contribs-lib/analysis/*)
-SOURCE_GROUP("contribs-lib\\analysis\\de" ./contribs-lib/analysis/de/*)
-
-file(GLOB_RECURSE test_HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
 
 IF ( BUILD_CONTRIBS_LIB )
-    SET(test_contribs-lib_files ./contribs-lib/analysis/de/TestGermanStemFilter.cpp)
+    SET(test_contribs_lib_files ./contribs-lib/analysis/de/TestGermanStemFilter.cpp)
     SET(EXTRA_LIBS ${EXTRA_LIBS} clucene-contribs-lib)
     ADD_DEFINITIONS(-DTEST_CONTRIB_LIBS)
     INCLUDE_DIRECTORIES(${clucene-test_SOURCE_DIR} ${clucene-contribs-lib_SOURCE_DIR})
-ENDIF ( BUILD_CONTRIBS_LIB ) 
+	
+    SOURCE_GROUP("contribs-lib" REGULAR_EXPRESSION ./contribs-lib/*)
+    SOURCE_GROUP("contribs-lib\\analysis" REGULAR_EXPRESSION ./contribs-lib/analysis/*)
+    SOURCE_GROUP("contribs-lib\\analysis\\de" FILES ${test_contribs_lib_files})
+ENDIF ( BUILD_CONTRIBS_LIB )
+
+file(GLOB_RECURSE test_HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
 
 SET(test_files ./tests.cpp
 ./CuTest.cpp
@@ -99,7 +100,7 @@ IF ( USE_SHARED_OBJECT_FILES )
 ENDIF ( USE_SHARED_OBJECT_FILES )
 
 #todo: do glob header and include header files for IDE.
-ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} ${test_contribs-lib_files})
+ADD_EXECUTABLE(cl_test EXCLUDE_FROM_ALL ${clucene_shared_Files} ${test_files} ${test_contribs_lib_files})
 
 #link the executable against the releavent clucene-shared library (if we aren't using the object files)
 IF ( NOT USE_SHARED_OBJECT_FILES )
