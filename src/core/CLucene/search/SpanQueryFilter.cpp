@@ -24,7 +24,7 @@ SpanQueryFilter::SpanQueryFilter( const CL_NS2(search,spans)::SpanQuery * query 
 SpanQueryFilter::SpanQueryFilter( CL_NS2(search,spans)::SpanQuery * query, bool bDeleteQuery )
 {
     this->query = query;
-    bDeleteQuery = bDeleteQuery; 
+    this->bDeleteQuery = bDeleteQuery; 
 }
 
 SpanQueryFilter::SpanQueryFilter( const SpanQueryFilter& copy )
