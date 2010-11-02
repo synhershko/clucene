@@ -218,7 +218,7 @@ TCHAR* NearSpansUnordered::toString() const
 
 void NearSpansUnordered::initList( bool next ) 
 {
-    for( list<SpansCell *>::iterator iCell = ordered.begin(); iCell != ordered.end(); iCell++ )
+    for( list<SpansCell *>::iterator iCell = ordered.begin(); more && iCell != ordered.end(); iCell++ )
     {
         if( next )
             more = (*iCell)->next();            // move to first entry
