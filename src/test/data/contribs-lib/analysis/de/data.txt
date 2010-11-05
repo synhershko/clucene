@@ -46,3 +46,6 @@ xxem;xxem
 xxer;xxer
 # -nd is not removed from words shorter than six characters:
 xxxnd;xxxnd
+
+# words where section sign will be used
+machen;mach

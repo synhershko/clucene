@@ -147,7 +147,7 @@ CL_NS_USE2(analysis,de)
             substCount =+ 2;
           }
           else if ( c == _T('c') && buffer.charAt( i + 1 ) == _T('h') ) {
-            buffer.setCharAt( i, _T('§') );
+            buffer.setCharAt( i, 0xa7 ); // section sign in UTF-16
             buffer.deleteCharAt( i + 1 );
             substCount++;
           }
@@ -189,7 +189,7 @@ CL_NS_USE2(analysis,de)
           buffer.setCharAt( i, 's' );
           buffer.insert( i + 1, _T("ch"), 2 );
         }
-        else if ( c == _T('§') ) {
+        else if ( c == 0xa7 ) { // section sign in UTF-16
           buffer.setCharAt( i, _T('c') );
           buffer.insert( i + 1, _T('h') );
         }
