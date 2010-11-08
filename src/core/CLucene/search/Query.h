@@ -11,7 +11,7 @@
 #include "CLucene/util/Array.h"
 #include "CLucene/index/Term.h"
 #include "CLucene/util/Equators.h"
-#include "CLucene/index/_Term.h"
+
 CL_CLASS_DEF(index,IndexReader)
 
 
