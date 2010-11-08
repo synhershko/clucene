@@ -72,7 +72,7 @@ public:
 };
 
 //map of thread<>ThreadLocals
-typedef CL_NS ( util ) ::CLMultiMap<const _LUCENE_THREADID_TYPE, ThreadLocals*,
+typedef CL_NS ( util ) ::CLMultiMap<_LUCENE_THREADID_TYPE, ThreadLocals*,
 	CL_NS ( util ) ::CLuceneThreadIdCompare,
 	CL_NS ( util ) ::Deletor::ConstNullVal<_LUCENE_THREADID_TYPE>,
 	CL_NS ( util ) ::Deletor::Object<ThreadLocals> > ThreadDataType;
