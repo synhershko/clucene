@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_Query_h
@@ -19,7 +19,7 @@ CL_NS_DEF(search)
     class Weight;
     class Similarity;
     class Searcher;
-    
+
     typedef std::set<CL_NS(index)::Term *, CL_NS(index)::Term_UnorderedCompare>  TermSet;
 
 	/** The abstract base class for queries.
@@ -41,7 +41,7 @@ CL_NS_DEF(search)
     <li>{@link queryParser.QueryParser QueryParser}
     </ul>
 	*/
-  class CLUCENE_EXPORT Query : public CL_NS(util)::NamedObject { 
+  class CLUCENE_EXPORT Query : public CL_NS(util)::NamedObject {
 	private:
 		// query boost factor
 		float_t boost;
@@ -89,14 +89,14 @@ CL_NS_DEF(search)
 
         /** Expert: adds all terms occurring in this query to the terms set. Only
          * works if this query is in its {@link #rewrite rewritten} form.
-         * 
+         *
          * @memory:
          * CLucene specific - all terms in the list have their reference counter
-         * increased by one. 
-         * 
+         * increased by one.
+         *
          * @throws CLuceneError with CL_ERR_UnsupportedOperation
          */
-        virtual void extractTerms( TermSet * termset );
+        virtual void extractTerms( TermSet * termset ) const;
 
         /** Expert: merges the clauses of a set of BooleanQuery's into a single
         * BooleanQuery.
@@ -115,7 +115,7 @@ CL_NS_DEF(search)
         virtual Query* clone() const = 0;
         _CL_DEPRECATED(getObjectName) const char* getQueryName() const;
 
-        /** Prints a query to a string, with <code>field</code> assumed to be the 
+        /** Prints a query to a string, with <code>field</code> assumed to be the
         * default field and omitted.
         * <p>The representation used is one that is supposed to be readable
         * by {@link org.apache.lucene.queryParser.QueryParser QueryParser}. However,
@@ -149,6 +149,6 @@ CL_NS_DEF(search)
         */
         virtual Weight* _createWeight(Searcher* searcher);
   };
-    
+
 CL_NS_END
 #endif

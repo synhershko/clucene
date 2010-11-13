@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -112,7 +112,7 @@ public:
         if (exists) {
             StringBuffer buf(100);
             buf.append(_T("ConstantScoreQuery("));
-            
+
             TCHAR* tmp = parentQuery->filter->toString();
             buf.append(tmp);
             _CLDELETE_LCARRAY(tmp);
@@ -127,14 +127,14 @@ public:
         } else {
             StringBuffer buf(100);
             buf.append(_T("ConstantScoreQuery("));
-            
+
             TCHAR* tmp = parentQuery->filter->toString();
             buf.append(tmp);
             _CLLDELETE(tmp);
 
             buf.append(_T(") doesn't match id "));
             buf.appendInt(doc);
-            
+
             result->setDescription(buf.getBuffer());
             result->setValue(0);
             result->setMatch(true);
@@ -160,7 +160,7 @@ Query* ConstantScoreQuery::rewrite(IndexReader* reader) {
     return this;
 }
 
-void ConstantScoreQuery::extractTerms( TermSet * termset )
+void ConstantScoreQuery::extractTerms( TermSet * termset ) const
 {
     // OK to not add any terms when used for MultiSearcher,
     // but may not be OK for highlighting
@@ -247,8 +247,8 @@ Query* ConstantScoreRangeQuery::rewrite(CL_NS(index)::IndexReader* reader) {
     const TCHAR* lowerSafe = lowerVal!=NULL?lowerVal:_T("");
     RangeFilter* rangeFilt = _CLNEW RangeFilter(fieldName,
         lowerSafe,
-        upperVal, 
-        (_tcscmp(lowerSafe, _T(""))==0)?false:includeLower, 
+        upperVal,
+        (_tcscmp(lowerSafe, _T(""))==0)?false:includeLower,
         upperVal==NULL?false:includeUpper);
     Query* q = _CLNEW ConstantScoreQuery(rangeFilt);
     q->setBoost(getBoost());
@@ -287,7 +287,7 @@ bool ConstantScoreRangeQuery::equals(Query* o) const {
 }
 
 // TODO: Complete this
-size_t ConstantScoreRangeQuery::hashCode() const 
+size_t ConstantScoreRangeQuery::hashCode() const
 {
     int32_t h = Similarity::floatToByte( getBoost() ) ^ Misc::thashCode( fieldName );
     // hashCode of "" is 0, so don't use that for null...

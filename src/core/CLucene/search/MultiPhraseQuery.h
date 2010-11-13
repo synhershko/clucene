@@ -38,7 +38,7 @@ private:
 
 protected:
     MultiPhraseQuery( const MultiPhraseQuery& clone );
-    
+
 public:
 	MultiPhraseQuery();
 	virtual ~MultiPhraseQuery();
@@ -92,7 +92,7 @@ public:
 	Query* rewrite(CL_NS(index)::IndexReader* reader);
 
     /** Expert: adds all terms occurring in this query to the terms set. */
-    void extractTerms( TermSet * termset );
+    void extractTerms( TermSet * termset ) const;
 
 protected:
 	Weight* _createWeight(Searcher* searcher);

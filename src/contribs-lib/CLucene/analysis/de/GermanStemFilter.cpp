@@ -33,7 +33,7 @@ CL_NS_USE2(analysis,de)
       } else if (exclusionSet != NULL && exclusionSet->find(t->termBuffer()) != exclusionSet->end()) { // Check the exclusiontable
         return t;
       } else {
-        TCHAR* s = stemmer->stem(t->termBuffer());
+        TCHAR* s = stemmer->stem(t->termBuffer(), t->termLength());
         // If not stemmed, dont waste the time creating a new token
         if (_tcscmp(s, t->termBuffer()) != 0) {
           t->setText(s);

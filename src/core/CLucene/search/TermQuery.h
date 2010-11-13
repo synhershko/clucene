@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_TermQuery_
@@ -23,16 +23,16 @@ CL_NS_DEF(search)
         Weight* _createWeight(Searcher* searcher);
         TermQuery(const TermQuery& clone);
 	public:
-		// Constructs a query for the term <code>t</code>. 
+		// Constructs a query for the term <code>t</code>.
 		TermQuery(CL_NS(index)::Term* t);
 		virtual ~TermQuery();
 
 		static const char* getClassName();
 		const char* getObjectName() const;
-	    
+
 		/** Returns the term of this query. */
 		CL_NS(index)::Term* getTerm(bool pointer=true) const;
-	    
+
 		/** Prints a user-readable version of this query. */
 		TCHAR* toString(const TCHAR* field) const;
 
@@ -44,7 +44,7 @@ CL_NS_DEF(search)
 		size_t hashCode() const;
 
         /** Expert: adds all terms occurring in this query to the termset set. */
-        void extractTerms( TermSet * termset );
+        void extractTerms( TermSet * termset ) const;
 
     };
 CL_NS_END

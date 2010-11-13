@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_PhraseQuery_
@@ -16,7 +16,7 @@ CL_CLASS_DEF(search,Scorer)
 CL_NS_DEF(search)
 	/** A Query that matches documents containing a particular sequence of terms.
 	* A PhraseQuery is built by QueryParser for input like <code>"new york"</code>.
-	* 
+	*
 	* <p>This query may be combined with other terms or queries with a {@link BooleanQuery}.
 	*/
 	class CLUCENE_EXPORT PhraseQuery: public Query {
@@ -30,7 +30,7 @@ CL_NS_DEF(search)
 	protected:
 		Weight* _createWeight(Searcher* searcher);
 		PhraseQuery(const PhraseQuery& clone);
-	public: 
+	public:
 		/** Constructs an empty phrase query. */
         PhraseQuery();
 		virtual ~PhraseQuery();
@@ -50,10 +50,10 @@ CL_NS_DEF(search)
 
 		<p>The slop is zero by default, requiring exact matches.*/
         void setSlop(const int32_t s);
-        
+
 		/** Returns the slop.  See setSlop(). */
         int32_t getSlop() const;
-        
+
 		/**
 		* Adds a term to the end of the query phrase.
 		* The relative position of the term is the one immediately after the last term added.
@@ -65,7 +65,7 @@ CL_NS_DEF(search)
 		* The relative position of the term within the phrase is specified explicitly.
 		* This allows e.g. phrases with more than one term at the same position
 		* or phrases with gaps (e.g. in connection with stopwords).
-		* 
+		*
 		* @param term
 		* @param position
 		*/
@@ -79,29 +79,29 @@ CL_NS_DEF(search)
 		*/
 		void getPositions(CL_NS(util)::ValueArray<int32_t>& result) const;
 
-		//Returns the sum of squared weights 
+		//Returns the sum of squared weights
     float_t sumOfSquaredWeights(Searcher* searcher);
-        
+
 		//Normalizes the Weight
     void normalize(const float_t norm);
-    
+
     Scorer* scorer(CL_NS(index)::IndexReader* reader);
-    
+
     const TCHAR* getFieldName() const;
- 
+
 		/** Prints a user-readable version of this query. */
     TCHAR* toString(const TCHAR* f) const;
 
 		Query* clone() const;
 		bool equals(Query *) const;
-		
+
 		size_t hashCode() const;
 
 		const char* getObjectName() const;
 		static const char* getClassName();
 
         /** Expert: adds all terms occurring in this query to the terms set. */
-        void extractTerms( TermSet * termset );
+        void extractTerms( TermSet * termset ) const;
 	};
 CL_NS_END
 #endif

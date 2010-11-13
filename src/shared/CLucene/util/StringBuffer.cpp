@@ -375,7 +375,7 @@ CL_NS_DEF(util)
   }
 
   void StringBuffer::insert(const size_t pos, const TCHAR* chrs, size_t length) {
-    if (pos >= len) {
+    if (pos > len) {
       throw std::out_of_range("pos is larger than string len");
       //_CLTHROWA(CL_ERR_IndexOutOfBounds, "pos is larger than string len");
     }

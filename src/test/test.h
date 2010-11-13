@@ -75,6 +75,10 @@ CuSuite *testExtractTerms(void);
 CuSuite *testSpanQueries(void);
 CuSuite *testStringBuffer(void);
 
+#ifdef TEST_CONTRIB_LIBS
+CuSuite *testGermanAnalyzer(void);
+#endif
+
 class English{
 public:
     static void IntToEnglish(int32_t i, CL_NS(util)::StringBuffer* result);

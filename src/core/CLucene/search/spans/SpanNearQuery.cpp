@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -55,7 +55,7 @@ const char * SpanNearQuery::getClassName()
 	return "SpanNearQuery";
 }
 
-const char * SpanNearQuery::getObjectName() const 
+const char * SpanNearQuery::getObjectName() const
 {
 	return getClassName();
 }
@@ -81,17 +81,17 @@ const TCHAR * SpanNearQuery::getField() const
     return field;
 }
 
-int32_t SpanNearQuery::getSlop() const 
-{ 
-    return slop; 
+int32_t SpanNearQuery::getSlop() const
+{
+    return slop;
 }
 
 bool SpanNearQuery::isInOrder() const
-{ 
-    return inOrder; 
+{
+    return inOrder;
 }
 
-void SpanNearQuery::extractTerms( CL_NS(search)::TermSet * terms )
+void SpanNearQuery::extractTerms( CL_NS(search)::TermSet * terms ) const
 {
     for( size_t i = 0; i < clausesCount; i++ )
         clauses[ i ]->extractTerms( terms );
@@ -100,16 +100,16 @@ void SpanNearQuery::extractTerms( CL_NS(search)::TermSet * terms )
 CL_NS(search)::Query * SpanNearQuery::rewrite( CL_NS(index)::IndexReader * reader )
 {
     SpanNearQuery * clone = NULL;
- 
+
     for( size_t i = 0; i < clausesCount; i++ )
     {
         SpanQuery * c = clauses[ i ];
         SpanQuery * query = (SpanQuery *) c->rewrite( reader );
-        if( query != c ) 
+        if( query != c )
         {                     // clause rewrote: must clone
             if( clone == NULL )
                 clone = (SpanNearQuery *) this->clone();
-    
+
             _CLLDELETE( clone->clauses[ i ] );
             clone->clauses[ i ] = query;
         }
@@ -152,7 +152,7 @@ bool SpanNearQuery::equals( Query* other ) const
 	    return false;
 
 	SpanNearQuery * that = (SpanNearQuery *) other;
-    if( inOrder != that->inOrder 
+    if( inOrder != that->inOrder
         || slop != that->slop
         || getBoost() != that->getBoost()
         || 0 != _tcscmp( field, that->field ) )     // CLucene: java version does not compare field names
