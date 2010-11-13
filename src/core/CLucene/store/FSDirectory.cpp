@@ -486,7 +486,7 @@ void FSDirectory::FSIndexInput::readInternal(uint8_t* b, const int32_t len) {
   	}
     
     struct cl_stat_t fstat;
-		if ( fileStat(file,&fstat) != 0 && !(fstat.st_mode & S_IFDIR) ){
+		if ( fileStat(file,&fstat) == 0 && !(fstat.st_mode & S_IFDIR) ){
 	      char tmp[1024];
 	      _snprintf(tmp,1024,"%s not a directory", file);
 	      _CLTHROWA(CL_ERR_IO,tmp);
