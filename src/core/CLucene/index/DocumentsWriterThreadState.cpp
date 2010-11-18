@@ -515,7 +515,11 @@ void DocumentsWriter::ThreadState::trimFields() {
   for(size_t i=0;i<_parent->norms.length;i++) {
     BufferedNorms* n = _parent->norms[i];
     if (n != NULL && n->upto == 0)
+    {
+      if ( n!= NULL )
+        _CLLDELETE(n);
       _parent->norms.values[i] = NULL;
+    }
   }
 
   numAllFieldData = upto;
