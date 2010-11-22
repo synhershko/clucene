@@ -35,7 +35,7 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
-	CND_PRECONDITION(_tcslen(Value)>0 && _tcslen(Name)>0, "name and value cannot both be empty");
+	CND_PRECONDITION(_tcslen(Value)>0 || _tcslen(Name)>0, "name and value cannot both be empty");
 
 	/*
 	if (_config & INDEX_NO && _config & STORE_NO)
