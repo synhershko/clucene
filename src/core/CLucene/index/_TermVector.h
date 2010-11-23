@@ -76,7 +76,7 @@ public:
 */
 class TermVectorMapper; // Forward declaration
 
-class TermVectorsReader:LUCENE_BASE {
+class CLUCENE_EXPORT TermVectorsReader:LUCENE_BASE {
 public:
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_VERSION = 2);
 	LUCENE_STATIC_CONSTANT(uint8_t, STORE_POSITIONS_WITH_TERMVECTOR = 0x1);

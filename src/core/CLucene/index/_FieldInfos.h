@@ -72,7 +72,7 @@ class FieldInfo :LUCENE_BASE{
  *  be adding documents at a time, with no other reader or writer threads
  *  accessing this object.
  */
-class FieldInfos :LUCENE_BASE{
+class CLUCENE_EXPORT FieldInfos :LUCENE_BASE{
     //we now use internd field names, so we can use the voidCompare
 	//to directly compare the strings
 	typedef CL_NS(util)::CLHashMap<const TCHAR*,FieldInfo*,
