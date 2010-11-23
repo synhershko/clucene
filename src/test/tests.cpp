@@ -41,6 +41,7 @@ unittest tests[] = {
     {"extractterms",testExtractTerms},
     {"spanqueries",testSpanQueries},
     {"stringbuffer", testStringBuffer},
+    {"termvectorsreader",testTermVectorsReader},
 #ifdef TEST_CONTRIB_LIBS
     {"germananalyzer", testGermanAnalyzer},
 #endif

@@ -74,6 +74,7 @@ CuSuite *testBitSet(void);
 CuSuite *testExtractTerms(void);
 CuSuite *testSpanQueries(void);
 CuSuite *testStringBuffer(void);
+CuSuite *testTermVectorsReader(void);
 
 #ifdef TEST_CONTRIB_LIBS
 CuSuite *testGermanAnalyzer(void);
