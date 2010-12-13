@@ -217,7 +217,7 @@ public:
  *
  *
  **/
-class TermVectorMapper : LUCENE_BASE{
+class CLUCENE_EXPORT TermVectorMapper : LUCENE_BASE{
 private:
 	bool ignoringPositions;
 	bool ignoringOffsets;
@@ -284,7 +284,7 @@ public:
 	*
 	* @param documentNumber index of document currently being mapped
 	*/
-	void setDocumentNumber(const int32_t documentNumber);
+	virtual void setDocumentNumber(const int32_t documentNumber);
 };
 
 /**

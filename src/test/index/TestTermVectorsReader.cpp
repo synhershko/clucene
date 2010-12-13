@@ -264,7 +264,7 @@ CL_NS_USE(util);
       return documentNumber;
     }
 
-    void setDocumentNumber(int documentNumber) {
+    virtual void setDocumentNumber(const int32_t documentNumber) {
       this->documentNumber = documentNumber;
     }
   };
