@@ -319,6 +319,11 @@ public:
 	* @memory Caller is responsible for freeing up the returned object
 	*/
 	TermFreqVector* materializeVector();
+
+	void reset()
+	{
+		currentPosition = 0;
+	}
 };
 
 CL_NS_END
