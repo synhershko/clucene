@@ -41,6 +41,7 @@ SET(test_files ./tests.cpp
 ./document/TestDateTools.cpp
 ./document/TestDocument.cpp
 ./document/TestNumberTools.cpp
+./document/TestField.cpp
 ./store/TestStore.cpp
 ./store/MockRAMDirectory.cpp
 ./search/TestBoolean.cpp

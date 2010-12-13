@@ -14,6 +14,7 @@ unittest tests[] = {
     {"analysis", testanalysis},
     {"analyzers", testanalyzers},
     {"document", testdocument},
+    {"field", testField},
     {"numbertools", testNumberTools},
     {"debug", testdebug},
     {"ramdirectory", testRAMDirectory},
