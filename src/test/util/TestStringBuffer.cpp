@@ -67,19 +67,6 @@ void testStringBufferInsert(CuTest *tc) {
 
   sb.insert(7, _T(""));
   CuAssertStrEquals(tc,  _T(""), _T("test XaYYbcd"), sb.getBuffer());
-
-  try {
-    sb.insert(100, _T(""));
-    CuFail(tc, _T("expected CL_ERR_IndexOutOfBounds"));
-  } catch (CLuceneError& e) {
-    CuAssertIntEquals(tc, _T(""), e.number(), CL_ERR_IndexOutOfBounds);
-  } catch (std::out_of_range&) {
-    // as expected
-  } catch (...) {
-    CuFail(tc, _T("unexpected exception"));
-  }
-  
-  CuAssertStrEquals(tc,  _T(""), _T("test XaYYbcd"), sb.getBuffer());
 }
 
 void testStringBufferDelete(CuTest *tc) {
