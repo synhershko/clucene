@@ -18,16 +18,18 @@ CL_NS_USE(analysis)
 CL_NS_USE2(analysis,de)
 CL_NS_USE2(analysis,standard)
 
+  const TCHAR GermanAnalyzer_DASZ[] = { 0x64, 0x61, 0xdf };
+  const TCHAR GermanAnalyzer_FUER[] = { 0x66, 0xfc, 0x72 };
   const TCHAR* GermanAnalyzer_GERMAN_STOP_WORDS[] = {
     _T("einer"), _T("eine"), _T("eines"), _T("einem"), _T("einen"),
-    _T("der"), _T("die"), _T("das"), _T("dass"), _T("daß"),
+    _T("der"), _T("die"), _T("das"), _T("dass"), GermanAnalyzer_DASZ,
     _T("du"), _T("er"), _T("sie"), _T("es"),
     _T("was"), _T("wer"), _T("wie"), _T("wir"),
     _T("und"), _T("oder"), _T("ohne"), _T("mit"),
     _T("am"), _T("im"),_T("in"), _T("aus"), _T("auf"),
     _T("ist"), _T("sein"), _T("war"), _T("wird"),
     _T("ihr"), _T("ihre"), _T("ihres"),
-    _T("als"), _T("für"), _T("von"), _T("mit"),
+    _T("als"), GermanAnalyzer_FUER, _T("von"), _T("mit"),
     _T("dich"), _T("dir"), _T("mich"), _T("mir"),
     _T("mein"), _T("sein"), _T("kein"),
     _T("durch"), _T("wegen"), _T("wird")
