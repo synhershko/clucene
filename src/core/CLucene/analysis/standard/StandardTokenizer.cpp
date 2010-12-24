@@ -134,6 +134,9 @@ CL_NS_DEF2(analysis,standard)
   void StandardTokenizer::reset(Reader* _input) {
 	this->input = _input;
     if (rd->input==NULL) rd->input = _input->__asBufferedReader();
+    rdPos = -1;
+    tokenStart = -1;
+    rd->reset();
   }
 
   Token* StandardTokenizer::next(Token* t) {

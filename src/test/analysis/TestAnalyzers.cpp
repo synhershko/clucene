@@ -35,6 +35,31 @@
 	_CLDELETE(ts);
   }
 
+  void assertReusableAnalyzesTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
+      Reader* reader = _CLNEW StringReader(input);
+      TokenStream* ts = a->reusableTokenStream(_T("dummy"), reader );
+
+      const TCHAR* pos = output;
+      TCHAR buffer[80];
+      const TCHAR* last = output;
+      CL_NS(analysis)::Token t;
+      while( (pos = _tcsstr(pos+1, _T(";"))) != NULL ) {
+          int32_t len = (int32_t)(pos-last);
+          _tcsncpy(buffer,last,len);
+          buffer[len]=0;
+
+          CLUCENE_ASSERT(ts->next(&t)!=NULL);
+          CLUCENE_ASSERT( t.termLength() == _tcslen(buffer) );
+          CLUCENE_ASSERT(_tcscmp( t.termBuffer(), buffer) == 0 );
+
+          last = pos+1;
+      }
+      CLUCENE_ASSERT(ts->next(&t)==NULL); //Test failed, more fields than expected.
+
+      ts->close();
+      _CLLDELETE(reader);
+  }
+
   void testSimpleAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW SimpleAnalyzer();
 	assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
@@ -268,6 +293,8 @@
 
        //todo: check this
        assertAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
+       assertReusableAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
+       assertReusableAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
 
        _CLDELETE(a);
    }
@@ -442,6 +469,7 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testNull);
     SUITE_ADD_TEST(suite, testStop);
+    SUITE_ADD_TEST(suite, testStandardAnalyzer);
     //SUITE_ADD_TEST(suite, testPayloadCopy); // <- TODO: Finish Payload and remove asserts before enabling this test
 
     // Ported from TestPerFieldAnalzyerWrapper.java + 1 test of our own
