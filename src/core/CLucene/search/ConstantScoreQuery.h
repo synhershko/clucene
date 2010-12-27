@@ -55,6 +55,7 @@ public:
     size_t hashCode() const;
 
     const char* getObjectName() const;
+	static const char* getClassName(){ return "ConstantScoreQuery"; }
     Query* clone() const;
 
     friend class ConstantWeight;
@@ -112,6 +113,7 @@ public:
     size_t hashCode() const;
 
     const char* getObjectName() const;
+	static const char* getClassName(){ return "ConstantScoreRangeQuery"; }
     Query* clone() const;
 protected:
     ConstantScoreRangeQuery( const ConstantScoreRangeQuery& copy );

@@ -199,7 +199,7 @@ size_t SpanFirstQuery::hashCode() const
 
 Spans * SpanFirstQuery::getSpans( CL_NS(index)::IndexReader * reader )
 {
-    return new SpanFirstQuerySpans( this, reader );
+    return _CLNEW SpanFirstQuerySpans( this, reader );
 }
 
 CL_NS_END2
