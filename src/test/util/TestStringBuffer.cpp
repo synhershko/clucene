@@ -63,10 +63,22 @@ void testStringBufferInsert(CuTest *tc) {
   CuAssertStrEquals(tc, _T(""), _T("test Xabcd"), sb.getBuffer());
 
   sb.insert(7, _T("YY"));
-  CuAssertStrEquals(tc,  _T(""), _T("test XaYYbcd"), sb.getBuffer());
+  CuAssertStrEquals(tc, _T(""), _T("test XaYYbcd"), sb.getBuffer());
 
   sb.insert(7, _T(""));
-  CuAssertStrEquals(tc,  _T(""), _T("test XaYYbcd"), sb.getBuffer());
+  CuAssertStrEquals(tc, _T(""), _T("test XaYYbcd"), sb.getBuffer());
+
+  sb.insert(12, _T("ZZZ"));
+  CuAssertStrEquals(tc, _T(""), _T("test XaYYbcdZZZ"), sb.getBuffer());
+
+  sb.insert(15, _T('_'));
+  CuAssertStrEquals(tc, _T(""), _T("test XaYYbcdZZZ_"), sb.getBuffer());
+
+  sb.insert(0, _T('_'));
+  CuAssertStrEquals(tc, _T(""), _T("_test XaYYbcdZZZ_"), sb.getBuffer());
+
+  sb.insert(0, _T("123"));
+  CuAssertStrEquals(tc, _T(""), _T("123_test XaYYbcdZZZ_"), sb.getBuffer());
 }
 
 void testStringBufferDelete(CuTest *tc) {
@@ -76,6 +88,9 @@ void testStringBufferDelete(CuTest *tc) {
   CuAssertStrEquals(tc, _T(""), _T("testabcd"), sb.getBuffer());
 
   sb.deleteChars(4, 7);
+  CuAssertStrEquals(tc, _T(""), _T("testd"), sb.getBuffer());
+
+  sb.deleteChars(3, 3);
   CuAssertStrEquals(tc, _T(""), _T("testd"), sb.getBuffer());
 }
 
@@ -97,5 +112,5 @@ CuSuite *testStringBuffer(void) {
     SUITE_ADD_TEST(suite, testStringBufferDelete);
     SUITE_ADD_TEST(suite, testSubstringEquals);
 
-    return suite; 
+    return suite;
 }

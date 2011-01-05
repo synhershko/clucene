@@ -348,18 +348,17 @@ CL_NS_DEF(util)
   }
 
   void StringBuffer::setCharAt(size_t pos, const TCHAR chr) {
-    if (pos < bufferLength) {
-      buffer[pos] = chr;
-    }
+    CND_PRECONDITION (pos < len, "pos is not in string");
+    buffer[pos] = chr;
   }
 
   TCHAR StringBuffer::charAt(size_t pos) {
-    CND_PRECONDITION (pos < bufferLength, "pos is not in string");
+    CND_PRECONDITION (pos < len, "pos is not in string");
     return buffer[pos];
   }
 
   void StringBuffer::insert(const size_t pos, TCHAR chr) {
-    CND_PRECONDITION (pos < bufferLength, "pos is larger than string len");
+    CND_PRECONDITION (pos <= len, "pos is larger than string len");
     growBuffer(len + 1, 0);
     memmove(&buffer[pos + 1], &buffer[pos], sizeof(TCHAR) * (len - pos));
     buffer[pos] = chr;
@@ -367,7 +366,7 @@ CL_NS_DEF(util)
   }
 
   void StringBuffer::insert(const size_t pos, const TCHAR* chrs, size_t length) {
-    CND_PRECONDITION (pos < len, "pos is larger than string len");
+    CND_PRECONDITION (pos <= len, "pos is larger than string len");
 
     if (length == -1) {
       length = _tcslen(chrs);
@@ -390,11 +389,13 @@ CL_NS_DEF(util)
   }
 
   void StringBuffer::deleteChars(size_t start, size_t end) {
-    CND_PRECONDITION (start < end || end < bufferLength, "start/end is not in string");
+    CND_PRECONDITION (start <= end && end <= len, "start/end is not in string");
 
-    memmove(&buffer[start], &buffer[end], sizeof(TCHAR) * (len - end));
-    buffer[len - (end - start)] = _T('\0');
-    len -= end - start;
+    if (start < end) {
+      memmove(&buffer[start], &buffer[end], sizeof(TCHAR) * (len - end));
+      buffer[len - (end - start)] = _T('\0');
+      len -= end - start;
+    }
   }
 
   void StringBuffer::toLower() {
