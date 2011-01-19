@@ -56,6 +56,9 @@ public:
 			while (termPositions[i]!=NULL) {
 				if (termPositions[i]->next())
 					put(termPositions[i]);
+                else
+                    _CLDELETE( termPositions[ i ] );
+
 				++i;
 			}
 		}
