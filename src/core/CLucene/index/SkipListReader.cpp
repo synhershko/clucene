@@ -132,10 +132,11 @@ void MultiLevelSkipListReader::init(const int64_t _skipPointer, const int32_t df
 	memset(skipDoc,0,sizeof(int32_t) * maxNumberOfSkipLevels);
 	memset(numSkipped,0,sizeof(int32_t) * maxNumberOfSkipLevels);
 	memset(childPointer,0,sizeof(int64_t) * maxNumberOfSkipLevels);
-  if ( numberOfSkipLevels > 1 ){
-    for (int i=0;i<maxNumberOfSkipLevels-1;i++)
-      _CLDELETE(skipStream.values[i]);
-  }
+    if ( numberOfSkipLevels > 1 )
+    {
+        for (int i=1;i<maxNumberOfSkipLevels;i++)
+          _CLDELETE(skipStream.values[i]);
+    }
 	haveSkipped = false;
 }
 
