@@ -272,9 +272,9 @@ CL_NS_DEF(search)
       return this;                                // no clauses rewrote
   }
 
-    void BooleanQuery::extractTerms( TermSet * termset )
+    void BooleanQuery::extractTerms( TermSet * termset ) const
     {
-		for (size_t i = 0 ; i < clauses->size(); i++) 
+		for (size_t i = 0 ; i < clauses->size(); i++)
         {
             BooleanClause* clause = (*clauses)[i];
             clause->getQuery()->extractTerms( termset );

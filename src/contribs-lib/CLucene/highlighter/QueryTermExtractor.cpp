@@ -27,34 +27,39 @@
 CL_NS_DEF2(search,highlight)
 CL_NS_USE(index)
 
-	WeightedTerm** QueryTermExtractor::getTerms(const Query *query) 
-	{
-		WeightedTerm** ret = getTerms(query,false);
-		return ret;
-	}
-
-	WeightedTerm** QueryTermExtractor::getTerms(const Query * query, bool prohibited) 
+	WeightedTerm** QueryTermExtractor::getTerms(const Query * query, bool prohibited, const TCHAR* fieldName) 
 	{
 		WeightedTermList terms(false);
-		getTerms(query,&terms,prohibited);
+		getTerms(query,&terms,prohibited,fieldName);
 
 		// Return extracted terms
 		WeightedTerm** ret = _CL_NEWARRAY(WeightedTerm*,terms.size()+1);
-		terms.toArray(ret, true);
+		terms.toArray_nullTerminated(ret);
 
 		return ret;
 	}
 
-	void QueryTermExtractor::getTerms(const Query * query, WeightedTermList * terms,bool prohibited) 
+	void QueryTermExtractor::getTerms(const Query * query, WeightedTermList * terms, bool prohibited, const TCHAR* fieldName) 
 	{
 		if (query->instanceOf( BooleanQuery::getClassName() ))
-			getTermsFromBooleanQuery((BooleanQuery *) query, terms, prohibited);
-		else if (query->instanceOf( PhraseQuery::getClassName() ))
-			getTermsFromPhraseQuery((PhraseQuery *) query, terms);
-		else if (query->instanceOf( TermQuery::getClassName() ))
-			getTermsFromTermQuery((TermQuery *) query, terms);
-		//else if(query->instanceOf(_T("SpanNearQuery"))
-		//	getTermsFromSpanNearQuery((SpanNearQuery*) query, terms);
+        {
+			getTermsFromBooleanQuery((BooleanQuery *) query, terms, prohibited, fieldName);
+        }
+// FilteredQuery not implemented yet
+// 		else if (query->instanceOf( FilteredQuery::getClassName() ))
+// 			getTermsFromFilteredQuery((FilteredQuery *) query, terms);
+		else
+        {
+            TermSet nonWeightedTerms;
+            query->extractTerms(&nonWeightedTerms);
+            for (TermSet::iterator iter = nonWeightedTerms.begin(); iter != nonWeightedTerms.end(); iter++)
+            {
+                Term * term = (Term *)(*iter);
+                if ( fieldName == NULL || term->field() == fieldName )
+                    terms->insert(_CLNEW WeightedTerm(query->getBoost(), term->text()));
+                _CLLDECDELETE( term );
+            }
+        }
 	}
 
 	/**
@@ -69,7 +74,7 @@ CL_NS_USE(index)
   	WeightedTerm** QueryTermExtractor::getIdfWeightedTerms(const Query* query, IndexReader* reader, const TCHAR* fieldName)
   	{
   	    WeightedTermList terms(true);
-		getTerms(query,&terms,false);
+		getTerms(query,&terms,false,fieldName);
 
   	    int32_t totalNumDocs=reader->numDocs();
 		
@@ -95,12 +100,12 @@ CL_NS_USE(index)
   	   
 		// Return extracted terms
 		WeightedTerm** ret = _CL_NEWARRAY(WeightedTerm*,terms.size()+1);
-		terms.toArray(ret, true);
+		terms.toArray_nullTerminated(ret);
 
 		return ret;
   	}
 
-	void QueryTermExtractor::getTermsFromBooleanQuery(const BooleanQuery * query, WeightedTermList * terms, bool prohibited)
+	void QueryTermExtractor::getTermsFromBooleanQuery(const BooleanQuery * query, WeightedTermList * terms, bool prohibited, const TCHAR* fieldName)
 	{
 		uint32_t numClauses = query->getClauseCount();
 		BooleanClause** queryClauses = _CL_NEWARRAY(BooleanClause*,numClauses);
@@ -110,50 +115,16 @@ CL_NS_USE(index)
 		{
 			if (prohibited || !queryClauses[i]->prohibited){
 				Query* qry = queryClauses[i]->getQuery();
-				getTerms(qry, terms, prohibited);
+				getTerms(qry, terms, prohibited, fieldName);
 			}
 		}
-
 		_CLDELETE_ARRAY(queryClauses);
 	}
 
-	void QueryTermExtractor::getTermsFromPhraseQuery(const PhraseQuery * query, WeightedTermList * terms)
-	{
-		Term** queryTerms = query->getTerms();
-		int32_t i = 0;
-		while ( queryTerms[i] != NULL ){
-			WeightedTerm * pWT = _CLNEW WeightedTerm(query->getBoost(),queryTerms[i]->text());
-			if (terms->find(pWT)==terms->end()) // possible memory leak if key already present
-				terms->insert(pWT);
-			else
-				_CLDELETE(pWT);
-
-			i++;
-		}
-		_CLDELETE_ARRAY(queryTerms);
-	}
-
-	void QueryTermExtractor::getTermsFromTermQuery(const TermQuery * query, WeightedTermList * terms)
-	{
-		Term * term = query->getTerm();
-		WeightedTerm * pWT = _CLNEW WeightedTerm(query->getBoost(),term->text());
-		_CLDECDELETE(term);
-		if (terms->find(pWT)==terms->end()) // possible memory leak if key already present
-			terms->insert(pWT);
-		else
-			_CLDELETE(pWT);
-	}
-
-	//todo: implement this when span queries are implemented
-	/*void getTermsFromSpanNearQuery(SpanNearQuery* query, WeightedTermList* terms){
-  	    Collection queryTerms = query.getTerms();
-
-  	    for(Iterator iterator = queryTerms.iterator(); iterator.hasNext();){
-  	        // break it out for debugging.
-  	        Term term = (Term) iterator.next();
-  	        const TCHAR* text = term.text();
-  	        terms.add(_CLNEW WeightedTerm(query.getBoost(), text));
-  	    }
-  	}*/
+// FilteredQuery not implemented yet
+//     void QueryTermExtractor::getTermsFromFilteredQuery(const FilteredQuery * query, WeightedTermList * terms, bool prohibited)
+//     {
+//         getTerms(query->getQuery(), terms, prohibited);
+//     }
 
 CL_NS_END2

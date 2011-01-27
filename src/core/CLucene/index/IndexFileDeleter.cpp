@@ -7,6 +7,7 @@
 #include "CLucene/LuceneThreads.h"
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 
 CL_NS_USE(store)
 CL_NS_USE(util)

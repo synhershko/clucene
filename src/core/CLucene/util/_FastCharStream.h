@@ -29,6 +29,8 @@ CL_NS_DEF(util)
 		/// Initializes a new instance of the FastCharStream class LUCENE_EXPORT.
 		FastCharStream(BufferedReader* reader);
 		virtual ~FastCharStream();
+
+        void reset();
 		
 		/// Returns the next TCHAR from the stream.
 		int GetNext();

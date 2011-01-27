@@ -35,6 +35,7 @@
 #include "_DocumentsWriter.h"
 #include <assert.h>
 #include <algorithm>
+#include <iostream>
 
 CL_NS_USE(util)
 CL_NS_USE(store)

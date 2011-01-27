@@ -35,7 +35,7 @@ Field::Field(const TCHAR* Name, const TCHAR* Value, int _config, const bool dupl
 {
 	CND_PRECONDITION(Name != NULL, "Name cannot be NULL");
 	CND_PRECONDITION(Value != NULL, "value cannot be NULL");
-	CND_PRECONDITION(_tcslen(Value)>0 && _tcslen(Name)>0, "name and value cannot both be empty");
+	CND_PRECONDITION(_tcslen(Value)>0 || _tcslen(Name)>0, "name and value cannot both be empty");
 
 	/*
 	if (_config & INDEX_NO && _config & STORE_NO)
@@ -117,9 +117,9 @@ bool 	Field::isTokenized() const	{ return (config & INDEX_TOKENIZED) != 0; }
 bool 	Field::isCompressed() const	{ return (config & STORE_COMPRESS) != 0; }
 bool 	Field::isBinary() const		{ return (valueType & VALUE_BINARY) && fieldsData!=NULL; }
 
-bool	Field::isTermVectorStored() const			{ return (config & TERMVECTOR_YES) != 0; }
-bool	Field::isStoreOffsetWithTermVector() const	{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0; }
-bool	Field::isStorePositionWithTermVector() const{ return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0; }
+bool	Field::isTermVectorStored() const { return (config & TERMVECTOR_YES) != 0; }
+bool	Field::isStoreOffsetWithTermVector() const { return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_OFFSETS) != 0 && ((config & TERMVECTOR_WITH_OFFSETS) != TERMVECTOR_YES); }
+bool	Field::isStorePositionWithTermVector() const { return (config & TERMVECTOR_YES) != 0 && (config & TERMVECTOR_WITH_POSITIONS) != 0 && ((config & TERMVECTOR_WITH_POSITIONS) != TERMVECTOR_YES); }
 
 bool Field::getOmitNorms() const { return (config & INDEX_NONORMS) != 0; }
 void Field::setOmitNorms(const bool omitNorms) {
@@ -206,11 +206,11 @@ void Field::setConfig(const uint32_t x){
 		if ( x & TERMVECTOR_YES ){
 			termVector=true;
 		}
-		if ( x & TERMVECTOR_WITH_POSITIONS ){
+		if ( (x & TERMVECTOR_WITH_POSITIONS) && ((x & TERMVECTOR_WITH_POSITIONS) != TERMVECTOR_YES) ){
 			newConfig |= TERMVECTOR_WITH_POSITIONS;
 			termVector=true;
 		}
-		if ( x & TERMVECTOR_WITH_OFFSETS ){
+		if ( x & TERMVECTOR_WITH_OFFSETS  && ((x & TERMVECTOR_WITH_OFFSETS) != TERMVECTOR_YES) ){
 			newConfig |= TERMVECTOR_WITH_OFFSETS;
 			termVector=true;
 		}

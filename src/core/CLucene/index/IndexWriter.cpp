@@ -30,6 +30,7 @@
 #include "_Term.h"
 #include <assert.h>
 #include <algorithm>
+#include <iostream>
 
 CL_NS_USE(store)
 CL_NS_USE(util)

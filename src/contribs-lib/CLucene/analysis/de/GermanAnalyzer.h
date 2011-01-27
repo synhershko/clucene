@@ -29,6 +29,8 @@ public:
 
 private:
 
+  class SavedStreams;
+
   /**
    * Contains the stopwords used with the StopFilter.
    */
@@ -98,6 +100,8 @@ public:
    *         StandardFilter, LowerCaseFilter, StopFilter, GermanStemFilter
    */
   virtual TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+
+  virtual TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 };
 
 CL_NS_END2

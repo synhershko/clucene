@@ -18,12 +18,12 @@
 
 CL_NS_DEF(store)
 
-	class RAMFile:LUCENE_BASE {
+	class CLUCENE_EXPORT RAMFile:LUCENE_BASE {
 	private:
 		struct RAMFileBuffer:LUCENE_BASE {
 			uint8_t* _buffer; size_t _len;
 			RAMFileBuffer(uint8_t* buf = NULL, size_t len=0) : _buffer(buf), _len(len) {};
-			~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
+			virtual ~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
 		};
 
 
@@ -40,22 +40,22 @@ CL_NS_DEF(store)
 		RAMDirectory* directory;
 
 	public:
-    DEFINE_MUTEX(THIS_LOCK)
+		DEFINE_MUTEX(THIS_LOCK)
 
     #ifdef _DEBUG
 		const char* filename;
     #endif
 		// File used as buffer, in no RAMDirectory
-		CLUCENE_EXPORT RAMFile( RAMDirectory* directory=NULL );
-		CLUCENE_EXPORT ~RAMFile();
+		RAMFile( RAMDirectory* directory=NULL );
+		virtual ~RAMFile();
 		
 		// For non-stream access from thread that might be concurrent with writing
-		int64_t CLUCENE_EXPORT getLength();
-		void CLUCENE_EXPORT setLength( const int64_t _length );
+		int64_t getLength();
+		void setLength( const int64_t _length );
 		
 		// For non-stream access from thread that might be concurrent with writing
-		uint64_t CLUCENE_EXPORT getLastModified();
-		void CLUCENE_EXPORT setLastModified( const uint64_t lastModified );
+		uint64_t getLastModified();
+		void setLastModified( const uint64_t lastModified );
 		
 		uint8_t* addBuffer( const int32_t size );
 		uint8_t* getBuffer( const int32_t index );
@@ -63,9 +63,9 @@ CL_NS_DEF(store)
 		int32_t numBuffers() const;
 		uint8_t* newBuffer( const int32_t size );
 		
-		int64_t CLUCENE_EXPORT getSizeInBytes() const;
+		int64_t getSizeInBytes() const;
 
-        friend class RAMDirectory;
+		friend class RAMDirectory;
 	};
 
 	class CLUCENE_EXPORT RAMOutputStream: public IndexOutput {
@@ -136,7 +136,7 @@ CL_NS_DEF(store)
 		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMOutputStream::BUFFER_SIZE);
 
 		RAMInputStream(RAMFile* f);
-		~RAMInputStream();
+		virtual ~RAMInputStream();
 		IndexInput* clone() const;
 
 		void close();

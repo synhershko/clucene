@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_spans_FirstSpanQuery_
@@ -13,7 +13,7 @@ CL_CLASS_DEF(index, IndexReader);
 CL_NS_DEF2( search, spans )
 
 /** Matches spans near the beginning of a field. */
-class CLUCENE_EXPORT SpanFirstQuery : public SpanQuery 
+class CLUCENE_EXPORT SpanFirstQuery : public SpanQuery
 {
 private:
     class SpanFirstQuerySpans;
@@ -21,7 +21,7 @@ private:
 private:
     SpanQuery *     match;
     bool            bDeleteQuery;
-    int32_t         end; 
+    int32_t         end;
 
 protected:
     SpanFirstQuery( const SpanFirstQuery& clone );
@@ -50,7 +50,7 @@ public:
      * @see #extractTerms(Set)
      */
 //   public Collection getTerms() { return match.getTerms(); }
-    void extractTerms( CL_NS(search)::TermSet * terms );
+    void extractTerms( CL_NS(search)::TermSet * terms ) const;
 
     CL_NS(search)::Query * rewrite( CL_NS(index)::IndexReader * reader );
 

@@ -132,7 +132,7 @@ public:
 	};
 
 #ifdef _UCS2
-	class CLUCENE_INLINE_EXPORT WChar: public _base, public Comparable //<wchar_t*>
+	class CLUCENE_EXPORT WChar: public _base, public Comparable //<wchar_t*>
 	{
 	    const wchar_t* s;
 	public:

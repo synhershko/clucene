@@ -527,7 +527,8 @@ KeywordTokenizer::KeywordTokenizer(CL_NS(util)::Reader* input, int bufferSize):
 	Tokenizer(input)
 {
   this->done = false;
-	if ( bufferSize < 1 )
+  this->bufferSize = bufferSize;
+  if ( bufferSize < 1 )
 	  this->bufferSize = DEFAULT_BUFFER_SIZE;
 }
 KeywordTokenizer::~KeywordTokenizer(){
@@ -553,7 +554,7 @@ Token* KeywordTokenizer::next(Token* token){
 	    _tcsncpy(termBuffer + upto, readBuffer, rd);
       upto += rd;
     }
-    if ( termBuffer == NULL ){
+    if ( token->bufferLength() < upto + 1 ){
       termBuffer=token->resizeTermBuffer(token->bufferLength() + 8);
     }
     termBuffer[upto]=0;

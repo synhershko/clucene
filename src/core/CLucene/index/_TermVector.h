@@ -76,7 +76,7 @@ public:
 */
 class TermVectorMapper; // Forward declaration
 
-class TermVectorsReader:LUCENE_BASE {
+class CLUCENE_EXPORT TermVectorsReader:LUCENE_BASE {
 public:
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_VERSION = 2);
 	LUCENE_STATIC_CONSTANT(uint8_t, STORE_POSITIONS_WITH_TERMVECTOR = 0x1);
@@ -217,7 +217,7 @@ public:
  *
  *
  **/
-class TermVectorMapper : LUCENE_BASE{
+class CLUCENE_EXPORT TermVectorMapper : LUCENE_BASE{
 private:
 	bool ignoringPositions;
 	bool ignoringOffsets;
@@ -284,7 +284,7 @@ public:
 	*
 	* @param documentNumber index of document currently being mapped
 	*/
-	void setDocumentNumber(const int32_t documentNumber);
+	virtual void setDocumentNumber(const int32_t documentNumber);
 };
 
 /**
@@ -319,6 +319,11 @@ public:
 	* @memory Caller is responsible for freeing up the returned object
 	*/
 	TermFreqVector* materializeVector();
+
+	void reset()
+	{
+		currentPosition = 0;
+	}
 };
 
 CL_NS_END

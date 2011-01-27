@@ -35,6 +35,31 @@
 	_CLDELETE(ts);
   }
 
+  void assertReusableAnalyzesTo(CuTest *tc,Analyzer* a, const TCHAR* input, const TCHAR* output){
+      Reader* reader = _CLNEW StringReader(input);
+      TokenStream* ts = a->reusableTokenStream(_T("dummy"), reader );
+
+      const TCHAR* pos = output;
+      TCHAR buffer[80];
+      const TCHAR* last = output;
+      CL_NS(analysis)::Token t;
+      while( (pos = _tcsstr(pos+1, _T(";"))) != NULL ) {
+          int32_t len = (int32_t)(pos-last);
+          _tcsncpy(buffer,last,len);
+          buffer[len]=0;
+
+          CLUCENE_ASSERT(ts->next(&t)!=NULL);
+          CLUCENE_ASSERT( t.termLength() == _tcslen(buffer) );
+          CLUCENE_ASSERT(_tcscmp( t.termBuffer(), buffer) == 0 );
+
+          last = pos+1;
+      }
+      CLUCENE_ASSERT(ts->next(&t)==NULL); //Test failed, more fields than expected.
+
+      ts->close();
+      _CLLDELETE(reader);
+  }
+
   void testSimpleAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW SimpleAnalyzer();
 	assertAnalyzesTo(tc,a, _T("foo bar FOO BAR"), _T("foo;bar;foo;bar;") );
@@ -49,6 +74,30 @@
     _CLLDELETE(a);
   }
   
+  void useKeywordTokenizer(CuTest *tc, const TCHAR* text) {
+    StringReader reader(text);
+    KeywordTokenizer tokenizer(&reader, 1);
+    Token t;
+    CuAssertTrue(tc, tokenizer.next(&t) != NULL, _T("token expected"));
+    CuAssertStrEquals(tc, _T(""), text, t.termBuffer(), false);
+    CuAssertTrue(tc, tokenizer.next(&t) == NULL, _T("no further token expected"));
+  }
+
+  // Tracker-Id: 3106808
+  void testKeywordTokenizer(CuTest *tc) {
+    useKeywordTokenizer(tc, _T("1"));
+    useKeywordTokenizer(tc, _T("12"));
+    useKeywordTokenizer(tc, _T("123"));
+    useKeywordTokenizer(tc, _T("1234"));
+    useKeywordTokenizer(tc, _T("12345"));
+    useKeywordTokenizer(tc, _T("123456"));
+    useKeywordTokenizer(tc, _T("1234567"));
+    useKeywordTokenizer(tc, _T("12345678"));
+    useKeywordTokenizer(tc, _T("123456789"));
+    useKeywordTokenizer(tc, _T("1234567812345678"));
+    useKeywordTokenizer(tc, _T("123456781234567812345678"));
+  }
+
    void testKeywordAnalyzer(CuTest *tc){
     Analyzer* a = _CLNEW KeywordAnalyzer();
     
@@ -60,7 +109,7 @@
     assertAnalyzesTo(tc,a, _T("B2B"), _T("B2B;"));
     assertAnalyzesTo(tc,a, _T("2B"), _T("2B;"));
     assertAnalyzesTo(tc,a, _T("\"QUOTED\" word"), _T("\"QUOTED\" word;"));
-    
+
     _CLDELETE(a);
    }
 
@@ -268,6 +317,8 @@
 
        //todo: check this
        assertAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
+       assertReusableAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
+       assertReusableAnalyzesTo(tc,a, _T("[050-070]"), _T("050;-070;") );
 
        _CLDELETE(a);
    }
@@ -433,7 +484,7 @@
       CLUCENE_ASSERT(td->next());
       _CLLDELETE(reader);
   }
-  
+
 CuSuite *testanalyzers(void)
 {
 	CuSuite *suite = CuSuiteNew(_T("CLucene Analyzers Test"));
@@ -442,6 +493,8 @@ CuSuite *testanalyzers(void)
     SUITE_ADD_TEST(suite, testSimpleAnalyzer);
     SUITE_ADD_TEST(suite, testNull);
     SUITE_ADD_TEST(suite, testStop);
+    SUITE_ADD_TEST(suite, testKeywordTokenizer);
+    SUITE_ADD_TEST(suite, testStandardAnalyzer);
     //SUITE_ADD_TEST(suite, testPayloadCopy); // <- TODO: Finish Payload and remove asserts before enabling this test
 
     // Ported from TestPerFieldAnalzyerWrapper.java + 1 test of our own

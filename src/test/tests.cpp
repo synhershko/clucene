@@ -14,6 +14,7 @@ unittest tests[] = {
     {"analysis", testanalysis},
     {"analyzers", testanalyzers},
     {"document", testdocument},
+    {"field", testField},
     {"numbertools", testNumberTools},
     {"debug", testdebug},
     {"ramdirectory", testRAMDirectory},
@@ -41,5 +42,9 @@ unittest tests[] = {
     {"extractterms",testExtractTerms},
     {"spanqueries",testSpanQueries},
     {"stringbuffer", testStringBuffer},
+    {"termvectorsreader",testTermVectorsReader},
+#ifdef TEST_CONTRIB_LIBS
+    {"germananalyzer", testGermanAnalyzer},
+#endif
     {"LastTest", NULL}
 };

@@ -312,6 +312,7 @@ ObjectArray<SegmentTermVector>* TermVectorsReader::readTermVectors(const int32_t
 		mapper->setDocumentNumber(docNum);
 		readTermVector(fields[i], tvfPointers[i], mapper);
 		res->values[i] = static_cast<SegmentTermVector*>(mapper->materializeVector());
+		mapper->reset();
 	}
 	_CLLDELETE(mapper);
 	return res;

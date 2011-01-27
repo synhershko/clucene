@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #include "CLucene/_ApiHeader.h"
@@ -28,19 +28,19 @@ protected:
     {
         if( spans1->doc() == spans2->doc() )
         {
-            if( spans1->start() == spans2->start()) 
+            if( spans1->start() == spans2->start())
                 return spans1->end() < spans2->end();
-            else 
+            else
                 return spans1->start() < spans2->start();
-        } 
-        else 
+        }
+        else
             return spans1->doc() < spans2->doc();
     }
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
-class SpanOrQuery::SpanOrQuerySpans : public Spans 
+class SpanOrQuery::SpanOrQuerySpans : public Spans
 {
 private:
     SpanQueue *                 queue;
@@ -105,7 +105,7 @@ bool SpanOrQuery::SpanOrQuerySpans::skipTo( int32_t target )
     {
         if( top()->skipTo( target ))
             queue->adjustTop();
-        else 
+        else
             _CLLDELETE( queue->pop() );
     }
 
@@ -179,7 +179,7 @@ const char * SpanOrQuery::getClassName()
 	return "SpanOrQuery";
 }
 
-const char * SpanOrQuery::getObjectName() const 
+const char * SpanOrQuery::getObjectName() const
 {
 	return getClassName();
 }
@@ -205,7 +205,7 @@ const TCHAR * SpanOrQuery::getField() const
     return field;
 }
 
-void SpanOrQuery::extractTerms( CL_NS(search)::TermSet * terms )
+void SpanOrQuery::extractTerms( CL_NS(search)::TermSet * terms ) const
 {
     for( size_t i = 0; i < clausesCount; i++ )
         clauses[ i ]->extractTerms( terms );
@@ -218,11 +218,11 @@ CL_NS(search)::Query * SpanOrQuery::rewrite( CL_NS(index)::IndexReader * reader 
     {
         SpanQuery * c = clauses[ i ];
         SpanQuery * query = (SpanQuery *) c->rewrite( reader );
-        if( query != c ) 
+        if( query != c )
         {                     // clause rewrote: must clone
             if( clone == NULL )
                 clone = (SpanOrQuery *) this->clone();
-    
+
             _CLLDELETE( clone->clauses[ i ] );
             clone->clauses[ i ] = query;
         }
@@ -250,7 +250,7 @@ TCHAR* SpanOrQuery::toString( const TCHAR* field ) const
 
     buffer.append( _T( "])" ));
     buffer.appendBoost( getBoost() );
-    
+
     return buffer.toString();
 }
 
@@ -266,7 +266,7 @@ bool SpanOrQuery::equals( Query* other ) const
     {
         return false;
     }
-    
+
     if( clausesCount != that->clausesCount )
         return false;
     for( size_t i = 0; i < clausesCount; i++ )
@@ -286,7 +286,7 @@ size_t SpanOrQuery::hashCode() const
 
     h ^= (h << 10) | (h >> 23);
     h ^= Similarity::floatToByte( getBoost() );
-    
+
     return h;
 }
 

@@ -1168,7 +1168,7 @@ protected:
   int32_t getSegmentCount();
   int32_t getBufferedDeleteTermsSize();
   int32_t getNumBufferedDeleteTerms();
-  SegmentInfo* newestSegment();
+  virtual SegmentInfo* newestSegment();
 
 private:
   void waitForClose();

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
- * 
- * Distributable under the terms of either the Apache License (Version 2.0) or 
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or
  * the GNU Lesser General Public License, as specified in the COPYING file.
  ------------------------------------------------------------------------------*/
 #ifndef _lucene_search_spans_SpanNearQuery_
@@ -15,7 +15,7 @@ CL_NS_DEF2( search, spans )
 /** Matches spans which are near one another.  One can specify <i>slop</i>, the
  * maximum number of intervening unmatched positions, as well as whether
  * matches are required to be in-order. */
-class CLUCENE_EXPORT SpanNearQuery : public SpanQuery 
+class CLUCENE_EXPORT SpanNearQuery : public SpanQuery
 {
 private:
     SpanQuery **    clauses;
@@ -52,10 +52,10 @@ public:
         {
             SpanQuery * clause = *first;
             if( i == 0 )
-            {                               
+            {
                 setField( clause->getField() );
-            } 
-            else if( 0 != _tcscmp( clause->getField(), field )) 
+            }
+            else if( 0 != _tcscmp( clause->getField(), field ))
             {
                 _CLTHROWA( CL_ERR_IllegalArgument, "Clauses must have same field." );
             }
@@ -73,8 +73,8 @@ public:
     static const char * getClassName();
 	const char * getObjectName() const;
 
-    /** Return the clauses whose spans are matched. 
-     * CLucene: pointer to the internal array 
+    /** Return the clauses whose spans are matched.
+     * CLucene: pointer to the internal array
      */
     SpanQuery ** getClauses() const;
     size_t getClausesCount() const;
@@ -86,15 +86,15 @@ public:
     bool isInOrder() const;
 
     const TCHAR * getField() const;
-  
+
     /** Returns a collection of all terms matched by this query.
      * @deprecated use extractTerms instead
      * @see #extractTerms(Set)
      */
-//    public Collection getTerms() 
-  
-    void extractTerms( CL_NS(search)::TermSet * terms );
-  
+//    public Collection getTerms()
+
+    void extractTerms( CL_NS(search)::TermSet * terms ) const;
+
     CL_NS(search)::Query * rewrite( CL_NS(index)::IndexReader * reader );
 
     using Query::toString;

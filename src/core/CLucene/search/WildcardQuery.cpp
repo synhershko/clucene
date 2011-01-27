@@ -24,7 +24,7 @@ MultiTermQuery( term ){
 	//Func - Constructor
 	//Pre  - term != NULL
 	//Post - Instance has been created
-	termContainsWildcard = (_tcschr(term->text(), _T('*')) == NULL || _tcschr(term->text(), _T('?')) == NULL);
+	termContainsWildcard = (_tcschr(term->text(), _T('*')) != NULL || _tcschr(term->text(), _T('?')) != NULL);
 }
 
 WildcardQuery::~WildcardQuery(){

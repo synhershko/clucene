@@ -11,7 +11,8 @@
 CL_NS_USE(util)
 CL_NS_USE2(analysis,de)
 
-    GermanStemmer::GermanStemmer() {
+    GermanStemmer::GermanStemmer() :
+      sb() {
     }
 
     TCHAR* GermanStemmer::stem(const TCHAR* term, size_t length) {
@@ -109,60 +110,65 @@ CL_NS_USE2(analysis,de)
     void GermanStemmer::substitute(StringBuffer& buffer) {
       substCount = 0;
 
-      for ( size_t c = 0; c < buffer.length(); c++ ) {
+      for ( size_t i = 0; i < buffer.length(); i++ ) {
+#ifdef _UCS2
+        TCHAR c = buffer.charAt(i);
+#else
+        unsigned char c = buffer.charAt(i);
+#endif
         // Replace the second char of a pair of the equal characters with an asterisk
-        if ( c > 0 && buffer.charAt( c ) == buffer.charAt ( c - 1 )  ) {
-          buffer.setCharAt( c, _T('*') );
+        if ( i > 0 && c == buffer.charAt ( i - 1 )  ) {
+          buffer.setCharAt( i, _T('*') );
         }
         // Substitute Umlauts.
-        else if ( buffer.charAt( c ) == _T('ä') ) {
-          buffer.setCharAt( c, _T('a') );
+        else if ( c  == 0xe4 ) {
+          buffer.setCharAt( i, _T('a') );
         }
-        else if ( buffer.charAt( c ) == _T('ö') ) {
-          buffer.setCharAt( c, _T('o') );
+        else if ( c == 0xf6 ) {
+          buffer.setCharAt( i, _T('o') );
         }
-        else if ( buffer.charAt( c ) == _T('ü') ) {
-          buffer.setCharAt( c, _T('u') );
+        else if ( c == 0xfc ) {
+          buffer.setCharAt( i, _T('u') );
         }
         // Fix bug so that 'ß' at the end of a word is replaced.
-        else if ( buffer.charAt( c ) == _T('ß') ) {
-            buffer.setCharAt( c, _T('s') );
-            buffer.insert( c + 1, _T('s') );
+        else if ( c == 0xdf ) {
+            buffer.setCharAt( i, _T('s') );
+            buffer.insert( i + 1, _T('s') );
             substCount++;
         }
         // Take care that at least one character is left left side from the current one
-        if ( c < buffer.length() - 1 ) {
+        if ( i < buffer.length() - 1 ) {
           // Masking several common character combinations with an token
-          if ( ( c < buffer.length() - 2 ) && buffer.charAt( c ) == _T('s') &&
-            buffer.charAt( c + 1 ) == _T('c') && buffer.charAt( c + 2 ) == _T('h') )
+          if ( ( i < buffer.length() - 2 ) && c == _T('s') &&
+            buffer.charAt( i + 1 ) == _T('c') && buffer.charAt( i + 2 ) == _T('h') )
           {
-            buffer.setCharAt( c, _T('$') );
-            buffer.deleteChars( c + 1, c + 3 );
+            buffer.setCharAt( i, _T('$') );
+            buffer.deleteChars( i + 1, i + 3 );
             substCount =+ 2;
           }
-          else if ( buffer.charAt( c ) == _T('c') && buffer.charAt( c + 1 ) == _T('h') ) {
-            buffer.setCharAt( c, _T('§') );
-            buffer.deleteCharAt( c + 1 );
+          else if ( c == _T('c') && buffer.charAt( i + 1 ) == _T('h') ) {
+            buffer.setCharAt( i, 0xa7 ); // section sign in UTF-16
+            buffer.deleteCharAt( i + 1 );
             substCount++;
           }
-          else if ( buffer.charAt( c ) == _T('e') && buffer.charAt( c + 1 ) == _T('i') ) {
-            buffer.setCharAt( c, _T('%') );
-            buffer.deleteCharAt( c + 1 );
+          else if ( c == _T('e') && buffer.charAt( i + 1 ) == _T('i') ) {
+            buffer.setCharAt( i, _T('%') );
+            buffer.deleteCharAt( i + 1 );
             substCount++;
           }
-          else if ( buffer.charAt( c ) == _T('i') && buffer.charAt( c + 1 ) == _T('e') ) {
-            buffer.setCharAt( c, _T('&') );
-            buffer.deleteCharAt( c + 1 );
+          else if ( c == _T('i') && buffer.charAt( i + 1 ) == _T('e') ) {
+            buffer.setCharAt( i, _T('&') );
+            buffer.deleteCharAt( i + 1 );
             substCount++;
           }
-          else if ( buffer.charAt( c ) == _T('i') && buffer.charAt( c + 1 ) == _T('g') ) {
-            buffer.setCharAt( c, _T('#') );
-            buffer.deleteCharAt( c + 1 );
+          else if ( c == _T('i') && buffer.charAt( i + 1 ) == _T('g') ) {
+            buffer.setCharAt( i, _T('#') );
+            buffer.deleteCharAt( i + 1 );
             substCount++;
           }
-          else if ( buffer.charAt( c ) == _T('s') && buffer.charAt( c + 1 ) == _T('t') ) {
-            buffer.setCharAt( c, _T('!') );
-            buffer.deleteCharAt( c + 1 );
+          else if ( c == _T('s') && buffer.charAt( i + 1 ) == _T('t') ) {
+            buffer.setCharAt( i, _T('!') );
+            buffer.deleteCharAt( i + 1 );
             substCount++;
           }
         }
@@ -170,35 +176,38 @@ CL_NS_USE2(analysis,de)
     }
 
     void GermanStemmer::resubstitute(StringBuffer& buffer) {
-      for ( size_t c = 0; c < buffer.length(); c++ ) {
-        if ( buffer.charAt( c ) == _T('*') ) {
-          TCHAR x = buffer.charAt( c - 1 );
-          buffer.setCharAt( c, x );
+      for ( size_t i = 0; i < buffer.length(); i++ ) {
+#ifdef _UCS2
+        TCHAR c = buffer.charAt(i);
+#else
+        unsigned char c = buffer.charAt(i);
+#endif
+        if ( c == _T('*') ) {
+          buffer.setCharAt( i, buffer.charAt( i - 1 ) );
         }
-        else if ( buffer.charAt( c ) == _T('$') ) {
-          buffer.setCharAt( c, 's' );
-          TCHAR ch[] = { _T('c'), _T('h')};
-          buffer.insert( c + 1, ch );
+        else if ( c == _T('$') ) {
+          buffer.setCharAt( i, 's' );
+          buffer.insert( i + 1, _T("ch"), 2 );
         }
-        else if ( buffer.charAt( c ) == _T('§') ) {
-          buffer.setCharAt( c, _T('c') );
-          buffer.insert( c + 1, _T('h') );
+        else if ( c == 0xa7 ) { // section sign in UTF-16
+          buffer.setCharAt( i, _T('c') );
+          buffer.insert( i + 1, _T('h') );
         }
-        else if ( buffer.charAt( c ) == _T('%') ) {
-          buffer.setCharAt( c, _T('e') );
-          buffer.insert( c + 1, _T('i') );
+        else if ( c == _T('%') ) {
+          buffer.setCharAt( i, _T('e') );
+          buffer.insert( i + 1, _T('i') );
         }
-        else if ( buffer.charAt( c ) == _T('&') ) {
-          buffer.setCharAt( c, _T('i') );
-          buffer.insert( c + 1, _T('e') );
+        else if ( c == _T('&') ) {
+          buffer.setCharAt( i, _T('i') );
+          buffer.insert( i + 1, _T('e') );
         }
-        else if ( buffer.charAt( c ) == _T('#') ) {
-          buffer.setCharAt( c, _T('i') );
-          buffer.insert( c + 1, _T('g') );
+        else if ( c == _T('#') ) {
+          buffer.setCharAt( i, _T('i') );
+          buffer.insert( i + 1, _T('g') );
         }
-        else if ( buffer.charAt( c ) == _T('!') ) {
-          buffer.setCharAt( c, _T('s') );
-          buffer.insert( c + 1, _T('t') );
+        else if ( c == _T('!') ) {
+          buffer.setCharAt( i, _T('s') );
+          buffer.insert( i + 1, _T('t') );
         }
       }
     }
