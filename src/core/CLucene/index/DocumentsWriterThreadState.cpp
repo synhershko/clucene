@@ -516,8 +516,7 @@ void DocumentsWriter::ThreadState::trimFields() {
     BufferedNorms* n = _parent->norms[i];
     if (n != NULL && n->upto == 0)
     {
-      if ( n!= NULL )
-        _CLLDELETE(n);
+      _CLLDELETE(n);
       _parent->norms.values[i] = NULL;
     }
   }
