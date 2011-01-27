@@ -67,6 +67,7 @@ CuSuite *testdebug(void);
 CuSuite *testutf8(void);
 CuSuite *testreuters(void);
 CuSuite *testdocument(void);
+CuSuite *testField(void);
 CuSuite *testNumberTools(void);
 CuSuite *testDateTools(void);
 CuSuite *testBoolean(void);
@@ -74,6 +75,7 @@ CuSuite *testBitSet(void);
 CuSuite *testExtractTerms(void);
 CuSuite *testSpanQueries(void);
 CuSuite *testStringBuffer(void);
+CuSuite *testTermVectorsReader(void);
 
 #ifdef TEST_CONTRIB_LIBS
 CuSuite *testGermanAnalyzer(void);

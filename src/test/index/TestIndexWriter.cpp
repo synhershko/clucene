@@ -415,7 +415,7 @@ void testExceptionFromTokenStream(CuTest *tc) {
     try {
         writer->addDocument(doc);
         CuFail(tc, _T("did not hit expected exception"));
-    } catch (CLuceneError& e) {
+    } catch (CLuceneError&) {
     }
     _CLLDELETE(doc);
 
@@ -594,15 +594,64 @@ void testDeleteDocument(CuTest* tc) {
     _CLLDELETE( dir );
 }
 
+void testMergeIndex(CuTest* tc) {
+
+    // A crash depends on the following:
+    // - The first document needs two differently named fields that set TERMVECTOR_YES.
+    // - The IndexWriter needs to reopen an existing index.
+    // - The reopened IndexWriter needs to call optimize() to force a merge
+    //   on term vectors. This merging causes the crash.
+    // Submitted by McCann
+
+    RAMDirectory* dir = _CLNEW RAMDirectory();
+
+    // open a new lucene index
+    SimpleAnalyzer a;
+    IndexWriter* writer = _CLNEW IndexWriter( dir, false, &a, true );
+    writer->setUseCompoundFile( false );
+
+    // add two fields to document
+    Document* doc = _CLNEW Document();
+    doc->add ( *_CLNEW Field(_T("field0"), _T("value0"), Field::STORE_NO | Field::TERMVECTOR_YES | Field::INDEX_TOKENIZED) );
+    doc->add ( *_CLNEW Field(_T("field1"), _T("value1"), Field::STORE_NO | Field::TERMVECTOR_YES | Field::INDEX_TOKENIZED) );
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    // close and flush index
+    writer->close();
+    _CLLDELETE( writer );
+
+    // open the previous lucene index
+    writer = _CLNEW IndexWriter( dir, false, &a, false );
+    writer->setUseCompoundFile( false );
+
+    // add a field to document
+    // note: the settings on this field don't seem to affect the crash
+    doc = _CLNEW Document();
+    doc->add ( *_CLNEW Field(_T("field"), _T("value"), Field::STORE_NO | Field::TERMVECTOR_YES | Field::INDEX_TOKENIZED) );
+    writer->addDocument(doc);
+    _CLLDELETE(doc);
+
+    // optimize index to force a merge
+    writer->optimize();
+    // close and flush index
+    writer->close();
+    _CLLDELETE( writer );
+
+    // Close directory
+    dir->close();
+  _CLLDELETE( dir );
+}
+
 CuSuite *testindexwriter(void)
 {
-	CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
-	SUITE_ADD_TEST(suite, testHashingBug);
-	SUITE_ADD_TEST(suite, testAddIndexes);
-	SUITE_ADD_TEST(suite, testIWmergeSegments1);
-	SUITE_ADD_TEST(suite, testIWmergeSegments2);
-	SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
-	SUITE_ADD_TEST(suite, testIWlargeScaleCorrectness);
+    CuSuite *suite = CuSuiteNew(_T("CLucene IndexWriter Test"));
+    SUITE_ADD_TEST(suite, testHashingBug);
+    SUITE_ADD_TEST(suite, testAddIndexes);
+    SUITE_ADD_TEST(suite, testIWmergeSegments1);
+    SUITE_ADD_TEST(suite, testIWmergeSegments2);
+    SUITE_ADD_TEST(suite, testIWmergePhraseSegments);
+    SUITE_ADD_TEST(suite, testIWlargeScaleCorrectness);
 
     // TODO: This test fails due to differences between CLucene's StandardTokenizer and JLucene's; this test
     // should work when the tokenizer will be brought up-to-date, 
@@ -610,7 +659,8 @@ CuSuite *testindexwriter(void)
 
     SUITE_ADD_TEST(suite, testExceptionFromTokenStream);
     SUITE_ADD_TEST(suite, testDeleteDocument);
+    SUITE_ADD_TEST(suite, testMergeIndex);
 
-  return suite;
+    return suite;
 }
 // EOF

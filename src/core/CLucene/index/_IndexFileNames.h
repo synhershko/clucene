@@ -6,7 +6,7 @@
 
 CL_NS_DEF(index)
 
-class IndexFileNames {
+class CLUCENE_EXPORT IndexFileNames {
 public:
 	
 	static const char* SEGMENTS;
