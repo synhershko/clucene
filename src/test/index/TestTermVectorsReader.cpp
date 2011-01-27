@@ -156,6 +156,7 @@ CL_NS_USE(util);
     //terms
     for(int j=0;j<5;j++)
       writer.addDocument(doc);
+    _CLLDELETE(doc);
     writer.flush();
     seg = writer.newestSegment()->name;
     writer.close();

@@ -23,7 +23,7 @@ CL_NS_DEF(store)
 		struct RAMFileBuffer:LUCENE_BASE {
 			uint8_t* _buffer; size_t _len;
 			RAMFileBuffer(uint8_t* buf = NULL, size_t len=0) : _buffer(buf), _len(len) {};
-			~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
+			virtual ~RAMFileBuffer() { _CLDELETE_LARRAY(_buffer); };
 		};
 
 
@@ -47,7 +47,7 @@ CL_NS_DEF(store)
     #endif
 		// File used as buffer, in no RAMDirectory
 		RAMFile( RAMDirectory* directory=NULL );
-		~RAMFile();
+		virtual ~RAMFile();
 		
 		// For non-stream access from thread that might be concurrent with writing
 		int64_t getLength();
@@ -136,7 +136,7 @@ CL_NS_DEF(store)
 		LUCENE_STATIC_CONSTANT(int32_t,BUFFER_SIZE=RAMOutputStream::BUFFER_SIZE);
 
 		RAMInputStream(RAMFile* f);
-		~RAMInputStream();
+		virtual ~RAMInputStream();
 		IndexInput* clone() const;
 
 		void close();
