@@ -44,6 +44,8 @@ SET(test_files ./tests.cpp
 ./document/TestField.cpp
 ./store/TestStore.cpp
 ./store/MockRAMDirectory.cpp
+./search/MockScorer.h
+./search/MockHitCollector.h
 ./search/TestBoolean.cpp
 ./search/TestDateFilter.cpp
 ./search/TestForDuplicates.cpp
