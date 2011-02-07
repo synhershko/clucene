@@ -5,6 +5,10 @@
 * the GNU Lesser General Public License, as specified in the COPYING file.
 ------------------------------------------------------------------------------*/
 #include "test.h"
+#include "CLucene/search/_BooleanScorer2.h"
+#include "CLucene/search/Similarity.h"
+#include "MockScorer.h"
+#include "MockHitCollector.h"
 
 /// TestBooleanQuery.java, ported 5/9/2009
 void testEquality(CuTest *tc) {
@@ -163,16 +167,28 @@ void testBooleanPrefixQuery(CuTest* tc) {
     }
 }
 
+void testBooleanScorer2WithProhibitedScorer(CuTest* tc) {
+    CL_NS(search)::DefaultSimilarity similarity;
+    BooleanScorer2 scorer(&similarity, 0, true);
+    MockScorer prohibitedScorer(&similarity);
+    scorer.add(&prohibitedScorer, false, true);
+    CL_NS(search)::MockHitCollector collector;
+    scorer.score(&collector);
+
+    CuAssertIntEquals(tc, _T("Unexpected calls of next()!"), 1, prohibitedScorer.getNextCalls());
+}
+
 CuSuite *testBoolean(void)
 {
-	CuSuite *suite = CuSuiteNew(_T("CLucene Boolean Tests"));
+    CuSuite *suite = CuSuiteNew(_T("CLucene Boolean Tests"));
 
-	SUITE_ADD_TEST(suite, testEquality);
+    SUITE_ADD_TEST(suite, testEquality);
     SUITE_ADD_TEST(suite, testException);
 
     SUITE_ADD_TEST(suite, testBooleanScorer);
 
     SUITE_ADD_TEST(suite, testBooleanPrefixQuery);
+    SUITE_ADD_TEST(suite, testBooleanScorer2WithProhibitedScorer);
 
     //_CrtSetBreakAlloc(1179);
 

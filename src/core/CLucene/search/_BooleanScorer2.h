@@ -12,7 +12,7 @@
 
 CL_NS_DEF(search)
 	
-	class BooleanScorer2: public Scorer {
+	class CLUCENE_EXPORT BooleanScorer2: public Scorer {
 	private:
 	    class Internal;
 		  friend class Internal;
