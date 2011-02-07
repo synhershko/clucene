@@ -616,8 +616,9 @@ void BooleanScorer2::score( HitCollector* hc )
 			si++;
 		}
 		si = _internal->prohibitedScorers.begin();
-		while ( si != _internal->prohibitedScorers.begin() ) {
+		while ( si != _internal->prohibitedScorers.end() ) {
 			bs->add( (*si), false /* required */, true /* prohibited */ );
+			si++;
 		}
 		bs->score( hc );
 	} else {
