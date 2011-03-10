@@ -96,7 +96,6 @@ void BitSet::set(const int32_t bit, bool val){
 		bits[bit >> 3] |= 1 << (bit & 7);
 	else
 		bits[bit >> 3] &= ~(1 << (bit & 7));
-	_count =-1;
 }
 
 int32_t BitSet::size() const {
