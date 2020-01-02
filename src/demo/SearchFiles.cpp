@@ -25,7 +25,7 @@ using namespace lucene::search;
 
 
 void SearchFiles(const char* index){
-    standard::StandardAnalyzer analyzer;
+      lucene::analysis::WhitespaceAnalyzer analyzer;
     char line[80];
     TCHAR tline[80];
     TCHAR* buf;
@@ -50,11 +50,13 @@ void SearchFiles(const char* index){
         Query* q = QueryParser::parse(tline,_T("contents"),&analyzer);
 
         buf = q->toString(_T("contents"));
+         Query* p=q;
+        
         _tprintf(_T("Searching for: %s\n\n"), buf);
         _CLDELETE_LCARRAY(buf);
 
         uint64_t str = Misc::currentTimeMillis();
-        Hits* h = s.search(q);
+        Hits* h = s.search(p);
         uint32_t srch = (int32_t)(Misc::currentTimeMillis() - str);
         str = Misc::currentTimeMillis();
 
