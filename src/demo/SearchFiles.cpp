@@ -25,7 +25,7 @@ using namespace lucene::search;
 
 
 void SearchFiles(const char* index){
-    standard::StandardAnalyzer WhitespaceAnalyzer analyzer;
+      lucene::analysis::WhitespaceAnalyzer analyzer;
     char line[80];
     TCHAR tline[80];
     TCHAR* buf;
